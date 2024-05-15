@@ -1,0 +1,906 @@
+/*
+ * Copyright (C) 2017-2024 Intel Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#define LOG_TAG ProcessingUnit
+
+#include "ProcessingUnit.h"
+
+#include <set>
+#include <utility>
+
+#include "3a/AiqResultStorage.h"
+#include "PlatformData.h"
+#include "iutils/CameraDump.h"
+#include "iutils/CameraLog.h"
+#include "iutils/Utils.h"
+#include "CameraContext.h"
+#include "src/core/processingUnit/IPipeManagerFactory.h"
+#include "StageDescriptor.h"
+
+#define EXTREME_STRENGTH_LEVEL4 (-120)
+#define EXTREME_STRENGTH_LEVEL3 (-60)
+#define EXTREME_STRENGTH_LEVEL2 (0)
+#define EXTREME_STRENGTH_LEVEL1 (20)
+
+using std::shared_ptr;
+using std::unique_ptr;
+
+namespace icamera {
+
+//#define USE_SCHEDULER
+
+ProcessingUnit::ProcessingUnit(int cameraId, std::shared_ptr<CameraScheduler> scheduler)
+        : mCameraId(cameraId),
+          mTuningMode(TUNING_MODE_MAX),
+          mRawPort(INVALID_PORT),
+          mStatus(PIPELINE_UNCREATED),
+          mScheduler(scheduler) {
+    mProcessThread = new ProcessThread(this);
+}
+
+ProcessingUnit::~ProcessingUnit() {
+    mProcessThread->join();
+    delete mProcessThread;
+}
+
+int ProcessingUnit::configure(const std::map<uuid, stream_t>& inputInfo,
+                             const std::map<uuid, stream_t>& outputInfo,
+                             const ConfigMode configModes) {
+    CheckAndLogError(mStatus == PIPELINE_CREATED, -1,
+                     "@%s mStatus is in wrong status: PIPELINE_CREATED", __func__);
+
+    setFrameInfo(inputInfo, outputInfo);
+
+    mConfigMode = configModes;
+    mOpaqueRawPorts.clear();
+    mRawPort = INVALID_PORT;
+
+    std::map<uuid, stream_t> outputFrameInfo;
+    stream_t stillStream = {}, videoStream = {};
+    for (auto& outFrameInfo : mOutputFrameInfo) {
+        // Check if it's required to output raw image from ISYS
+        if (outFrameInfo.second.format == V4L2_PIX_FMT_SGRBG12) {
+            mRawPort = outFrameInfo.first;
+        } else if (outFrameInfo.second.usage == CAMERA_STREAM_OPAQUE_RAW) {
+            mOpaqueRawPorts.insert(outFrameInfo.first);
+        } else if (outFrameInfo.second.streamType == CAMERA_STREAM_INPUT &&
+                   (outFrameInfo.second.usage == CAMERA_STREAM_PREVIEW ||
+                    outFrameInfo.second.usage == CAMERA_STREAM_VIDEO_CAPTURE)) {
+            mYuvInputInfo[outFrameInfo.first] = outFrameInfo.second;
+        } else if (outFrameInfo.second.usage == CAMERA_STREAM_STILL_CAPTURE) {
+            stillStream = outFrameInfo.second;
+            outputFrameInfo[outFrameInfo.first] = outFrameInfo.second;
+        } else {
+            videoStream = outFrameInfo.second;
+            outputFrameInfo[outFrameInfo.first] = outFrameInfo.second;
+        }
+    }
+
+    TuningConfig tuningConfig;
+    int ret = PlatformData::getTuningConfigByConfigMode(mCameraId, mConfigMode, tuningConfig);
+    CheckAndLogError(ret != OK, ret, "%s: can't get config for mode %d", __func__, mConfigMode);
+
+    LOG1("%s, Create PipeManager for ConfigMode %d", __func__, mConfigMode);
+    mPipeManager = unique_ptr<IPipeManager>
+                   (IPipeManagerFactory::createIPipeManager(mCameraId, this, mScheduler));
+
+    ret = mPipeManager->configure(inputInfo, outputFrameInfo, tuningConfig.configMode,
+                                  tuningConfig.tuningMode, &mYuvInputInfo);
+    CheckAndLogError(ret != OK, ret, "@%s configure psys dag failed:%d", __func__, ret);
+
+    mTuningMode = tuningConfig.tuningMode;
+
+    if (ret == OK) mStatus = PIPELINE_CREATED;
+    return ret;
+}
+
+int ProcessingUnit::start() {
+    PERF_CAMERA_ATRACE();
+    AutoMutex l(mBufferQueueLock);
+    int rawBufferNum = !mOpaqueRawPorts.empty() ? PlatformData::getMaxRawDataNum(mCameraId)
+                                                : PlatformData::getPreferredBufQSize(mCameraId);
+
+    /* Should use MIN_BUFFER_COUNT to optimize frame latency when PSYS processing
+     * time is slower than ISYS
+     */
+    bool needProducerBuffer = PlatformData::isIsysEnabled(mCameraId);
+
+    // FILE_SOURCE_S
+    needProducerBuffer = needProducerBuffer || PlatformData::isFileSourceEnabled();
+    // FILE_SOURCE_E
+
+    if (needProducerBuffer) {
+        int ret = allocProducerBuffers(mCameraId, rawBufferNum);
+        CheckAndLogError(ret != OK, NO_MEMORY, "Allocating producer buffer failed:%d", ret);
+    }
+
+    mThreadRunning = true;
+    mProcessThread->run("ProcessingUnit", PRIORITY_NORMAL);
+
+    mPipeManager->start();
+
+    auto cameraContext = CameraContext::getInstance(mCameraId);
+    auto dataContext = cameraContext->getDataContextBySeq(0);
+    setParameters(dataContext);
+    AutoWMutex wl(mIspSettingsLock);
+    // Predict to run AIC with video pipe for the first frame
+    mPipeManager->prepareIpuParams(&mIspSettings);
+
+    return OK;
+}
+
+void ProcessingUnit::stop() {
+    PERF_CAMERA_ATRACE();
+    mPipeManager->stop();
+
+    mProcessThread->requestExit();
+
+    {
+        AutoMutex lMeta(mMetaQueueLock);
+        mMetaAvailableSignal.signal();
+    }
+
+    mProcessThread->requestExitAndWait();
+
+    // Thread is not running. It is safe to clear the Queue
+    clearBufferQueues();
+}
+
+int ProcessingUnit::setParameters(const DataContext* dataContext) {
+    // Process image enhancement related settings.
+    const camera_image_enhancement_t& enhancement = dataContext->mIspParams.enhancement;
+    AutoWMutex wl(mIspSettingsLock);
+    mIspSettings.manualSettings.manualSharpness = (char)enhancement.sharpness;
+    mIspSettings.manualSettings.manualBrightness = (char)enhancement.brightness;
+    mIspSettings.manualSettings.manualContrast = (char)enhancement.contrast;
+    mIspSettings.manualSettings.manualHue = (char)enhancement.hue;
+    mIspSettings.manualSettings.manualSaturation = (char)enhancement.saturation;
+    mIspSettings.eeSetting.strength = enhancement.sharpness;
+
+    mIspSettings.eeSetting.feature_level = ia_isp_feature_level_high;
+    camera_edge_mode_t manualEdgeMode = dataContext->mIspParams.edgeMode;
+    LOG2("%s: manual edge mode set: %d", __func__, manualEdgeMode);
+    switch (manualEdgeMode) {
+        case EDGE_MODE_LEVEL_4:
+            mIspSettings.eeSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL4);
+            break;
+        case EDGE_MODE_LEVEL_3:
+            mIspSettings.eeSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL3);
+            break;
+        case EDGE_MODE_LEVEL_2:
+            mIspSettings.eeSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL2);
+            break;
+        case EDGE_MODE_LEVEL_1:
+            mIspSettings.eeSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL1);
+            break;
+        default:
+            mIspSettings.eeSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL2);
+    }
+
+    LOG2("%s: ISP EE setting, level: %d, strength: %d", __func__,
+         static_cast<int>(mIspSettings.eeSetting.feature_level),
+         static_cast<int>(mIspSettings.eeSetting.strength));
+
+    mIspSettings.nrSetting.feature_level = ia_isp_feature_level_high;
+    mIspSettings.nrSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL2);
+    camera_nr_mode_t manualNrMode = dataContext->mIspParams.nrMode;
+    LOG2("%s: manual NR mode set: %d", __func__, manualNrMode);
+    switch (manualNrMode) {
+        case NR_MODE_LEVEL_4:
+            mIspSettings.nrSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL4);
+            break;
+        case NR_MODE_LEVEL_3:
+            mIspSettings.nrSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL3);
+            break;
+        case NR_MODE_LEVEL_2:
+            mIspSettings.nrSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL2);
+            break;
+        case NR_MODE_LEVEL_1:
+            mIspSettings.nrSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL1);
+            break;
+        default:
+            mIspSettings.nrSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL2);
+    }
+
+    if (dataContext->mIspParams.nrLevel.set) {
+        mIspSettings.nrSetting.strength
+            = static_cast<char>(dataContext->mIspParams.nrLevel.nrLevel.overall);
+    }
+
+    LOG2("%s: ISP NR setting, level: %d, strength: %d", __func__,
+         static_cast<int>(mIspSettings.nrSetting.feature_level),
+         static_cast<int>(mIspSettings.nrSetting.strength));
+
+    mIspSettings.videoStabilization
+        = (dataContext->mAiqParams.videoStabilizationMode == VIDEO_STABILIZATION_MODE_ON);
+    LOG2("%s: Video stablilization enabled:%d", __func__, mIspSettings.videoStabilization);
+
+    mIspSettings.zoom = dataContext->zoomRegion;
+
+    return OK;
+}
+
+/**
+ * Get available setting sequence from outBuf
+ */
+int64_t ProcessingUnit::getSettingSequence(const CameraBufferPortMap& outBuf) {
+    int64_t settingSequence = -1;
+    for (auto& output : outBuf) {
+        if (output.second) {
+            settingSequence = output.second->getSettingSequence();
+            break;
+        }
+    }
+    return settingSequence;
+}
+
+/**
+ * Check if the input frame should be skipped
+ *
+ * If the corresponding mSkip of AiqResult gotten from sequence is true,
+ * return true; otherwise return false.
+ */
+bool ProcessingUnit::needSkipOutputFrame(int64_t sequence) {
+    // Check if need to skip output frame
+    auto cameraContext = CameraContext::getInstance(mCameraId);
+    AiqResultStorage* resultStorage = cameraContext->getAiqResultStorage();
+    const AiqResult* aiqResults = resultStorage->getAiqResult(sequence);
+    if (aiqResults != nullptr && aiqResults->mSkip) {
+        LOG1("<seq:%ld>@%s", sequence, __func__);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Check if 'inBuffer' can be used for 'settingSequence' to run PSys pipe.
+ *
+ * If 'settingSequence' is -1, it means the output buffer doesn't require particular
+ * input buffer, so it can run the pipe.
+ * If 'inputSequence' larger than 'settingSequence', the pipeline needs to
+ * run as well, otherwise the pipe doesn't need to run and this input buffer needs to
+ * be skipped.
+ */
+bool ProcessingUnit::needExecutePipe(int64_t settingSequence, int64_t inputSequence) {
+    if (settingSequence == -1 || inputSequence >= settingSequence) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Check if the input buffer need to be reused
+ *
+ * If 'settingSequence' is -1, it means the output buffer doesn't require particular
+ * input buffer, so the input buffer doesn't need to be reused.
+ * If 'inputSequence' larger than 'settingSequence', means the input buffer
+ * may be required by following output buffer, so it may be reused later.
+ */
+bool ProcessingUnit::needHoldOnInputFrame(int64_t settingSequence, int64_t inputSequence) {
+    if (settingSequence == -1 || inputSequence <= settingSequence) {
+        return false;
+    }
+
+    return true;
+}
+
+void ProcessingUnit::handleEvent(EventData eventData) {
+    // Process registered events
+    switch (eventData.type) {
+        // CSI_META_S
+        case EVENT_META:
+            break;
+        // CSI_META_E
+        default:
+            LOGW("Unexpected event: %d", eventData.type);
+            break;
+    }
+}
+
+// ProcessingUnit ThreadLoop
+int ProcessingUnit::processNewFrame() {
+    LOG2("<id%d>@%s", mCameraId, __func__);
+    CheckAndLogError(!mBufferProducer, INVALID_OPERATION, "No available producer");
+
+    /* Will trigger the Scheduler in this Loop. trigger chance:
+    ** 1. ISys buffer done and request output buffer ready, trigger the Scheduler after prepareTask
+    ** run PAL and stage parallel
+    ** 2. ISys buffer done but output is empty, always happens at sequence 1 and 2, should trigger
+    ** scheduler if there is any task remain
+    ** 3. Wait ISys buffer timeout, always happens in reprocessing, when no new request
+    ** there will no ISys buffer done event, should trigger scheduler if there is any task remain
+    */
+    int ret = OK;
+    CameraBufferPortMap srcBuffers, dstBuffers;
+    int64_t inputSequence = -1;
+    bool taskReady = true;
+    {
+        ConditionLock lock(mBufferQueueLock);
+        if (!mThreadRunning) return -1;  // Already stopped
+        // set timeout only when there are already pending tasks in the Queue
+        int64_t timeout = mSequencesInflight.size() > 0 ? kQueueTimeout : 0;
+        ret = waitFreeBuffersInQueue(lock, srcBuffers, mInputQueue, timeout);
+
+        if (!mThreadRunning) return -1;  // Already stopped
+        if (ret == NOT_ENOUGH_DATA) return OK;
+        if (ret == TIMED_OUT) {
+            LOG1("<id%d>@%s, timeout happen, wait recovery", mCameraId, __func__);
+            taskReady = false;
+        }
+
+        if (!srcBuffers.empty()) {
+            uuid defaultPort = srcBuffers.begin()->first;
+            shared_ptr<CameraBuffer> mainBuf = srcBuffers[defaultPort];
+            inputSequence = mainBuf->getSequence();
+        }
+        // check the output request
+        for (auto& output : mOutputQueue) {
+            uuid port = output.first;
+            CameraBufQ& outputQueue = output.second;
+            if (outputQueue.empty()) {
+                taskReady = false;
+                LOG1("<id%d>@%s, port %d, output buffer not ready", mCameraId, __func__, port);
+                break;
+            }
+            dstBuffers[port] = outputQueue.front();
+        }
+    }
+
+    if (taskReady) {
+        ret = prepareTask(&srcBuffers, &dstBuffers);
+        CheckAndLogError(ret != OK, UNKNOWN_ERROR, "%s, Failed to process frame", __func__);
+    }
+
+    if (!mSequencesInflight.empty()) {
+        std::string source;
+        mScheduler->executeNode(source, inputSequence);
+    }
+
+    // run PAL for next frame only when task scheduled
+    if (inputSequence > -1) {
+        auto cameraContext = CameraContext::getInstance(mCameraId);
+        // Check if next sequence is requested or not
+        if (cameraContext->checkUserRequestBySeq(inputSequence + 1)) {
+            LOG2("%s sequence %ld is ready for PAL", __func__, inputSequence + 1);
+            AutoWMutex wl(mIspSettingsLock);
+            // Predict to run AIC with video pipe for next frame
+            mPipeManager->prepareIpuParams(&mIspSettings, inputSequence + 1);
+        }
+    }
+
+    return OK;
+}
+
+int ProcessingUnit::handleYuvReprocessing(CameraBufferPortMap* buffersMap) {
+    CheckAndLogError(buffersMap->empty(), UNKNOWN_ERROR,
+                     "%s, the input or output buffer is empty", __func__);
+
+    CameraBufferPortMap srcBuffers, dstBuffers;
+    std::shared_ptr<CameraBuffer> inputBuffer = nullptr;
+    uint64_t timestamp = 0;
+    int64_t bufSequence = -1;
+
+    for (const auto& item : *buffersMap) {
+        if (item.first == YUV_REPROCESSING_INPUT_PORT_ID) {
+            srcBuffers[item.first] = item.second;
+            inputBuffer = item.second;
+            timestamp = TIMEVAL2NSECS(item.second->getTimestamp());
+            bufSequence = item.second->getSequence();
+            LOG2("%s, YUV reprocessing input buf port id %d, usage %d, timestamp %ld, sequence %d",
+                 __func__, item.first, item.second->getStreamUsage(), timestamp, bufSequence);
+        } else {
+            dstBuffers[item.first] = item.second;
+            if (item.second.get() != nullptr) {
+                LOG2("%s, YUV output buf port id %d, usage %d, timestamp %ld, sequence %u",
+                     __func__, item.first, item.second->getStreamUsage(),
+                     TIMEVAL2USECS(item.second->getTimestamp()), item.second->getSequence());
+            }
+        }
+     }
+
+    for (auto& output: mOutputQueue) {
+        output.second.pop();
+    }
+
+    // handle buffer done for normal YUV output
+    sendPsysRequestEvent(&dstBuffers, bufSequence, timestamp, EVENT_PSYS_REQUEST_BUF_READY);
+
+    // Prepare the task input paramerters including input and output buffers, settings etc.
+    PipeTaskData taskParam;
+    taskParam.mTuningMode = mTuningMode;
+    taskParam.mInputBuffers = srcBuffers;
+    taskParam.mOutputBuffers = dstBuffers;
+    taskParam.mFakeTask = false;
+    taskParam.mCallbackRgbs = false;
+    taskParam.mYuvTask = true;
+
+    if (!mThreadRunning) return -1;
+
+    mPipeManager->addTask(taskParam);
+
+    // handle metadata event after running pal(update metadata from pal result)
+    sendPsysRequestEvent(&dstBuffers, bufSequence, timestamp, EVENT_REQUEST_METADATA_READY);
+
+    return OK;
+}
+
+void ProcessingUnit::handleRawReprocessing(CameraBufferPortMap* srcBuffers,
+                                           CameraBufferPortMap* dstBuffers, bool* allBufDone,
+                                           bool* hasRawOutput, bool* hasRawInput) {
+    std::shared_ptr<CameraBuffer> rawOutputBuffer = nullptr;
+    int64_t settingSequence = -1;
+    CameraBufferPortMap videoBuf, stillBuf;
+    uuid rawPort = 0;
+
+    for (const auto& item : *dstBuffers) {
+        if (item.second) {
+            LOG2("%s, usage %d, timestamp %ld, sequence %u", __func__,
+                 item.second->getStreamUsage(), TIMEVAL2USECS(item.second->getTimestamp()),
+                 item.second->getSequence());
+            if (item.second->getStreamUsage() == CAMERA_STREAM_OPAQUE_RAW) {
+                rawOutputBuffer = item.second;
+                rawPort = item.first;
+            } else if (item.second->getStreamUsage() == CAMERA_STREAM_STILL_CAPTURE) {
+                stillBuf[item.first] = item.second;
+            } else {
+                videoBuf[item.first] = item.second;
+            }
+            if (item.second->getSettingSequence() >= 0) {
+                settingSequence = item.second->getSettingSequence();
+            }
+        }
+    }
+
+    uuid defaultPort = srcBuffers->begin()->first;
+    shared_ptr<CameraBuffer> mainBuf = (*srcBuffers)[defaultPort];
+    int64_t inputSequence = mainBuf->getSequence();
+    uint64_t timestamp = TIMEVAL2NSECS(mainBuf->getTimestamp());
+
+    if (rawOutputBuffer && TIMEVAL2USECS(rawOutputBuffer->getTimestamp()) > 0) {
+        timestamp = 0;
+
+        // handle Shutter first if has raw input
+        sendPsysRequestEvent(dstBuffers, settingSequence, timestamp, EVENT_PSYS_REQUEST_BUF_READY);
+        {
+            AutoMutex lock(mBufferMapLock);
+            // Find Raw buffer in mRawBufferMap
+            if (mRawBufferMap.find(settingSequence) != mRawBufferMap.end()) {
+                CameraBufferPortMap& mapBuf = mRawBufferMap[settingSequence];
+                // Update source buffers
+                for (const auto& bufPortMap : mapBuf) {
+                    (*srcBuffers)[bufPortMap.first] = bufPortMap.second;
+                }
+                *hasRawInput = true;
+            }
+        }
+
+        // Return opaque RAW buffer
+        for (auto& it : mBufferConsumerList) {
+            it->onFrameAvailable(rawPort, rawOutputBuffer);
+        }
+
+        // Remove input stream from dstBuffers map
+        dstBuffers->erase(rawPort);
+    } else if (rawOutputBuffer) {
+        if (!needExecutePipe(settingSequence, inputSequence)) {
+            LOG2("%s, inputSequence %ld is smaller than settingSequence %ld, skip sensor frame.",
+                 __func__, inputSequence, settingSequence);
+            return;
+        }
+
+        rawOutputBuffer->updateV4l2Buffer(*mainBuf->getV4L2Buffer().Get());
+
+        LOG2("%s, timestamp %ld, inputSequence %ld, dstBufferSize %d, addr %p", __func__, timestamp,
+             inputSequence, rawOutputBuffer->getBufferSize(), rawOutputBuffer->getBufferAddr());
+
+        // handle Shutter first if has raw output
+        sendPsysRequestEvent(dstBuffers, settingSequence, timestamp, EVENT_PSYS_REQUEST_BUF_READY);
+
+        // Return opaque RAW buffer
+        for (auto& it : mBufferConsumerList) {
+            it->onFrameAvailable(rawPort, rawOutputBuffer);
+        }
+        *hasRawOutput = true;
+
+        if (stillBuf.empty() && videoBuf.empty()) {
+            *allBufDone = true;
+        } else {
+            // Remove raw stream from dstBuffers map
+            dstBuffers->erase(rawPort);
+        }
+    }
+
+    // handle Metadata ready event if all buffer done here(psys doesn't run)
+    if (*allBufDone) {
+        sendPsysRequestEvent(dstBuffers, settingSequence, timestamp, EVENT_REQUEST_METADATA_READY);
+    }
+
+    LOG2("%s, RAW input %d, RAW output %d, allBufDone %d, settingSequence %ld, inputSequence %ld",
+         __func__, *hasRawInput, *hasRawOutput, *allBufDone, settingSequence, inputSequence);
+}
+
+bool ProcessingUnit::isBufferHoldForRawReprocess(int64_t sequence) {
+    AutoMutex lock(mBufferMapLock);
+    if (mRawBufferMap.find(sequence) == mRawBufferMap.end()) return false;
+
+    return true;
+}
+
+void ProcessingUnit::saveRawBuffer(CameraBufferPortMap* srcBuffers) {
+    // Save buffer into mRawBufferMap
+    CameraBufferPortMap mapBuf;
+    for (const auto& src : *srcBuffers) {
+        mapBuf[src.first] = src.second;
+    }
+
+    uuid defaultPort = srcBuffers->begin()->first;
+    shared_ptr<CameraBuffer> mainBuf = (*srcBuffers)[defaultPort];
+    int64_t inputSequence = mainBuf->getSequence();
+
+    LOG2("<id%d:seq%ld>@%s", mCameraId, inputSequence, __func__);
+    {
+        AutoMutex lock(mBufferMapLock);
+        mRawBufferMap[inputSequence] = mapBuf;
+    }
+
+    returnRawBuffer();
+}
+
+void ProcessingUnit::returnRawBuffer() {
+    AutoMutex lock(mBufferMapLock);
+    // If too many buffers are holden in mRawQueue, return back to producer
+    if (mRawBufferMap.size() > (PlatformData::getMaxRawDataNum(mCameraId) -
+                                PlatformData::getMaxRequestsInflight(mCameraId))) {
+        auto it = mRawBufferMap.cbegin();
+        {
+            AutoMutex l(mBufferQueueLock);
+            if (mSequencesInflight.find(it->first) != mSequencesInflight.end()) {
+                // Raw buffer is in used and return it later
+                return;
+            }
+        }
+
+        const CameraBufferPortMap& bufferPortMap = it->second;
+        for (auto& item : bufferPortMap) {
+            mBufferProducer->qbuf(item.first, item.second);
+        }
+        LOG2("@%s, returned sequence %ld", __func__, it->first);
+        mRawBufferMap.erase(it);
+    }
+}
+
+status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
+                                     CameraBufferPortMap* dstBuffers) {
+    CheckAndLogError(srcBuffers->empty() || dstBuffers->empty(), UNKNOWN_ERROR,
+                     "%s, the input or output buffer is empty", __func__);
+
+    bool allBufDone = false;
+    bool hasRawOutput = false;
+    bool hasRawInput = false;
+    if (!mOpaqueRawPorts.empty()) {
+        handleRawReprocessing(srcBuffers, dstBuffers, &allBufDone, &hasRawOutput, &hasRawInput);
+        saveRawBuffer(srcBuffers);
+
+        if (allBufDone) {
+            sendPsysFrameDoneEvent(dstBuffers);
+            // If all buffers are handled
+            AutoMutex l(mBufferQueueLock);
+            if (hasRawOutput) {
+                for (auto& input : mInputQueue) {
+                    input.second.pop();
+                }
+            }
+            for (auto& output : mOutputQueue) {
+                output.second.pop();
+            }
+            return OK;
+        }
+    } else if (!mYuvInputInfo.empty()) {
+        auto iter = dstBuffers->find(YUV_REPROCESSING_INPUT_PORT_ID);
+        if (iter != dstBuffers->end() && iter->second.get() != nullptr)
+            return handleYuvReprocessing(dstBuffers);
+    }
+
+    uuid defaultPort = srcBuffers->begin()->first;
+    shared_ptr<CameraBuffer> mainBuf = (*srcBuffers)[defaultPort];
+    int64_t inputSequence = mainBuf->getSequence();
+    TRACE_LOG_POINT("ProcessingUnit", "input output buffer ready", MAKE_COLOR(inputSequence),
+                    inputSequence);
+    uint64_t timestamp = TIMEVAL2NSECS(mainBuf->getTimestamp());
+    LOG2("%s: input buffer sequence %ld timestamp %ld", __func__, inputSequence, timestamp);
+
+    // Output raw image
+    if (mRawPort != INVALID_PORT) {
+        shared_ptr<CameraBuffer> dstBuf = nullptr;
+
+        // Get output buffer and remove it from dstBuffers
+        for (auto& buffer : *dstBuffers) {
+            if (buffer.first == mRawPort) {
+                dstBuf = buffer.second;
+                CheckAndLogError(!dstBuf, UNKNOWN_ERROR, "%s, dstBuf for output raw is null",
+                                 __func__);
+                dstBuf->updateV4l2Buffer(*mainBuf->getV4L2Buffer().Get());
+                dstBuffers->erase(mRawPort);
+                break;
+            }
+        }
+        outputRawImage(mainBuf, dstBuf);
+    }
+
+    int64_t settingSequence = getSettingSequence(*dstBuffers);
+    bool needRunPipe = needExecutePipe(settingSequence, inputSequence);
+    bool holdOnInput = needHoldOnInputFrame(settingSequence, inputSequence);
+    LOG2("%s: dst sequence = %ld, src sequence = %ld, needRunPipe = %d, needReuseInput = %d",
+         __func__, settingSequence, inputSequence, needRunPipe, holdOnInput);
+
+    {
+        AutoMutex l(mBufferQueueLock);
+        if (needRunPipe && !needSkipOutputFrame(inputSequence)) {
+            for (auto& output : mOutputQueue) {
+                output.second.pop();
+            }
+        }
+
+        // If input buffer will be used later, don't pop it from the queue.
+        if (!holdOnInput && !hasRawInput) {
+            for (auto& input : mInputQueue) {
+                input.second.pop();
+            }
+        }
+    }
+
+    if (needRunPipe) {
+        // Raw output already has been returned back, and don't need to handle again.
+        if (!hasRawOutput) {
+            // handle buffer done for normal YUV output
+            sendPsysRequestEvent(dstBuffers, settingSequence, timestamp,
+                                 EVENT_PSYS_REQUEST_BUF_READY);
+        }
+
+        auto cameraContext = CameraContext::getInstance(mCameraId);
+        auto dataContext = cameraContext->getDataContextBySeq(inputSequence);
+
+        bool callbackRgbs = false;
+        AiqResultStorage* resultStorage = cameraContext->getAiqResultStorage();
+        AiqResult* aiqResult = const_cast<AiqResult*>(resultStorage->getAiqResult(inputSequence));
+        if (aiqResult && dataContext->mAiqParams.callbackRgbs) {
+            callbackRgbs = true;
+        }
+
+        dispatchTask(*srcBuffers, *dstBuffers, false, callbackRgbs);
+
+        if (!callbackRgbs) {
+            // handle metadata event after running pal(update metadata from pal result)
+            sendPsysRequestEvent(dstBuffers, settingSequence, timestamp,
+                                 EVENT_REQUEST_METADATA_READY);
+        }
+    } else if (!holdOnInput && !isBufferHoldForRawReprocess(inputSequence)) {
+        for (const auto& src : *srcBuffers) {
+            mBufferProducer->qbuf(src.first, src.second);
+        }
+    }
+
+    return OK;
+}
+
+void ProcessingUnit::dispatchTask(CameraBufferPortMap& inBuf, CameraBufferPortMap& outBuf,
+                                 bool fakeTask, bool callbackRgbs) {
+    int64_t currentSequence = inBuf.begin()->second->getSequence();
+    TRACE_LOG_POINT("ProcessingUnit", "start run PSYS", MAKE_COLOR(currentSequence),
+                    currentSequence);
+    PERF_CAMERA_ATRACE_PARAM1("Task Sequence", currentSequence);
+    {
+        ConditionLock lock(mBufferQueueLock);
+        mSequencesInflight.insert(currentSequence);
+    }  // End of lock mBufferQueueLock
+    LOG2("<id%d:seq:%ld>@%s, fake task %d, pending task: %zu", mCameraId, currentSequence, __func__,
+         fakeTask, mSequencesInflight.size());
+
+    // Prepare the task input paramerters including input and output buffers, settings etc.
+    PipeTaskData taskParam;
+    taskParam.mTuningMode = mTuningMode;
+    taskParam.mInputBuffers = inBuf;
+    taskParam.mOutputBuffers = outBuf;
+    taskParam.mFakeTask = fakeTask;
+    taskParam.mCallbackRgbs = callbackRgbs;
+
+    int64_t settingSequence = getSettingSequence(outBuf);
+    // Handle per-frame settings if output buffer requires
+    if (settingSequence > -1) {
+        auto cameraContext = CameraContext::getInstance(mCameraId);
+        auto dataContext = cameraContext->getDataContextBySeq(currentSequence);
+
+        setParameters(dataContext);
+
+        // Dump raw image if makernote mode is MAKERNOTE_MODE_JPEG or fake task for IQ tune
+        if (((dataContext->mAiqParams.makernoteMode == MAKERNOTE_MODE_JPEG)
+             || fakeTask) &&
+            CameraDump::isDumpTypeEnable(DUMP_JPEG_BUFFER)) {
+            CameraDump::dumpImage(mCameraId, inBuf.begin()->second, M_PSYS, inBuf.begin()->first);
+        }
+    }
+    {
+        AutoRMutex rl(mIspSettingsLock);
+        mIspSettings.palOverride = nullptr;
+        taskParam.mIspSettings = mIspSettings;
+    }
+
+    if (!mThreadRunning) return;
+
+    mPipeManager->addTask(taskParam);
+}
+
+void ProcessingUnit::onBufferDone(int64_t sequence, uuid port,
+                                 const std::shared_ptr<CameraBuffer>& camBuffer) {
+    LOG2("<id%d:seq%ld>@%s, port %d", mCameraId, sequence, __func__, port);
+
+    if (CameraDump::isDumpTypeEnable(DUMP_PIPELINE_OUTPUT)) {
+        CameraDump::dumpImage(mCameraId, camBuffer, M_PIPELINE, port);
+    }
+
+    if (!needSkipOutputFrame(sequence)) {
+        for (auto& it : mBufferConsumerList) {
+            it->onFrameAvailable(port, camBuffer);
+        }
+    }
+}
+
+void ProcessingUnit::onStatsReady(EventData& eventData) {
+    if ((eventData.type == EVENT_PSYS_STATS_BUF_READY) ||
+        (eventData.type == EVENT_PSYS_STATS_SIS_BUF_READY)) {
+        notifyListeners(eventData);
+    }
+}
+
+void ProcessingUnit::sendPsysFrameDoneEvent(const CameraBufferPortMap* dstBuffers) {
+    for (auto& dst : *dstBuffers) {
+        shared_ptr<CameraBuffer> outBuf = dst.second;
+        if (!outBuf || outBuf->getSequence() < 0) {
+            continue;
+        }
+
+        EventData frameData;
+        frameData.type = EVENT_PSYS_FRAME;
+        frameData.buffer = nullptr;
+        frameData.data.frame.sequence = outBuf->getSequence();
+        frameData.data.frame.timestamp.tv_sec = outBuf->getTimestamp().tv_sec;
+        frameData.data.frame.timestamp.tv_usec = outBuf->getTimestamp().tv_usec;
+        notifyListeners(frameData);
+
+        LOG2("%s, frame done for sequence: %ld", __func__, frameData.data.frame.sequence);
+        break;
+    }
+}
+
+void ProcessingUnit::sendPsysRequestEvent(const CameraBufferPortMap* dstBuffers, int64_t sequence,
+                                         uint64_t timestamp, EventType eventType) {
+    for (const auto& output : *dstBuffers) {
+        if (output.second && !output.second->isInternalBuffer()) {
+            EventData event;
+            event.type = eventType;
+            event.buffer = nullptr;
+            event.data.requestReady.timestamp =
+                timestamp > 0 ? timestamp : output.second->getUserBuffer()->timestamp;
+            event.data.requestReady.sequence = sequence;
+            event.data.requestReady.frameNumber = output.second->getUserBuffer()->frameNumber;
+
+            notifyListeners(event);
+            break;
+        }
+    }
+}
+
+void ProcessingUnit::onTaskDone(const PipeTaskData& result) {
+    int64_t sequence = result.mInputBuffers.begin()->second->getSequence();
+    LOG2("<id%d:seq%ld>@%s", mCameraId, sequence, __func__);
+    TRACE_LOG_POINT("ProcessingUnit", __func__, MAKE_COLOR(sequence), sequence);
+    PERF_CAMERA_ATRACE_PARAM1("Task Done Sequence", sequence);
+
+    // If it is YUV reprocessing, its request doesn't have extra processing
+    if (result.mYuvTask) {
+        auto iter = result.mInputBuffers.find(YUV_REPROCESSING_INPUT_PORT_ID);
+        if (iter == result.mInputBuffers.end()) {
+            LOGW("<id%d:seq%ld>@%s can't find YUV reprocesing input buffer",
+                 mCameraId, sequence, __func__);
+            return;
+        }
+        // Return YUV reprocessing input buffer
+        for (auto& it : mBufferConsumerList) {
+            it->onFrameAvailable(YUV_REPROCESSING_INPUT_PORT_ID, iter->second);
+        }
+        return;
+    }
+
+    if (!result.mFakeTask) {
+        if (!needSkipOutputFrame(sequence)) {
+            sendPsysFrameDoneEvent(&result.mOutputBuffers);
+        }
+
+        int64_t settingSequence = getSettingSequence(result.mOutputBuffers);
+        bool holdOnInput = needHoldOnInputFrame(settingSequence, sequence);
+        bool hasRawOutput = isBufferHoldForRawReprocess(sequence);
+
+        LOG2("%s, dst sequence: %ld, src sequence: %ld, hasRawOutput: %d, holdOnInput: %d",
+             __func__, settingSequence, sequence, hasRawOutput, holdOnInput);
+        // Return buffer only if the buffer is not used in the future.
+        if (!holdOnInput && mBufferProducer && !hasRawOutput) {
+            for (const auto& src : result.mInputBuffers) {
+                if (src.second->getStreamUsage() != CAMERA_STREAM_OPAQUE_RAW &&
+                    src.second->getStreamType() == CAMERA_STREAM_INPUT) {
+                    for (auto& it : mBufferConsumerList) {
+                        it->onFrameAvailable(src.first, src.second);
+                    }
+                } else {
+                    mBufferProducer->qbuf(src.first, src.second);
+                }
+            }
+        }
+    }
+
+    {
+        AutoMutex l(mBufferQueueLock);
+        std::multiset<int64_t>::iterator it = mSequencesInflight.find(sequence);
+        if (it != mSequencesInflight.end()) {
+            mSequencesInflight.erase(it);
+        }
+    }
+
+    returnRawBuffer();
+}
+
+void ProcessingUnit::onMetadataReady(int64_t sequence, const CameraBufferPortMap& outBuf) {
+    LOG2("<seq%ld> %s", sequence, __func__);
+
+    // handle metadata event after decoding stats
+    sendPsysRequestEvent(&outBuf, sequence, 0, EVENT_REQUEST_METADATA_READY);
+}
+
+void ProcessingUnit::outputRawImage(shared_ptr<CameraBuffer>& srcBuf,
+                                   shared_ptr<CameraBuffer>& dstBuf) {
+    if ((srcBuf == nullptr) || (dstBuf == nullptr)) {
+        return;
+    }
+
+    // Copy from source buffer
+    int srcBufferSize = srcBuf->getBufferSize();
+    int srcMemoryType = srcBuf->getMemory();
+    void* pSrcBuf = (srcMemoryType == V4L2_MEMORY_DMABUF)
+                        ? CameraBuffer::mapDmaBufferAddr(srcBuf->getFd(), srcBufferSize)
+                        : srcBuf->getBufferAddr();
+
+    int dstBufferSize = dstBuf->getBufferSize();
+    int dstMemoryType = dstBuf->getMemory();
+    void* pDstBuf = (dstMemoryType == V4L2_MEMORY_DMABUF)
+                        ? CameraBuffer::mapDmaBufferAddr(dstBuf->getFd(), dstBufferSize)
+                        : dstBuf->getBufferAddr();
+
+    MEMCPY_S(pDstBuf, dstBufferSize, pSrcBuf, srcBufferSize);
+
+    if (srcMemoryType == V4L2_MEMORY_DMABUF) {
+        CameraBuffer::unmapDmaBufferAddr(pSrcBuf, srcBufferSize);
+    }
+    if (dstMemoryType == V4L2_MEMORY_DMABUF) {
+        CameraBuffer::unmapDmaBufferAddr(pDstBuf, dstBufferSize);
+    }
+
+    // Send output buffer to its consumer
+    for (auto& it : mBufferConsumerList) {
+        it->onFrameAvailable(mRawPort, dstBuf);
+    }
+}
+
+}  // namespace icamera

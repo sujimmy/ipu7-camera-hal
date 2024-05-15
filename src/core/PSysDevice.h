@@ -1,0 +1,179 @@
+/*
+ * Copyright (C) 2022-2024 Intel Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
+
+#include <map>
+#include <list>
+#include <mutex>
+#include <unordered_map>
+
+#include "modules/ipu_desc/ipu-psys.h"
+#include "iutils/Thread.h"
+
+// MOCK_PSYS_S
+#include <unistd.h>
+#include "Errors.h"
+// MOCK_PSYS_E
+
+namespace icamera {
+
+class IPSysDeviceCallback {
+ public:
+    virtual int bufferDone(int64_t sequence) = 0;
+};
+
+static const uint8_t INVALID_TERMINAL_ID = 0xFF;
+static const uint8_t MAX_NODE_NUM = 5;
+static const uint8_t MAX_LINK_NUM = 10;
+static const uint8_t MAX_TASK_NUM = 8;
+static const uint8_t MAX_TERMINAL_NUM = 26;
+
+struct TerminalConfig {
+    uint32_t payloadSize = 0;  // buffer needed for terminal
+};
+
+struct PSysBitmapGroup {
+    uint32_t teb[2] = {0};
+    uint32_t deb[4] = {0};
+    uint32_t rbm[4] = {0};
+    uint32_t reb[4] = {0};
+};
+
+struct PSysNode {
+    uint8_t nodeCtxId = 0;
+    uint8_t nodeRsrcId = 0;
+    PSysBitmapGroup bitmaps;
+    // first: terminal id, second: TerminalConfig
+    std::unordered_map<uint8_t, TerminalConfig> terminalConfig;
+};
+
+struct PSysLink {
+    uint8_t srcNodeCtxId = 0;
+    uint8_t srcTermId = 0;
+    uint8_t dstNodeCtxId = 0;
+    uint8_t dstTermId = 0;
+
+    uint8_t streamingMode = 0;
+    uint8_t delayedLink = 0;
+};
+
+struct PSysGraph {
+    std::list<PSysNode> nodes;
+    std::list<PSysLink> links;
+};
+
+struct TerminalBuffer {
+    void* userPtr;
+    uint64_t handle;
+    uint32_t size;
+    uint32_t flags;
+    struct ipu_psys_buffer psysBuf;
+};
+
+struct PSysTask {
+    uint8_t nodeCtxId = 0;
+    int64_t sequence = 0;
+    // first: terminal id, second: TerminalBuffer
+    std::unordered_map<uint8_t, TerminalBuffer> terminalBuffers;
+};
+
+/**
+ * PSysDevice abstracts the PSYS function
+ */
+class PSysDevice {
+ public:
+    explicit PSysDevice(int cameraId);
+    virtual ~PSysDevice();
+
+    virtual int init();
+    virtual void registerPSysDeviceCallback(uint8_t contextId, IPSysDeviceCallback* callback);
+
+    virtual int addGraph(const PSysGraph& graph);
+    virtual int closeGraph();
+    virtual int addTask(const PSysTask& task);
+    virtual int wait(ipu_psys_event& event);
+    virtual int poll(short events, int timeout);
+
+    virtual int registerBuffer(TerminalBuffer* buf);
+    virtual int unregisterBuffer(TerminalBuffer* buf);
+
+ private:
+    void handleEvent(const ipu_psys_event& event);
+    void updatePsysBufMap(TerminalBuffer* buf);
+    bool getPsysBufMap(TerminalBuffer* buf);
+
+ private:
+    class PollThread : public Thread {
+        PSysDevice* mPSysDevice;
+        static const int kEventTimeout = 800;
+
+     public:
+        PollThread(PSysDevice* psysDevice);
+
+        virtual bool threadLoop();
+    };
+    friend class PollThread;
+    PollThread* mPollThread;
+    std::unordered_map<uint8_t, IPSysDeviceCallback*> mPSysDeviceCallbackMap;
+
+    static const uint8_t INVALID_GRAPH_ID = 255;
+    static const uint8_t MAX_DRV_FRAME_ID = 255;
+
+    int mCameraId;
+    int32_t mFd;
+    int mGraphId;
+
+    uint8_t mFrameId[MAX_NODE_NUM];
+    std::mutex mDataLock;
+    static const uint8_t MAX_FRAME_NUM = 10;
+    std::map<uint8_t, int64_t> mFrameIdToSeqMap[MAX_NODE_NUM];
+
+    struct graph_node *mGraphNode;
+    struct ipu_psys_term_buffers *mTaskBuffers[MAX_GRAPH_NODES];
+
+    std::unordered_map<int, TerminalBuffer> mFdToTermBufMap;
+    std::unordered_map<void*, TerminalBuffer> mPtrToTermBufMap;
+};  /* PSysDevice */
+
+// MOCK_PSYS_S
+/********************only for debug***********************/
+
+/**
+ * PSYS uAPI Mock
+ */
+class MockPSysDevice : public PSysDevice {
+ public:
+    explicit MockPSysDevice(int cameraId) : PSysDevice(cameraId) {}
+    ~MockPSysDevice() {}
+
+    int init() { return OK; }
+    void registerPSysDeviceCallback(uint8_t contextId, IPSysDeviceCallback* callback) {}
+
+    int addGraph(const PSysGraph& graph) { return OK; }
+    int closeGraph() { return OK; }
+    int addTask(const PSysTask& task) { return OK; }
+    int wait(ipu_psys_event& event) { usleep(10000); return OK; }
+    int poll(short events, int timeout) { return OK; }
+
+    int registerBuffer(TerminalBuffer* buf) { buf->psysBuf.base.fd = ++mFd; return OK; }
+    int unregisterBuffer(TerminalBuffer* buf) { return OK; }
+ private:
+    int mFd = 0;
+};  /* MockPSysDevice */
+// MOCK_PSYS_E
+
+} /* namespace icamera */

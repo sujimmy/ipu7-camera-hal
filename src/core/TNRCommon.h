@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) 2020-2021 Intel Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
+
+#include "ia_pal_types_isp_parameters_autogen.h"
+#include "tnr7us_parameters_definition.h"
+
+namespace icamera {
+
+typedef struct Tnr7Param {
+    tnr_scale_1_0_t scale;
+    tnr7_ims_1_0_t ims;
+    tnr7_bc_1_0_t bc;
+    tnr7_blend_1_0_t blend;
+} Tnr7Param;
+
+typedef struct TnrInitInfo {
+    int width;
+    int height;
+    int cameraId;
+} TnrInitInfo;
+
+typedef struct TnrRequestInfo {
+    int width;
+    int height;
+    int32_t inHandle;
+    int32_t outHandle;
+    int32_t paramHandle;
+    int cameraId;
+    int gain;
+    int outBufFd;
+} TnrRequestInfo;
+}  // namespace icamera
