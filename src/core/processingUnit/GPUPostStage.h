@@ -38,6 +38,9 @@ class GPUPostStage : public IPipeStage {
     virtual int start();
     virtual int stop() { return OK; }
 
+    // IPipeStage
+    virtual void setControl(int64_t sequence, const StageControl& control) {}
+
     // ISchedulerNode
     virtual bool process(int64_t triggerId);
 

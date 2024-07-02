@@ -80,6 +80,8 @@ class PipeLine {
     int start();
     int stop();
 
+    void setControl(int64_t sequence, const StageControl& control);
+
     IPipeStage* getInput();
     std::vector<IPipeStage*> getOutput();
     std::vector<IGraphType::PipelineConnection>& getEdgeConnections() { return mEdgeConnections; }

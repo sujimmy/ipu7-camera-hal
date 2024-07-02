@@ -30,4 +30,6 @@ cmake -DCMAKE_BUILD_TYPE=Release \
 -DCMAKE_INSTALL_LIBDIR=lib \
 ..
 make && sudo make install
+# need to fix pkgconfig file manually...
+sudo sed -i 's|includedir=/|includedir=/usr|g' /usr/lib/pkgconfig/libcamhal.pc
 ```

@@ -17,11 +17,7 @@
 
 #include "GraphConfig.h"
 #include "StageDescriptor.h"
-#ifdef PAC_ENABLE
 #include "ia_aic_types.h"
-#else
-#include "ia_isp_bxt_types.h"
-#endif
 
 namespace icamera {
 namespace GraphUtils {

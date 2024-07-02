@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 #pragma once
 
+#include "CameraTypes.h"
 #include "ParamDataType.h"
-#include "PlatformData.h"
 #include "IntelCCATypes.h"
 
 namespace icamera {
@@ -53,8 +53,6 @@ static const int AWB_GAIN_RANGE_NORMALIZED = AWB_GAIN_NORMALIZED_END - AWB_GAIN_
 static const float AWB_GAIN_MIN = 0;
 static const float AWB_GAIN_MAX = 255;
 static const float AWB_GAIN_RANGE_USER = AWB_GAIN_MAX - AWB_GAIN_MIN;
-
-static const int MAX_CUSTOM_CONTROLS_PARAM_SIZE = 1024;
 
 namespace AiqUtils {
 void dumpAeResults(const cca::cca_ae_results& aeResult);
@@ -118,7 +116,6 @@ template <typename T> int resize2dArray(
     const unsigned int FRAC_BITS_CURR_LOC = 8;
     const unsigned int FRAC_BASE = (1 << FRAC_BITS_CURR_LOC);
 
-    nsecs_t startTime = CameraUtils::systemTime();
     step_size_w = ((a_src_w - 1) << FRAC_BITS_CURR_LOC) / (a_dst_w - 1);
     step_size_h = ((a_src_h - 1) << FRAC_BITS_CURR_LOC) / (a_dst_h - 1);
     rounding_term = (1 << (2 * FRAC_BITS_CURR_LOC - 1));
@@ -149,8 +146,6 @@ template <typename T> int resize2dArray(
                 + rounding_term) / (FRAC_BASE * FRAC_BASE);
         }
     }
-    LOG2("resize the 2D array cost %dus",
-         (unsigned)((CameraUtils::systemTime() - startTime) / 1000));
 
     return 0;
 }

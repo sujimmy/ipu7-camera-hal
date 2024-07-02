@@ -89,6 +89,10 @@ bool PnpDebugControl::isBypassISys() {
     return getInstance()->mStaticCfg.isBypassISys;
 }
 
+bool PnpDebugControl::isUsingMockPSys() {
+    return getInstance()->mStaticCfg.useMockPSys;
+}
+
 bool PnpDebugControl::useMockHal() {
     return getInstance()->mStaticCfg.useMockHal;
 }
@@ -130,6 +134,7 @@ bool PnpDebugParser::run(const std::string& filename) {
             ele["disableFaceAe"].asBool();
         if (ele.isMember("bypassFDAlgo")) mStaticCfg->isBypassFDAlgo = ele["bypassFDAlgo"].asBool();
         if (ele.isMember("bypassISys")) mStaticCfg->isBypassISys = ele["bypassISys"].asBool();
+        if (ele.isMember("useMockPSys")) mStaticCfg->useMockPSys = ele["useMockPSys"].asBool();
     }
 
     if (node.isMember("Performance")) {

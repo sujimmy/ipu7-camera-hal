@@ -53,6 +53,7 @@ class CameraHal {
     virtual int deviceOpen(int cameraId, int vcNum = 0);
     virtual void deviceClose(int cameraId);
 
+    virtual void deviceCallbackRegister(int cameraId, const camera_callback_ops_t* callback);
     virtual int deviceConfigInput(int cameraId, const stream_t* inputConfig);
     virtual int deviceConfigStreams(int cameraId, stream_config_t* streamList);
     virtual int deviceStart(int cameraId);

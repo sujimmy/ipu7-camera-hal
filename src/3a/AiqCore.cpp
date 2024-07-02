@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,6 @@ AiqCore::AiqCore(int cameraId)
           mLscGridRGGBLen(0),
           mLastEvShift(0.0f),
           mAeAndAwbConverged(false),
-          mRgbStatsBypassed(false),
           mAeBypassed(false),
           mAfBypassed(false),
           mAwbBypassed(false),
@@ -255,11 +254,6 @@ int AiqCore::updateParameter(const aiq_parameter_t& param) {
     mAwbBypassed = bypassAwb(param);
     LOG2("Ae Bypass: %d, Af Bypass: %d, Awb Bypass: %d", mAeBypassed, mAfBypassed, mAwbBypassed);
 
-    mRgbStatsBypassed = false;
-    if (param.powerMode == CAMERA_LOW_POWER && mAeBypassed && mAwbBypassed && mAfBypassed) {
-        mRgbStatsBypassed = true;
-    }
-
     return OK;
 }
 
@@ -271,33 +265,6 @@ int AiqCore::setStatsParams(const cca::cca_stats_params& statsParams, AiqStatist
     IntelCca* intelCca = getIntelCca(mTuningMode);
     CheckAndLogError(!intelCca, UNKNOWN_ERROR, "%s, intelCca is nullptr, mode:%d", __func__,
                      mTuningMode);
-
-    if (aiqStats && aiqStats->mPendingDecode) {
-        uint32_t bitmap = 0;
-        if (!mRgbStatsBypassed) bitmap |= cca::CCA_STATS_RGBS | cca::CCA_STATS_HIST;
-        if (!mAfBypassed) {
-            bitmap |= cca::CCA_STATS_AF;
-
-            if (PlatformData::isPdafEnabled(mCameraId)) bitmap |= cca::CCA_STATS_PDAF;
-        }
-        LOG3("<seq%ld> bypass bitmap %x", aiqStats->mSequence, bitmap);
-
-        if (!mRgbStatsBypassed && !mAfBypassed) {
-            aiqStats->mPendingDecode = false;
-        }
-        unsigned int byteUsed = 0;
-        void* pStatsData = intelCca->fetchHwStatsData(aiqStats->mSequence, &byteUsed);
-        CheckAndLogError(!pStatsData, UNKNOWN_ERROR, "%s, pStatsData is nullptr", __func__);
-#ifndef PAC_ENABLE
-        ia_isp_bxt_statistics_query_results_t queryResults = {};
-        ia_err iaErr = intelCca->decodeStats(reinterpret_cast<uint64_t>(pStatsData), byteUsed,
-                                             bitmap, &queryResults);
-        CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR, "%s, Faield convert statistics",
-                         __func__);
-        LOG2("%s, query results: rgbs_grid(%d), af_grid(%d), dvs_stats(%d)", __func__,
-             queryResults.rgbs_grid, queryResults.af_grid, queryResults.dvs_stats);
-#endif
-    }
 
     {
         PERF_CAMERA_ATRACE_PARAM1_IMAGING("intelCca->setStatsParams", 1);
@@ -353,8 +320,7 @@ int AiqCore::runAiq(int64_t ccaId, AiqResult* aiqResult) {
 
     if (aaaRunType & IMAGING_ALGO_GBCE) {
         // run gbce with bypass level if AE lock
-        if (mAeForceLock || mIntel3AParameter->mTestPatternMode != TEST_PATTERN_OFF ||
-            mRgbStatsBypassed) {
+        if (mAeForceLock || mIntel3AParameter->mTestPatternMode != TEST_PATTERN_OFF) {
             mGbceParams.is_bypass = true;
         } else {
             mGbceParams.is_bypass = false;
@@ -370,14 +336,11 @@ int AiqCore::runAiq(int64_t ccaId, AiqResult* aiqResult) {
     }
 
     if (aaaRunType & IMAGING_ALGO_SA) {
-        if (!mRgbStatsBypassed) {
-            mAiqParams->bitmap |= cca::CCA_MODULE_SA;
-            mSaParams.lsc_on = mLensShadingMapMode == LENS_SHADING_MAP_MODE_ON ? true : false;
-            mAiqParams->sa_input = mSaParams;
-        }
+        mAiqParams->bitmap |= cca::CCA_MODULE_SA;
+        mSaParams.lsc_on = mLensShadingMapMode == LENS_SHADING_MAP_MODE_ON ? true : false;
+        mAiqParams->sa_input = mSaParams;
     }
-    LOG2("bitmap:%d, mAiqRunTime:%lu, mRgbStatsBypassed %d", mAiqParams->bitmap, mAiqRunTime,
-         mRgbStatsBypassed);
+    LOG2("bitmap:%d, mAiqRunTime:%lu", mAiqParams->bitmap, mAiqRunTime);
 
     // runAIQ for awb/af/gbce/pa/sa
     int ret = OK;
@@ -620,6 +583,7 @@ int AiqCore::storeLensShadingMap(const LSCGrid& inputLscGrid, const LSCGrid& res
         // Our lensShadingMapSize is dynamic based on the resolution, so need
         // to do resize for 4 channels separately
 
+        nsecs_t startTime = CameraUtils::systemTime();
         AiqUtils::resize2dArray(inputLscGrid.gridR, width, height, resizeLscGrid.gridR, destWidth,
                                 destHeight);
         AiqUtils::resize2dArray(inputLscGrid.gridGr, width, height, resizeLscGrid.gridGr, destWidth,
@@ -628,6 +592,8 @@ int AiqCore::storeLensShadingMap(const LSCGrid& inputLscGrid, const LSCGrid& res
                                 destHeight);
         AiqUtils::resize2dArray(inputLscGrid.gridB, width, height, resizeLscGrid.gridB, destWidth,
                                 destHeight);
+        LOG2("resize the 2D array cost %dus",
+             (unsigned)((CameraUtils::systemTime() - startTime) / 1000));
 
         LOG2("%s:resize lens shading map from [%d,%d] to [%d,%d]", __func__, width, height,
              destWidth, destHeight);

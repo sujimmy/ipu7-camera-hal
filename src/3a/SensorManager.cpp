@@ -281,14 +281,15 @@ int SensorManager::getSensorInfo(ia_aiq_frame_params &frameParams,
         float freq = res[0].width * res[0].height * fps / 1000000;
         sensorDescriptor = {freq, static_cast<unsigned short>(res[0].width),
                             static_cast<unsigned short>(res[0].height), 24, 0,
-                            static_cast<unsigned short>(res[0].width), 6, 0};
+                            static_cast<unsigned short>(res[0].width), 6, 0,
+                            ia_aiq_sensor_rgb_stream};
         LOG2("freq %f, width %d, height %d", freq, res[0].width, res[0].height);
         return OK;
     }
 
     ret |= getSensorModeData(sensorDescriptor);
 
-    LOG3("ia_aiq_frame_params=[%d, %d, %d, %d, %d, %d, %d, %d]",
+    LOG3("ia_aiq_frame_params=[%u, %u, %u, %u, %u, %u, %u, %u]",
          frameParams.horizontal_crop_offset,
          frameParams.vertical_crop_offset,
          frameParams.cropped_image_height,
@@ -298,7 +299,7 @@ int SensorManager::getSensorInfo(ia_aiq_frame_params &frameParams,
          frameParams.vertical_scaling_numerator,
          frameParams.vertical_scaling_denominator);
 
-    LOG3("ia_aiq_exposure_sensor_descriptor=[%f, %d, %d, %d, %d, %d, %d, %d]",
+    LOG3("ia_aiq_exposure_sensor_descriptor=[%f, %u, %u, %u, %u, %u, %u, %u, %u]",
          sensorDescriptor.pixel_clock_freq_mhz,
          sensorDescriptor.pixel_periods_per_line,
          sensorDescriptor.line_periods_per_field,
@@ -306,7 +307,8 @@ int SensorManager::getSensorInfo(ia_aiq_frame_params &frameParams,
          sensorDescriptor.coarse_integration_time_min,
          sensorDescriptor.coarse_integration_time_max_margin,
          sensorDescriptor.fine_integration_time_min,
-         sensorDescriptor.fine_integration_time_max_margin);
+         sensorDescriptor.fine_integration_time_max_margin,
+         sensorDescriptor.sensor_stream_type);
 
     return ret;
 }

@@ -27,8 +27,12 @@
 #include "IPipeStage.h"
 #include "IpuPacAdaptor.h"
 #include "PSysDevice.h"
-#ifdef USE_STATIC_GRAPH_AUTOGEN
+#if defined(GRC_IPU7X)
 #include "Ipu7xTerminalDescriptorAutogen.h"
+#elif defined(GRC_IPU75XA)
+#include "Ipu75xaTerminalDescriptorAutogen.h"
+#elif defined(GRC_IPU8)
+#include "Ipu8TerminalDescriptorAutogen.h"
 #else
 #include "TerminalDescriptorAutogen.h"
 #endif
@@ -59,6 +63,8 @@ class CBStage : public IPipeStage, public IPSysDeviceCallback {
 
     virtual int start();
     virtual int stop();
+
+    virtual void setControl(int64_t sequence, const StageControl& control) {}
 
     // IPSysDeviceCallback
     virtual int bufferDone(int64_t sequence);

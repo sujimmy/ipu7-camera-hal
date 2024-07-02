@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,12 @@ namespace icamera {
 typedef uint32_t uuid;
 
 #define INVALID_PORT 0
+#define MAX_BUFFER_COUNT (10)
+#define MAX_STREAM_NUMBER 7
+#define MAX_SETTING_COUNT 40
+
+#define DEFAULT_JPEG_QUALITY 95
+#define DEFAULT_THUMBNAIL_QUALITY 0
 
 enum {
     FACING_BACK = 0,

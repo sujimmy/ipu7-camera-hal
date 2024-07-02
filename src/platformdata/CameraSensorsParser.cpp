@@ -18,10 +18,10 @@
 
 #include "CameraSensorsParser.h"
 
+#include <dirent.h>
+
 #include <string>
 #include <vector>
-
-#include <dirent.h>
 
 namespace icamera {
 
@@ -29,11 +29,9 @@ CameraSensorsParser::CameraSensorsParser(MediaControl* mc, PlatformData::StaticC
                                          SensorInfo info)
         : mMediaCtl(mc),
           mStaticCfg(cfg),
-          mSensorInfo(info) {
-}
+          mSensorInfo(info) {}
 
-CameraSensorsParser::~CameraSensorsParser() {
-}
+CameraSensorsParser::~CameraSensorsParser() {}
 
 void CameraSensorsParser::parseMediaCtlConfigSection(const Json::Value& node) {
     for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
@@ -299,10 +297,12 @@ void CameraSensorsParser::parseDVSType(const Json::Value& node) {
 
 void CameraSensorsParser::resolveLensName(const Json::Value& node) {
     std::string vcmName = node.asString();
-    if (mI2CBus.empty()) {
+    if (!mI2CBus.empty()) {
         int i2cBusID = std::atoi(mI2CBus.c_str());
         vcmName.append(" ");
         vcmName.append(std::to_string(i2cBusID));
+    } else {
+        LOGW("%s, i2c bus is unknown", __func__);
     }
 
     if (mMediaCtl) mMediaCtl->getVCMI2CAddr(vcmName.c_str(), &mCurCam->mLensName);
@@ -559,14 +559,21 @@ void CameraSensorsParser::parseSupportedTuningConfig(const Json::Value& node) {
 
 std::string CameraSensorsParser::resolveI2CBusString(const std::string& name) {
     std::string res = name;
-    auto pos = res.find("$I2CBUS");
 
+    auto pos = res.find("$I2CBUS");
     if (pos != std::string::npos) {
         res.replace(pos, sizeof("$I2CBUS"), mI2CBus);
-    } else {
-        pos = res.find("$CSI_PORT");
-        if (pos != std::string::npos) res.replace(pos, sizeof("$CSI_PORT"), mCsiPort);
     }
+    pos = res.find("$CSI_PORT");
+    if (pos != std::string::npos) {
+        res.replace(pos, sizeof("$CSI_PORT"), mCsiPort);
+    }
+    pos = res.find("$CAP_N");
+    if (pos != std::string::npos) {
+        res.replace(pos, sizeof("$CAP_N"),
+                    std::to_string(std::stoi(mCsiPort) * NR_OF_CSI2_SRC_PADS));
+    }
+
     return res;
 }
 
@@ -622,11 +629,10 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
         mCurCam->mTnrExtraFrameNum = node["tnrExtraFrameNum"].asInt();
     if (node.isMember("isPLCEnable")) mCurCam->mPLCEnable = node["isPLCEnable"].asBool();
     if (node.isMember("enableAIQ")) mCurCam->mEnableAIQ = node["enableAIQ"].asBool();
-    // MOCK_PSYS_S
-    if (node.isMember("usingMockPSys")) mCurCam->mUsingMockPSys = node["usingMockPSys"].asBool();
-    // MOCK_PSYS_E
     if (node.isMember("dummyStillSink")) mCurCam->mDummyStillSink = node["dummyStillSink"].asBool();
     if (node.isMember("useGpuTnr")) mCurCam->mGpuTnrEnabled = node["useGpuTnr"].asBool();
+    if (node.isMember("psysAlignWithSystem"))
+        mCurCam->mMsPsysAlignWithSystem = node["psysAlignWithSystem"].asInt();
 
     if (node.isMember("MediaCtlConfig")) parseMediaCtlConfigSection(node["MediaCtlConfig"]);
     if (node.isMember("StaticMetadata")) parseStaticMetaDataSection(node["StaticMetadata"]);
@@ -771,8 +777,8 @@ void CameraSensorsParser::updateNVMDir() {
             LOG2("NVM data is located in %s", nvmPath.c_str());
             mCurCam->mNvmDirectory = nvmPath;
             mCurCam->mMaxNvmDataSize = nvm.dataSize;
-            int ret = getCameraModuleNameFromEEPROM(mCurCam->mNvmDirectory,
-                                                    &mCurCam->mCamModuleName);
+            int ret =
+                getCameraModuleNameFromEEPROM(mCurCam->mNvmDirectory, &mCurCam->mCamModuleName);
             LOG2("NVM dir %s, ret %d", mCurCam->mNvmDirectory.c_str(), ret);
             break;
         } else {
@@ -798,8 +804,8 @@ void CameraSensorsParser::parseGenericStaticMetaData(const Json::Value& node) {
         for (Json::Value::ArrayIndex i = 0; i < itemNode.size(); ++i) {
             switch (tagType) {
                 case TYPE_BYTE:
-                    mCurCam->mStaticMetadata.mByteMetadata[name].push_back(static_cast<uint8_t>(
-                                                                           itemNode[i].asInt()));
+                    mCurCam->mStaticMetadata.mByteMetadata[name].push_back(
+                        static_cast<uint8_t>(itemNode[i].asInt()));
                     break;
                 case TYPE_INT32:
                 case TYPE_RATIONAL:
@@ -812,7 +818,8 @@ void CameraSensorsParser::parseGenericStaticMetaData(const Json::Value& node) {
                     mCurCam->mStaticMetadata.mFloatMetadata[name].push_back(itemNode[i].asFloat());
                     break;
                 case TYPE_DOUBLE:
-                    mCurCam->mStaticMetadata.mDoubleMetadata[name].push_back(itemNode[i].asDouble());
+                    mCurCam->mStaticMetadata.mDoubleMetadata[name].push_back(
+                        itemNode[i].asDouble());
                     break;
             }
         }

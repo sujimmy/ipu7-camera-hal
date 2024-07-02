@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,21 @@
 #include <vector>
 #include <set>
 #include <stdint.h>
+#include <cstddef>
 
 namespace icamera {
 
 /***************Start of Camera Basic Data Structure ****************************/
+
 // VIRTUAL_CHANNEL_S
 /**
  * \struct vc_info_t: Define the virtual channel information for the device
  */
 typedef struct {
-    int total_num; /**< the total camera number of virtual channel. 0: the virtual channel is disabled */
-    int sequence; /**< the current camera's sequence in all the virtual channel cameras */
-    int group; /**< the virtual channel group id */
+    int total_num; /**< the total camera number of virtual channel. 0: the virtual channel is
+                      disabled */
+    int sequence;  /**< the current camera's sequence in all the virtual channel cameras */
+    int group;     /**< the virtual channel group id */
 } vc_info_t;
 // VIRTUAL_CHANNEL_E
 
@@ -700,6 +703,7 @@ typedef enum {
     CAMERA_DEVICE_ERROR,
     CAMERA_IPC_ERROR,
     CAMERA_FRAME_DONE,
+    CAMERA_METADATA_ENTRY,
 } camera_msg_type_t;
 
 /**
@@ -742,6 +746,22 @@ typedef struct {
     int64_t sequence;
 } metadata_ready_t;
 
+/**
+ * \struct metadata_entry_t: Use to set metadata entry.
+ */
+typedef struct {
+    uint32_t tag;
+    uint32_t frameNumber;
+    size_t count;
+    union {
+        const uint8_t* u8;
+        const int32_t* i32;
+        const float* f;
+        const int64_t* i64;
+        const double* d;
+    } data;
+} metadata_entry_t;
+
 typedef struct {
     int32_t streamId;
 } frame_ready_t;
@@ -755,6 +775,7 @@ typedef struct {
         isp_buffer_ready_t buffer_ready;
         metadata_ready_t metadata_ready;
         frame_ready_t frame_ready;
+        metadata_entry_t metadata_entry;
     } data;
 } camera_msg_data_t;
 

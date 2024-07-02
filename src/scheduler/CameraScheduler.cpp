@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation
+ * Copyright (C) 2022-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,15 @@
 
 #include "CameraLog.h"
 #include "Errors.h"
+#include "PlatformData.h"
+#include "iutils/Utils.h"
 
 namespace icamera {
 
-CameraScheduler::CameraScheduler() : mTriggerCount(0) {
+CameraScheduler::CameraScheduler(int cameraId) : mCameraId(cameraId), mTriggerCount(0) {
     mPolicy = CameraSchedulerPolicy::getInstance();
+    mMsAlignWithSystem = PlatformData::getMsOfPsysAlignWithSystem(mCameraId);
+    LOG2("%s: msAlignWithSystem %d", __func__, mMsAlignWithSystem);
 }
 
 CameraScheduler::~CameraScheduler() {
@@ -51,8 +55,13 @@ int32_t CameraScheduler::createExecutors() {
     std::lock_guard<std::mutex> l(mLock);
     for (auto& exe : executors) {
         ExecutorGroup group;
-        group.executor = std::shared_ptr<Executor>(new Executor(exe.first));
-        group.triggerSource = exe.second;
+        if (mMsAlignWithSystem) {
+            group.executor =
+                std::shared_ptr<Executor>(new SystemTimerExecutor(exe.first, mMsAlignWithSystem));
+        } else {
+            group.executor = std::shared_ptr<Executor>(new Executor(exe.first));
+            group.triggerSource = exe.second;
+        }
         if (!group.triggerSource.empty()) {
             // Check if trigger source is one executor
             std::shared_ptr<Executor> source = findExecutor(group.triggerSource.c_str());
@@ -61,7 +70,6 @@ int32_t CameraScheduler::createExecutors() {
         mPolicy->getNodeList(exe.first, &group.nodeList);
 
         mExeGroups.push_back(group);
-        group.executor->run(exe.first, PRIORITY_NORMAL);
     }
     return OK;
 }
@@ -99,7 +107,22 @@ void CameraScheduler::unregisterNode(ISchedulerNode* node) {
     }
 }
 
+void CameraScheduler::start() {
+    for (auto& group : mExeGroups) {
+        group.executor->start();
+    }
+}
+
+void CameraScheduler::stop() {
+    for (auto& group : mExeGroups) {
+        group.executor->stop();
+    }
+}
+
 int32_t CameraScheduler::executeNode(std::string triggerSource, int64_t triggerId) {
+    // System timer aligned, ignore external trigger
+    if (mMsAlignWithSystem) return OK;
+
     mTriggerCount++;
     for (auto& group : mExeGroups) {
         if (group.triggerSource == triggerSource)
@@ -120,21 +143,24 @@ std::shared_ptr<CameraScheduler::Executor> CameraScheduler::findExecutor(const c
 
 CameraScheduler::Executor::Executor(const char* name)
         : mName(name ? name : "unknown"),
-          mActive(false) {}
+          mActive(false),
+          mTriggerTick(0) {}
 
 CameraScheduler::Executor::~Executor() {
     LOG1("%s: destory", getName());
-    requestExit();
+    stop();
 }
 
 void CameraScheduler::Executor::addNode(ISchedulerNode* node) {
     std::lock_guard<std::mutex> l(mNodeLock);
+    if (mActive) return;
     mNodes.push_back(node);
     LOG1("%s: %s added to %s, pos %d", __func__, node->getName(), getName(), mNodes.size());
 }
 
 void CameraScheduler::Executor::removeNode(ISchedulerNode* node) {
     std::lock_guard<std::mutex> l(mNodeLock);
+    if (mActive) return;
     for (size_t i = 0; i < mNodes.size(); i++) {
         if (mNodes[i] == node) {
             LOG1("%s: %s moved from %s", __func__, node->getName(), getName());
@@ -144,34 +170,44 @@ void CameraScheduler::Executor::removeNode(ISchedulerNode* node) {
     }
 }
 
+void CameraScheduler::Executor::start() {
+    LOG2("%s: %s", getName(), __func__);
+    {
+        std::lock_guard<std::mutex> l(mNodeLock);
+        mActive = true;
+        mTriggerTick = 0;
+    }
+    icamera::Thread::run(mName, PRIORITY_NORMAL);
+}
+
+void CameraScheduler::Executor::stop() {
+    LOG2("%s: %s", getName(), __func__);
+    icamera::Thread::requestExit();
+    std::lock_guard<std::mutex> l(mNodeLock);
+    mActive = false;
+    mTriggerSignal.signal();
+}
+
 void CameraScheduler::Executor::trigger(int64_t tick) {
     PERF_CAMERA_ATRACE_PARAM1(getName(), tick);
     std::lock_guard<std::mutex> l(mNodeLock);
-    mActive = true;
     mTriggerTick = tick;
     mTriggerSignal.signal();
 }
 
-void CameraScheduler::Executor::requestExit() {
-    LOG2("%s: requestExit", getName());
-    mActive = false;
-    icamera::Thread::requestExit();
-    std::lock_guard<std::mutex> l(mNodeLock);
-    mTriggerSignal.signal();
+int CameraScheduler::Executor::waitTrigger() {
+    ConditionLock lock(mNodeLock);
+    int ret = mTriggerSignal.waitRelative(lock, kWaitDuration * SLOWLY_MULTIPLIER);
+    CheckWarning(ret == TIMED_OUT, true, "%s: wait trigger time out", getName());
+    return mTriggerTick;
 }
 
 bool CameraScheduler::Executor::threadLoop() {
-    int64_t tick = -1;
-    {
-        ConditionLock lock(mNodeLock);
-        int ret = mTriggerSignal.waitRelative(lock, kWaitDuration * SLOWLY_MULTIPLIER);
-        CheckWarning(ret == TIMED_OUT, true, "%s: wait trigger time out", getName());
-        tick = mTriggerTick;
-    }
+    int64_t tick = waitTrigger();
     if (!mActive) return false;
 
+    LOG2("%s process, tick %d", getName(), tick);
     for (auto& node : mNodes) {
-        LOG2("%s process %d", getName(), tick);
         bool ret = node->process(tick);
         CheckAndLogError(!ret, true, "%s: node %s process error", getName(), node->getName());
     }
@@ -181,6 +217,38 @@ bool CameraScheduler::Executor::threadLoop() {
         listener->trigger(tick);
     }
     return true;
+}
+
+void CameraScheduler::SystemTimerExecutor::trigger(int64_t tick) {
+    // Ingore external trigger
+    UNUSED(tick);
+}
+
+int CameraScheduler::SystemTimerExecutor::waitTrigger() {
+// Allow +/- 3ms delay
+// TODO: check and ignore repeating without sleep (if no task to be handled)
+#define SYS_TRIGGER_DELTA    (3)
+
+    if (mMsAlignWithSystem) {
+        timeval curTime;
+        gettimeofday(&curTime, nullptr);
+        int64_t ms = (curTime.tv_usec / 1000) % mMsAlignWithSystem;
+        int64_t waitMs = 0;
+
+        if ((ms <= SYS_TRIGGER_DELTA) || ((mMsAlignWithSystem - ms) <= SYS_TRIGGER_DELTA))
+            waitMs = 0;
+        else
+            waitMs  = mMsAlignWithSystem - ms;
+
+        if (waitMs) {
+            LOG2("%s: need wait %ld to trigger", getName(), waitMs);
+            usleep(waitMs * 1000);
+        }
+    }
+
+    PERF_CAMERA_ATRACE_PARAM1(getName(), mTriggerTick);
+    mTriggerTick++;
+    return mTriggerTick;
 }
 
 }  // namespace icamera

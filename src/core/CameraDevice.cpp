@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ CameraDevice::CameraDevice(int cameraId)
     mRequestThread = new RequestThread(mCameraId, m3AControl);
     mRequestThread->registerListener(EVENT_PROCESS_REQUEST, this);
 
-    mScheduler = std::make_shared<CameraScheduler>();
+    mScheduler = std::make_shared<CameraScheduler>(mCameraId);
 }
 
 CameraDevice::~CameraDevice() {
@@ -747,6 +747,7 @@ int CameraDevice::start() {
     CheckAndLogError(mStreamNum == 0, BAD_VALUE, "@%s: device doesn't add any stream yet.",
                      __func__);
 
+    mScheduler->start();
     int ret = startLocked();
     if (ret != OK) {
         LOGE("Camera device starts failed.");
@@ -769,6 +770,7 @@ int CameraDevice::stop() {
 
     if (mState == DEVICE_START) stopLocked();
 
+    mScheduler->stop();
     mState = DEVICE_STOP;
 
     return OK;

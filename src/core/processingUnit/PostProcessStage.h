@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,9 @@ class PostProcessStage : public IPipeStage {
     // ISchedulerNode
     virtual bool process(int64_t triggerId);
 
+    // IPipeStage
+    virtual void setControl(int64_t sequence, const StageControl& control);
+
     int32_t allocateBuffers();
 
  private:
@@ -62,6 +65,9 @@ class PostProcessStage : public IPipeStage {
 
     // Save internal buffers queued to producers. Protected by mBufferQueueLock
     std::queue<std::shared_ptr<CameraBuffer>> mQueuedInputBuffers;
+
+    // <sequence, control>
+    std::map<int64_t, StageControl> mControls;
 };
 
 }  // namespace icamera

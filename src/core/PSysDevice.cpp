@@ -29,7 +29,7 @@
 
 namespace icamera {
 
-const char* DRIVER_NAME = "/dev/ipu-psys0";
+const char* DRIVER_NAME = "/dev/ipu7-psys0";
 
 PSysDevice::PSysDevice(int cameraId)
         : mPollThread(nullptr),
@@ -39,6 +39,7 @@ PSysDevice::PSysDevice(int cameraId)
     LOG1("<%id> Construct PSysDevice", mCameraId);
 
     CLEAR(mFrameId);
+    memset(&mFrameIdToSeqMap, -1, sizeof(mFrameIdToSeqMap));
     mGraphNode = new graph_node[MAX_GRAPH_NODES];
     for (uint8_t i = 0; i < MAX_GRAPH_NODES; i++) {
         mTaskBuffers[i] = new ipu_psys_term_buffers[MAX_GRAPH_TERMINALS];
@@ -175,18 +176,23 @@ int PSysDevice::addTask(const PSysTask& task) {
         taskData.term_buf_count++;
     }
 
-    int ret = ioctl(mFd, static_cast<int>(IPU_IOC_TASK_REQUEST), &taskData);
-    CheckAndLogError(ret != 0, INVALID_OPERATION, "Failed to add task %s", strerror(errno));
-
     {
         std::lock_guard<std::mutex> l(mDataLock);
-        if (mFrameIdToSeqMap[task.nodeCtxId].size() >= MAX_FRAME_NUM) {
-            mFrameIdToSeqMap[task.nodeCtxId].erase(mFrameIdToSeqMap[task.nodeCtxId].begin());
+        uint8_t idx = taskData.frame_id % MAX_TASK_NUM;
+        CheckWarningNoReturn(mFrameIdToSeqMap[task.nodeCtxId][idx] >= 0,
+                             "context %d sequence %lld not done", task.nodeCtxId,
+                             mFrameIdToSeqMap[task.nodeCtxId][idx]);
+
+        mFrameIdToSeqMap[task.nodeCtxId][idx] = task.sequence;
+        if (mFrameId[task.nodeCtxId] >= MAX_DRV_FRAME_ID) {
+            mFrameId[task.nodeCtxId] = 0;
+        } else {
+            ++mFrameId[task.nodeCtxId];
         }
-        mFrameIdToSeqMap[task.nodeCtxId][mFrameId[task.nodeCtxId]] = task.sequence;
-        mFrameId[task.nodeCtxId]++;
-        mFrameId[task.nodeCtxId] %= MAX_DRV_FRAME_ID;
     }
+
+    int ret = ioctl(mFd, static_cast<int>(IPU_IOC_TASK_REQUEST), &taskData);
+    CheckAndLogError(ret != 0, INVALID_OPERATION, "Failed to add task %s", strerror(errno));
 
     return OK;
 }
@@ -318,14 +324,15 @@ void PSysDevice::handleEvent(const ipu_psys_event& event) {
         return;
     }
 
-    if (mFrameIdToSeqMap[event.node_ctx_id].find(event.frame_id) ==
-        mFrameIdToSeqMap[event.node_ctx_id].end()) {
+    uint8_t idx = event.frame_id % MAX_TASK_NUM;
+    if (mFrameIdToSeqMap[event.node_ctx_id][idx] < 0) {
         LOGW("frame id %u isn't found", event.frame_id);
         return;
     }
 
-    int64_t sequence = mFrameIdToSeqMap[event.node_ctx_id][event.frame_id];
+    int64_t sequence = mFrameIdToSeqMap[event.node_ctx_id][idx];
     mPSysDeviceCallbackMap[event.node_ctx_id]->bufferDone(sequence);
+    mFrameIdToSeqMap[event.node_ctx_id][idx] = -1;
     LOG2("context id %u, frame id %u is done", event.node_ctx_id, event.frame_id);
 }
 

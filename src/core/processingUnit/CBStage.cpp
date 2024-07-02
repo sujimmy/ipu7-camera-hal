@@ -213,20 +213,20 @@ int32_t CBStage::processTask(StageTask* task) {
     ret = addFrameTerminals(&terminalBuffers, task->outBuffers);
     CheckAndLogError(ret != OK, ret, "Failed to add terminals for  task->outBuffers");
 
-    ret = addTask(&terminalBuffers, bufferMap, task->sequence);
-    CheckAndLogError(ret != OK, ret, "Failed to add task ret %d", ret);
-
-    if (mLinkStreamMode == LINK_STREAMING_MODE_BCLM) {
-        std::map<uuid, std::shared_ptr<CameraBuffer> > inBuffers;
-        returnBuffers(inBuffers, task->outBuffers);
-    }
-
     {
         std::lock_guard<std::mutex> l(mDataLock);
         if (mSeqToStageTaskMap.size() >= MAX_FRAME_NUM) {
             mSeqToStageTaskMap.erase(mSeqToStageTaskMap.begin());
         }
         mSeqToStageTaskMap[task->sequence] = *task;
+    }
+
+    ret = addTask(&terminalBuffers, bufferMap, task->sequence);
+    CheckAndLogError(ret != OK, ret, "Failed to add task ret %d", ret);
+
+    if (mLinkStreamMode == LINK_STREAMING_MODE_BCLM) {
+        std::map<uuid, std::shared_ptr<CameraBuffer> > inBuffers;
+        returnBuffers(inBuffers, task->outBuffers);
     }
 
     return ret;

@@ -47,8 +47,11 @@ ProcessingUnit::ProcessingUnit(int cameraId, std::shared_ptr<CameraScheduler> sc
           mTuningMode(TUNING_MODE_MAX),
           mRawPort(INVALID_PORT),
           mStatus(PIPELINE_UNCREATED),
-          mScheduler(scheduler) {
+          mScheduler(scheduler),
+          mLastStillTnrSequence(-1) {
     mProcessThread = new ProcessThread(this);
+
+    CLEAR(mTnrTriggerInfo);
 }
 
 ProcessingUnit::~ProcessingUnit() {
@@ -103,6 +106,8 @@ int ProcessingUnit::configure(const std::map<uuid, stream_t>& inputInfo,
 
     mTuningMode = tuningConfig.tuningMode;
 
+    getTnrTriggerInfo();
+
     if (ret == OK) mStatus = PIPELINE_CREATED;
     return ret;
 }
@@ -122,15 +127,17 @@ int ProcessingUnit::start() {
     needProducerBuffer = needProducerBuffer || PlatformData::isFileSourceEnabled();
     // FILE_SOURCE_E
 
+    int ret = OK;
     if (needProducerBuffer) {
-        int ret = allocProducerBuffers(mCameraId, rawBufferNum);
+        ret = allocProducerBuffers(mCameraId, rawBufferNum);
         CheckAndLogError(ret != OK, NO_MEMORY, "Allocating producer buffer failed:%d", ret);
     }
 
     mThreadRunning = true;
     mProcessThread->run("ProcessingUnit", PRIORITY_NORMAL);
 
-    mPipeManager->start();
+    ret = mPipeManager->start();
+    CheckAndLogError(ret != OK, ret, "Failed to start pipemanager");
 
     auto cameraContext = CameraContext::getInstance(mCameraId);
     auto dataContext = cameraContext->getDataContextBySeq(0);
@@ -157,6 +164,22 @@ void ProcessingUnit::stop() {
 
     // Thread is not running. It is safe to clear the Queue
     clearBufferQueues();
+}
+
+status_t ProcessingUnit::getTnrTriggerInfo() {
+    IntelCca* intelCca = IntelCca::getInstance(mCameraId, mTuningMode);
+    CheckAndLogError(!intelCca, UNKNOWN_ERROR, "cca is nullptr, mode:%d", mTuningMode);
+    cca::cca_cmc cmc;
+    ia_err ret = intelCca->getCMC(&cmc);
+    CheckAndLogError(ret != ia_err_none, BAD_VALUE, "Get cmc data failed");
+    mTnrTriggerInfo = cmc.tnr7us_trigger_info;
+    LOG2("%s tnr trigger info: gain num: %d threshold: %f", __func__, mTnrTriggerInfo.num_gains,
+         mTnrTriggerInfo.tnr7us_threshold_gain);
+    for (unsigned int i = 0; i < mTnrTriggerInfo.num_gains; i++) {
+        LOG2("  %u: gain %f, frame count: %d", i, mTnrTriggerInfo.trigger_infos[i].gain,
+             mTnrTriggerInfo.trigger_infos[i].frame_count);
+    }
+    return OK;
 }
 
 int ProcessingUnit::setParameters(const DataContext* dataContext) {
@@ -681,6 +704,10 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
             callbackRgbs = true;
         }
 
+        if (PlatformData::isGpuTnrEnabled(mCameraId)) {
+            handleExtraTasksForTnr(inputSequence, dstBuffers, aiqResult);
+        }
+
         dispatchTask(*srcBuffers, *dstBuffers, false, callbackRgbs);
 
         if (!callbackRgbs) {
@@ -697,8 +724,70 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
     return OK;
 }
 
+void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMap* dstBuffers,
+                                            const AiqResult* aiqResult) {
+    bool hasStill = false;
+    CameraBufferPortMap fakeTaskBuffers = *dstBuffers;
+    // Extra tasks only for ipu still pipe
+    for (const auto& item : *dstBuffers) {
+        // TODO: Check if ipu still pipe is tnr pipe
+        if (GET_STREAM_ID(item.first) == STILL_STREAM_ID)
+            hasStill = true;
+        else
+            fakeTaskBuffers.erase(item.first);
+    }
+    if (!hasStill) return;
+
+    int startSequence = sequence - (getTnrFrameCount(aiqResult) - 1);
+    StageControl ctl;
+    ctl.stillTnrReferIn = true;
+    PipeControl control;
+    control[STILL_STREAM_ID] = ctl;
+
+    if (startSequence < 0) startSequence = 0;
+    if (startSequence > mLastStillTnrSequence) {
+        LOG2("<seq%ld>: still tnr task start from seq %ld", sequence, startSequence);
+        while (startSequence < sequence) {
+            mPipeManager->setControl(startSequence, control);
+
+            CameraBufferPortMap srcBuf;
+            {
+                AutoMutex lock(mBufferMapLock);
+                if (mRawBufferMap.find(startSequence) != mRawBufferMap.end()) {
+                    for (const auto& item : mRawBufferMap[startSequence]) {
+                        srcBuf[item.first] = item.second;
+                    }
+                }
+            }
+            if (!srcBuf.empty()) {
+                dispatchTask(srcBuf, fakeTaskBuffers, true, false);
+            }
+            startSequence++;
+        }
+    }
+
+    mLastStillTnrSequence = sequence;
+}
+
+int ProcessingUnit::getTnrFrameCount(const AiqResult* aiqResult) {
+    if (!mTnrTriggerInfo.num_gains) return 1;
+
+    float totalGain = (aiqResult->mAeResults.exposures[0].exposure->analog_gain *
+                  aiqResult->mAeResults.exposures[0].exposure->digital_gain);
+    if (totalGain < mTnrTriggerInfo.tnr7us_threshold_gain) return 1;
+
+    unsigned int index = 0;
+    for (unsigned int i = 1; i < mTnrTriggerInfo.num_gains; i++) {
+        if (fabs(mTnrTriggerInfo.trigger_infos[i].gain - totalGain) <
+            fabs(mTnrTriggerInfo.trigger_infos[i - 1].gain - totalGain)) {
+            index = i;
+        }
+    }
+    return mTnrTriggerInfo.trigger_infos[index].frame_count;
+}
+
 void ProcessingUnit::dispatchTask(CameraBufferPortMap& inBuf, CameraBufferPortMap& outBuf,
-                                 bool fakeTask, bool callbackRgbs) {
+                                  bool fakeTask, bool callbackRgbs) {
     int64_t currentSequence = inBuf.begin()->second->getSequence();
     TRACE_LOG_POINT("ProcessingUnit", "start run PSYS", MAKE_COLOR(currentSequence),
                     currentSequence);

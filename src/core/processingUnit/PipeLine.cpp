@@ -26,7 +26,6 @@
 #include "GPUPostStage.h"
 #endif
 #include "StageDescriptor.h"
-
 namespace icamera {
 
 PipeLine::PipeLine(int cameraId, int streamId, std::shared_ptr<GraphConfig> gc,
@@ -44,6 +43,10 @@ PipeLine::~PipeLine() {
     LOG1("<id%d>@%s stream %d", mCameraId, __func__, mStreamId);
 
     releasePipeStage();
+
+    if (mPacAdaptor) {
+        mPacAdaptor->reinitAic(mStreamId);
+    }
 }
 
 int PipeLine::configure(TuningMode tuningMode, IpuPacAdaptor* adaptor) {
@@ -89,8 +92,7 @@ int PipeLine::start() {
                          unit.pipeStage->getName());
     }
 
-    mPSysDevice->addGraph(mPSysGraph);
-    return OK;
+    return mPSysDevice->addGraph(mPSysGraph);
 }
 
 int PipeLine::stop() {
@@ -105,6 +107,12 @@ int PipeLine::stop() {
     }
 
     return OK;
+}
+
+void PipeLine::setControl(int64_t sequence, const StageControl& control) {
+    for (auto& unit : mPSUnit) {
+        unit.pipeStage->setControl(sequence, control);
+    }
 }
 
 // It supports that one pipe has only one input pipeStage now
@@ -166,13 +174,6 @@ status_t PipeLine::createPipeStages() {
 
     if (mPSysDevice) delete mPSysDevice;
     mPSysDevice = new PSysDevice(mCameraId);
-
-    // MOCK_PSYS_S
-    if (PlatformData::isUsingMockPSys(mCameraId)) {
-        delete mPSysDevice;
-        mPSysDevice = new MockPSysDevice(mCameraId);
-    }
-    // MOCK_PSYS_E
 
     ret = mPSysDevice->init();
     CheckAndLogError(ret != OK, ret, "%s: failed to initialize psys device", __func__);

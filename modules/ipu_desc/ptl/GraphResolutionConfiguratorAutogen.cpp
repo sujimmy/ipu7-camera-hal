@@ -23,18 +23,22 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuid(GraphResolutionConf
         case GraphResolutionConfiguratorKernelRole::UpScaler:    return 25569; // upscaler_1_0
         case GraphResolutionConfiguratorKernelRole::DownScaler:  return 40299; // b2i_ds_1_1
         case GraphResolutionConfiguratorKernelRole::FinalCropper:  return 42330; // lbff_crop_espa_1_3
+        default: break;
     }
 
     return 0;
 }
 
-uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSink)
+uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId)
 {
+    (void)graphId;
+
     switch (hwSink)
     {
-        case HwSink::ImageMpSink:   return 18789; // ofs_mp_bodr_regs_1_3
-        case HwSink::ImageDpSink:   return 27847; // ofs_dp_bodr_regs_1_3
-        case HwSink::ProcessedMainSink:   return 2565; // gdc7_1
+        case HwSink::ImageMpSink:    return 18789; // ofs_mp_bodr_regs_1_3
+        case HwSink::ImageDpSink:    return 27847; // ofs_dp_bodr_regs_1_3
+        case HwSink::ProcessedMainSink:    return 2565; // gdc7_1
+        case HwSink::AeOutSink:    return 55073; // aestatistics_2_1
         default: break;
     }
 
@@ -57,4 +61,3 @@ StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHisto
     kernelUuids.push_back(26536);  // slim_tnr_fp_blend_bifd_yuvnm1_regs_1_3
     return StaticGraphStatus::SG_OK;
 }
-

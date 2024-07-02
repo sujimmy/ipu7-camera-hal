@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "IPipeManager.h"
+#include "IpuPacAdaptor.h"
 
 namespace icamera {
 
@@ -45,15 +46,15 @@ class PipeManagerStub : public IPipeManager, public icamera::Thread {
  private:
     int mCameraId;
     std::map<uuid, stream_t> mInputFrameInfo;
-    std::map<uuid, stream_t> mOutputFrameInfo;
     ConfigMode mConfigMode;
     TuningMode mTuningMode;
     uuid mDefaultMainInputPort;
-    std::map<uuid, std::vector<int32_t>> mOutputPortToStreamIds;
+    std::vector<int32_t> mActiveStreamIds;
     Mutex mTaskLock;
     std::vector<TaskInfo> mOngoingTasks;
     std::condition_variable mTaskReadyCondition;
-
+    IpuPacAdaptor* mPacAdaptor;
+    std::shared_ptr<GraphConfig> mGraphConfig;
     Mutex mOngoingPalMapLock;
     // first is sequence id, second is a set of stream id
     std::map<int64_t, std::set<int32_t>> mOngoingPalMap;

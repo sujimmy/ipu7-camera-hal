@@ -94,7 +94,11 @@ public:
     // Calculate ROI in sensor dimensions. User ROI is given relative to *full* output ROI
     StaticGraphStatus getSensorRoi(const RegionOfInterest& userRoi, SensorRoi& sensorRoi);
     // Calculate ROI in sensor dimensions. Resolution ROI is given relative to *final* (zoomed) output ROI
-    StaticGraphStatus getInputRoiForOutput(ResolutionRoi& roi, HwSink hwSink, SensorRoi& sensorRoi);
+    StaticGraphStatus getInputRoiForOutput(const ResolutionRoi& roi, const HwSink hwSink, SensorRoi& sensorRoi);
+
+    // Calculate ROI in sensor dimensions. Resolution ROI is given relative to *final* (zoomed) output ROI
+    // This function is used for statistics output only
+    StaticGraphStatus getStatsRoiFromSensorRoi(const SensorRoi& sensorRoi, const HwSink hwSink, ResolutionRoi& statsRoi);
 
 private:
     StaticGraphStatus initRunKernelCoord(GraphResolutionConfiguratorKernelRole role, RunKernelCoords& coord);
@@ -124,7 +128,7 @@ private:
     std::vector<RunKernelCoords> _kernelsForUpdate;
     double _widthIn2OutScale = 1;
     double _heightIn2OutScale = 1;
-    double _sensorScaling = 1;
+    double _sensorHorizontalScaling = 1.0;
+    double _sensorVerticalScaling = 1.0;
     StaticGraphKernelResCrop _originalOutputCrop = {0,0,0,0};
 };
-

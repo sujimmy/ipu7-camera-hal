@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation
+ * Copyright (C) 2022-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,12 @@
 
 namespace icamera {
 
+struct StageControl {
+    bool stillTnrReferIn;  // Fake task to generate still tnr refer-in frame for still tnr
+
+    StageControl() : stillTnrReferIn(false) {}
+};
+
 /**
  * \Interface IPipeStage
  */
@@ -34,6 +40,8 @@ class IPipeStage : public ISchedulerNode, public BufferQueue {
     int getId() const { return mId; }
     virtual int start() = 0;
     virtual int stop() = 0;
+
+    virtual void setControl(int64_t sequence, const StageControl& control) = 0;
 
     virtual void setInputTerminals(const std::map<uuid, uint32_t>& inputPortTerminals) {
         mInputPortTerminals = inputPortTerminals;

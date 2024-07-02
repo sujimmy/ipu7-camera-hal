@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,16 @@
 #include <climits>
 #include <cmath>
 
-#include "AiqUtils.h"
 #include "iutils/CameraLog.h"
 #include "iutils/Errors.h"
 #include "iutils/Utils.h"
+#include "AiqUtils.h"
+#include "PlatformData.h"
 
 #ifdef ENABLE_SANDBOXING
 #include "modules/sandboxing/client/IntelCcaClient.h"
+#elif IPA_SANDBOXING
+#include "IntelCcaClient.h"
 #else
 #include "modules/algowrapper/IntelCca.h"
 #endif

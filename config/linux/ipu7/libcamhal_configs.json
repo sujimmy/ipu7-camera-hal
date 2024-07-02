@@ -22,7 +22,9 @@
         //  wf is word facing, and uf is user facing.
         "availableSensors": [
             "ov13b10-uf-0",
-            "ov13b10-wf-3"
+            "ov13b10-wf-3",
+            "ov02c10-uf-0",
+            "ov02c10-uf-1"
         ],
         "videoStreamNum" : 2,
         "cameraNumber" : 1

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Intel Corporation
+ * Copyright (C) 2022-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,50 @@
 
 #include <Utils.h>
 
+#include "PlatformData.h"
+#include "AiqResultStorage.h"
+
 namespace icamera {
 
 std::map<int, CameraContext*> CameraContext::sInstances;
 std::mutex CameraContext::sLock;
+
+DataContext::DataContext(int cameraId) :
+    mFrameNumber(-1),
+    mSequence(-1),
+    mCcaId(-1),
+    mFaceDetectMode(0),
+    monoDsMode(MONO_DS_MODE_OFF),
+    deinterlaceMode(DEINTERLACE_OFF) {
+    cropRegion = {0, 0, 0};
+    zoomRegion = {0, 0, 0, 0, 1.0f, icamera::ROTATE_NONE};
+
+    camera_coordinate_system_t activePixelArray = PlatformData::getActivePixelArray(cameraId);
+    if ((activePixelArray.right > activePixelArray.left) &&
+        (activePixelArray.bottom > activePixelArray.top)) {
+        mAiqParams.resolution.width = activePixelArray.right - activePixelArray.left;
+        mAiqParams.resolution.height = activePixelArray.bottom - activePixelArray.top;
+    }
+    const StaticMetadata *staticMetadata = PlatformData::getStaticMetadata(cameraId);
+    if (staticMetadata->mEvRange.size() == 2) {
+        mAiqParams.evRange = {static_cast<float>(staticMetadata->mEvRange[0]),
+                             static_cast<float>(staticMetadata->mEvRange[1])};
+    }
+    if (staticMetadata->mEvStep.size() == 2) {
+        mAiqParams.evStep = {staticMetadata->mEvStep[0], staticMetadata->mEvStep[1]};
+    };
+
+    std::string str = "lens.info.shadingMapSize";
+    auto vI = PlatformData::getInt32StaticMetadata(cameraId, str);
+    if (vI.size() == 2) {
+        mAiqParams.lensShadingMapSize = {vI[0], vI[1]};
+    }
+    str = "lens.info.minimumFocusDistance";
+    auto vF = PlatformData::getFloatStaticMetadata(cameraId, str);
+    if (vF.size() == 1) {
+        mAiqParams.minFocusDistance = vF[0];
+    }
+}
 
 CameraContext* CameraContext::getInstance(int cameraId) {
     std::lock_guard<std::mutex> lock(sLock);
@@ -135,6 +175,11 @@ DataContext* CameraContext::getReprocessingDataContextBySeq(int64_t sequence) {
     mSeqToDataContextMap[sequence] = mDataContext[mCurrentIndex];
 
     return mDataContext[mCurrentIndex];
+}
+
+void CameraContext::storeGraphConfig(std::map<ConfigMode, std::shared_ptr<GraphConfig> > gcs) {
+    AutoMutex l(mLock);
+    mGraphConfigMap = gcs;
 }
 
 std::shared_ptr<GraphConfig> CameraContext::getGraphConfig(ConfigMode configMode) {

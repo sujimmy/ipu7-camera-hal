@@ -65,6 +65,7 @@ enum class GraphConfigurationKeyAttributes : uint32_t
     Dol2Inputs = 0x00000010,
     PipelineLowLight = 0x00000040,
     PipelineNormalLight = 0x00000080,
+    VaiActive = 0x00000100,
 };
 
 struct GraphConfigurationKey {

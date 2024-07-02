@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,30 +115,48 @@ bool PostProcessStage::fetchRequestBuffer(int64_t sequence,
     return true;
 }
 
+void PostProcessStage::setControl(int64_t sequence, const StageControl& control) {
+    AutoMutex l(mBufferQueueLock);
+    mControls[sequence] = control;
+}
+
 bool PostProcessStage::process(int64_t triggerId) {
     PERF_CAMERA_ATRACE_PARAM1(getName(), triggerId);
     std::map<uuid, std::shared_ptr<CameraBuffer> > inBuffers;
     std::map<uuid, std::shared_ptr<CameraBuffer> > outBuffers;
 
+    StageControl control;
+    std::shared_ptr<CameraBuffer> inBuffer;
+    int64_t sequence = -1;
     {
         AutoMutex l(mBufferQueueLock);
         if (getFreeBuffersInQueue(inBuffers, outBuffers) != OK) return true;
+
+        inBuffer = inBuffers.begin()->second;
+        sequence = inBuffer->getSequence();
+        if (mControls.find(sequence) != mControls.end()) {
+            control = mControls[sequence];
+            mControls.erase(sequence);
+        }
     }
 
-    std::shared_ptr<CameraBuffer> inBuffer = inBuffers.begin()->second;
     v4l2_buffer_t inV4l2Buf = *inBuffer->getV4L2Buffer().Get();
-    int64_t sequence = inBuffer->getSequence();
     for (auto& output : outBuffers) {
         if (!output.second) continue;
 
         uuid outPort = output.first;
         LOG2("<seq%ld>%s: handle port %x in async", sequence, getName(), outPort);
 
-        bool needLock = (inBuffer != output.second);  // need access to output buffer
-        if (needLock) output.second->lock();
-        int32_t ret = mPostProcessors[outPort]->doPostProcessing(inBuffer, output.second);
-        CheckWarningNoReturn(ret != OK, false, "%s: Process errorfor port %d", getName(), outPort);
-        if (needLock) output.second->unlock();
+        // Do processing only it is for usr request
+        if (!control.stillTnrReferIn) {
+            bool needLock = (inBuffer != output.second);  // need access to output buffer
+            if (needLock) output.second->lock();
+
+            int32_t ret = mPostProcessors[outPort]->doPostProcessing(inBuffer, output.second);
+            CheckWarningNoReturn(ret != OK, false, "%s: Process errorfor port %d", getName(),
+                                 outPort);
+            if (needLock) output.second->unlock();
+        }
 
         updateInfoAndSendEvents(inV4l2Buf, output.second, outPort);
     }

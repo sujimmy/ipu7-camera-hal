@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2022 Intel Corporation.
+ * Copyright (C) 2017-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 namespace icamera {
 
 class IPipeManager;
+class AiqResult;
 
 typedef std::map<uuid, std::shared_ptr<CameraBuffer>> CameraBufferPortMap;
 
@@ -83,6 +84,11 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
     void sendPsysRequestEvent(const CameraBufferPortMap* dstBuffers, int64_t sequence,
                               uint64_t timestamp, EventType eventType);
 
+    status_t getTnrTriggerInfo();
+    int getTnrFrameCount(const AiqResult* aiqResult);
+    void handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMap* dstBuffers,
+                                const AiqResult* aiqResult);
+
  private:
     int mCameraId;
     static const nsecs_t kWaitDuration = 1000000000;  // 1000ms
@@ -120,6 +126,10 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
     std::shared_ptr<CameraScheduler> mScheduler;
 
     std::map<uuid, stream_t> mYuvInputInfo;
+
+    tnr7us_trigger_info_t mTnrTriggerInfo;
+    // Indicate the latest sequence of raw buffer used in still TNR
+    int64_t mLastStillTnrSequence;
 };  // End of class ProcessingUnit
 
 }  // namespace icamera

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,11 +50,9 @@ namespace icamera {
 #define RESOLUTION_VGA_HEIGHT 480
 #define RESOLUTION_360P_HEIGHT 360
 
-#define MAX_BUFFER_COUNT (10)
 // VIRTUAL_CHANNEL_S
 #define MAX_VC_GROUP_NUMBER 8
 // VIRTUAL_CHANNEL_E
-#define MAX_STREAM_NUMBER 7
 #define MAX_WEIGHT_GRID_SIDE_LEN 1024
 
 #define FACE_ENGINE_DEFAULT_RUNNING_INTERVAL 1
@@ -68,8 +66,7 @@ namespace icamera {
  * Max number size of the pipeline depth is 6.
  * Max setting count should be larger than raw buffer number + pipeline depth.
  */
-#define MAX_SETTING_COUNT 40
-#define CAMERA_PORT_NAME "CSI-2"
+#define CAMERA_PORT_NAME "CSI2"
 
 #ifdef CAL_BUILD
 #define MAX_CAMERA_NUMBER 2
@@ -274,9 +271,7 @@ class PlatformData {
                       mNvmOverwrittenFileSize(0),
                       mGpuTnrEnabled(false),
                       mTnrExtraFrameNum(DEFAULT_TNR_EXTRA_FRAME_NUM),
-                      // MOCK_PSYS_S
-                      mUsingMockPSys(false),
-                      // MOCK_PSYS_E
+                      mMsPsysAlignWithSystem(0),
                       mDummyStillSink(false),
                       mRemoveCacheFlushOutputBuffer(false),
                       mPLCEnable(false),
@@ -392,9 +387,7 @@ class PlatformData {
             std::vector<IGraphType::ScalerInfo> mScalerInfo;
             bool mGpuTnrEnabled;
             int mTnrExtraFrameNum;
-            // MOCK_PSYS_S
-            bool mUsingMockPSys;
-            // MOCK_PSYS_E
+            int mMsPsysAlignWithSystem;  // Scheduling aligned with system time
             bool mDummyStillSink;
             bool mRemoveCacheFlushOutputBuffer;
             bool mPLCEnable;
@@ -1517,6 +1510,13 @@ class PlatformData {
      */
     static int getTnrExtraFrameCount(int cameraId);
 
+    /**
+     * Get time interval to align psys processing
+     *
+     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
+     * \return time interval.
+     */
+    static int getMsOfPsysAlignWithSystem(int cameraId);
     /*
      * Set the orientation Info
      *
@@ -1532,16 +1532,6 @@ class PlatformData {
      * \return sensor orientation
      */
     static int getSensorOrientation(int cameraId);
-
-    // MOCK_PSYS_S
-    /**
-     * check if support Mock PSYS device
-     *
-     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return true if supported.
-     */
-    static bool isUsingMockPSys(int cameraId);
-    // MOCK_PSYS_E
 
     /**
      * check if support dummy still stream

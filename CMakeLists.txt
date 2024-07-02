@@ -125,7 +125,7 @@ if (IPU_VER MATCHES "ipu6ep")
 endif()
 
 if (IPU_VER MATCHES "ipu7")
-    message(INFO "add definition -DIPU_SYSVER_ipu7 for ipu7")
+    message(STATUS "add definition -DIPU_SYSVER_ipu7 for ipu7")
     add_definitions(-DIPU_SYSVER_ipu7 -DSTATIC_GRAPH_USE_IA_AIC_TYPES -DPAC_ENABLE)
 endif()
 
@@ -226,30 +226,39 @@ endif() #ENABLE_SANDBOXING
 
 if (USE_STATIC_GRAPH)
     add_compile_options(-fpermissive -Wno-unused-variable -Wno-maybe-uninitialized)
-    if (STATIC_GRAPH_IPU_PREFIXS MATCHES "Ipu7x")
-        set(PRODUCTION_NAME "lnl")
-    endif()
     include_directories(modules/ipu_desc)
 
-    if (USE_STATIC_GRAPH_AUTOGEN)
-        message("Use auto generated static graph code")
-        add_definitions(-DUSE_STATIC_GRAPH_AUTOGEN)
+    if (STATIC_GRAPH_IPU_PREFIXS)
+        if (STATIC_GRAPH_IPU_PREFIXS MATCHES "Ipu7x")
+            set(PRODUCTION_NAME "lnl")
+            add_definitions(-DGRC_IPU7X)
+        elseif (STATIC_GRAPH_IPU_PREFIXS MATCHES "Ipu75xa")
+            set(PRODUCTION_NAME "ptl")
+            add_definitions(-DGRC_IPU75XA)
+        endif()
+        message(STATUS "Use auto generated static graph code, prefix: ${STATIC_GRAPH_IPU_PREFIXS}")
+        include_directories(modules/ipu_desc/${PRODUCTION_NAME})
         set(LIBCAMHAL_SRCS ${LIBCAMHAL_SRCS}
             ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/CBLayoutUtils.cpp
+            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/GraphResolutionConfigurator.cpp
+            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}GraphResolutionConfiguratorAutogen.cpp
             ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}TerminalDescriptorAutogen.cpp
             ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}StaticGraphAutogen.cpp
             ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}StaticGraphReaderAutogen.cpp
             )
-        include_directories(modules/ipu_desc/${PRODUCTION_NAME})
     else ()
+        if (IPU_VER MATCHES "ipu7")
+            set(PRODUCTION_NAME "lnl")
+        endif ()
+        message(STATUS "Use ${PRODUCTION_NAME} static graph code")
+        include_directories(modules/ipu_desc/${PRODUCTION_NAME})
         set(LIBCAMHAL_SRCS ${LIBCAMHAL_SRCS}
-            ${MODULES_DIR}/ipu_desc/lnl/CBLayoutUtils.cpp
-            ${MODULES_DIR}/ipu_desc/lnl/TerminalDescriptorAutogen.cpp
-            ${MODULES_DIR}/ipu_desc/lnl/StaticGraphAutogen.cpp
-            ${MODULES_DIR}/ipu_desc/lnl/StaticGraphReaderAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/CBLayoutUtils.cpp
+            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/TerminalDescriptorAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/StaticGraphAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/StaticGraphReaderAutogen.cpp
             )
-        include_directories(modules/ipu_desc/lnl)
-    endif() # USE_STATIC_GRAPH_AUTOGEN
+    endif () # STATIC_GRAPH_IPU_PREFIXS
 
 endif() # USE_STATIC_GRAPH
 
@@ -423,7 +432,7 @@ elseif("${IPU_VER}" STREQUAL "ipu6sepla")
     endif()
 elseif("${IPU_VER}" STREQUAL "ipu7")
     message("Install LNL IPU7 configure files")
-    install(DIRECTORY config/linux/ipu7/ DESTINATION etc/camera)
+    install(DIRECTORY config/linux/ipu7/ DESTINATION etc/camera PATTERN "config/linux/ipu7/gcss/*.xml" EXCLUDE)
 else()
     message("Install APL IPU4 configure files")
     install(DIRECTORY config/linux/ipu4/ DESTINATION etc/camera)

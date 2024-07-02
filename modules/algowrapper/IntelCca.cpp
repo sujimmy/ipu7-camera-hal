@@ -72,8 +72,6 @@ IntelCca::IntelCca(int cameraId, TuningMode mode) :
 
 IntelCca::~IntelCca() {
     releaseIntelCCA();
-    freeStatsDataMem();
-    mMemStatsInfoMap.clear();
 }
 
 cca::IntelCCA* IntelCca::getIntelCCA() {
@@ -91,6 +89,14 @@ ia_err IntelCca::init(const cca::cca_init_params& initParams) {
     ia_err ret = getIntelCCA()->init(initParams);
     LOG2("@%s, bitmap:0x%x, ret:%d, version:%s", __func__, initParams.bitmap, ret,
          getIntelCCA()->getVersion());
+
+    return ret;
+}
+
+ia_err IntelCca::reinitAic(const int32_t aicId) {
+    ia_err ret = getIntelCCA()->reinitAic(aicId);
+
+    LOG2("@%s, aicId:%d, ret:%d", __func__, aicId, ret);
 
     return ret;
 }
@@ -160,73 +166,6 @@ ia_err IntelCca::getAiqd(cca::cca_aiqd* aiqd) {
     return ret;
 }
 
-bool IntelCca::allocStatsDataMem(unsigned int size) {
-    LOG2("<id%d>@%s, tuningMode:%d, size:%d", mCameraId, __func__, mTuningMode, size);
-
-    freeStatsDataMem();
-
-    AutoMutex l(mMemStatsMLock);
-    for (int i = 0; i < kMaxQueueSize; i++) {
-        void* p = malloc(size);
-        CheckAndLogError(!p, false, "failed to malloc stats buffer");
-        StatsBufInfo info = { size, p, 0 };
-
-        int64_t index = i * (-1) - 1;  // default index list: -1, -2, -3, ...
-        mMemStatsInfoMap[index] = info;
-    }
-
-    return true;
-}
-
-void IntelCca::freeStatsDataMem() {
-    LOG2("<id%d>@%s, tuningMode:%d", mCameraId, __func__, mTuningMode);
-
-    AutoMutex l(mMemStatsMLock);
-    for (auto it = mMemStatsInfoMap.begin(); it != mMemStatsInfoMap.end(); ++it) {
-        free(it->second.ptr);
-    }
-
-    mMemStatsInfoMap.clear();
-}
-
-void* IntelCca::getStatsDataBuffer() {
-    AutoMutex l(mMemStatsMLock);
-    if (mMemStatsInfoMap.empty()) return nullptr;
-
-    void* p = mMemStatsInfoMap.begin()->second.ptr;
-    LOG2("<id%d>@%s, stats buffer addr: %p", mCameraId, __func__, p);
-    return p;
-}
-
-void IntelCca::decodeHwStatsDone(int64_t sequence, unsigned int byteUsed) {
-    LOG2("<id%d>@%s, tuningMode:%d, sequence:%ld, byteUsed:%d", mCameraId, __func__,
-         mTuningMode, sequence, byteUsed);
-
-    AutoMutex l(mMemStatsMLock);
-    if (mMemStatsInfoMap.empty()) return;
-
-    auto it = mMemStatsInfoMap.begin();
-    it->second.usedSize = byteUsed;
-    mMemStatsInfoMap[sequence] = it->second;
-
-    if (sequence != it->first) mMemStatsInfoMap.erase(it->first);
-}
-
-void* IntelCca::fetchHwStatsData(int64_t sequence, unsigned int* byteUsed) {
-    LOG2("<id%d>@%s, tuningMode:%d, sequence:%ld", mCameraId, __func__, mTuningMode, sequence);
-    CheckAndLogError(!byteUsed, nullptr, "byteUsed is nullptr");
-
-    AutoMutex l(mMemStatsMLock);
-    if (mMemStatsInfoMap.find(sequence) != mMemStatsInfoMap.end()) {
-        *byteUsed = mMemStatsInfoMap[sequence].usedSize;
-        void* p = mMemStatsInfoMap[sequence].ptr;
-        LOG2("decode stats address %p", p);
-        return p;
-    }
-
-    return nullptr;
-}
-
 void* IntelCca::allocMem(int streamId, const std::string& name, int index, int size) {
     LOG1("@%s, name:%s, index: %d, streamId: %d, size: %d", __func__,
          name.c_str(), index, streamId, size);
@@ -247,7 +186,6 @@ void IntelCca::deinit() {
     releaseIntelCCA();
 }
 
-#ifdef PAC_ENABLE
 ia_err IntelCca::configAic(const cca::cca_aic_config& aicConf,
                            const cca::cca_aic_kernel_offset& kernelOffset, uint32_t* offsetPtr,
                            cca::cca_aic_terminal_config& termConfig, int32_t aicId,
@@ -273,9 +211,29 @@ ia_err IntelCca::getAicBuf(cca::cca_aic_terminal_config& termConfig, int32_t aic
     return ret;
 }
 
-ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId) {
+ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
+                             cca::cca_out_stats* outStats) {
     ia_err ret = getIntelCCA()->decodeStats(groupId, sequence, aicId);
     LOG2("@%s, ret:%d", __func__, ret);
+
+    if (ret == ia_err_none && outStats && outStats->get_rgbs_stats) {
+        auto stats = getIntelCCA()->queryStatsBuf(cca::STATS_BUF_LATEST);
+        if (stats) {
+            outStats->rgbs_grid[0].grid_width = stats->stats.rgbs_grids[0].grid_width;
+            outStats->rgbs_grid[0].grid_height = stats->stats.rgbs_grids[0].grid_height;
+            outStats->rgbs_grid[0].shading_correction = stats->stats.shading_corrected;
+
+            unsigned int width = stats->stats.rgbs_grids[0].grid_width;
+            unsigned int height = stats->stats.rgbs_grids[0].grid_height;
+            for (unsigned int i = 0; i < width * height; i++) {
+                outStats->rgbs_blocks[i]->avg_gr = stats->stats.rgbs_grids[0].avg[i].gr;
+                outStats->rgbs_blocks[i]->avg_r = stats->stats.rgbs_grids[0].avg[i].r;
+                outStats->rgbs_blocks[i]->avg_b = stats->stats.rgbs_grids[0].avg[i].b;
+                outStats->rgbs_blocks[i]->avg_gb = stats->stats.rgbs_grids[0].avg[i].gb;
+                outStats->rgbs_blocks[i]->sat = stats->stats.rgbs_grids[0].sat[i];
+            }
+        }
+    }
 
     return ret;
 }
@@ -296,41 +254,5 @@ ia_err IntelCca::updateConfigurationResolutions(const cca::cca_aic_config& aicCo
 
     return ret;
 }
-
-#else
-ia_err IntelCca::runAIC(uint64_t frameId, const cca::cca_pal_input_params* params,
-                        ia_binary_data* pal) {
-    CheckAndLogError(!params, ia_err_argument, "@%s, params is nullptr", __func__);
-    CheckAndLogError(!pal, ia_err_argument, "@%s, pal is nullptr", __func__);
-
-    ia_err ret = getIntelCCA()->runAIC(frameId, *params, pal);
-
-    // if PAL doesn't run, set output size to 0
-    if (ret == ia_err_not_run) pal->size = 0;
-
-    LOG2("@%s, ret:%d, pal result size: %d", __func__, ret, pal->size);
-
-    return ret;
-}
-
-ia_err IntelCca::decodeStats(uint64_t statsPointer, uint32_t statsSize, uint32_t bitmap,
-                             ia_isp_bxt_statistics_query_results_t* results,
-                             cca::cca_out_stats* outStats) {
-    CheckAndLogError(!results, ia_err_argument, "@%s, results is nullptr", __func__);
-
-    ia_err ret = getIntelCCA()->decodeStats(statsPointer, statsSize, bitmap, results, outStats);
-    LOG2("@%s, statsPointer: 0x%lu, statsSize:%d, bitmap:%x, ret: %d", __func__, statsPointer,
-         statsSize, bitmap, ret);
-
-    return ret;
-}
-
-uint32_t IntelCca::getPalDataSize(const cca::cca_program_group& programGroup) {
-    uint32_t size = getIntelCCA()->getPalSize(programGroup);
-    LOG2("@%s, pal data size: %u", __func__, size);
-
-    return size;
-}
-#endif
 
 } /* namespace icamera */

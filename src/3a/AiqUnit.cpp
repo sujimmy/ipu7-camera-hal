@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "iutils/Errors.h"
 #include "iutils/CameraLog.h"
 #include "CameraContext.h"
+#include "PlatformData.h"
 
 #include "AiqUnit.h"
 

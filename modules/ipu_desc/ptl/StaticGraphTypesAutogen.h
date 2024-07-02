@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Intel Corporation.
+ * Copyright (C) 2023-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 
 #pragma once
-
-#include <cstdio>
-#include <cstdint>
 
 #ifdef STATIC_GRAPH_USE_IA_AIC_TYPES
 #define STATIC_GRAPH_USE_IA_LEGACY_TYPES
@@ -45,6 +42,13 @@ typedef ia_isp_bxt_run_kernels StaticGraphRunKernel;
 #else
 #define STATIC_GRAPH_LOG(...) ((void)0)
 #endif
+
+enum class NodeResourceId : uint8_t {
+    Lbff = 0,
+    Bbps = 1,
+    SwIsys = 2,
+    SwGdc = 3,
+};
 
 enum class StaticGraphStatus : uint8_t
 {

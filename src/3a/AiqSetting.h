@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,8 @@
 
 #pragma once
 
-#include "iutils/Utils.h"
-#include "iutils/RWLock.h"
 #include "CameraTypes.h"
 #include "ParamDataType.h"
-
-#include "AiqUtils.h"
 
 namespace icamera {
 
@@ -36,6 +32,7 @@ typedef enum {
 } aec_scene_t;
 // HDR_FEATURE_E
 
+static const int MAX_CUSTOM_CONTROLS_PARAM_SIZE = 1024;
 typedef struct {
     char data[MAX_CUSTOM_CONTROLS_PARAM_SIZE];
     unsigned int length;

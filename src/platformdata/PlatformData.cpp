@@ -26,6 +26,11 @@
 #include "iutils/CameraLog.h"
 #include "CameraSchedulerPolicy.h"
 
+#if defined(IPU_SYSVER_ipu7) || defined(IPU_SYSVER_ipu75)
+#include "CameraContext.h"
+#include "GraphConfig.h"
+#include "lbff_ids_array.h"
+#endif
 #include "gc/GraphConfigManager.h"
 
 #include "src/platformdata/CameraParserInvoker.h"
@@ -980,6 +985,36 @@ int PlatformData::calculateFrameParams(int cameraId, SensorFrameParams& sensorFr
         sensorFrameParams.vertical_scaling_denominator = verticalBinDenom;
     }
 
+#if defined(IPU_SYSVER_ipu7) || defined(IPU_SYSVER_ipu75)
+    vector<ConfigMode> cms;
+
+    int ret = PlatformData::getConfigModesByOperationMode(
+        cameraId, CAMERA_STREAM_CONFIGURATION_MODE_AUTO, cms);
+    CheckWarning(ret != 0 || cms.empty(), ret,
+                 "@%s, getConfigModesByOperationMode: %d, cms size %llu", __func__, ret,
+                 cms.size());
+
+    auto gc = CameraContext::getInstance(cameraId)->getGraphConfig(cms[0]);
+    CheckWarning(gc == nullptr, BAD_VALUE, "@%s, gc is nullptr", __func__);
+
+    StaticGraphKernelRes res;
+    ret = gc->getStaticGraphKernelRes(ia_pal_uuid_isp_ifd_pipe_1_1, res);
+    CheckWarning(ret != OK, BAD_VALUE, "@%s, getStaticGraphKernelRes failed (%d)", __func__, ret);
+
+    if (static_cast<int32_t>(sensorFrameParams.horizontal_crop_offset) + res.input_crop.left < 0) {
+        sensorFrameParams.horizontal_crop_offset = 0;
+    } else {
+        sensorFrameParams.horizontal_crop_offset += res.input_crop.left;
+    }
+    if (static_cast<int32_t>(sensorFrameParams.vertical_crop_offset) + res.input_crop.top < 0) {
+        sensorFrameParams.vertical_crop_offset = 0;
+    } else {
+        sensorFrameParams.vertical_crop_offset += res.input_crop.top;
+    }
+    sensorFrameParams.cropped_image_width = res.output_width;
+    sensorFrameParams.cropped_image_height = res.output_height;
+#endif
+
     return OK;
 }
 
@@ -1131,7 +1166,7 @@ bool PlatformData::isCSIFrontEndCapture(int cameraId) {
 
     for (const auto& node : mc->videoNodes) {
         if (node.videoNodeType == VIDEO_GENERIC &&
-            (node.name.find("CSI-2") != string::npos || node.name.find("TPG") != string::npos)) {
+            (node.name.find("CSI2") != string::npos || node.name.find("TPG") != string::npos)) {
             isCsiFeCapture = true;
             break;
         }
@@ -1398,6 +1433,10 @@ int PlatformData::getTnrExtraFrameCount(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mTnrExtraFrameNum;
 }
 
+int PlatformData::getMsOfPsysAlignWithSystem(int cameraId) {
+    return getInstance()->mStaticCfg.mCameras[cameraId].mMsPsysAlignWithSystem;
+}
+
 void PlatformData::setSensorOrientation(int cameraId, int orientation) {
     getInstance()->mStaticCfg.mCameras[cameraId].mSensorOrientation = orientation;
 }
@@ -1405,12 +1444,6 @@ void PlatformData::setSensorOrientation(int cameraId, int orientation) {
 int PlatformData::getSensorOrientation(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mSensorOrientation;
 }
-
-// MOCK_PSYS_S
-bool PlatformData::isUsingMockPSys(int cameraId) {
-    return getInstance()->mStaticCfg.mCameras[cameraId].mUsingMockPSys;
-}
-// MOCK_PSYS_E
 
 bool PlatformData::isDummyStillSink(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mDummyStillSink;
