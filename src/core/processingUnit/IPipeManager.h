@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation
+ * Copyright (C) 2022-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 #include "IspSettings.h"
 #include "ParamDataType.h"
 #include "PlatformData.h"
+#include "IPipeStage.h"
 
 namespace icamera {
 
@@ -69,6 +70,9 @@ struct TaskInfo {
     bool mMetadataDone;
 };
 
+// <stream id, control>
+typedef std::map<int, StageControl> PipeControl;
+
 class IPipeManager : public EventListener {
  public:
     IPipeManager() {}
@@ -79,6 +83,8 @@ class IPipeManager : public EventListener {
                           const std::map<uuid, stream_t>* yuvInputInfo = nullptr) = 0;
     virtual int start() = 0;
     virtual int stop() = 0;
+
+    virtual void setControl(int64_t sequence, const PipeControl& control) {}
 
     virtual void addTask(PipeTaskData taskParam) = 0;
     virtual int prepareIpuParams(IspSettings* settings, int64_t sequence = 0,

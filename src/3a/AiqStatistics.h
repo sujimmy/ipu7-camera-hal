@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Intel Corporation.
+ * Copyright (C) 2018-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,11 @@ struct AiqStatistics {
     unsigned long long mTimestamp;
     TuningMode mTuningMode;
     bool mInUse;
-    bool mPendingDecode;
 
     AiqStatistics() : mSequence(-1),
                       mTimestamp(0),
                       mTuningMode(TUNING_MODE_MAX),
-                      mInUse(false),
-                      mPendingDecode(false) {}
+                      mInUse(false) {}
 };
 } /* namespace icamera */
 

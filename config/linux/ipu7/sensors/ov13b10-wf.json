@@ -32,38 +32,26 @@
                 "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
               },
               {
-                "name": "Intel IPU7 CSI-2 $CSI_PORT", "pad": 0, "width": 4208, "height": 3120,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "pad": 0, "width": 4208, "height": 3120,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "pad": 1, "width": 4208, "height": 3120,
+                "name": "Intel IPU7 CSI2 $CSI_PORT", "pad": 0, "width": 4208, "height": 3120,
                 "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
               }
             ],
             "link": [
               {
-                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI-2 $CSI_PORT",
+                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI2 $CSI_PORT",
                 "sinkPad": 0, "enable": true
               },
               {
-                "srcName": "Intel IPU7 CSI-2 $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "sinkPad": 0, "enable": true
-              },
-              {
-                "srcName": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 BE SOC capture $CSI_PORT", "sinkPad": 0, "enable": true
+                "srcName": "Intel IPU7 CSI2 $CSI_PORT", "srcPad": 1,
+                "sinkName": "Intel IPU7 ISYS Capture $CAP_N", "sinkPad": 0, "enable": true
               }
             ],
             "videonode": [
               {
-                "name": "Intel IPU7 BE SOC capture $CSI_PORT", "videoNodeType": "VIDEO_GENERIC"
+                "name": "Intel IPU7 ISYS Capture $CAP_N", "videoNodeType": "VIDEO_GENERIC"
               },
               {
-                "name": "Intel IPU7 CSI-2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
+                "name": "Intel IPU7 CSI2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
               },
               {
                 "name": "ov13b10 $I2CBUS", "videoNodeType": "VIDEO_PIXEL_ARRAY"
@@ -81,38 +69,26 @@
                 "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
               },
               {
-                "name": "Intel IPU7 CSI-2 $CSI_PORT", "pad": 0, "width": 2104, "height": 1560,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "pad": 0, "width": 2104, "height": 1560,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "pad": 1, "width": 2104, "height": 1560,
+                "name": "Intel IPU7 CSI2 $CSI_PORT", "pad": 0, "width": 2104, "height": 1560,
                 "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
               }
             ],
             "link": [
               {
-                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI-2 $CSI_PORT",
+                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI2 $CSI_PORT",
                 "sinkPad": 0, "enable": true
               },
               {
-                "srcName": "Intel IPU7 CSI-2 $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "sinkPad": 0, "enable": true
-              },
-              {
-                "srcName": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 BE SOC capture $CSI_PORT", "sinkPad": 0, "enable": true
+                "srcName": "Intel IPU7 CSI2 $CSI_PORT", "srcPad": 1,
+                "sinkName": "Intel IPU7 ISYS Capture $CAP_N", "sinkPad": 0, "enable": true
               }
             ],
             "videonode": [
               {
-                "name": "Intel IPU7 BE SOC capture $CSI_PORT", "videoNodeType": "VIDEO_GENERIC"
+                "name": "Intel IPU7 ISYS Capture $CAP_N", "videoNodeType": "VIDEO_GENERIC"
               },
               {
-                "name": "Intel IPU7 CSI-2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
+                "name": "Intel IPU7 CSI2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
               },
               {
                 "name": "ov13b10 $I2CBUS", "videoNodeType": "VIDEO_PIXEL_ARRAY"
@@ -130,38 +106,26 @@
                 "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
               },
               {
-                "name": "Intel IPU7 CSI-2 $CSI_PORT", "pad": 0, "width": 1364, "height": 768,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "pad": 0, "width": 1364, "height": 768,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "pad": 1, "width": 1364, "height": 768,
+                "name": "Intel IPU7 CSI2 $CSI_PORT", "pad": 0, "width": 1364, "height": 768,
                 "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
               }
             ],
             "link": [
               {
-                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI-2 $CSI_PORT",
+                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI2 $CSI_PORT",
                 "sinkPad": 0, "enable": true
               },
               {
-                "srcName": "Intel IPU7 CSI-2 $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "sinkPad": 0, "enable": true
-              },
-              {
-                "srcName": "Intel IPU7 CSI2 BE SOC $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 BE SOC capture $CSI_PORT", "sinkPad": 0, "enable": true
+                "srcName": "Intel IPU7 CSI2 $CSI_PORT", "srcPad": 1,
+                "sinkName": "Intel IPU7 ISYS Capture $CAP_N", "sinkPad": 0, "enable": true
               }
             ],
             "videonode": [
               {
-                "name": "Intel IPU7 BE SOC capture $CSI_PORT", "videoNodeType": "VIDEO_GENERIC"
+                "name": "Intel IPU7 ISYS Capture $CAP_N", "videoNodeType": "VIDEO_GENERIC"
               },
               {
-                "name": "Intel IPU7 CSI-2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
+                "name": "Intel IPU7 CSI2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
               },
               {
                 "name": "ov13b10 $I2CBUS", "videoNodeType": "VIDEO_PIXEL_ARRAY"

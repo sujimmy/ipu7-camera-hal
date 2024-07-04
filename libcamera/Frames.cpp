@@ -24,6 +24,8 @@
 
 #include "libcamera/internal/framebuffer.h"
 
+#include "CameraContext.h"
+
 namespace libcamera {
 
 LOG_DECLARE_CATEGORY(IPU7)
@@ -32,6 +34,8 @@ IPU7Frames::IPU7Frames() {
     for (uint8_t i = 0; i < kMaxProcessingRequest; i++) {
         mAvailableRequestBuffers.push(&mRequestBuffers[i]);
     }
+
+    mResultsHandler.init(this);
 }
 
 IPU7Frames::~IPU7Frames() {}
@@ -74,35 +78,44 @@ void IPU7Frames::remove(Info* info) {
     mProcessingRequests.erase(id);
 }
 
-void IPU7Frames::processRequest(Info* info) {
+Info* IPU7Frames::find(unsigned int frameNumber) {
+    if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
+        Info* info = mProcessingRequests[frameNumber];
+
+        return info;
+    }
+
+    return nullptr;
 }
 
 bool IPU7Frames::getBuffer(Info* info, const icamera::stream_t& halStream, FrameBuffer* frameBuffer,
                            icamera::camera_buffer_t* buf) {
     if (!info || !frameBuffer || !buf) return false;
+
     const std::vector<FrameBuffer::Plane> &planes = frameBuffer->planes();
     if (planes.size() == 0 || planes[0].fd.get() < 0) return false;
 
     buf->s = halStream;
+    buf->s.memType = V4L2_MEMORY_DMABUF;
     buf->frameNumber = info->id;
     buf->dmafd = planes[0].fd.get();
-    buf->flags = V4L2_MEMORY_DMABUF;
+    buf->flags = icamera::BUFFER_FLAG_DMA_EXPORT;
 
-    info->outBuffers.insert(halStream.id);
+    info->outBuffers[halStream.id] = frameBuffer;
 
+    LOG(IPU7, Debug) << "id " << info->id << " dma fd " << buf->dmafd;
     return true;
 }
 
 void IPU7Frames::returnRequest(Info* info) {
 }
 
-void IPU7Frames::updateShutterInfo(unsigned int frameNumber, uint64_t timestamp) {
+void IPU7Frames::shutterReady(unsigned int frameNumber) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
         Info* info = mProcessingRequests[frameNumber];
 
-        info->request->metadata().set(controls::SensorTimestamp, timestamp);
         info->shutterReady = true;
 
         return;
@@ -111,7 +124,7 @@ void IPU7Frames::updateShutterInfo(unsigned int frameNumber, uint64_t timestamp)
     LOG(IPU7, Warning) << "id " << frameNumber << " for shutter isn't found";
 }
 
-void IPU7Frames::upateMetadataInfo(unsigned int frameNumber, int64_t sequence) {
+void IPU7Frames::metadataReady(unsigned int frameNumber, int64_t sequence) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
@@ -125,12 +138,99 @@ void IPU7Frames::upateMetadataInfo(unsigned int frameNumber, int64_t sequence) {
     LOG(IPU7, Warning) << "id " << frameNumber << " for metadata isn't found";
 }
 
-IPU7Results::IPU7Results(IPU7Frames* frames)
-    : mIPU7Frames(frames) {
+void IPU7Frames::bufferReady(unsigned int frameNumber, unsigned int streamId) {
+    MutexLocker locker(mMutex);
+
+    if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
+        Info* info = mProcessingRequests[frameNumber];
+
+        info->outBuffers.erase(streamId);
+
+        return;
+    }
+
+    LOG(IPU7, Warning) << "id " << frameNumber << " for buffer isn't found";
+}
+
+Info* IPU7Frames::requestComplete(unsigned int frameNumber) {
+    MutexLocker locker(mMutex);
+
+    if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
+        Info* info = mProcessingRequests[frameNumber];
+
+        if (info->shutterReady && info->metadataReady && !info->outBuffers.size()) {
+            return info;
+        }
+    }
+
+    return nullptr;
+}
+
+IPU7Results::IPU7Results() : mState(State::Stopped) {
     icamera::camera_callback_ops_t::notify = IPU7Results::notifyCallback;
 }
 
 IPU7Results::~IPU7Results() {
+    {
+        MutexLocker locker(mMutex);
+        mState = State::Stopped;
+        mEventCondition.notify_one();
+    }
+
+    wait();
+
+    LOG(IPU7, Debug) << "Result thread stopped";
+}
+
+void IPU7Results::init(IPU7Frames* frames) {
+    mIPU7Frames = frames;
+
+    {
+        MutexLocker locker(mMutex);
+        mState = State::Running;
+    }
+
+    start();
+
+    LOG(IPU7, Debug) << "Result thread started";
+}
+
+void IPU7Results::sendEvent(const icamera::camera_msg_data_t& data) {
+    MutexLocker locker(mMutex);
+
+    mEventQueue.push(data);
+    mEventCondition.notify_one();
+}
+
+void IPU7Results::run() {
+    LOG(IPU7, Debug) << "Enter result thread loop";
+
+    while(true) {
+        icamera::camera_msg_data_t data;
+        {
+            MutexLocker locker(mMutex);
+
+            auto isEmpty = ([&]() LIBCAMERA_TSA_REQUIRES(mMutex) {
+                return mState != State::Running || !mEventQueue.empty();
+            });
+
+            auto duration = std::chrono::duration<float, std::ratio<2 / 1>>(10);
+            if (mEventQueue.empty()) {
+                mEventCondition.wait_for(locker, duration, isEmpty);
+            }
+
+            if (mState != State::Running) break;
+
+            if (mEventQueue.empty()) continue;
+
+            data = std::move(mEventQueue.front());
+            mEventQueue.pop();
+        }
+
+        handleEvent(data);
+    }
+
+    LOG(IPU7, Debug) << "Exit result thread loop";
 }
 
 void IPU7Results::notifyCallback(const icamera::camera_callback_ops_t* cb,
@@ -139,7 +239,7 @@ void IPU7Results::notifyCallback(const icamera::camera_callback_ops_t* cb,
 
     IPU7Results* callback = const_cast<IPU7Results*>(static_cast<const IPU7Results*>(cb));
 
-    callback->handleEvent(data);
+    callback->sendEvent(data);
 }
 
 void IPU7Results::handleEvent(const icamera::camera_msg_data_t& data) {
@@ -163,7 +263,7 @@ void IPU7Results::handleEvent(const icamera::camera_msg_data_t& data) {
 }
 
 void IPU7Results::shutterDone(unsigned int frameNumber, uint64_t timestamp) {
-    mIPU7Frames->updateShutterInfo(frameNumber, timestamp);
+    mShutterReady.emit(frameNumber, timestamp);
 }
 
 void IPU7Results::metadataDone(unsigned int frameNumber, int64_t sequence) {

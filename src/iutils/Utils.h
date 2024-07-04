@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -222,9 +222,6 @@ typedef ::cros::V4L2Format V4L2Format;
 
 #define FOURCC_TO_UL(a, b, c, d) \
     ((uint32_t)(a) | ((uint32_t)(b) << 8) | ((uint32_t)(c) << 16) | ((uint32_t)(d) << 24))
-
-#define DEFAULT_JPEG_QUALITY 95
-#define DEFAULT_THUMBNAIL_QUALITY 0
 
 // Internal useful tool for format
 namespace CameraUtils {

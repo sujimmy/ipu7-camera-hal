@@ -24,11 +24,6 @@
 #include "modules/ipu_desc/ipu-psys.h"
 #include "iutils/Thread.h"
 
-// MOCK_PSYS_S
-#include <unistd.h>
-#include "Errors.h"
-// MOCK_PSYS_E
-
 namespace icamera {
 
 class IPSysDeviceCallback {
@@ -139,8 +134,7 @@ class PSysDevice {
 
     uint8_t mFrameId[MAX_NODE_NUM];
     std::mutex mDataLock;
-    static const uint8_t MAX_FRAME_NUM = 10;
-    std::map<uint8_t, int64_t> mFrameIdToSeqMap[MAX_NODE_NUM];
+    int64_t mFrameIdToSeqMap[MAX_NODE_NUM][MAX_TASK_NUM];
 
     struct graph_node *mGraphNode;
     struct ipu_psys_term_buffers *mTaskBuffers[MAX_GRAPH_NODES];
@@ -148,32 +142,5 @@ class PSysDevice {
     std::unordered_map<int, TerminalBuffer> mFdToTermBufMap;
     std::unordered_map<void*, TerminalBuffer> mPtrToTermBufMap;
 };  /* PSysDevice */
-
-// MOCK_PSYS_S
-/********************only for debug***********************/
-
-/**
- * PSYS uAPI Mock
- */
-class MockPSysDevice : public PSysDevice {
- public:
-    explicit MockPSysDevice(int cameraId) : PSysDevice(cameraId) {}
-    ~MockPSysDevice() {}
-
-    int init() { return OK; }
-    void registerPSysDeviceCallback(uint8_t contextId, IPSysDeviceCallback* callback) {}
-
-    int addGraph(const PSysGraph& graph) { return OK; }
-    int closeGraph() { return OK; }
-    int addTask(const PSysTask& task) { return OK; }
-    int wait(ipu_psys_event& event) { usleep(10000); return OK; }
-    int poll(short events, int timeout) { return OK; }
-
-    int registerBuffer(TerminalBuffer* buf) { buf->psysBuf.base.fd = ++mFd; return OK; }
-    int unregisterBuffer(TerminalBuffer* buf) { return OK; }
- private:
-    int mFd = 0;
-};  /* MockPSysDevice */
-// MOCK_PSYS_E
 
 } /* namespace icamera */

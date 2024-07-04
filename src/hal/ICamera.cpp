@@ -86,10 +86,6 @@ int get_camera_info(int camera_id, camera_info_t& info) {
 
     // VIRTUAL_CHANNEL_S
     PlatformData::getVCInfo(camera_id, info.vc);
-    // For backward compatibility
-    info.vc_total_num = info.vc.total_num;
-    info.vc_sequence = info.vc.sequence;
-    info.vc_group = info.vc.group;
     // VIRTUAL_CHANNEL_E
 
     return OK;
@@ -135,12 +131,20 @@ int camera_hal_deinit() {
 }
 
 /**
+ * Register callback function
+ **/
+void camera_callback_register(int camera_id, const camera_callback_ops_t* callback) {
+    HAL_TRACE_CALL(1);
+
+    CheckAndLogError(!gCameraHal, VOID_VALUE, "camera hal is NULL.");
+    gCameraHal->deviceCallbackRegister(camera_id, callback);
+}
+
+/**
  * Open one camera device
  *
  * \param camera_id camera index
- // VIRTUAL_CHANNEL_S
  * \param vc_num total virtual channel camera number
- // VIRTUAL_CHANNEL_E
  *
  * \return error code
  **/

@@ -20,8 +20,12 @@
 
 #include "iutils/Errors.h"
 #include "cb_payload_descriptor.h"
-#ifdef USE_STATIC_GRAPH_AUTOGEN
+#if defined(GRC_IPU7X)
 #include "Ipu7xTerminalDescriptorAutogen.h"
+#elif defined(GRC_IPU75XA)
+#include "Ipu75xaTerminalDescriptorAutogen.h"
+#elif defined(GRC_IPU8)
+#include "Ipu8TerminalDescriptorAutogen.h"
 #else
 #include "TerminalDescriptorAutogen.h"
 #endif

@@ -40,6 +40,9 @@ class PipeManager : public IPipeManager {
                           const std::map<uuid, stream_t>* yuvInputInfo = nullptr);
     virtual int start();
     virtual int stop();
+
+    virtual void setControl(int64_t sequence, const PipeControl& control);
+
     virtual void addTask(PipeTaskData taskParam);
     virtual int prepareIpuParams(IspSettings* settings, int64_t sequence = 0,
                                  int streamId = VIDEO_STREAM_ID);

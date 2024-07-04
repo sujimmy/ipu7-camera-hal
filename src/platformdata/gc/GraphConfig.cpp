@@ -676,10 +676,8 @@ void GraphConfig::getStaticGraphConfigData(const std::map<VirtualSink, const Hal
             saveLink(streamId, link, &streamsSinkMap, &graph);
         }
 
-#ifdef IPU_SYSVER_ipu75
         graph.graphResolutionConfig = new GraphResolutionConfigurator(graph.staticGraph);
         dumpNodes(graph);
-#endif
     }
 }
 
@@ -788,10 +786,8 @@ status_t GraphConfig::fillConnectionFormat(const IpuGraphLink& ipuLink, const Ou
             fmtSettings->height = useDest ? kernel->resolution_info->input_height
                                            : kernel->resolution_info->output_height;
         } else if (kernel->resolution_history) {
-            fmtSettings->width = useDest ? kernel->resolution_history->input_width
-                                          : kernel->resolution_history->output_width;
-            fmtSettings->height = useDest ? kernel->resolution_history->input_height
-                                           : kernel->resolution_history->output_height;
+            fmtSettings->width = kernel->resolution_history->output_width;
+            fmtSettings->height = kernel->resolution_history->output_height;
         }
     }
     int32_t bpp = useDest ? kernel->bpp_info.input_bpp : kernel->bpp_info.output_bpp;
@@ -853,7 +849,6 @@ void GraphConfig::fillConnectionConfig(const IpuGraphLink& ipuLink, int32_t term
 
 status_t GraphConfig::updateGraphSettingForPtz(const PtzInfo& cur, const PtzInfo& prev,
                                                bool* isKeyResChanged) {
-#ifdef IPU_SYSVER_ipu75
     RegionOfInterest cRoi = {cur.zoomRatio, cur.x, cur.y, false};
     RegionOfInterest rRoi = {prev.zoomRatio, prev.x, prev.y, false};
 
@@ -872,7 +867,6 @@ status_t GraphConfig::updateGraphSettingForPtz(const PtzInfo& cur, const PtzInfo
 
         dumpNodes(info);
     }
-#endif
     return OK;
 }
 
@@ -1303,5 +1297,38 @@ void GraphConfig::dumpPostStageInfo() {
         }
     }
 }
+
+#ifdef IPU_SYSVER_ipu7
+status_t GraphConfig::getStaticGraphKernelRes(const uint32_t kernel_id,
+                                              StaticGraphKernelRes& res) {
+    std::map<int32_t, OuterNode*> nodes;
+    int32_t streamId = VIDEO_STREAM_ID;
+    status_t ret;
+
+    if (mStaticGraphs.empty()) {
+        return NO_ENTRY;
+    }
+    if (mStaticGraphs.find(streamId) == mStaticGraphs.end()) {
+        streamId = mStaticGraphs.begin()->first;
+    }
+
+    ret = getOuterNodes(streamId, nodes);
+    if (ret != OK) {
+        return ret;
+    }
+
+    for (auto& node : nodes) {
+        StaticGraphNodeKernels& nks = node.second->nodeKernels;
+        for (uint32_t i = 0; i < nks.kernelCount; ++i) {
+            if (nks.kernelList[i].run_kernel.kernel_uuid == kernel_id) {
+                res = *(nks.kernelList[i].run_kernel.resolution_info);
+                return OK;
+            }
+        }
+    }
+
+    return NAME_NOT_FOUND;
+}
+#endif
 
 }  // namespace icamera

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Intel Corporation.
+ * Copyright (C) 2023-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,10 +42,6 @@ struct AutoCalibrationStreamConfig {
     uint32_t sliceNumber = 0;
 };
 
-#ifdef None
-#undef None
-#endif
-
 enum class GraphConfigurationKeyAttributes : uint32_t
 {
     None = 0x00000000,
@@ -80,6 +76,7 @@ struct GraphConfigurationHeader {
 };
 
 struct BinaryHeader {
+    uint32_t isSapEnable = 0;
     uint32_t binaryCommonHashCode = 0;
     uint32_t numberOfResolutions = 0;
     uint32_t numberOfSensorModes = 0;

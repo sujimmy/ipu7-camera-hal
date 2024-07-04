@@ -185,6 +185,18 @@ void CameraHal::deviceClose(int cameraId) {
     CameraContext::releaseInstance(cameraId);
 }
 
+void CameraHal::deviceCallbackRegister(int cameraId, const camera_callback_ops_t* callback) {
+    LOG1("<id%d> @%s", cameraId, __func__);
+    AutoMutex l(mLock);
+
+    CameraDevice* device = mCameraDevices[cameraId];
+    checkCameraDevice(device, VOID_VALUE);
+#ifdef ENABLE_SANDBOXING
+    IntelAlgoClient::getInstance()->registerErrorCallback(callback);
+#endif
+    device->callbackRegister(callback);
+}
+
 // Assume the inputConfig is already checked in upper layer
 int CameraHal::deviceConfigInput(int cameraId, const stream_t* inputConfig) {
     LOG1("<id%d> @%s", cameraId, __func__);

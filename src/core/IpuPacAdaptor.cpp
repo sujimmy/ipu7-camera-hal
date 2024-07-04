@@ -74,6 +74,17 @@ int IpuPacAdaptor::init(std::vector<int> streamIds) {
     return OK;
 }
 
+int IpuPacAdaptor::reinitAic(const int32_t aicId) {
+    AutoMutex l(mPacAdaptorLock);
+    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+
+    ia_err iaErr = mIntelCca->reinitAic(aicId);
+    CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
+                     "%s, Faield to reinit aic, aicId: %d", __func__, aicId);
+
+    return OK;
+}
+
 int IpuPacAdaptor::deinit() {
     LOG1("<id%d>@%s", mCameraId, __func__);
 
@@ -462,24 +473,39 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
 
-    LOG2("<seq:%ld>@%s, decode 3A status. streamId: %d, contextId: %d",
+    // Only decode stats for video stream if it exists.
+    if (streamId != VIDEO_STREAM_ID &&
+        mStreamIdToInputParams.find(VIDEO_STREAM_ID) != mStreamIdToInputParams.end()) {
+        LOG2("<seq:%ld>@%s, skip 3A stats for streamId: %d, contextId: %d",
+             sequenceId, __func__, streamId, contextId);
+        return OK;
+    }
+
+    LOG2("<seq:%ld>@%s, decode 3A stats. streamId: %d, contextId: %d",
          sequenceId, __func__, streamId, contextId);
 
-    ia_err iaErr = mIntelCca->decodeStats(contextId, sequenceId, streamId);
+    cca::cca_out_stats outStatsTemp;
+    cca::cca_out_stats* outStats = &outStatsTemp;
+    outStats->get_rgbs_stats = false;
+
+    auto cameraContext = CameraContext::getInstance(mCameraId);
+    auto dataContext = cameraContext->getDataContextBySeq(sequenceId);
+    auto aiqResult = const_cast<AiqResult*>(mAiqResultStorage->getAiqResult(sequenceId));
+    if (aiqResult && dataContext->mAiqParams.callbackRgbs) {
+        outStats = &aiqResult->mOutStats;
+        outStats->get_rgbs_stats = true;
+    }
+
+    ia_err iaErr = mIntelCca->decodeStats(contextId, sequenceId, streamId, outStats);
     CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
                      "<seq:%ld>%s, Faield to decode stats. streamId: %d, contextId: %d",
                      sequenceId, __func__, streamId, contextId);
 
-    auto cameraContext = CameraContext::getInstance(mCameraId);
-    AiqResultStorage* aiqResultStorage = cameraContext->getAiqResultStorage();
-
-    AiqStatistics* aiqStatistics = aiqResultStorage->acquireAiqStatistics();
+    AiqStatistics* aiqStatistics = mAiqResultStorage->acquireAiqStatistics();
     aiqStatistics->mSequence = sequenceId;
-    aiqStatistics->mTimestamp = timestamp;
-    aiqStatistics->mTuningMode = TUNING_MODE_VIDEO;
-    aiqStatistics->mPendingDecode = false;
+    aiqStatistics->mTimestamp = timestamp; aiqStatistics->mTuningMode = TUNING_MODE_VIDEO;
 
-    aiqResultStorage->updateAiqStatistics(sequenceId);
+    mAiqResultStorage->updateAiqStatistics(sequenceId);
 
     return OK;
 }

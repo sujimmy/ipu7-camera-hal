@@ -48,14 +48,8 @@ void CameraParserInvoker::parseSensors() {
 
     for (const auto& sensor : allSensors) {
         ++mNumSensors;
-        std::string sensorFileName = "sensors/";
-        if ((sensor.first.find("-wf-") != std::string::npos) ||
-            (sensor.first.find("-uf-") != std::string::npos)) {
-            sensorFileName.append(sensor.first.substr(0, sensor.first.find_last_of('-')));
-        } else {
-            sensorFileName.append(sensor.first);
-        }
-        sensorFileName.append(".json");
+
+        std::string sensorFileName = "sensors/" + sensor.first + ".json";
         LOGI("%s: I will Load config file: %s", __func__, sensorFileName.c_str());
 
         CameraSensorsParser cameraSensorsParser(mMediaCtl, mStaticCfg, sensor.second);
@@ -101,27 +95,32 @@ std::vector<std::pair<std::string, SensorInfo>> CameraParserInvoker::getAvailabl
     const std::string& ipuName, const std::vector<std::string>& sensorsList) {
     LOGI("%s, Found IPU: %s", __func__, ipuName.c_str());
 
-    if ((sensorsList[0].find("-wf-") == std::string::npos) &&
-        (sensorsList[0].find("-uf-") == std::string::npos)) {
-        return std::vector<std::pair<std::string, SensorInfo>>();
-    }
-
     std::string sensorSinkName = "Intel ";
     sensorSinkName.append(ipuName);
-    sensorSinkName.append(" CSI-2 ");
+    sensorSinkName.append(" CSI2 ");
 
     std::vector<std::pair<std::string, SensorInfo>> availableSensors;
     for (const auto& sensor : sensorsList) {
-        auto srcSensor = sensor;
-        auto portNum = srcSensor.substr(srcSensor.find_last_of('-') + 1);
-        auto sensorSinkNameWithPort = sensorSinkName + portNum;
-        auto sensorName = srcSensor.substr(0, srcSensor.find_first_of('-'));
+        if (sensor.find("-") == std::string::npos) {
+            // sensors without suffix port number
+            if (mMediaCtl && mMediaCtl->checkAvailableSensor(sensor)) {
+                SensorInfo sensorInfo = {sensor, true};
+                availableSensors.push_back({sensor, sensorInfo});
+                LOG1("@%s, found %s", __func__, sensor.c_str());
+            }
+        } else {
+            // sensors with suffix port number
+            std::string portNum = sensor.substr(sensor.find_last_of('-') + 1);
+            std::string sensorSinkNameWithPort = sensorSinkName + portNum;
+            std::string sensorName = sensor.substr(0, sensor.find_first_of('-'));
+            std::string sensorOutName = sensor.substr(0, sensor.find_last_of('-'));
 
-        if (mMediaCtl && mMediaCtl->checkAvailableSensor(sensorName, sensorSinkNameWithPort)) {
-            SensorInfo sensorInfo = {sensorSinkNameWithPort, false};
-            availableSensors.push_back({srcSensor, sensorInfo});
-            LOG1("%s, Find:% s, Sinkname with port:%s", __func__,
-                 srcSensor.c_str(), sensorSinkNameWithPort.c_str());
+            if (mMediaCtl && mMediaCtl->checkAvailableSensor(sensorName, sensorSinkNameWithPort)) {
+                SensorInfo sensorInfo = {sensorSinkNameWithPort, false};
+                availableSensors.push_back({sensorOutName, sensorInfo});
+                LOG1("@%s, found %s, Sinkname with port: %s", __func__,
+                     sensor.c_str(), sensorSinkNameWithPort.c_str());
+            }
         }
     }
 

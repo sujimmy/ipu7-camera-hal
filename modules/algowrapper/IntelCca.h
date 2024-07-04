@@ -37,6 +37,7 @@ class IntelCca {
     static void releaseInstance(int cameraId, TuningMode mode);
 
     ia_err init(const cca::cca_init_params& initParams);
+    ia_err reinitAic(const int32_t aicId);
 
     ia_err setStatsParams(const cca::cca_stats_params& params);
 
@@ -55,56 +56,31 @@ class IntelCca {
     ia_err getMKN(ia_mkn_trg type, cca::cca_mkn* mkn);
     ia_err getAiqd(cca::cca_aiqd* aiqd);
 
-    bool allocStatsDataMem(unsigned int size);
-    void* getStatsDataBuffer();
-    void decodeHwStatsDone(int64_t sequence, unsigned int byteUsed);
-    void* fetchHwStatsData(int64_t sequence, unsigned int* byteUsed);
     void* allocMem(int streamId, const std::string& name, int index, int size);
     void freeMem(void* addr);
 
     void deinit();
-#ifdef PAC_ENABLE
+
     ia_err configAic(const cca::cca_aic_config& aicConf,
                      const cca::cca_aic_kernel_offset& kernelOffset, uint32_t* offsetPtr,
                      cca::cca_aic_terminal_config& termConfig, int32_t aicId,
                      const int32_t* statsBufToTermIds);
     ia_err registerAicBuf(const cca::cca_aic_terminal_config& termConfig, int32_t aicId);
     ia_err getAicBuf(cca::cca_aic_terminal_config& termConfig, int32_t aicId);
-    ia_err decodeStats(int32_t groupId, int64_t sequence, int32_t aicId);
+    ia_err decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
+                       cca::cca_out_stats* outStats);
     ia_err runAIC (uint64_t frameId, const cca::cca_pal_input_params* params,
                    uint8_t bitmap, int32_t aicId);
 
     ia_err updateConfigurationResolutions(const cca::cca_aic_config& aicConf,
                                           int32_t aicId, bool isKeyResChanged);
-#else
-    ia_err runAIC(uint64_t frameId, const cca::cca_pal_input_params* params, ia_binary_data* pal);
-    ia_err decodeStats(uint64_t statsPointer, uint32_t statsSize, uint32_t bitmap,
-                       ia_isp_bxt_statistics_query_results_t* results,
-                       cca::cca_out_stats* outStats = nullptr);
-
-    uint32_t getPalDataSize(const cca::cca_program_group& programGroup);
-#endif
 
  private:
     cca::IntelCCA* getIntelCCA();
     void releaseIntelCCA();
-    void freeStatsDataMem();
 
- private:
      int mCameraId;
      TuningMode mTuningMode;
-
-    // Only 3 buffers will be held in AiqResultStorage (kAiqResultStorageSize is 3),
-    // So it is safe to use other 3 buffers.
-    static const int kMaxQueueSize = 6;
-    struct StatsBufInfo {
-        unsigned int bufSize;
-        void* ptr;
-        unsigned int usedSize;
-    };
-    Mutex mMemStatsMLock;  // protect mMemStatsInfoMap
-    // first: sequence id, second: stats buffer info
-    std::map<int64_t, StatsBufInfo> mMemStatsInfoMap;
 
     struct CCAHandle {
         int cameraId;

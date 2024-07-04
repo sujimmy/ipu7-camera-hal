@@ -1,0 +1,33 @@
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
+
+/*
+ * \todo Document the interface and remove the related EXCLUDE_PATTERNS entry.
+ */
+
+module ipa.ipu7;
+
+import "include/libcamera/ipa/core.mojom";
+
+struct IPACmdInfo {
+    int32 cameraId;
+    int32 tuningMode;
+    uint32 cmd;
+    uint32 bufferId;
+};
+
+interface IPAIPU7Interface {
+    init(uint32 bufferId) => (int32 ret);
+
+    start() => (int32 ret);
+    stop();
+
+    requestSync(IPACmdInfo cmdInfo) => (int32 ret);
+    [async] requestASync(IPACmdInfo cmdInfo);
+
+    mapBuffers(array<libcamera.IPABuffer> buffers);
+    unmapBuffers(array<uint32> ids);
+};
+
+interface IPAIPU7EventInterface {
+    notifyCallback(IPACmdInfo cmdInfo, int32 ret);
+};

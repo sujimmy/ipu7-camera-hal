@@ -85,10 +85,13 @@ int PipeManager::configure(const std::map<uuid, stream_t>& inputInfo,
 }
 
 int PipeManager::start() {
+    int ret = OK;
+
     for (auto& pipeLine : mPipeLines) {
-        pipeLine.second->start();
+        ret = pipeLine.second->start();
+        CheckAndLogError(ret != OK, ret, "Failed to start pipeline");
     }
-    return icamera::OK;
+    return ret;
 }
 
 int PipeManager::stop() {
@@ -364,6 +367,13 @@ void PipeManager::releasePipeLines() {
     mYuvPipeLine.clear();
 }
 
+void PipeManager::setControl(int64_t sequence, const PipeControl& control) {
+    for (auto pipeline : mPipeLines) {
+        if (control.find(pipeline.first) != control.end())
+            pipeline.second->setControl(sequence, control.at(pipeline.first));
+    }
+}
+
 void PipeManager::addTask(PipeTaskData taskParam) {
     LOG2("<id%d>@%s", mCameraId, __func__);
 
@@ -429,6 +439,11 @@ int PipeManager::getActiveStreamIds(const PipeTaskData& taskData,
 }
 
 int PipeManager::prepareIpuParams(IspSettings* settings, int64_t sequence, int streamId) {
+    if (mPipeLines.find(streamId) == mPipeLines.end()) {
+        LOGW("<id%d>@%s Invalid stream id:%d", mCameraId, __func__, streamId);
+        return BAD_VALUE;
+    }
+
     {
         // Make sure the AIC is executed once.
         AutoMutex l(mOngoingPalMapLock);

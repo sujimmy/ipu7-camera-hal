@@ -342,7 +342,7 @@ int CsiMetaDevice::setFormat() {
     struct v4l2_format v4l2fmt;
     CLEAR(v4l2fmt);
 
-    v4l2fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+    v4l2fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     v4l2fmt.fmt.pix_mp.width = mEmbeddedMetaData.width;
     v4l2fmt.fmt.pix_mp.height = mEmbeddedMetaData.height;
     v4l2fmt.fmt.pix_mp.num_planes = mEmbeddedMetaData.planesNum;

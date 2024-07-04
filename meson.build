@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2019-2024 Intel Corporation
+#  Copyright (C) 2024 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -13,11 +13,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+libcamera_sources += files([
+    'ipu7.cpp',
+    'Frames.cpp',
+    'CameraHal.cpp',
+    'ParameterConverter.cpp',
+    'Camera3AMetadata.cpp',
+    'IntelAEStateMachine.cpp',
+    'IntelAFStateMachine.cpp',
+    'IntelAWBStateMachine.cpp',
+# PNP_DEBUG_S
+    'MockCameraHal.cpp',
+# PNP_DEBUG_E
+])
 
 libcamera_sources += files([
-    'modules/algowrapper/IntelCca.cpp',
     'modules/algowrapper/IntelFaceDetection.cpp',
-    'modules/memory/chrome/Camera3Buffer.cpp',
     'modules/memory/chrome/BufferAllocator.cpp',
     'src/3a/AiqCore.cpp',
     'src/3a/AiqEngine.cpp',
@@ -58,6 +69,14 @@ libcamera_sources += files([
     'src/core/processingUnit/GPUPostStage.cpp',
     'src/core/processingUnit/IntelTNR7Stage.cpp',
     'modules/algowrapper/IntelICBM.cpp',
+# PNP_DEBUG_S
+    'src/core/FileSource.cpp',
+    'src/platformdata/PnpDebugControl.cpp',
+    'src/core/processingUnit/PipeManagerStub.cpp',
+    'src/image_process/sw/ImageConverter.cpp',
+    'src/image_process/sw/ImageScalerCore.cpp',
+    'src/iutils/SwImageConverter.cpp',
+# PNP_DEBUG_E
     'src/icbm/ICBMThread.cpp',
     'src/icbm/OnePunchIC2.cpp',
     'src/icbm/MemoryChain.cpp',
@@ -107,41 +126,39 @@ libcamera_sources += files([
     'modules/ipu_desc/ptl/GraphResolutionConfigurator.cpp',
     'modules/ipu_desc/ptl/GraphResolutionConfiguratorAutogen.cpp',
 ])
-
-cpp_includes += [
-    'pipeline/ipu7/',
-    'pipeline/ipu7/aal',
-    'pipeline/ipu7/aal/chrome',
-    'pipeline/ipu7/include',
-    'pipeline/ipu7/include/api',
-    'pipeline/ipu7/include/utils',
-    'pipeline/ipu7/include/linux',
-    'pipeline/ipu7/src',
-    'pipeline/ipu7/src/fd',
-    'pipeline/ipu7/src/fd/pvl',
-    'pipeline/ipu7/src/fd/facessd',
-    'pipeline/ipu7/src/platformdata',
-    'pipeline/ipu7/src/platformdata/gc',
-    'pipeline/ipu7/src/v4l2',
-    'pipeline/ipu7/src/iutils',
-    'pipeline/ipu7/src/core',
-    'pipeline/ipu7/src/core/processingUnit',
-    'pipeline/ipu7/src/scheduler',
-    'pipeline/ipu7/src/3a/intel3a',
-    'pipeline/ipu7/src/3a',
-    'pipeline/ipu7/src/image_process',
-    'pipeline/ipu7/src/image_process/sw',
-    'pipeline/ipu7/src/image_process/gpu',
-    'pipeline/ipu7/src/image_process/chrome',
-    'pipeline/ipu7/src/jpeg/',
-    'pipeline/ipu7/src/jpeg/chrome',
-    'pipeline/ipu7/modules/memory',
-    'pipeline/ipu7/modules/memory/chrome',
-    'pipeline/ipu7/modules/algowrapper',
-    'pipeline/ipu7/include/ia_imaging',
-    'pipeline/ipu7/modules/ipu_desc',
-    'pipeline/ipu7/modules/ipu_desc/ptl',
-]
+# for master branch build
+ipu7_includes += include_directories(
+    '.',
+    'include',
+    'include/api',
+    'include/utils',
+    'include/linux',
+    'src',
+    'src/fd',
+    'src/fd/pvl',
+    'src/fd/facessd',
+    'src/platformdata',
+    'src/platformdata/gc',
+    'src/v4l2',
+    'src/iutils',
+    'src/core',
+    'src/core/processingUnit',
+    'src/scheduler',
+    'src/3a/intel3a',
+    'src/3a',
+    'src/image_process',
+    'src/image_process/sw',
+    'src/image_process/gpu',
+    'src/image_process/chrome',
+    'src/jpeg/',
+    'src/jpeg/chrome',
+    'modules/memory',
+    'modules/memory/chrome',
+    'modules/algowrapper',
+    'include/ia_imaging',
+    'modules/ipu_desc',
+    'modules/ipu_desc/ptl',
+)
 
 libcamera_args = [
     '-DCAL_BUILD',
@@ -155,12 +172,14 @@ libcamera_args = [
     '-DHAL_PIXEL_FORMAT_NV12_LINEAR_CAMERA_INTEL=0x10F',
     '-DMAX_PAC_BUFFERS=10',
     '-DFACE_DETECTION',
-    '-DNON_SANDBOX',
     '-DIPU7_SIMULATION',
     '-DIPU_SYSVER_ipu7',
     '-DIPU_SYSVER_ipu75',
     '-DPAC_ENABLE',
     '-DSTATIC_GRAPH_USE_IA_AIC_TYPES',
+# PNP_DEBUG_S
+    '-DPNP_DEBUG_TEST',
+# PNP_DEBUG_E
 ]
 
 libcamera_args += [
@@ -242,3 +261,18 @@ libcamera_deps += [
   OpenGL,
 ]
 # GPU_GLES_PROCESSOR_E
+
+# set default as not enabling Sandbox
+ipa_sandbox = false
+
+if not ipa_sandbox
+    libcamera_sources += files([
+        'modules/algowrapper/IntelCca.cpp',
+    ])
+else
+    libcamera_args += [
+        '-DIPA_SANDBOXING',
+    ]
+
+    subdir('ipa')
+endif

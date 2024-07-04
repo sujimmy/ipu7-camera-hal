@@ -192,12 +192,12 @@ void OuterNode::Init(uint8_t nodeResourceId,
 
     kernelListOptions = new StaticGraphPacRunKernel*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; i++)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; i++)
     {
         if (kernelCount > 0)
         {
             kernelListOptions[i] = new StaticGraphPacRunKernel[kernelCount];
-            for (uint8_t j = 0; j < kernelCount; j++)
+            for (uint32_t j = 0; j < kernelCount; j++)
             {
                 kernelListOptions[i][j].fragment_descs = nullptr;
             }
@@ -216,7 +216,7 @@ void OuterNode::Init(uint8_t nodeResourceId,
 
 OuterNode::~OuterNode()
 {
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; i++)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; i++)
     {
         delete[] kernelListOptions[i];
     }
@@ -228,6 +228,7 @@ void OuterNode::InitRunKernels(uint16_t* kernelsUuids, uint64_t kernelsRcbBitmap
     uint8_t* systemApiDataCurrentPtr = systemApiData;
     uint32_t currentResolutionHistoryIndex = 0;
     uint32_t currentRcbIndex = 0;
+
     for (uint32_t i = 0; i < nodeKernels.kernelCount; ++i)
     {
         auto& runKernel = nodeKernels.kernelList[i].run_kernel;
@@ -277,7 +278,7 @@ void OuterNode::InitRunKernels(uint16_t* kernelsUuids, uint64_t kernelsRcbBitmap
 
 void OuterNode::SetDisabledKernels(uint64_t disabledRunKernelsBitmap)
 {
-    for (uint8_t i = 0; i < nodeKernels.kernelCount; ++i)
+    for (uint32_t i = 0; i < nodeKernels.kernelCount; ++i)
     {
         // check the i'th bit in the bitmap
         if (CHECK_BITMAP64_BIT(disabledRunKernelsBitmap, i))
@@ -314,11 +315,11 @@ void IsysOuterNode::Init(IsysOuterNodeConfiguration** selectedGraphConfiguration
 
     uint8_t systemApisSizes[1] = {0 /*is_odr_a*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
     }
 
     // set default inner Node
@@ -335,15 +336,15 @@ void LbffBayerOuterNode::Init(LbffBayerOuterNodeConfiguration** selectedGraphCon
 
     uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -362,11 +363,11 @@ void BbpsNoTnrOuterNode::Init(BbpsNoTnrOuterNodeConfiguration** selectedGraphCon
 
     uint8_t systemApisSizes[7] = {156 /*slim_tnr_spatial_bifd_yuvn_regs_1_1*/, 0 /*cas_1_0*/, 156 /*ofs_mp_bodr_regs_1_1*/, 0 /*outputscaler_2_0_a*/, 0 /*outputscaler_2_0_b*/, 156 /*ofs_dp_bodr_regs_1_1*/, 156 /*ofs_pp_bodr_regs_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // set default inner Node
@@ -383,11 +384,11 @@ void BbpsWithTnrOuterNode::Init(BbpsWithTnrOuterNodeConfiguration** selectedGrap
 
     uint8_t systemApisSizes[20] = {156 /*slim_tnr_sp_bc_bifd_yuv4nm1_regs_1_1*/, 156 /*slim_tnr_sp_bc_bifd_rs4nm1_regs_1_1*/, 156 /*tnr_sp_bc_bifd_yuv4n_regs_1_1*/, 0 /*tnr7_ims_1_1*/, 0 /*tnr7_bc_1_1*/, 156 /*tnr_sp_bc_bodr_rs4n_regs_1_1*/, 156 /*slim_tnr_spatial_bifd_yuvn_regs_1_1*/, 0 /*tnr7_spatial_1_0*/, 156 /*slim_tnr_fp_blend_bifd_yuvnm1_regs_1_1*/, 156 /*tnr_fp_blend_bifd_rs4n_regs_1_1*/, 6 /*tnr7_blend_1_0*/, 156 /*tnr_fp_bodr_yuvn_regs_1_1*/, 0 /*cas_1_0*/, 0 /*tnr_scale_fp*/, 156 /*ofs_mp_bodr_regs_1_1*/, 0 /*outputscaler_2_0_a*/, 0 /*outputscaler_2_0_b*/, 156 /*ofs_dp_bodr_regs_1_1*/, 156 /*ofs_pp_bodr_regs_1_1*/, 156 /*tnr_scale_fp_bodr_yuv4n_regs_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // set default inner Node
@@ -404,15 +405,15 @@ void LbffBayerWithGmvOuterNode::Init(LbffBayerWithGmvOuterNodeConfiguration** se
 
     uint8_t systemApisSizes[35] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -431,11 +432,11 @@ void SwGdcOuterNode::Init(SwGdcOuterNodeConfiguration** selectedGraphConfigurati
 
     uint8_t systemApisSizes[1] = {0 /*gdc7_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
     }
 
     // set default inner Node
@@ -452,15 +453,15 @@ void LbffRgbIrOuterNode::Init(LbffRgbIrOuterNodeConfiguration** selectedGraphCon
 
     uint8_t systemApisSizes[34] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 0 /*gd_dpc_2_2*/, 7 /*rgbs_grid_1_1*/, 0 /*rgb_ir_2_0*/, 156 /*odr_ir_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sve_1_1*/, 156 /*odr_awb_sat_1_1*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][13].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -479,15 +480,15 @@ void LbffIrNoGmvIrStreamOuterNode::Init(LbffIrNoGmvIrStreamOuterNodeConfiguratio
 
     uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -506,11 +507,11 @@ void BbpsIrWithTnrOuterNode::Init(BbpsIrWithTnrOuterNodeConfiguration** selected
 
     uint8_t systemApisSizes[20] = {156 /*slim_tnr_sp_bc_bifd_yuv4nm1_regs_1_1*/, 156 /*slim_tnr_sp_bc_bifd_rs4nm1_regs_1_1*/, 156 /*tnr_sp_bc_bifd_yuv4n_regs_1_1*/, 0 /*tnr7_ims_1_1*/, 0 /*tnr7_bc_1_1*/, 156 /*tnr_sp_bc_bodr_rs4n_regs_1_1*/, 156 /*slim_tnr_spatial_bifd_yuvn_regs_1_1*/, 0 /*tnr7_spatial_1_0*/, 156 /*slim_tnr_fp_blend_bifd_yuvnm1_regs_1_1*/, 156 /*tnr_fp_blend_bifd_rs4n_regs_1_1*/, 6 /*tnr7_blend_1_0*/, 156 /*tnr_fp_bodr_yuvn_regs_1_1*/, 0 /*cas_1_0*/, 0 /*tnr_scale_fp*/, 156 /*ofs_mp_bodr_regs_1_1*/, 0 /*outputscaler_2_0_a*/, 0 /*outputscaler_2_0_b*/, 156 /*ofs_dp_bodr_regs_1_1*/, 156 /*ofs_pp_bodr_regs_1_1*/, 156 /*tnr_scale_fp_bodr_yuv4n_regs_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // set default inner Node
@@ -527,15 +528,15 @@ void LbffBayerBurstOutNo3AOuterNode::Init(LbffBayerBurstOutNo3AOuterNodeConfigur
 
     uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 156 /*odr_burst_isp_1_1*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*ifd_pdaf_1_1*/, 24 /*pext_1_0*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][6].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -554,11 +555,11 @@ void BbpsIrNoTnrOuterNode::Init(BbpsIrNoTnrOuterNodeConfiguration** selectedGrap
 
     uint8_t systemApisSizes[7] = {156 /*slim_tnr_spatial_bifd_yuvn_regs_1_1*/, 0 /*cas_1_0*/, 156 /*ofs_mp_bodr_regs_1_1*/, 0 /*outputscaler_2_0_a*/, 0 /*outputscaler_2_0_b*/, 156 /*ofs_dp_bodr_regs_1_1*/, 156 /*ofs_pp_bodr_regs_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // set default inner Node
@@ -575,11 +576,11 @@ void LbffIrNoGmvOuterNode::Init(LbffIrNoGmvOuterNodeConfiguration** selectedGrap
 
     uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // set default inner Node
@@ -596,11 +597,11 @@ void IsysPdaf2OuterNode::Init(IsysPdaf2OuterNodeConfiguration** selectedGraphCon
 
     uint8_t systemApisSizes[2] = {0 /*is_odr_a*/, 0 /*is_odr_b*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
     }
 
     // set default inner Node
@@ -617,15 +618,15 @@ void LbffBayerPdaf2OuterNode::Init(LbffBayerPdaf2OuterNodeConfiguration** select
 
     uint8_t systemApisSizes[35] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_pdaf_1_1*/, 24 /*pext_1_0*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -644,15 +645,15 @@ void LbffBayerPdaf3OuterNode::Init(LbffBayerPdaf3OuterNodeConfiguration** select
 
     uint8_t systemApisSizes[34] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*pext_1_0*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -671,11 +672,11 @@ void IsysDolOuterNode::Init(IsysDolOuterNodeConfiguration** selectedGraphConfigu
 
     uint8_t systemApisSizes[2] = {0 /*is_odr_a*/, 0 /*is_odr_c*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
     }
 
     // set default inner Node
@@ -692,11 +693,11 @@ void SwDolOuterNode::Init(SwDolOuterNodeConfiguration** selectedGraphConfigurati
 
     uint8_t systemApisSizes[1] = {0 /*dol_lite_1_0*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, nullptr, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, nullptr, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
     }
 
     // set default inner Node
@@ -713,15 +714,15 @@ void LbffDolOuterNode::Init(LbffDolOuterNodeConfiguration** selectedGraphConfigu
 
     uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
     }
 
     // Metadata update
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
     }
@@ -740,11 +741,11 @@ void SwGtmOuterNode::Init(SwGtmOuterNodeConfiguration** selectedGraphConfigurati
 
     uint8_t systemApisSizes[1] = {0 /*tm_app*/};
 
-    for (uint8_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
         nodeKernels.kernelList = kernelListOptions[i];
 
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, nullptr, kernelsResolutionHistoryGroupBitmap, selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, nullptr, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
     }
 
     // set default inner Node
@@ -764,7 +765,7 @@ void IsysOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void LbffBayerOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 31; ++i)
         {
@@ -984,7 +985,7 @@ void LbffBayerOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void BbpsNoTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 7; ++i)
         {
@@ -1136,7 +1137,7 @@ void BbpsNoTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void BbpsWithTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 20; ++i)
         {
@@ -1290,7 +1291,7 @@ void BbpsWithTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void LbffBayerWithGmvOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 35; ++i)
         {
@@ -1729,7 +1730,7 @@ void SwGdcOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void LbffRgbIrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 34; ++i)
         {
@@ -2174,7 +2175,7 @@ void LbffRgbIrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void LbffIrNoGmvIrStreamOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 31; ++i)
         {
@@ -2399,7 +2400,7 @@ void LbffIrNoGmvIrStreamOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerO
 void BbpsIrWithTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 20; ++i)
         {
@@ -2553,7 +2554,7 @@ void BbpsIrWithTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions
 void LbffBayerBurstOutNo3AOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 31; ++i)
         {
@@ -3357,7 +3358,7 @@ void LbffBayerBurstOutNo3AOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInne
 void BbpsIrNoTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 7; ++i)
         {
@@ -3509,7 +3510,7 @@ void BbpsIrNoTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void LbffIrNoGmvOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 31; ++i)
         {
@@ -3741,7 +3742,7 @@ void IsysPdaf2OuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void LbffBayerPdaf2OuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 35; ++i)
         {
@@ -4204,7 +4205,7 @@ void LbffBayerPdaf2OuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOption
 void LbffBayerPdaf3OuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 34; ++i)
         {
@@ -4669,7 +4670,7 @@ void SwDolOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 void LbffDolOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
     // Kernel default enablement
-    for (uint8_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
     {
         for (uint8_t i = 0; i < 31; ++i)
         {
@@ -4910,7 +4911,7 @@ StaticGraph100000::StaticGraph100000(GraphConfiguration100000** selectedGraphCon
     LbffBayerOuterNodeConfiguration** lbffBayerOuterNodeConfigurationOptions = new LbffBayerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions = new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -5016,9 +5017,9 @@ StaticGraph100000::StaticGraph100000(GraphConfiguration100000** selectedGraphCon
     for (uint8_t i = 0; i < 11; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -5175,7 +5176,7 @@ StaticGraph100002::StaticGraph100002(GraphConfiguration100002** selectedGraphCon
     LbffBayerOuterNodeConfiguration** lbffBayerOuterNodeConfigurationOptions = new LbffBayerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -5330,9 +5331,9 @@ StaticGraph100002::StaticGraph100002(GraphConfiguration100002** selectedGraphCon
     for (uint8_t i = 0; i < 16; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -5490,7 +5491,7 @@ StaticGraph100003::StaticGraph100003(GraphConfiguration100003** selectedGraphCon
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     SwGdcOuterNodeConfiguration** swGdcOuterNodeConfigurationOptions = new SwGdcOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -5690,9 +5691,9 @@ StaticGraph100003::StaticGraph100003(GraphConfiguration100003** selectedGraphCon
     for (uint8_t i = 0; i < 21; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -5860,7 +5861,7 @@ StaticGraph100006::StaticGraph100006(GraphConfiguration100006** selectedGraphCon
     LbffIrNoGmvIrStreamOuterNodeConfiguration** lbffIrNoGmvIrStreamOuterNodeConfigurationOptions = new LbffIrNoGmvIrStreamOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsIrWithTnrOuterNodeConfiguration** bbpsIrWithTnrOuterNodeConfigurationOptions = new BbpsIrWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -6206,9 +6207,9 @@ StaticGraph100006::StaticGraph100006(GraphConfiguration100006** selectedGraphCon
     for (uint8_t i = 0; i < 30; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -6659,7 +6660,7 @@ StaticGraph100007::StaticGraph100007(GraphConfiguration100007** selectedGraphCon
     IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     LbffBayerBurstOutNo3AOuterNodeConfiguration** lbffBayerBurstOutNo3AOuterNodeConfigurationOptions = new LbffBayerBurstOutNo3AOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -6703,9 +6704,9 @@ StaticGraph100007::StaticGraph100007(GraphConfiguration100007** selectedGraphCon
     for (uint8_t i = 0; i < 3; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -6827,7 +6828,7 @@ StaticGraph100008::StaticGraph100008(GraphConfiguration100008** selectedGraphCon
     LbffIrNoGmvIrStreamOuterNodeConfiguration** lbffIrNoGmvIrStreamOuterNodeConfigurationOptions = new LbffIrNoGmvIrStreamOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsIrNoTnrOuterNodeConfiguration** bbpsIrNoTnrOuterNodeConfigurationOptions = new BbpsIrNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -7055,9 +7056,9 @@ StaticGraph100008::StaticGraph100008(GraphConfiguration100008** selectedGraphCon
     for (uint8_t i = 0; i < 20; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -7506,7 +7507,7 @@ StaticGraph100015::StaticGraph100015(GraphConfiguration100015** selectedGraphCon
     IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     LbffBayerOuterNodeConfiguration** lbffBayerOuterNodeConfigurationOptions = new LbffBayerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -7592,9 +7593,9 @@ StaticGraph100015::StaticGraph100015(GraphConfiguration100015** selectedGraphCon
     for (uint8_t i = 0; i < 9; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -7721,7 +7722,7 @@ StaticGraph100016::StaticGraph100016(GraphConfiguration100016** selectedGraphCon
     _graphConfigurations = new GraphConfiguration100016[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions = new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         bbpsNoTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsNoTnrOuterNodeConfiguration;
@@ -7767,9 +7768,9 @@ StaticGraph100016::StaticGraph100016(GraphConfiguration100016** selectedGraphCon
     for (uint8_t i = 0; i < 4; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -7889,7 +7890,7 @@ StaticGraph100025::StaticGraph100025(GraphConfiguration100025** selectedGraphCon
     LbffIrNoGmvOuterNodeConfiguration** lbffIrNoGmvOuterNodeConfigurationOptions = new LbffIrNoGmvOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions = new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -7995,9 +7996,9 @@ StaticGraph100025::StaticGraph100025(GraphConfiguration100025** selectedGraphCon
     for (uint8_t i = 0; i < 11; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -8152,7 +8153,7 @@ StaticGraph100026::StaticGraph100026(GraphConfiguration100026** selectedGraphCon
     _graphConfigurations = new GraphConfiguration100026[kernelConfigurationsOptionsCount];
     IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -8184,9 +8185,9 @@ StaticGraph100026::StaticGraph100026(GraphConfiguration100026** selectedGraphCon
     for (uint8_t i = 0; i < 2; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -8240,7 +8241,7 @@ StaticGraph100027::StaticGraph100027(GraphConfiguration100027** selectedGraphCon
     LbffBayerPdaf2OuterNodeConfiguration** lbffBayerPdaf2OuterNodeConfigurationOptions = new LbffBayerPdaf2OuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions = new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysPdaf2OuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysPdaf2OuterNodeConfiguration;
@@ -8369,9 +8370,9 @@ StaticGraph100027::StaticGraph100027(GraphConfiguration100027** selectedGraphCon
     for (uint8_t i = 0; i < 14; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -8529,7 +8530,7 @@ StaticGraph100028::StaticGraph100028(GraphConfiguration100028** selectedGraphCon
     LbffBayerPdaf3OuterNodeConfiguration** lbffBayerPdaf3OuterNodeConfigurationOptions = new LbffBayerPdaf3OuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions = new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -8642,9 +8643,9 @@ StaticGraph100028::StaticGraph100028(GraphConfiguration100028** selectedGraphCon
     for (uint8_t i = 0; i < 12; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -8802,7 +8803,7 @@ StaticGraph100029::StaticGraph100029(GraphConfiguration100029** selectedGraphCon
     LbffBayerPdaf2OuterNodeConfiguration** lbffBayerPdaf2OuterNodeConfigurationOptions = new LbffBayerPdaf2OuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysPdaf2OuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysPdaf2OuterNodeConfiguration;
@@ -8980,9 +8981,9 @@ StaticGraph100029::StaticGraph100029(GraphConfiguration100029** selectedGraphCon
     for (uint8_t i = 0; i < 19; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -9140,7 +9141,7 @@ StaticGraph100030::StaticGraph100030(GraphConfiguration100030** selectedGraphCon
     LbffBayerPdaf3OuterNodeConfiguration** lbffBayerPdaf3OuterNodeConfigurationOptions = new LbffBayerPdaf3OuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
@@ -9302,9 +9303,9 @@ StaticGraph100030::StaticGraph100030(GraphConfiguration100030** selectedGraphCon
     for (uint8_t i = 0; i < 17; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -9464,7 +9465,7 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions = new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     SwGtmOuterNodeConfiguration** swGtmOuterNodeConfigurationOptions = new SwGtmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysDolOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysDolOuterNodeConfiguration;
@@ -9626,9 +9627,9 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     for (uint8_t i = 0; i < 17; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -9799,7 +9800,7 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     SwGtmOuterNodeConfiguration** swGtmOuterNodeConfigurationOptions = new SwGtmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysDolOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysDolOuterNodeConfiguration;
@@ -10010,9 +10011,9 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     for (uint8_t i = 0; i < 22; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -10179,7 +10180,7 @@ StaticGraph100035::StaticGraph100035(GraphConfiguration100035** selectedGraphCon
     _graphConfigurations = new GraphConfiguration100035[kernelConfigurationsOptionsCount];
     IsysDolOuterNodeConfiguration** isysDolOuterNodeConfigurationOptions = new IsysDolOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysDolOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysDolOuterNodeConfiguration;
@@ -10225,9 +10226,9 @@ StaticGraph100035::StaticGraph100035(GraphConfiguration100035** selectedGraphCon
     for (uint8_t i = 0; i < 4; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {
@@ -10279,7 +10280,7 @@ StaticGraph100036::StaticGraph100036(GraphConfiguration100036** selectedGraphCon
     _graphConfigurations = new GraphConfiguration100036[kernelConfigurationsOptionsCount];
     IsysPdaf2OuterNodeConfiguration** isysPdaf2OuterNodeConfigurationOptions = new IsysPdaf2OuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
-    for (uint8_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
         isysPdaf2OuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysPdaf2OuterNodeConfiguration;
@@ -10325,9 +10326,9 @@ StaticGraph100036::StaticGraph100036(GraphConfiguration100036** selectedGraphCon
     for (uint8_t i = 0; i < 4; ++i)
     {
         // apply link configuration. select configuration with maximal size
-        uint8_t selectedLinkConfig = 0;
+        uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
-        for (uint8_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
         {
             if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
             {

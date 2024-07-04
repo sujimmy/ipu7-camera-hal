@@ -22,6 +22,7 @@
 
 #include <libcamera/base/mutex.h>
 #include <libcamera/base/signal.h>
+#include <libcamera/base/thread.h>
 
 #include "ParamDataType.h"
 
@@ -34,8 +35,8 @@ struct Info {
     unsigned int id;
     Request* request;
 
-    std::set<int> outBuffers;
-    std::set<int> inBuffer;
+    std::map<int, FrameBuffer*> outBuffers;
+    std::map<int, FrameBuffer*> inBuffer;
     bool metadataReady;
     bool shutterReady;
 
@@ -48,41 +49,26 @@ struct Info {
     }
 };
 
-class IPU7Frames {
+class IPU7Frames;
+class IPU7Results : public icamera::camera_callback_ops_t, public Thread {
  public:
-    IPU7Frames();
-    ~IPU7Frames();
-
-    void clear();
-
-    Info* create(Request* request);
-    void remove(Info* info);
-
-    void processRequest(Info* info);
-    bool getBuffer(Info* info, const icamera::stream_t& halStream, FrameBuffer* frameBuffer,
-                   icamera::camera_buffer_t* buf);
-    void returnRequest(Info* info);
-
-    void updateShutterInfo(unsigned int frameNumber, uint64_t timestamp);
-    void upateMetadataInfo(unsigned int frameNumber, int64_t sequence);
-
- private:
-    mutable Mutex mMutex;
-
-    static const uint8_t kMaxProcessingRequest = 10;
-    Info mRequestBuffers[kMaxProcessingRequest];
-    std::queue<Info*> mAvailableRequestBuffers;
-
-    std::map<unsigned int, Info*> mProcessingRequests;
-};
-
-class IPU7Results : public icamera::camera_callback_ops_t {
- public:
-    IPU7Results(IPU7Frames* frames);
+    IPU7Results();
     ~IPU7Results();
 
+    void init(IPU7Frames* frames);
+    void sendEvent(const icamera::camera_msg_data_t& data);
+
     Signal<unsigned int, int64_t> mMetadataAvailable;
+    Signal<unsigned int, int64_t> mShutterReady;
     Signal<unsigned int> mBufferAvailable;
+
+    enum State {
+        Stopped,
+        Running,
+    };
+
+ protected:
+    void run() override;
 
  private:
     static void notifyCallback(const icamera::camera_callback_ops_t* cb,
@@ -95,6 +81,44 @@ class IPU7Results : public icamera::camera_callback_ops_t {
     void bufferDone(unsigned int streamId);
 
     IPU7Frames* mIPU7Frames;
+    mutable Mutex mMutex;
+    ConditionVariable mEventCondition;
+    std::queue<icamera::camera_msg_data_t> mEventQueue;
+
+    State mState LIBCAMERA_TSA_GUARDED_BY(mMutex);
+};
+
+class IPU7Frames {
+ public:
+    IPU7Frames();
+    ~IPU7Frames();
+
+    void clear();
+
+    Info* create(Request* request);
+    void remove(Info* info);
+    Info* find(unsigned int frameNumber);
+
+    bool getBuffer(Info* info, const icamera::stream_t& halStream, FrameBuffer* frameBuffer,
+                   icamera::camera_buffer_t* buf);
+    void returnRequest(Info* info);
+
+    void shutterReady(unsigned int frameNumber);
+    void metadataReady(unsigned int frameNumber, int64_t sequence);
+    void bufferReady(unsigned int frameNumber, unsigned int streamId);
+
+    Info* requestComplete(unsigned int frameNumber);
+
+    IPU7Results mResultsHandler;
+
+ private:
+    mutable Mutex mMutex;
+
+    static const uint8_t kMaxProcessingRequest = 10;
+    Info mRequestBuffers[kMaxProcessingRequest];
+    std::queue<Info*> mAvailableRequestBuffers;
+
+    std::map<unsigned int, Info*> mProcessingRequests;
 };
 
 } /* namespace libcamera */

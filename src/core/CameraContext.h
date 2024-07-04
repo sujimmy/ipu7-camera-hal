@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,18 @@
 
 #include <map>
 #include <mutex>
+#include <memory>
+#include <cstring>
 
-#include "Utils.h"
 #include "AiqSetting.h"
-#include "PlatformData.h"
+#include "CameraTypes.h"
 #include "ParamDataType.h"
 #include "EXIFMetaData.h"
-#include "AiqResultStorage.h"
 
 namespace icamera {
+
+class AiqResultStorage;
+class GraphConfig;
 
 struct IspParameters {
     camera_edge_mode_t edgeMode;
@@ -40,7 +43,7 @@ struct IspParameters {
     float digitalZoomRatio;
 
     IspParameters() {
-        CLEAR(*this);
+        memset(this, 0, sizeof(*this));
 
         nrMode = NR_MODE_LEVEL_2;
     }
@@ -61,7 +64,7 @@ struct JpegParameters {
     float aperture;
 
     JpegParameters() {
-        CLEAR(*this);
+        memset(this, 0, sizeof(*this));
 
         jpegQuality = DEFAULT_JPEG_QUALITY;
         thumbQuality = DEFAULT_JPEG_QUALITY;
@@ -78,7 +81,7 @@ struct EvcpParameters {
     int brBgFd;
 
     EvcpParameters() {
-        CLEAR(*this);
+        memset(this, 0, sizeof(*this));
     }
 };
 // ENABLE_EVCP_E
@@ -104,42 +107,7 @@ class DataContext {
     struct EvcpParameters mEvcpParams;
 // ENABLE_EVCP_E
 
-    DataContext(int cameraId) :
-        mFrameNumber(-1),
-        mSequence(-1),
-        mCcaId(-1),
-        mFaceDetectMode(0),
-        monoDsMode(MONO_DS_MODE_OFF),
-        deinterlaceMode(DEINTERLACE_OFF) {
-        cropRegion = {0, 0, 0};
-        zoomRegion = {0, 0, 0, 0, 1.0f, icamera::ROTATE_NONE};
-
-        camera_coordinate_system_t activePixelArray = PlatformData::getActivePixelArray(cameraId);
-        if ((activePixelArray.right > activePixelArray.left) &&
-            (activePixelArray.bottom > activePixelArray.top)) {
-            mAiqParams.resolution.width = activePixelArray.right - activePixelArray.left;
-            mAiqParams.resolution.height = activePixelArray.bottom - activePixelArray.top;
-        }
-        const StaticMetadata *staticMetadata = PlatformData::getStaticMetadata(cameraId);
-        if (staticMetadata->mEvRange.size() == 2) {
-            mAiqParams.evRange = {static_cast<float>(staticMetadata->mEvRange[0]),
-                                 static_cast<float>(staticMetadata->mEvRange[1])};
-        }
-        if (staticMetadata->mEvStep.size() == 2) {
-            mAiqParams.evStep = {staticMetadata->mEvStep[0], staticMetadata->mEvStep[1]};
-        };
-
-        std::string str = "lens.info.shadingMapSize";
-        auto vI = PlatformData::getInt32StaticMetadata(cameraId, str);
-        if (vI.size() == 2) {
-            mAiqParams.lensShadingMapSize = {vI[0], vI[1]};
-        }
-        str = "lens.info.minimumFocusDistance";
-        auto vF = PlatformData::getFloatStaticMetadata(cameraId, str);
-        if (vF.size() == 1) {
-            mAiqParams.minFocusDistance = vF[0];
-        }
-    }
+    DataContext(int cameraId);
     ~DataContext() {}
 
     DataContext& operator=(const DataContext& other) {
@@ -182,10 +150,7 @@ class CameraContext {
     DataContext* getReprocessingDataContextBySeq(int64_t sequence);
 
     std::shared_ptr<GraphConfig> getGraphConfig(ConfigMode configMode);
-    void storeGraphConfig(std::map<ConfigMode, std::shared_ptr<GraphConfig> > gcs) {
-        AutoMutex l(mLock);
-        mGraphConfigMap = gcs;
-    }
+    void storeGraphConfig(std::map<ConfigMode, std::shared_ptr<GraphConfig> > gcs);
 
     // only called when handling request once
     DataContext* acquireDataContextByFn(int64_t frameNumber);

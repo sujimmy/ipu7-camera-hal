@@ -53,7 +53,7 @@ CameraBuffer::CameraBuffer(int memory, uint32_t size, int index)
 
     mV.SetMemory(memory);
     mV.SetIndex(index);
-    mV.SetType(V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE);
+    mV.SetType(V4L2_BUF_TYPE_VIDEO_CAPTURE);
     mV.SetLength(size, 0);
     mV.SetFlags(mV.Flags() | V4L2_BUF_FLAG_NO_CACHE_INVALIDATE | V4L2_BUF_FLAG_NO_CACHE_CLEAN);
 }
@@ -329,11 +329,18 @@ void CameraBuffer::unmapDmaBufferAddr(void* addr, unsigned int bufferSize) {
 
 bool CameraBuffer::lock() {
 #ifdef CAL_BUILD
+    /* GBM buffer not implemented in libcamera yet, map out the addr to compatible
+    ** with libcamera when lock() is called
+    */
     if (getMemory() == V4L2_MEMORY_DMABUF && mU && !mU->addr) {
-        mU->addr = BufferAllocator::lock(mU->s.width, mU->s.height, mU->s.format, mHandle);
-        mU->s.size = icamera::BufferAllocator::getSize(mHandle);
-        mU->s.stride = icamera::BufferAllocator::getStride(mHandle);
-        mV.SetLength(mU->s.size, 0);
+        if (mHandle) {
+            mU->addr = BufferAllocator::lock(mU->s.width, mU->s.height, mU->s.format, mHandle);
+            mU->s.size = icamera::BufferAllocator::getSize(mHandle);
+            mU->s.stride = icamera::BufferAllocator::getStride(mHandle);
+            mV.SetLength(mU->s.size, 0);
+        } else {
+            mU->addr = mapDmaBufferAddr(getFd(), getBufferSize());
+        }
     }
 
     return (mU->addr != nullptr);
@@ -345,7 +352,11 @@ bool CameraBuffer::lock() {
 void CameraBuffer::unlock() {
 #ifdef CAL_BUILD
     if (getMemory() == V4L2_MEMORY_DMABUF && mU && mU->addr) {
-        BufferAllocator::unlock(mHandle);
+        if (mHandle) {
+            BufferAllocator::unlock(mHandle);
+        } else {
+            unmapDmaBufferAddr(mU->addr, getBufferSize());
+        }
         mU->addr = nullptr;
     }
 #endif

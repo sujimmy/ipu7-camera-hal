@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation
+ * Copyright (C) 2022-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,13 +39,16 @@ namespace icamera {
  */
 class CameraScheduler {
  public:
-    CameraScheduler();
+    explicit CameraScheduler(int cameraId);
     ~CameraScheduler();
 
     int32_t configurate(int32_t graphId);
 
     int32_t registerNode(ISchedulerNode* node);
     void unregisterNode(ISchedulerNode* node);
+
+    void start();
+    void stop();
 
     /**
      * triggerSource:
@@ -58,20 +61,25 @@ class CameraScheduler {
     int32_t executeNode(std::string triggerSource, int64_t triggerId = -1);
 
  private:
+    // Aligned with trigger signal sent by CameraScheduler
     class Executor : public icamera::Thread {
      public:
         explicit Executor(const char* name);
-        ~Executor();
+        virtual ~Executor();
 
+        virtual void start();
+        virtual void stop();
         virtual bool threadLoop();
-        virtual void requestExit();
 
         void addNode(ISchedulerNode*);
         void removeNode(ISchedulerNode* node);
         void addListener(std::shared_ptr<Executor> executor) { mListeners.push_back(executor); }
-        void trigger(int64_t tick);
+        virtual void trigger(int64_t tick);
 
         const char* getName() { return mName.c_str(); }
+
+     protected:
+        virtual int waitTrigger();
 
      private:
         static const nsecs_t kWaitDuration = 2000000000;  // 2s
@@ -83,10 +91,30 @@ class CameraScheduler {
         std::vector<std::shared_ptr<Executor>> mListeners;
         Condition mTriggerSignal;
         bool mActive;
+
+    protected:
         int64_t mTriggerTick;
 
      private:
         DISALLOW_COPY_AND_ASSIGN(Executor);
+    };
+
+    // Executor aligned with system time
+    class SystemTimerExecutor : public Executor {
+     public:
+        SystemTimerExecutor(const char* name, int32_t alignedTime)
+            : Executor(name), mMsAlignWithSystem(alignedTime) {}
+        virtual ~SystemTimerExecutor() {}
+
+        // Executor
+        virtual void trigger(int64_t tick);
+
+     private:
+        // Executor
+        virtual int waitTrigger();
+
+     private:
+        int32_t mMsAlignWithSystem;
     };
 
  private:
@@ -102,6 +130,7 @@ class CameraScheduler {
         std::vector<std::string> nodeList;
     };
 
+    int mCameraId;
     std::mutex mLock;
     std::vector<ExecutorGroup> mExeGroups;
     // Record owner exe of nodes (after policy switch)
@@ -111,6 +140,7 @@ class CameraScheduler {
 
  private:
     CameraSchedulerPolicy* mPolicy;
+    int32_t mMsAlignWithSystem;
 
  private:
     DISALLOW_COPY_AND_ASSIGN(CameraScheduler);

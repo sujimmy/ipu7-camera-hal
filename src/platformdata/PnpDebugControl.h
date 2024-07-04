@@ -107,6 +107,13 @@ class PnpDebugControl {
     static bool isBypassISys();
 
     /**
+     * check if PSys is skipped for PNP test
+     *
+     * \return true if feature is skipped, otherwise return false.
+     */
+    static bool isUsingMockPSys();
+
+    /**
      * check if using mock camhal for PNP test
      *
      * \return true if feature is enabled, otherwise return false.
@@ -137,6 +144,7 @@ class PnpDebugControl {
                   isFaceAeDisabled(false),
                   isBypassFDAlgo(false),
                   isBypassISys(false),
+                  useMockPSys(false),
                   useMockHal(false),
                   useMockPipes(false) {}
         bool useMockAAL;
@@ -148,6 +156,7 @@ class PnpDebugControl {
         bool isFaceAeDisabled;
         bool isBypassFDAlgo;
         bool isBypassISys;
+        bool useMockPSys;
         bool useMockHal;
         bool useMockPipes;
     };

@@ -22,18 +22,25 @@
 #include "iutils/Utils.h"
 
 #ifdef IPU_SYSVER_ipu7
+#if defined(GRC_IPU7X)
+#include "Ipu7xStaticGraphAutogen.h"
+#include "Ipu7xStaticGraphReaderAutogen.h"
+#elif defined(GRC_IPU75XA)
+#include "Ipu75xaStaticGraphAutogen.h"
+#include "Ipu75xaStaticGraphReaderAutogen.h"
+#elif defined(GRC_IPU8)
+#include "Ipu8StaticGraphAutogen.h"
+#include "Ipu8StaticGraphReaderAutogen.h"
+#else
 #include "StaticGraphAutogen.h"
 #include "StaticGraphReaderAutogen.h"
+#endif
 #else
 #include <gcss.h>
 #include <gcss_aic_utils.h>
 #endif
 
-#ifdef PAC_ENABLE
 #include "ia_aic_types.h"
-#else
-#include "ia_isp_bxt_types.h"
-#endif
 
 #ifndef IPU_SYSVER_ipu7
 namespace GCSS {

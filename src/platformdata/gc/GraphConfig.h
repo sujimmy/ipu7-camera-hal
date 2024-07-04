@@ -27,7 +27,7 @@
 #include "IGraphType.h"
 #include "iutils/Thread.h"
 
-#ifdef IPU_SYSVER_ipu75
+#ifdef IPU_SYSVER_ipu7
 #include "GraphResolutionConfigurator.h"
 #endif
 
@@ -79,12 +79,11 @@ class GraphConfig {
 
     status_t updateGraphSettingForPtz(const PtzInfo& cur, const PtzInfo& prev,
                                       bool* isKeyResChanged);
+    status_t getStaticGraphKernelRes(const uint32_t kernel_id, StaticGraphKernelRes& res);
 
     // Not support the below API in ipu7, keep them only for ipu7 build
     void addCustomKeyMap() {}
     int getSelectedMcId() { return -1; }
-
-    // Not support the below API in ipu7, keep them only for ipu7 build
     void getCSIOutputResolution(camera_resolution_t &reso) {}
     status_t getGdcKernelSetting(uint32_t *kernelId,
                                  ia_isp_bxt_resolution_info_t *resolution) {
@@ -181,16 +180,10 @@ class GraphConfig {
     };
 
     struct StaticGraphInfo {
-#ifdef IPU_SYSVER_ipu75
         StaticGraphInfo() : staticGraph(nullptr), graphResolutionConfig(nullptr) {}
-#else
-        StaticGraphInfo() : staticGraph(nullptr) {}
-#endif
         void clear() {
-#ifdef IPU_SYSVER_ipu75
             if (graphResolutionConfig) delete graphResolutionConfig;
             graphResolutionConfig = nullptr;
-#endif
             if (staticGraph) delete staticGraph;
             staticGraph = nullptr;
         }
@@ -200,9 +193,7 @@ class GraphConfig {
         // W/A: save in context id order, to recode context id (index) for psys cbs.
         std::vector<IpuStageInfo> stageInfos;
         // Zoom support
-#ifdef IPU_SYSVER_ipu75
         GraphResolutionConfigurator* graphResolutionConfig;
-#endif
     };
 
  private:

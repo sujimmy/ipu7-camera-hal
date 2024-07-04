@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Intel Corporation.
+ * Copyright (C) 2023-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,11 @@
 
 #pragma once
 
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
 #include "StaticGraphTypesAutogen.h"
 #include "StaticGraphBinaryAutogen.h"
-#include <cstring>
-#ifdef None
-#undef None
-#endif
-
-#ifdef None
-#undef None
-#endif
 
 enum InnerNodeOption
 {
@@ -81,7 +76,7 @@ public:
     void SetDisabledKernels(uint64_t disabledRunKernelsBitmap);
 
 protected:
-    void InitRunKernels(uint16_t* kernelsUuids, uint64_t kernelsRcbBitmap, StaticGraphKernelRes* resolutionInfos, uint64_t kernelsResolutionHistoryGroupBitmap, StaticGraphKernelRes* resolutionHistories, StaticGraphKernelBppConfiguration* bppInfos, uint8_t* systemApisSizes, uint8_t* systemApiData);
+    void InitRunKernels(uint16_t* kernelsUuids, uint64_t kernelsRcbBitmap, StaticGraphKernelRes* resolutionInfos, uint64_t  kernelsResolutionHistoryGroupBitmap, StaticGraphKernelRes* resolutionHistories, StaticGraphKernelBppConfiguration* bppInfos, uint8_t* systemApisSizes, uint8_t* systemApiData);
     uint32_t kernelConfigurationsOptionsCount;
     uint32_t selectedKernelConfigurationIndex;
     StaticGraphPacRunKernel **kernelListOptions;

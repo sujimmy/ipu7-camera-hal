@@ -20,6 +20,7 @@
 
 #include "ImageScalerCore.h"
 #include "SwImageConverter.h"
+#include "CameraContext.h"
 
 namespace icamera {
 
@@ -35,6 +36,7 @@ PipeManagerStub::PipeManagerStub(int cameraId, PipeManagerCallback* callback)
     LOG1("<id%d>@%s", mCameraId, __func__);
 
     mStatsBuffer = CameraBuffer::create(V4L2_MEMORY_USERPTR, sizeof(ia_binary_data), 0, -1, -1, -1);
+    mPacAdaptor = new IpuPacAdaptor(mCameraId);
 #ifdef IPU7_SIMULATION
     ia_binary_data* buffer = (ia_binary_data*)mStatsBuffer->getBufferAddr();
     buffer->size = STATS_BUFFER_SIZE;
@@ -44,7 +46,8 @@ PipeManagerStub::PipeManagerStub(int cameraId, PipeManagerCallback* callback)
 
 PipeManagerStub::~PipeManagerStub() {
     LOG1("<id%d>@%s", mCameraId, __func__);
-
+    mPacAdaptor->deinit();
+    delete mPacAdaptor;
 #ifdef IPU7_SIMULATION
     // stub doesn't have stats result, use a pre allocated buffer as stats data
     ia_binary_data* buffer = (ia_binary_data*)mStatsBuffer->getBufferAddr();
@@ -62,18 +65,25 @@ int PipeManagerStub::configure(const std::map<uuid, stream_t>& inputInfo,
     mConfigMode = configMode;
     mTuningMode = tuningMode;
     mInputFrameInfo = inputInfo;
-    mOutputFrameInfo = outputInfo;
     mDefaultMainInputPort = inputInfo.begin()->first;
 
-    int fmt = mOutputFrameInfo[mDefaultMainInputPort].format;
+    int fmt = outputInfo.begin()->second.format;
     int width = mInputFrameInfo[mDefaultMainInputPort].width;
     int height = mInputFrameInfo[mDefaultMainInputPort].height;
-
     uint32_t size = CameraUtils::getFrameSize(fmt, width, height, true);
-
     mIntermBuffer = CameraBuffer::create(V4L2_MEMORY_USERPTR, size, 0, fmt, width, height);
 
-    return OK;
+    status_t ret = OK;
+    mGraphConfig = CameraContext::getInstance(mCameraId)->getGraphConfig(mConfigMode);
+    CheckAndLogError(!mGraphConfig, UNKNOWN_ERROR, "Failed to get GraphConfig in PipeManager!");
+
+    mActiveStreamIds.clear();
+    ret = mGraphConfig->graphGetStreamIds(mActiveStreamIds);
+    CheckAndLogError(ret != OK, UNKNOWN_ERROR, "Failed to get the streamIds");
+
+    ret = mPacAdaptor->init(mActiveStreamIds);
+    CheckAndLogError(ret != OK, ret, "Init pac Adaptor failed, tuningMode %d", mTuningMode);
+    return ret;
 }
 
 int PipeManagerStub::start() {
@@ -112,8 +122,9 @@ void PipeManagerStub::addTask(PipeTaskData taskParam) {
     }
 
     int64_t sequence = taskParam.mInputBuffers.at(mDefaultMainInputPort)->getSequence();
-    LOG2("%s, <seq%ld> run AIC before execute psys", __func__, sequence);
-    prepareIpuParams(&taskParam.mIspSettings, sequence);
+    for (auto& id : mActiveStreamIds) {
+        prepareIpuParams(&taskParam.mIspSettings, sequence, id);
+    }
     // queue buffers to pipeLine here in virtual PipeManager
     queueBuffers();
 }
@@ -125,8 +136,17 @@ int PipeManagerStub::queueBuffers() {
 
 int PipeManagerStub::prepareIpuParams(IspSettings* settings, int64_t sequence, int streamId) {
     LOG2("<id%d>@%s", mCameraId, __func__);
-
     UNUSED(settings);
+
+    bool validStream = false;
+    for (auto id : mActiveStreamIds) {
+        if (id == streamId) {
+            validStream = true;
+            break;
+        }
+    }
+    if (!validStream) return BAD_VALUE;
+
     {
         // Make sure the AIC is executed once.
         AutoMutex l(mOngoingPalMapLock);
@@ -139,12 +159,14 @@ int PipeManagerStub::prepareIpuParams(IspSettings* settings, int64_t sequence, i
             }
         }
     }
-
+    int ret = mPacAdaptor->runAIC(settings, sequence, streamId);
+    CheckAndLogError(ret != OK, UNKNOWN_ERROR, "%s, <seq%ld> Failed to run AIC: streamId: %d",
+                     __func__, sequence, streamId);
     // Store the new sequence.
     AutoMutex l(mOngoingPalMapLock);
     mOngoingPalMap[sequence].insert(streamId);
 
-    return OK;
+    return ret;
 }
 
 void PipeManagerStub::onMetadataReady(int64_t sequence) {

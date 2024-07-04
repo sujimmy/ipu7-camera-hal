@@ -31,6 +31,8 @@
 
 #ifdef ENABLE_SANDBOXING
 #include "modules/sandboxing/client/IntelCcaClient.h"
+#elif IPA_SANDBOXING
+#include "IntelCcaClient.h"
 #else
 #include "modules/algowrapper/IntelCca.h"
 #endif
@@ -52,6 +54,7 @@ public:
     virtual ~IpuPacAdaptor();
 
     int init(std::vector<int> streamIds);
+    int reinitAic(const int32_t aicId);
     int deinit();
     status_t pacConfig(int streamId, const cca::cca_aic_config& aicConfig,
                        const cca::cca_aic_kernel_offset& kernelOffset, uint32_t* offsetPtr,

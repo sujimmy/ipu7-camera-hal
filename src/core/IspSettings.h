@@ -16,11 +16,7 @@
 
 #pragma once
 
-#ifdef PAC_ENABLE
 #include "ia_aic_types.h"
-#else
-#include "ia_isp_types.h"
-#endif
 #include "iutils/Utils.h"
 #include "ParamDataType.h"
 

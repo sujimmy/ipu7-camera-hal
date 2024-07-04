@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Intel Corporation.
+ * Copyright (C) 2023-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,9 @@ StaticGraphStatus StaticGraphReader::Init(StaticReaderBinaryData& binaryGraphSet
         STATIC_GRAPH_LOG("Binary hash code is not matching the static graph structure hash code. Binary should be re-created.");
         return StaticGraphStatus::SG_ERROR;
     }
+
+    //Skipping BinaryHeader
+
     currOffset += sizeof(BinaryHeader);
 
     uint32_t numOfAvailablePins = 0;
