@@ -220,10 +220,10 @@ struct intel_cca_get_pal_data_size {
     uint32_t returnSize;
 };
 
-class IPCIntelCca {
+class IPCCca {
  public:
-    IPCIntelCca() {}
-    virtual ~IPCIntelCca() {}
+    IPCCca() {}
+    virtual ~IPCCca() {}
 
     bool clientFlattenConfigAic(void* pData, uint32_t size, const cca::cca_aic_config& aicConf,
                                 const cca::cca_aic_kernel_offset& kernelOffset,

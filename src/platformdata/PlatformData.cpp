@@ -26,12 +26,10 @@
 #include "iutils/CameraLog.h"
 #include "CameraSchedulerPolicy.h"
 
-#if defined(IPU_SYSVER_ipu7) || defined(IPU_SYSVER_ipu75)
 #include "CameraContext.h"
 #include "GraphConfig.h"
-#include "lbff_ids_array.h"
-#endif
-#include "gc/GraphConfigManager.h"
+
+#include "gc/GraphConfig.h"
 
 #include "src/platformdata/CameraParserInvoker.h"
 #include "StageDescriptor.h"
@@ -120,9 +118,6 @@ int PlatformData::init() {
 void PlatformData::parseGraphFromXmlFile() {
     std::shared_ptr<GraphConfig> graphConfig = std::make_shared<GraphConfig>();
 
-    // Assuming that PSL section from profiles is already parsed, and number
-    // of cameras is known.
-    graphConfig->addCustomKeyMap();
     for (size_t i = 0; i < getInstance()->mStaticCfg.mCameras.size(); ++i) {
         const string& fileName = getInstance()->mStaticCfg.mCameras[i].mGraphSettingsFile;
         if (fileName.empty()) {
@@ -344,6 +339,19 @@ int PlatformData::isUseFixedHDRExposureInfo(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mUseFixedHdrExposureInfo;
 }
 // HDR_FEATURE_E
+
+bool PlatformData::isMultiExposureCase(int cameraId, TuningMode tuningMode) {
+    // HDR_FEATURE_S
+    if (tuningMode == TUNING_MODE_VIDEO_HDR || tuningMode == TUNING_MODE_VIDEO_HDR2 ||
+        tuningMode == TUNING_MODE_VIDEO_HLC) {
+        return true;
+    } else if (getSensorAeEnable(cameraId)) {
+        return true;
+    }
+    // HDR_FEATURE_E
+
+    return false;
+}
 
 int PlatformData::getSensorExposureType(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mSensorExposureType;
@@ -985,7 +993,6 @@ int PlatformData::calculateFrameParams(int cameraId, SensorFrameParams& sensorFr
         sensorFrameParams.vertical_scaling_denominator = verticalBinDenom;
     }
 
-#if defined(IPU_SYSVER_ipu7) || defined(IPU_SYSVER_ipu75)
     vector<ConfigMode> cms;
 
     int ret = PlatformData::getConfigModesByOperationMode(
@@ -997,23 +1004,25 @@ int PlatformData::calculateFrameParams(int cameraId, SensorFrameParams& sensorFr
     auto gc = CameraContext::getInstance(cameraId)->getGraphConfig(cms[0]);
     CheckWarning(gc == nullptr, BAD_VALUE, "@%s, gc is nullptr", __func__);
 
-    StaticGraphKernelRes res;
-    ret = gc->getStaticGraphKernelRes(ia_pal_uuid_isp_ifd_pipe_1_1, res);
-    CheckWarning(ret != OK, BAD_VALUE, "@%s, getStaticGraphKernelRes failed (%d)", __func__, ret);
+    IspRawCropInfo info;
+    ret = gc->getIspRawCropInfo(info);
+    CheckWarning(ret != OK, BAD_VALUE, "failed to get raw crop info (%d)", ret);
 
-    if (static_cast<int32_t>(sensorFrameParams.horizontal_crop_offset) + res.input_crop.left < 0) {
+    LOG1("Isp raw crop [%d, %d, %d, %d], wxh [%d x %d]", info.left, info.top, info.right,
+         info.bottom, info.outputWidth, info.outputHeight);
+
+    if (static_cast<int32_t>(sensorFrameParams.horizontal_crop_offset) + info.left < 0) {
         sensorFrameParams.horizontal_crop_offset = 0;
     } else {
-        sensorFrameParams.horizontal_crop_offset += res.input_crop.left;
+        sensorFrameParams.horizontal_crop_offset += info.left;
     }
-    if (static_cast<int32_t>(sensorFrameParams.vertical_crop_offset) + res.input_crop.top < 0) {
+    if (static_cast<int32_t>(sensorFrameParams.vertical_crop_offset) + info.top < 0) {
         sensorFrameParams.vertical_crop_offset = 0;
     } else {
-        sensorFrameParams.vertical_crop_offset += res.input_crop.top;
+        sensorFrameParams.vertical_crop_offset += info.top;
     }
-    sensorFrameParams.cropped_image_width = res.output_width;
-    sensorFrameParams.cropped_image_height = res.output_height;
-#endif
+    sensorFrameParams.cropped_image_width = info.outputWidth;
+    sensorFrameParams.cropped_image_height = info.outputHeight;
 
     return OK;
 }
@@ -1104,14 +1113,6 @@ int PlatformData::getMaxRequestsInflight(int cameraId) {
     return inflight;
 }
 
-bool PlatformData::getGraphConfigNodes(int cameraId) {
-    return !(getInstance()->mStaticCfg.mCameras[cameraId].mGraphSettingsFile.empty());
-}
-
-GraphSettingType PlatformData::getGraphSettingsType(int cameraId) {
-    return getInstance()->mStaticCfg.mCameras[cameraId].mGraphSettingsType;
-}
-
 camera_yuv_color_range_mode_t PlatformData::getYuvColorRangeMode(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mYuvColorRangeMode;
 }
@@ -1166,7 +1167,7 @@ bool PlatformData::isCSIFrontEndCapture(int cameraId) {
 
     for (const auto& node : mc->videoNodes) {
         if (node.videoNodeType == VIDEO_GENERIC &&
-            (node.name.find("CSI2") != string::npos || node.name.find("TPG") != string::npos)) {
+            (node.name.find(CSI_PORT_NAME) != string::npos || node.name.find("TPG") != string::npos)) {
             isCsiFeCapture = true;
             break;
         }
@@ -1292,10 +1293,6 @@ string PlatformData::getCameraCfgPath() {
     return p ? string(p) : string(CAMERA_DEFAULT_CFG_PATH);
 }
 
-string PlatformData::getGraphDescFilePath() {
-    return PlatformData::getCameraCfgPath() + string(CAMERA_GRAPH_DESCRIPTOR_FILE);
-}
-
 string PlatformData::getGraphSettingFilePath() {
     return PlatformData::getCameraCfgPath() + string(CAMERA_GRAPH_SETTINGS_DIR);
 }
@@ -1412,12 +1409,20 @@ bool PlatformData::isGpuTnrEnabled(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mGpuTnrEnabled;
 }
 
+bool PlatformData::isUsingGpuIpa() {
+    bool enabled = false;
+    for (int cameraId =0; cameraId < static_cast<int>(getInstance()->mStaticCfg.mCameras.size());
+         cameraId++)
+        enabled |= getInstance()->mStaticCfg.mCameras[cameraId].mGpuIpaEnabled;
+    return enabled;
+}
+
 int PlatformData::getVideoStreamNum() {
     return getInstance()->mStaticCfg.mCommonConfig.videoStreamNum;
 }
 
-bool PlatformData::supportUpdateTuning() {
-    return getInstance()->mStaticCfg.mCommonConfig.supportIspTuningUpdate;
+bool PlatformData::supportUpdateTuning(int cameraId) {
+    return getInstance()->mStaticCfg.mCameras[cameraId].mIspTuningUpdate;
 }
 
 bool PlatformData::isUsingGpuAlgo() {

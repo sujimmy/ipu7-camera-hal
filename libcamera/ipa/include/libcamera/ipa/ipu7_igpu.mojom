@@ -1,0 +1,28 @@
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
+
+/*
+ * \todo Document the interface and remove the related EXCLUDE_PATTERNS entry.
+ */
+
+module ipa.igpu;
+
+import "include/libcamera/ipa/core.mojom";
+
+struct IPACmdInfo {
+    int32 cameraId;
+    int32 tuningMode;
+    int32 sessionType;
+    int32 height;
+    int32 width;
+};
+
+interface IPAGPUInterface {
+    init(string libPath) => (int32 ret);
+
+    start() => (int32 ret);
+    stop();
+};
+
+interface IPAGPUEventInterface {
+    requestReady(IPACmdInfo cmdInfo, int32 ret);
+};

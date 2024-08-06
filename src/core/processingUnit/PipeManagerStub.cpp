@@ -24,9 +24,7 @@
 
 namespace icamera {
 
-#ifdef IPU7_SIMULATION
 #define STATS_BUFFER_SIZE 285736
-#endif
 
 PipeManagerStub::PipeManagerStub(int cameraId, PipeManagerCallback* callback)
         : mCameraId(cameraId),
@@ -37,23 +35,19 @@ PipeManagerStub::PipeManagerStub(int cameraId, PipeManagerCallback* callback)
 
     mStatsBuffer = CameraBuffer::create(V4L2_MEMORY_USERPTR, sizeof(ia_binary_data), 0, -1, -1, -1);
     mPacAdaptor = new IpuPacAdaptor(mCameraId);
-#ifdef IPU7_SIMULATION
     ia_binary_data* buffer = (ia_binary_data*)mStatsBuffer->getBufferAddr();
     buffer->size = STATS_BUFFER_SIZE;
     buffer->data = malloc(STATS_BUFFER_SIZE);
-#endif
 }
 
 PipeManagerStub::~PipeManagerStub() {
     LOG1("<id%d>@%s", mCameraId, __func__);
     mPacAdaptor->deinit();
     delete mPacAdaptor;
-#ifdef IPU7_SIMULATION
     // stub doesn't have stats result, use a pre allocated buffer as stats data
     ia_binary_data* buffer = (ia_binary_data*)mStatsBuffer->getBufferAddr();
     free(buffer->data);
     buffer->size = 0;
-#endif
 }
 
 int PipeManagerStub::configure(const std::map<uuid, stream_t>& inputInfo,

@@ -69,7 +69,7 @@ class PnpDebugControl {
      *
      * \return true if feature is skipped, otherwise return false.
      */
-    static bool isBypassPAL();
+    static bool isBypassPAC();
 
     /**
      * check if CB is skipped for PNP test
@@ -138,7 +138,7 @@ class PnpDebugControl {
                 : useMockAAL(false),
                   mockAALFps(30),
                   isBypass3A(false),
-                  isBypassPAL(false),
+                  isBypassPAC(false),
                   isBypassCB(false),
                   isFaceDisabled(false),
                   isFaceAeDisabled(false),
@@ -150,7 +150,7 @@ class PnpDebugControl {
         bool useMockAAL;
         int mockAALFps;
         bool isBypass3A;
-        bool isBypassPAL;
+        bool isBypassPAC;
         bool isBypassCB;
         bool isFaceDisabled;
         bool isFaceAeDisabled;

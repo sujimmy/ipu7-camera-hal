@@ -16,15 +16,13 @@
 libcamera_sources += files([
     'ipu7.cpp',
     'Frames.cpp',
-    'CameraHal.cpp',
     'ParameterConverter.cpp',
     'Camera3AMetadata.cpp',
-    'IntelAEStateMachine.cpp',
-    'IntelAFStateMachine.cpp',
-    'IntelAWBStateMachine.cpp',
-# PNP_DEBUG_S
-    'MockCameraHal.cpp',
-# PNP_DEBUG_E
+    'AEStateMachine.cpp',
+    'AFStateMachine.cpp',
+    'AWBStateMachine.cpp',
+    'PrivacyControl.cpp',
+    'HwPrivacyControl.cpp',
 ])
 
 libcamera_sources += files([
@@ -76,6 +74,7 @@ libcamera_sources += files([
     'src/image_process/sw/ImageConverter.cpp',
     'src/image_process/sw/ImageScalerCore.cpp',
     'src/iutils/SwImageConverter.cpp',
+    'src/core/MockPSysDevice.cpp',
 # PNP_DEBUG_E
     'src/icbm/ICBMThread.cpp',
     'src/icbm/OnePunchIC2.cpp',
@@ -127,7 +126,7 @@ libcamera_sources += files([
     'modules/ipu_desc/ptl/GraphResolutionConfiguratorAutogen.cpp',
 ])
 # for master branch build
-ipu7_includes += include_directories(
+includes += include_directories(
     '.',
     'include',
     'include/api',
@@ -172,8 +171,6 @@ libcamera_args = [
     '-DHAL_PIXEL_FORMAT_NV12_LINEAR_CAMERA_INTEL=0x10F',
     '-DMAX_PAC_BUFFERS=10',
     '-DFACE_DETECTION',
-    '-DIPU7_SIMULATION',
-    '-DIPU_SYSVER_ipu7',
     '-DIPU_SYSVER_ipu75',
     '-DPAC_ENABLE',
     '-DSTATIC_GRAPH_USE_IA_AIC_TYPES',
@@ -263,7 +260,7 @@ libcamera_deps += [
 # GPU_GLES_PROCESSOR_E
 
 # set default as not enabling Sandbox
-ipa_sandbox = false
+ipa_sandbox = true
 
 if not ipa_sandbox
     libcamera_sources += files([

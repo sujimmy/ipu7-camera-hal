@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -221,5 +221,10 @@ int cbDeviceId2Uuid(uint8_t resourceId, uint32_t deviceId) {
 const int32_t* getStatsBufToTermIds() {
     return kStatsBufToTermIds;
 }
+
+uint32_t getIspIfdKernelId() {
+    return ia_pal_uuid_isp_ifd_pipe_1_3;
+}
+
 }  // namespace CBLayoutUtils
 }  // namespace icamera

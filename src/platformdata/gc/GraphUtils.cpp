@@ -19,13 +19,9 @@
 
 #include "iutils/CameraLog.h"
 #include "iutils/Utils.h"
-#ifdef IPU_SYSVER_ipu7
 #include "CBLayoutUtils.h"
-#endif
 
 namespace icamera {
-
-#ifdef IPU_SYSVER_ipu7
 
 #define GET_FOURCC_FMT(a, b, c, d) \
     ((uint32_t)(d) | ((uint32_t)(c) << 8) | ((uint32_t)(b) << 16) | ((uint32_t)(a) << 24))
@@ -90,7 +86,6 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
     LOGW("%s: no fourcc for resourceId %d, term %d", __func__, resourceId, terminalId);
     return 0;
 }
-#endif
 
 void GraphUtils::dumpConnections(const std::vector<IGraphType::PipelineConnection>& connections) {
     if (!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphUtils))) return;

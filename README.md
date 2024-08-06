@@ -21,15 +21,22 @@ There are 4 repositories that provide the complete setup:
 ```sh
 cd ipu7-camera-hal && mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release \
--DIPU_VER=ipu7 \
+-DIPU_VERSIONS=ipu7 \
 -DBUILD_CAMHAL_TESTS=OFF \
--DCMAKE_INSTALL_PREFIX=/ \
+-DCMAKE_INSTALL_PREFIX=/usr \
 -DUSE_STATIC_GRAPH=ON \
 -DUSE_STATIC_GRAPH_AUTOGEN=ON \
 -DSTATIC_GRAPH_IPU_PREFIXS=Ipu7x \
--DCMAKE_INSTALL_LIBDIR=lib \
 ..
+# If you need IPU7 HAL work under IPU6 adaptor, please add option -DWITH_PLUGINS=ON:
+# cmake -DCMAKE_BUILD_TYPE=Release \
+# -DIPU_VERSIONS=ipu7 \
+# -DWITH_PLUGINS=ON   \
+# -DBUILD_CAMHAL_TESTS=OFF \
+# -DCMAKE_INSTALL_PREFIX=/usr \
+# -DUSE_STATIC_GRAPH=ON \
+# -DUSE_STATIC_GRAPH_AUTOGEN=ON \
+# -DSTATIC_GRAPH_IPU_PREFIXS=Ipu7x \
+# ..
 make && sudo make install
-# need to fix pkgconfig file manually...
-sudo sed -i 's|includedir=/|includedir=/usr|g' /usr/lib/pkgconfig/libcamhal.pc
 ```

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "IntelAEStateMachine.h"
+#include "AEStateMachine.h"
 
 #include <libcamera/base/log.h>
 
@@ -24,13 +24,13 @@
 namespace libcamera {
 LOG_DECLARE_CATEGORY(IPU7MetaData)
 
-IntelAEStateMachine::IntelAEStateMachine(int cameraId) : mCameraId(cameraId), mCurrentAeMode(NULL) {
+AEStateMachine::AEStateMachine(int cameraId) : mCameraId(cameraId), mCurrentAeMode(NULL) {
     LOG(IPU7MetaData, Debug) << "id" << mCameraId << " " << __func__;
     mCurrentAeMode = &mAutoMode;
     CLEAR(mLastAeControls);
 }
 
-IntelAEStateMachine::~IntelAEStateMachine() {
+AEStateMachine::~AEStateMachine() {
     LOG(IPU7MetaData, Debug) << "id" << mCameraId << " " << __func__;
 }
 
@@ -43,7 +43,7 @@ IntelAEStateMachine::~IntelAEStateMachine() {
  * \param[IN] sceneMode: control.sceneMode
  * \param[IN] aeControls: set of control.<ae>
  */
-int IntelAEStateMachine::processState(uint8_t controlMode, uint8_t sceneMode,
+int AEStateMachine::processState(uint8_t controlMode, uint8_t sceneMode,
                                       const AeControls& aeControls) {
     if (controlMode == controls::Mode3AOff) {
         LOG(IPU7MetaData, Info) << " Set AE offMode";
@@ -72,14 +72,14 @@ int IntelAEStateMachine::processState(uint8_t controlMode, uint8_t sceneMode,
  * \param[IN] aeConverged: from the ae result
  * \param[IN] results: cameraMetadata to write dynamic tags.
  */
-int IntelAEStateMachine::processResult(bool aeConverged, ControlList& metadata) {
+int AEStateMachine::processResult(bool aeConverged, ControlList& metadata) {
     return mCurrentAeMode->processResult(aeConverged, metadata);
 }
 
 /******************************************************************************
  * AE MODE   -  BASE
  ******************************************************************************/
-IntelAEModeBase::IntelAEModeBase()
+AEModeBase::AEModeBase()
         : mLastControlMode(0),
           mLastSceneMode(0),
           mEvChanged(false),
@@ -90,14 +90,14 @@ IntelAEModeBase::IntelAEModeBase()
     CLEAR(mLastAeControls);
 }
 
-void IntelAEModeBase::updateResult(ControlList& metadata) {
+void AEModeBase::updateResult(ControlList& metadata) {
     metadata.set(controls::AeMode, mLastAeControls.aeMode);
     metadata.set(controls::AeLocked, mLastAeControls.aeLock);
     metadata.set(controls::draft::AePrecaptureTrigger, mLastAeControls.aePreCaptureTrigger);
     metadata.set(controls::draft::AeState, mCurrentAeState);
 }
 
-void IntelAEModeBase::resetState() {
+void AEModeBase::resetState() {
     mCurrentAeState = controls::AeModeOff;
     mLastAeConvergedFlag = false;
     mAeRunCount = 0;
@@ -108,9 +108,9 @@ void IntelAEModeBase::resetState() {
  * AE MODE   -  OFF
  ******************************************************************************/
 
-IntelAEModeOff::IntelAEModeOff() : IntelAEModeBase() {}
+AEModeOff::AEModeOff() : AEModeBase() {}
 
-int IntelAEModeOff::processState(uint8_t controlMode, uint8_t sceneMode,
+int AEModeOff::processState(uint8_t controlMode, uint8_t sceneMode,
                                  const AeControls& aeControls) {
     LOG(IPU7MetaData, Debug) << __func__;
     mLastAeControls = aeControls;
@@ -127,7 +127,7 @@ int IntelAEModeOff::processState(uint8_t controlMode, uint8_t sceneMode,
     return icamera::OK;
 }
 
-int IntelAEModeOff::processResult(bool aeConverged, ControlList& metadata) {
+int AEModeOff::processResult(bool aeConverged, ControlList& metadata) {
     UNUSED(aeConverged);
     LOG(IPU7MetaData, Debug) << __func__;
     updateResult(metadata);
@@ -139,9 +139,9 @@ int IntelAEModeOff::processResult(bool aeConverged, ControlList& metadata) {
  * AE MODE   -  AUTO
  ******************************************************************************/
 
-IntelAEModeAuto::IntelAEModeAuto() : IntelAEModeBase() {}
+AEModeAuto::AEModeAuto() : AEModeBase() {}
 
-int IntelAEModeAuto::processState(uint8_t controlMode, uint8_t sceneMode,
+int AEModeAuto::processState(uint8_t controlMode, uint8_t sceneMode,
                                   const AeControls& aeControls) {
     if (controlMode != mLastControlMode) {
         LOG(IPU7MetaData, Debug) << "control mode has changed " << controlMode;
@@ -187,7 +187,7 @@ int IntelAEModeAuto::processState(uint8_t controlMode, uint8_t sceneMode,
     return icamera::OK;
 }
 
-int IntelAEModeAuto::processResult(bool aeConverged, ControlList& metadata) {
+int AEModeAuto::processResult(bool aeConverged, ControlList& metadata) {
     uint8_t aeState = mCurrentAeState;
     switch (mCurrentAeState) {
         case controls::draft::AeStateLocked:

@@ -363,7 +363,7 @@ int CameraDevice::configure(stream_config_t* streamList) {
     int mcId = -1;
     int totalStream = 0;
 
-    if (!mGcMgr && PlatformData::getGraphConfigNodes(mCameraId)) {
+    if (!mGcMgr) {
         mGcMgr = new GraphConfigManager(mCameraId);
     }
     if (mGcMgr != nullptr) {

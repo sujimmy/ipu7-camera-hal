@@ -59,10 +59,8 @@ class PipeManagerStub : public IPipeManager, public icamera::Thread {
     // first is sequence id, second is a set of stream id
     std::map<int64_t, std::set<int32_t>> mOngoingPalMap;
     PipeManagerCallback* mPipeManagerCallback;
-#ifdef IPU7_SIMULATION
     // create blank stats buffer to trigger 3A
     std::shared_ptr<CameraBuffer> mStatsBuffer;
-#endif
     std::shared_ptr<CameraBuffer> mIntermBuffer;
     /* for Pnp test, will only fill the first 30 frames with real data */
     static const int kStartingFrameCount = 30;

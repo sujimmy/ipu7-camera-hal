@@ -24,7 +24,6 @@
 
 #include "CameraBuffer.h"
 #include "CameraTypes.h"
-#include "StageDescriptor.h"
 
 namespace icamera {
 

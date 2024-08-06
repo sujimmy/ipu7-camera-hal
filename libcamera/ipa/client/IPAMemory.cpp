@@ -33,7 +33,7 @@
 
 namespace libcamera {
 
-LOG_DECLARE_CATEGORY(IPU7)
+LOG_DECLARE_CATEGORY(IPAIPU)
 
 IPAMemory::IPAMemory() : mIpaBufferId(0) {
 }
@@ -46,35 +46,35 @@ int IPAMemory::allocateShmMem(const std::string& name, unsigned int size, int* f
 
     shmFd = shm_open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (shmFd == -1) {
-        LOG(IPU7, Error) << "Failed to open shm, name " << name.c_str() << " errorno "
-            << strerror(errno);
+        LOG(IPAIPU, Error) << "Failed to open shm, name " << name.c_str() << " errorno "
+                           << strerror(errno);
         return -1;
     }
 
     do {
         int ret = fcntl(shmFd, F_GETFD);
         if (ret == -1) {
-            LOG(IPU7, Error) << "Failed to fcntl shmFd " << shmFd << " errorno " << strerror(errno);
+            LOG(IPAIPU, Error) << "Failed to fcntl shmFd " << shmFd << " errorno " << strerror(errno);
             break;
         }
 
         ret = ftruncate(shmFd, size);
         if (ret == -1) {
-            LOG(IPU7, Error) << "Failed to ftruncate shmFd " << shmFd << " errorno "
-                << strerror(errno);
+            LOG(IPAIPU, Error) << "Failed to ftruncate shmFd " << shmFd << " errorno "
+                               << strerror(errno);
             break;
         }
 
         struct stat sb;
         ret = fstat(shmFd, &sb);
         if (ret == -1) {
-            LOG(IPU7, Error) << "Failed to fstat shmFd " << shmFd << " errorno " << strerror(errno);
+            LOG(IPAIPU, Error) << "Failed to fstat shmFd " << shmFd << " errorno " << strerror(errno);
             break;
         }
 
         shmAddr = mmap(0, sb.st_size, PROT_WRITE, MAP_SHARED, shmFd, 0);
         if (!shmAddr) {
-            LOG(IPU7, Error) << "Failed to mmap shmFd " << shmFd << " errorno " << strerror(errno);
+            LOG(IPAIPU, Error) << "Failed to mmap shmFd " << shmFd << " errorno " << strerror(errno);
             break;
         }
 
@@ -100,7 +100,7 @@ std::shared_ptr<FrameBuffer> IPAMemory::allocateBuffer(const std::string& name, 
 
     int ret = allocateShmMem(name, size, &fd, addr);
     if (ret == -1) {
-        LOG(IPU7, Error) << "Failed to allocate buffer  " << name.c_str();
+        LOG(IPAIPU, Error) << "Failed to allocate buffer  " << name.c_str();
         return nullptr;
     }
 

@@ -16,13 +16,14 @@
 
 libcamera_sources += files([
     'client/IPAMemory.cpp',
-    'client/IntelAlgoClient.cpp',
+    'client/IPAClient.cpp',
     'client/IPAClientWorker.cpp',
-    'client/IntelCcaClient.cpp',
-    'IPCIntelCca.cpp',
+    'client/CcaClient.cpp',
+    'client/IGPUIPAClient.cpp',
+    'IPCCca.cpp',
 ])
 
-ipu7_includes += include_directories(
+includes += include_directories(
     '.',
     'client/',
     '../../../../ipa/ipu7/',

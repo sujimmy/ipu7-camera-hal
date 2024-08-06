@@ -49,13 +49,13 @@ struct Info {
     }
 };
 
-class IPU7Frames;
-class IPU7Results : public icamera::camera_callback_ops_t, public Thread {
+class IPUFrames;
+class IPUResults : public icamera::camera_callback_ops_t, public Thread {
  public:
-    IPU7Results();
-    ~IPU7Results();
+    IPUResults();
+    ~IPUResults();
 
-    void init(IPU7Frames* frames);
+    void init(IPUFrames* frames);
     void sendEvent(const icamera::camera_msg_data_t& data);
 
     Signal<unsigned int, int64_t> mMetadataAvailable;
@@ -80,7 +80,7 @@ class IPU7Results : public icamera::camera_callback_ops_t, public Thread {
     void metadataDone(unsigned int frameNumber, int64_t sequence);
     void bufferDone(unsigned int streamId);
 
-    IPU7Frames* mIPU7Frames;
+    IPUFrames* mIPUFrames;
     mutable Mutex mMutex;
     ConditionVariable mEventCondition;
     std::queue<icamera::camera_msg_data_t> mEventQueue;
@@ -88,10 +88,10 @@ class IPU7Results : public icamera::camera_callback_ops_t, public Thread {
     State mState LIBCAMERA_TSA_GUARDED_BY(mMutex);
 };
 
-class IPU7Frames {
+class IPUFrames {
  public:
-    IPU7Frames();
-    ~IPU7Frames();
+    IPUFrames();
+    ~IPUFrames();
 
     void clear();
 
@@ -109,7 +109,7 @@ class IPU7Frames {
 
     Info* requestComplete(unsigned int frameNumber);
 
-    IPU7Results mResultsHandler;
+    IPUResults mResultsHandler;
 
  private:
     mutable Mutex mMutex;

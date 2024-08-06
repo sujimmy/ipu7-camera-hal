@@ -19,7 +19,7 @@
 #ifdef ENABLE_SANDBOXING
 #include "modules/sandboxing/client/IntelCcaClient.h"
 #elif IPA_SANDBOXING
-#include "IntelCcaClient.h"
+#include "CcaClient.h"
 #else
 #include "modules/algowrapper/IntelCca.h"
 #endif

@@ -24,7 +24,8 @@
             "ov13b10-uf-0",
             "ov13b10-wf-3",
             "ov02c10-uf-0",
-            "ov02c10-uf-1"
+            "ov02c10-uf-1",
+            "ov05c10-uf-1"
         ],
         "videoStreamNum" : 2,
         "cameraNumber" : 1

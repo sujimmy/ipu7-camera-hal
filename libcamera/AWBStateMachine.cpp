@@ -13,43 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG IntelAWBStateMachine
 
-#include "IntelAWBStateMachine.h"
-
+#include "AWBStateMachine.h"
 #include <libcamera/base/utils.h>
 
-#include "CameraLog.h"
-#include "Utils.h"
-#include "Errors.h"
+#include <libcamera/base/log.h>
 
 namespace libcamera {
+LOG_DECLARE_CATEGORY(IPU7MetaData)
 
-IntelAWBStateMachine::IntelAWBStateMachine(int cameraId)
+AWBStateMachine::AWBStateMachine(int cameraId)
         : mCameraId(cameraId),
           mCurrentAwbMode(NULL) {
-    LOG1("<id%d>%s", mCameraId, __func__);
+    LOG(IPU7MetaData, Debug) << "<id" << mCameraId << ">" << __func__;
     mCurrentAwbMode = &mAutoMode;
     CLEAR(mLastAwbControls);
     mLastAwbControls.awbMode = controls::AwbAuto;
 }
 
-IntelAWBStateMachine::~IntelAWBStateMachine() {
-    LOG1("<id%d>%s", mCameraId, __func__);
+AWBStateMachine::~AWBStateMachine() {
+    LOG(IPU7MetaData, Debug) << "<id " << mCameraId << ">" << __func__;
 }
 
-int IntelAWBStateMachine::processState(uint8_t controlMode, uint8_t sceneMode,
+int AWBStateMachine::processState(uint8_t controlMode, uint8_t sceneMode,
                                        const AwbControls& awbControls) {
     if (controlMode == controls::Mode3AOff) {
         mCurrentAwbMode = &mOffMode;
         if (controlMode != mLastControlMode)
-            LOG1("%s: Set AWB offMode: controlMode = %d, awbMode = %d", __func__, controlMode,
-                 awbControls.awbMode);
+            LOG(IPU7MetaData, Debug) << __func__ << ": Set AWB offMode: controlMode = "
+                                     << controlMode << ", awbMode = " << awbControls.awbMode;
     } else {
         mCurrentAwbMode = &mAutoMode;
         if (awbControls.awbMode != mLastAwbControls.awbMode)
-            LOG1("%s: Set AWB autoMode: controlMode = %d, awbMode = %d", __func__, controlMode,
-                 awbControls.awbMode);
+            LOG(IPU7MetaData, Debug) << __func__ << ": Set AWB autoMode: controlMode = "
+                                     << controlMode << ", awbMode = " << awbControls.awbMode;
     }
 
     mLastAwbControls = awbControls;
@@ -59,28 +56,28 @@ int IntelAWBStateMachine::processState(uint8_t controlMode, uint8_t sceneMode,
     return mCurrentAwbMode->processState(controlMode, sceneMode, awbControls);
 }
 
-int IntelAWBStateMachine::processResult(bool converged, ControlList& controls) {
+int AWBStateMachine::processResult(bool converged, ControlList& controls) {
     return mCurrentAwbMode->processResult(converged, controls);
 }
 
 /******************************************************************************
  * AWB MODE   -  BASE
  ******************************************************************************/
-IntelAWBModeBase::IntelAWBModeBase()
+AWBModeBase::AWBModeBase()
         : mLastControlMode(0),
           mLastSceneMode(0),
           mCurrentAwbState(controls::draft::AwbStateInactive) {
     CLEAR(mLastAwbControls);
 }
 
-void IntelAWBModeBase::updateResult(ControlList& controls) {
-    LOG2("%s: current AWB state is: %d", __func__, mCurrentAwbState);
+void AWBModeBase::updateResult(ControlList& controls) {
+    LOG(IPU7MetaData, Debug) << __func__ << ": current AWB state is: " << mCurrentAwbState;
     controls.set(controls::AwbMode, mLastAwbControls.awbMode);
     controls.set(controls::AwbLocked, static_cast<bool>(mLastAwbControls.awbLock));
     controls.set(controls::draft::AwbState, mCurrentAwbState);
 }
 
-void IntelAWBModeBase::resetState() {
+void AWBModeBase::resetState() {
     mCurrentAwbState = controls::draft::AwbStateInactive;
 }
 
@@ -88,11 +85,11 @@ void IntelAWBModeBase::resetState() {
  * AWB MODE   -  OFF
  ******************************************************************************/
 
-IntelAWBModeOff::IntelAWBModeOff() : IntelAWBModeBase() {}
+AWBModeOff::AWBModeOff() : AWBModeBase() {}
 
-int IntelAWBModeOff::processState(uint8_t controlMode, uint8_t sceneMode,
+int AWBModeOff::processState(uint8_t controlMode, uint8_t sceneMode,
                                   const AwbControls& awbControls) {
-    LOG2("%s", __func__);
+    LOG(IPU7MetaData, Debug) << __func__;
 
     mLastAwbControls = awbControls;
     mLastSceneMode = sceneMode;
@@ -100,29 +97,29 @@ int IntelAWBModeOff::processState(uint8_t controlMode, uint8_t sceneMode,
 
     if (controlMode == controls::Mode3AOff) resetState();
 
-    return icamera::OK;
+    return 0;
 }
 
-int IntelAWBModeOff::processResult(bool converged, ControlList& controls) {
+int AWBModeOff::processResult(bool converged, ControlList& controls) {
     UNUSED(converged);
 
     mCurrentAwbState = controls::draft::AwbStateInactive;
     updateResult(controls);
 
-    return icamera::OK;
+    return 0;
 }
 
 /******************************************************************************
  * AWB MODE   -  AUTO
  ******************************************************************************/
 
-IntelAWBModeAuto::IntelAWBModeAuto() : IntelAWBModeBase() {}
+AWBModeAuto::AWBModeAuto() : AWBModeBase() {}
 
-int IntelAWBModeAuto::processState(uint8_t controlMode, uint8_t sceneMode,
+int AWBModeAuto::processState(uint8_t controlMode, uint8_t sceneMode,
                                    const AwbControls& awbControls) {
     if (controlMode != mLastControlMode) {
-        LOG2("%s: control mode has changed %d -> %d, reset AWB State", __func__, mLastControlMode,
-             controlMode);
+        LOG(IPU7MetaData, Debug) << __func__ << ": control mode has changed " << mLastControlMode
+                                 << " -> " << controlMode << ", reset AWB State";
         resetState();
     }
 
@@ -142,7 +139,7 @@ int IntelAWBModeAuto::processState(uint8_t controlMode, uint8_t sceneMode,
                 // do nothing
                 break;
             default:
-                LOGE("Invalid AWB state!, State set to INACTIVE");
+                LOG(IPU7MetaData, Error) << "Invalid AWB state!, State set to INACTIVE";
                 mCurrentAwbState = controls::draft::AwbStateInactive;
         }
     }
@@ -150,10 +147,10 @@ int IntelAWBModeAuto::processState(uint8_t controlMode, uint8_t sceneMode,
     mLastSceneMode = sceneMode;
     mLastControlMode = controlMode;
 
-    return icamera::OK;
+    return 0;
 }
 
-int IntelAWBModeAuto::processResult(bool converged, ControlList& controls) {
+int AWBModeAuto::processResult(bool converged, ControlList& controls) {
     int32_t awbState = mCurrentAwbState;
 
     switch (mCurrentAwbState) {
@@ -169,15 +166,16 @@ int IntelAWBModeAuto::processResult(bool converged, ControlList& controls) {
                 mCurrentAwbState = controls::draft::AwbStateSearching;
             break;
         default:
-            LOGE("invalid AWB state!, State set to INACTIVE");
+            LOG(IPU7MetaData, Error) << "Invalid AWB state!, State set to INACTIVE";
             mCurrentAwbState = controls::draft::AwbStateInactive;
     }
 
     updateResult(controls);
     if (awbState != mCurrentAwbState) {
-        LOG1("%s: AWB state has changed %u -> %u", __func__, awbState, mCurrentAwbState);
+        LOG(IPU7MetaData, Debug) << __func__ << " AWB state has changed " << awbState
+                                 << " -> " << mCurrentAwbState;
     }
-    return icamera::OK;
+    return 0;
 }
 
 }  // namespace libcamera

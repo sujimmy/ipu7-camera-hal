@@ -20,6 +20,7 @@ namespace libcamera {
 
 namespace ipa::ipu7 {
 
+#define IPU7_IPA_VERSION 1
 #define IPC_MATCHING_KEY 0x56  // the value is randomly chosen
 #define IPC_MATCHED_KEY 0x47  // the value is randomly chosen
 
@@ -57,7 +58,7 @@ struct cmd_event {
 };
 
 /**
- * \brief The IPU7 IPA callback interface
+ * \brief The IPU IPA callback interface
  *
  */
 class IIPAServerCallback {
@@ -65,7 +66,7 @@ class IIPAServerCallback {
     IIPAServerCallback() {}
     virtual ~IIPAServerCallback() {}
 
-    virtual void notifyCallback(int cameraId, int tuningMode, uint32_t cmd, int ret) = 0;
+    virtual void returnRequestReady(int cameraId, int tuningMode, uint32_t cmd, int ret) = 0;
     virtual void* getBuffer(uint32_t bufferId) = 0;
 };
 

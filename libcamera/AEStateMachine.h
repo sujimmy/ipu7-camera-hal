@@ -37,7 +37,7 @@ struct AeControls {
 };
 
 /**
- * \class IntelAEModeBase
+ * \class AEModeBase
  *
  * Base class for all the Autoexposure modes as defined by the Android
  * camera device V3.x API.
@@ -45,10 +45,10 @@ struct AeControls {
  * android.control.aeState
  *
  */
-class IntelAEModeBase {
+class AEModeBase {
  public:
-    IntelAEModeBase();
-    virtual ~IntelAEModeBase() {}
+    AEModeBase();
+    virtual ~AEModeBase() {}
 
     virtual int processState(uint8_t controlMode, uint8_t sceneMode,
                              const AeControls& aeControls) = 0;
@@ -72,42 +72,42 @@ class IntelAEModeBase {
 };
 
 /**
- * \class IntelAEModeAuto
- * Derived class from IntelAEModeBase for Auto mode
+ * \class AEModeAuto
+ * Derived class from AEModeBase for Auto mode
  *
  */
-class IntelAEModeAuto : public IntelAEModeBase {
+class AEModeAuto : public AEModeBase {
  public:
-    IntelAEModeAuto();
+    AEModeAuto();
     virtual int processState(uint8_t controlMode, uint8_t sceneMode, const AeControls& aeControls);
     virtual int processResult(bool aeConverged, ControlList& controls);
 };
 
 /**
- * \class IntelAEModeOFF
- * Derived class from IntelAEModeBase for OFF mode
+ * \class AEModeOFF
+ * Derived class from AEModeBase for OFF mode
  *
  */
-class IntelAEModeOff : public IntelAEModeBase {
+class AEModeOff : public AEModeBase {
  public:
-    IntelAEModeOff();
+    AEModeOff();
     virtual int processState(uint8_t controlMode, uint8_t sceneMode, const AeControls& aeControls);
     virtual int processResult(bool aeConverged, ControlList& controls);
 };
 
 /**
- * \class IntelAEStateMachine
+ * \class AEStateMachine
  *
  * This class adapts the Android V3 AE triggers and state transitions to
  * the ones implemented by the Intel AIQ algorithm
  * This class is platform independent. Platform specific behaviors should be
- * implemented in derived classes from this one or from the IntelAEModeBase
+ * implemented in derived classes from this one or from the AEModeBase
  *
  */
-class IntelAEStateMachine {
+class AEStateMachine {
  public:
-    IntelAEStateMachine(int cameraId);
-    virtual ~IntelAEStateMachine();
+    AEStateMachine(int cameraId);
+    virtual ~AEStateMachine();
 
     int processState(uint8_t controlMode, uint8_t sceneMode, const AeControls& aeControls);
 
@@ -115,7 +115,7 @@ class IntelAEStateMachine {
 
  private:
     // prevent copy constructor and assignment operator
-    DISALLOW_COPY_AND_ASSIGN(IntelAEStateMachine);
+    DISALLOW_COPY_AND_ASSIGN(AEStateMachine);
 
  private: /* members*/
     int mCameraId;
@@ -123,10 +123,10 @@ class IntelAEStateMachine {
     uint8_t mLastControlMode;
     uint8_t mLastSceneMode;
 
-    IntelAEModeBase* mCurrentAeMode;
+    AEModeBase* mCurrentAeMode;
 
-    IntelAEModeOff mOffMode;
-    IntelAEModeAuto mAutoMode;
+    AEModeOff mOffMode;
+    AEModeAuto mAutoMode;
 };
 
 }  // namespace libcamera

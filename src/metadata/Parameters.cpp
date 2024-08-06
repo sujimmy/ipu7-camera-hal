@@ -21,7 +21,6 @@
 #include "iutils/CameraDump.h"
 #include "iutils/Utils.h"
 
-#include "PlatformData.h"
 #include "Parameters.h"
 #include "ParameterHelper.h"
 

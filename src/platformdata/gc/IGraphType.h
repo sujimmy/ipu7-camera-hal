@@ -21,7 +21,6 @@
 #include "iutils/Errors.h"
 #include "iutils/Utils.h"
 
-#ifdef IPU_SYSVER_ipu7
 #if defined(GRC_IPU7X)
 #include "Ipu7xStaticGraphAutogen.h"
 #include "Ipu7xStaticGraphReaderAutogen.h"
@@ -35,23 +34,8 @@
 #include "StaticGraphAutogen.h"
 #include "StaticGraphReaderAutogen.h"
 #endif
-#else
-#include <gcss.h>
-#include <gcss_aic_utils.h>
-#endif
 
 #include "ia_aic_types.h"
-
-#ifndef IPU_SYSVER_ipu7
-namespace GCSS {
-    class GraphConfigNode;
-    class GraphQueryManager;
-    class ItemUID;
-}
-
-typedef GCSS::GraphConfigNode Node;
-typedef std::vector<Node*> NodesPtrVector;
-#endif
 
 namespace icamera {
 
@@ -165,53 +149,6 @@ struct StageAttr{
     uint32_t rbm_bytes;
     StageAttr() : rbm_bytes(0) {}
 };
-
-#ifndef IPU_SYSVER_ipu7
-struct TuningModeInfo {
-    int32_t streamId;
-    int32_t tuningMode;
-};
-
-struct PgInfo {
-    PgInfo() : pgId(-1), streamId(-1) {}
-    std::string pgName;
-    int pgId;
-    int streamId;
-    StageAttr rbmValue;
-};
-
-struct MbrInfo {
-    MbrInfo() { streamId = -1; CLEAR(data); }
-    int streamId;
-    ia_isp_bxt_gdc_limits data;
-};
-
-struct ProgramGroupInfo {
-    ProgramGroupInfo() { streamId = -1; pgPtr = nullptr; }
-    int streamId;
-    ia_isp_bxt_program_group *pgPtr;
-};
-
-struct GraphConfigData {
-    int mcId;
-    int graphId;
-    uint32_t gdcKernelId;
-    camera_resolution_t csiReso;
-    ia_isp_bxt_resolution_info_t gdcReso;
-    std::vector<int32_t> streamIds;
-    std::vector<PgInfo> pgInfo;
-    std::vector<MbrInfo> mbrInfo;
-    std::vector<std::string> pgNames;
-    std::vector<ProgramGroupInfo> programGroup;
-    std::vector<TuningModeInfo> tuningModes;
-    GraphConfigData() : mcId(-1),
-                        graphId(-1),
-                        gdcKernelId(-1) {
-        CLEAR(csiReso);
-        CLEAR(gdcReso);
-    }
-};
-#endif
 
 struct ScalerInfo {
     int32_t streamId;

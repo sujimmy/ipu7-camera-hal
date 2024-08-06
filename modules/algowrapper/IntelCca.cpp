@@ -130,14 +130,15 @@ ia_err IntelCca::runAIQ(uint64_t frameId, const cca::cca_aiq_params& params,
 
 #ifndef PAC_ENABLE
 
+#endif
 ia_err IntelCca::updateTuning(uint8_t lardTags, const ia_lard_input_params& lardParams,
                               const cca::cca_nvm& nvm, int32_t streamId) {
-    ia_err ret = getIntelCCA()->updateTuning(lardTags, lardParams, nvm, streamId);
+    ia_lard_input_params& lardInputParam = const_cast<ia_lard_input_params&>(lardParams);
+    ia_err ret = getIntelCCA()->updateTuning(lardTags, lardInputParam, nvm, streamId);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
 }
-#endif
 
 ia_err IntelCca::getCMC(cca::cca_cmc* cmc) {
     CheckAndLogError(!cmc, ia_err_argument, "@%s, cmc is nullptr", __func__);
@@ -226,11 +227,11 @@ ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
             unsigned int width = stats->stats.rgbs_grids[0].grid_width;
             unsigned int height = stats->stats.rgbs_grids[0].grid_height;
             for (unsigned int i = 0; i < width * height; i++) {
-                outStats->rgbs_blocks[i]->avg_gr = stats->stats.rgbs_grids[0].avg[i].gr;
-                outStats->rgbs_blocks[i]->avg_r = stats->stats.rgbs_grids[0].avg[i].r;
-                outStats->rgbs_blocks[i]->avg_b = stats->stats.rgbs_grids[0].avg[i].b;
-                outStats->rgbs_blocks[i]->avg_gb = stats->stats.rgbs_grids[0].avg[i].gb;
-                outStats->rgbs_blocks[i]->sat = stats->stats.rgbs_grids[0].sat[i];
+                outStats->rgbs_blocks[0][i].avg_gr = stats->stats.rgbs_grids[0].avg[i].gr;
+                outStats->rgbs_blocks[0][i].avg_r = stats->stats.rgbs_grids[0].avg[i].r;
+                outStats->rgbs_blocks[0][i].avg_b = stats->stats.rgbs_grids[0].avg[i].b;
+                outStats->rgbs_blocks[0][i].avg_gb = stats->stats.rgbs_grids[0].avg[i].gb;
+                outStats->rgbs_blocks[0][i].sat = stats->stats.rgbs_grids[0].sat[i];
             }
         }
     }

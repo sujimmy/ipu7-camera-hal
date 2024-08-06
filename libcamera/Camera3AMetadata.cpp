@@ -27,17 +27,17 @@ LOG_DEFINE_CATEGORY(IPU7MetaData)
 Camera3AMetadata::Camera3AMetadata(int cameraId) : mCameraId(cameraId) {
     LOG(IPU7MetaData, Debug) << __func__;
 
-    mIntelAEStateMachine = new IntelAEStateMachine(mCameraId);
-    mIntelAFStateMachine = new IntelAFStateMachine(mCameraId);
-    mIntelAWBStateMachine = new IntelAWBStateMachine(mCameraId);
+    mAEStateMachine = new AEStateMachine(mCameraId);
+    mAFStateMachine = new AFStateMachine(mCameraId);
+    mAWBStateMachine = new AWBStateMachine(mCameraId);
 }
 
 Camera3AMetadata::~Camera3AMetadata() {
     LOG(IPU7MetaData, Debug) << __func__;
 
-    delete mIntelAEStateMachine;
-    delete mIntelAFStateMachine;
-    delete mIntelAWBStateMachine;
+    delete mAEStateMachine;
+    delete mAFStateMachine;
+    delete mAWBStateMachine;
 }
 
 void Camera3AMetadata::process3Astate(const icamera::AiqResult* aiqResult,
@@ -55,8 +55,8 @@ void Camera3AMetadata::process3Astate(const icamera::AiqResult* aiqResult,
 
     uint8_t controlMode = controls.get(controls::Mode3A).value_or(controls::Mode3AAuto);
     uint8_t sceneMode = controls.get(controls::SceneMode).value_or(controls::SceneModeDisabled);
-    mIntelAEStateMachine->processState(controlMode, sceneMode, aeControls);
-    mIntelAEStateMachine->processResult(aiqResult->mAeResults.exposures[0].converged, metadata);
+    mAEStateMachine->processState(controlMode, sceneMode, aeControls);
+    mAEStateMachine->processResult(aiqResult->mAeResults.exposures[0].converged, metadata);
 
     // process AF
     uint8_t afTrigger = static_cast<uint8_t>(controls::AfTriggerIdle);
@@ -66,7 +66,7 @@ void Camera3AMetadata::process3Astate(const icamera::AiqResult* aiqResult,
     uint8_t afMode = static_cast<uint8_t>(controls::AfModeAuto);
     const auto& mode = controls.get(controls::AfMode);
     if (mode) afMode = *mode;
-    mIntelAFStateMachine->processTriggers(afTrigger, afMode);
+    mAFStateMachine->processTriggers(afTrigger, afMode);
 
     // get AF state
     icamera::camera_af_state_t internalAfState =
@@ -92,7 +92,7 @@ void Camera3AMetadata::process3Astate(const icamera::AiqResult* aiqResult,
         lensMoving = (aiqResult->mLensPosition != aiqResult->mAfResults.next_lens_position);
     }
 
-    mIntelAFStateMachine->processResult(internalAfState, lensMoving, metadata);
+    mAFStateMachine->processResult(internalAfState, lensMoving, metadata);
 
     // AWB
     AwbControls awbControls = {controls::AwbAuto, 0, 0, 0};
@@ -102,14 +102,14 @@ void Camera3AMetadata::process3Astate(const icamera::AiqResult* aiqResult,
     const auto& awbLock = controls.get(controls::AwbLocked);
     if (awbLock) awbControls.awbLock = *awbLock;
 
-    mIntelAWBStateMachine->processState(controlMode, sceneMode, awbControls);
+    mAWBStateMachine->processState(controlMode, sceneMode, awbControls);
 
     // get AWB state
     icamera::camera_awb_state_t awbState =
         (fabs(aiqResult->mAwbResults.distance_from_convergence) < 0.001)
             ? icamera::AWB_STATE_CONVERGED
             : icamera::AWB_STATE_NOT_CONVERGED;
-    mIntelAWBStateMachine->processResult(awbState == icamera::AWB_STATE_CONVERGED, metadata);
+    mAWBStateMachine->processResult(awbState == icamera::AWB_STATE_CONVERGED, metadata);
 }
 
 }  // namespace libcamera

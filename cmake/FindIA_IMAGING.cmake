@@ -22,8 +22,11 @@ endif()
 # Get include and lib paths for IA_IMAGING from pkgconfig
 include(FindPackageHandleStandardArgs)
 
+if(${INTERNAL_BUILD})
+    set(ENV{PKG_CONFIG} "pkg-config --define-prefix")
+endif()
 find_package(PkgConfig)
-pkg_check_modules(IA_IMAGING ia_imaging)
+pkg_search_module(IA_IMAGING ia_imaging ia_imaging${TARGET_SUFFIX})
 if(NOT IA_IMAGING_FOUND)
     message(FATAL_ERROR "IA_IMAGING not found")
 endif()
@@ -31,8 +34,8 @@ endif()
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${IA_IMAGING_LIBRARY_DIRS})
 
 # Libraries
-find_library(IA_CCA_LIB         ia_cca)
-find_library(IA_LOG_LIB         ia_log)
+find_library(IA_CCA_LIB         NAMES ia_cca ia_cca${TARGET_SUFFIX})
+find_library(IA_LOG_LIB         NAMES ia_log ia_log${TARGET_SUFFIX})
 
 set(IA_IMAGING_LIBS
     ${IA_CCA_LIB}

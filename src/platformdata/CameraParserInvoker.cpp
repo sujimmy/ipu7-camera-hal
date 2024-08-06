@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,9 @@ std::vector<std::pair<std::string, SensorInfo>> CameraParserInvoker::getAvailabl
 
     std::string sensorSinkName = "Intel ";
     sensorSinkName.append(ipuName);
-    sensorSinkName.append(" CSI2 ");
+    sensorSinkName.append(" ");
+    sensorSinkName.append(CSI_PORT_NAME);
+    sensorSinkName.append(" ");
 
     std::vector<std::pair<std::string, SensorInfo>> availableSensors;
     for (const auto& sensor : sensorsList) {

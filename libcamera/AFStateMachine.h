@@ -37,7 +37,7 @@ struct AfControls {
 };
 
 /**
- * \class IntelAfModeBase
+ * \class AFModeBase
  *
  * Base class for all the AutoFocus modes as defined by the Android
  * camera device V3.x API.
@@ -45,10 +45,10 @@ struct AfControls {
  * android.control.afState
  *
  */
-class IntelAfModeBase {
+class AFModeBase {
  public:
-    IntelAfModeBase();
-    virtual ~IntelAfModeBase() {}
+    AFModeBase();
+    virtual ~AFModeBase() {}
 
     virtual int processTriggers(uint8_t afTrigger, uint8_t afMode) = 0;
     virtual int processResult(int afState, bool lensMoving, ControlList& controls) = 0;
@@ -69,73 +69,73 @@ class IntelAfModeBase {
 };
 
 /**
- * \class IntelAFModeAuto
- * Derived class from IntelAFModeBase for Auto mode
+ * \class AFModeAuto
+ * Derived class from AFModeBase for Auto mode
  *
  */
-class IntelAFModeAuto : public IntelAfModeBase {
+class AFModeAuto : public AFModeBase {
  public:
-    IntelAFModeAuto();
+    AFModeAuto();
     virtual int processTriggers(uint8_t afTrigger, uint8_t afMode);
     virtual int processResult(int afState, bool lensMoving, ControlList& controls);
 };
 
 /**
- * \class IntelAFModeContinuousPicture
- * Derived class from IntelAFModeBase for Continuous AF mode
+ * \class AFModeContinuousPicture
+ * Derived class from AFModeBase for Continuous AF mode
  *
  */
-class IntelAFModeContinuousPicture : public IntelAfModeBase {
+class AFModeContinuousPicture : public AFModeBase {
  public:
-    IntelAFModeContinuousPicture();
+    AFModeContinuousPicture();
     virtual int processTriggers(uint8_t afTrigger, uint8_t afMode);
     virtual int processResult(int afState, bool lensMoving, ControlList& controls);
 };
 
 /**
- * \class IntelAFModeOff
- * Derived class from IntelAFModeBase for OFF mode
+ * \class AFModeOff
+ * Derived class from AFModeBase for OFF mode
  *
  */
-class IntelAFModeOff : public IntelAfModeBase {
+class AFModeOff : public AFModeBase {
  public:
-    IntelAFModeOff();
+    AFModeOff();
     virtual int processTriggers(uint8_t afTrigger, uint8_t afMode);
     virtual int processResult(int afState, bool lensMoving, ControlList& controls);
 };
 
 /**
- * \class IntelAFStateMachine
+ * \class AFStateMachine
  *
  * This class adapts the Android V3 AF triggers and state transitions to
  * the ones implemented by the Intel AIQ algorithm
  * This class is platform independent. Platform specific behaviors should be
- * implemented in derived classes from this one or from the IntelAFModeBase
+ * implemented in derived classes from this one or from the AFModeBase
  *
  */
-class IntelAFStateMachine {
+class AFStateMachine {
  public:
-    IntelAFStateMachine(int cameraId);
-    virtual ~IntelAFStateMachine();
+    AFStateMachine(int cameraId);
+    virtual ~AFStateMachine();
 
     int processTriggers(uint8_t afTrigger, uint8_t afMode);
     int processResult(int afState, bool lensMoving, ControlList& controls);
 
  private:
     // prevent copy constructor and assignment operator
-    DISALLOW_COPY_AND_ASSIGN(IntelAFStateMachine);
+    DISALLOW_COPY_AND_ASSIGN(AFStateMachine);
 
  private: /* members*/
     int mCameraId;
     AfControls mLastAfControls;
-    IntelAfModeBase* mCurrentAfMode;
+    AFModeBase* mCurrentAfMode;
 
     std::vector<uint8_t> mAvailableModes;
 
-    IntelAFModeOff mOffMode;
-    IntelAFModeAuto mAutoMode;
+    AFModeOff mOffMode;
+    AFModeAuto mAutoMode;
 
-    IntelAFModeContinuousPicture mContinuousPictureMode;
+    AFModeContinuousPicture mContinuousPictureMode;
 };
 
 }  // namespace libcamera

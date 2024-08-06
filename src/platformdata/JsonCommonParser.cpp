@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,8 +47,6 @@ bool CameraCommonParser::run(const std::string& filename) {
         mStaticCfg->mCommonConfig.cameraNumber = node["cameraNumber"].asInt();
     if (node.isMember("videoStreamNum"))
         mStaticCfg->mCommonConfig.videoStreamNum = node["videoStreamNum"].asInt();
-    if (node.isMember("supportIspTuningUpdate"))
-        mStaticCfg->mCommonConfig.supportIspTuningUpdate = node["supportIspTuningUpdate"].asBool();
     if (node.isMember("useGpuProcessor"))
         mStaticCfg->mCommonConfig.useGpuProcessor = node["useGpuProcessor"].asBool();
     return true;

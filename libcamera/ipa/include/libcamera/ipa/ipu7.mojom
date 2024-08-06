@@ -29,5 +29,5 @@ interface IPAIPU7Interface {
 };
 
 interface IPAIPU7EventInterface {
-    notifyCallback(IPACmdInfo cmdInfo, int32 ret);
+    requestReady(IPACmdInfo cmdInfo, int32 ret);
 };

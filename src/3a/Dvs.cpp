@@ -32,12 +32,6 @@
 
 namespace icamera {
 
-#ifndef IPU_SYSVER_ipu7
-const int DVS_OXDIM_Y = 128;
-const int DVS_OYDIM_Y = 32;
-const int DVS_OXDIM_UV = 64;
-const int DVS_OYDIM_UV = 16;
-#endif
 const int DVS_MIN_ENVELOPE = 12;
 
 Dvs::Dvs(int cameraId)
@@ -87,20 +81,6 @@ int Dvs::configCcaDvsData(const ConfigMode configMode, cca::cca_init_params *par
              sizeof(ia_isp_bxt_resolution_info_t));
     gdcConfig->pre_gdc_top_padding = 0;
     gdcConfig->pre_gdc_bottom_padding = 0;
-
-#ifndef IPU_SYSVER_ipu7
-    if (gdcKernelId == ia_pal_uuid_isp_gdc3_1) {
-        gdcConfig->splitMetadata[0] = DVS_OYDIM_UV;
-        gdcConfig->splitMetadata[1] = DVS_OXDIM_UV;
-        gdcConfig->splitMetadata[2] = DVS_OYDIM_Y;
-        gdcConfig->splitMetadata[3] = DVS_OXDIM_Y;
-    } else {
-        gdcConfig->splitMetadata[0] = DVS_OYDIM_UV;
-        gdcConfig->splitMetadata[1] = DVS_OXDIM_UV;
-        gdcConfig->splitMetadata[2] = DVS_OYDIM_Y;
-        gdcConfig->splitMetadata[3] = DVS_OXDIM_Y/2;
-    }
-#endif
 
     camera_resolution_t envelopeResolution;
     camera_resolution_t envelope_bq;

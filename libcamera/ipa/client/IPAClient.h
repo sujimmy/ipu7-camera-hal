@@ -36,14 +36,14 @@ namespace libcamera {
 
 class PipelineHandler;
 
-class IntelAlgoClient : public IAlgoClient, public Thread {
+class IPAClient : public IAlgoClient, public Thread {
  public:
-    static IntelAlgoClient* getInstance();
-    static IntelAlgoClient* createInstance(PipelineHandler* handler);
+    static IPAClient* getInstance();
+    static IPAClient* createInstance(PipelineHandler* handler);
     static void removeInstance();
 
-    IntelAlgoClient(PipelineHandler* handler);
-    virtual ~IntelAlgoClient();
+    IPAClient(PipelineHandler* handler);
+    virtual ~IPAClient();
 
     void init(uint32_t bufferId);
     void exitIPA();
@@ -82,7 +82,7 @@ class IntelAlgoClient : public IAlgoClient, public Thread {
 
     class SyncMessage : public Object {
      public:
-        SyncMessage(IntelAlgoClient* client);
+        SyncMessage(IPAClient* client);
         ~SyncMessage();
 
         void init(uint32_t bufferId);
@@ -92,7 +92,7 @@ class IntelAlgoClient : public IAlgoClient, public Thread {
         void unmapBuffers(const std::vector<unsigned int>& ids);
 
      private:
-        IntelAlgoClient* mClient;
+        IPAClient* mClient;
     };
 
  protected:
@@ -101,7 +101,7 @@ class IntelAlgoClient : public IAlgoClient, public Thread {
  private:
     void validate();
 
-    void notifyCallback(const ipa::ipu7::IPACmdInfo& cmdInfo, int ret);
+    void returnRequestReady(const ipa::ipu7::IPACmdInfo& cmdInfo, int ret);
     void initClientWorkerMap(int cameraId, int tuningMode, IPAClientWorkerMaps& clientWorkerMaps);
     int sendCmdWithWorker(int cameraId, int tuningMode, uint32_t cmd, uint32_t bufferId,
                           IPAClientWorkerMaps& clientWorkerMaps);
@@ -129,7 +129,7 @@ class IntelAlgoClient : public IAlgoClient, public Thread {
     std::unordered_map<void*, uint32_t> mShmMap;
     std::unordered_map<void*, std::shared_ptr<FrameBuffer>> mFrameBufferMap;
 
-    static IntelAlgoClient* sIntelAlgoClient;
+    static IPAClient* sIPAClient;
     static std::mutex sLock;
 };
 
