@@ -28,6 +28,7 @@
 #include "iutils/CameraDump.h"
 #include "CameraContext.h"
 #include "AiqResultStorage.h"
+#include "PlatformData.h"
 #include "ia_pal_types_isp_ids_autogen.h"
 
 namespace icamera {
@@ -317,7 +318,6 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
     CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
-
     auto aiqResults = const_cast<AiqResult*>(mAiqResultStorage->getAiqResult(settingSequence));
     if (aiqResults == nullptr) {
         LOGW("<seq%ld>@%s: no result! use the latest instead", settingSequence, __func__);
@@ -391,7 +391,7 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
         }
 
         LOG2("%s: set digital gain for ULL pipe: %f", __func__, inputParams->manual_digital_gain);
-    } else if (CameraUtils::isMultiExposureCase(mCameraId, TUNING_MODE_VIDEO) &&
+    } else if (PlatformData::isMultiExposureCase(mCameraId, TUNING_MODE_VIDEO) &&
                PlatformData::getSensorGainType(mCameraId) == ISP_DG_AND_SENSOR_DIRECT_AG) {
         inputParams->manual_digital_gain =
             aiqResults->mAeResults.exposures[0].exposure[0].digital_gain;
@@ -472,15 +472,6 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
     AutoMutex l(mPacAdaptorLock);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
-
-    // Only decode stats for video stream if it exists.
-    if (streamId != VIDEO_STREAM_ID &&
-        mStreamIdToInputParams.find(VIDEO_STREAM_ID) != mStreamIdToInputParams.end()) {
-        LOG2("<seq:%ld>@%s, skip 3A stats for streamId: %d, contextId: %d",
-             sequenceId, __func__, streamId, contextId);
-        return OK;
-    }
-
     LOG2("<seq:%ld>@%s, decode 3A stats. streamId: %d, contextId: %d",
          sequenceId, __func__, streamId, contextId);
 
@@ -503,7 +494,8 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
 
     AiqStatistics* aiqStatistics = mAiqResultStorage->acquireAiqStatistics();
     aiqStatistics->mSequence = sequenceId;
-    aiqStatistics->mTimestamp = timestamp; aiqStatistics->mTuningMode = TUNING_MODE_VIDEO;
+    aiqStatistics->mTimestamp = timestamp;
+    aiqStatistics->mTuningMode = TUNING_MODE_VIDEO;
 
     mAiqResultStorage->updateAiqStatistics(sequenceId);
 

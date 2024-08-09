@@ -35,25 +35,25 @@
 #include "libcamera/internal/mapped_framebuffer.h"
 #include "libcamera/internal/yaml_parser.h"
 
-#include "IntelAlgoServer.h"
+#include "IPAServer.h"
 
 namespace libcamera {
 
-LOG_DEFINE_CATEGORY(IPAIPU7)
+LOG_DEFINE_CATEGORY(IPAIPU)
 
 namespace ipa::ipu7 {
 
 /**
- * \brief The IPU7 IPA implementation
+ * \brief The IPU IPA implementation
  *
- * The IPU7 Pipeline defines an IPU7-specific interface for communication
+ * The IPU Pipeline defines an IPU-specific interface for communication
  * between the PipelineHandler and the IPA module.
  *
- * We extend the IPAIPU7Interface to implement our algorithms and handle
- * calls from the IPU7 PipelineHandler to satisfy requests from the
+ * We extend the IPAIPUInterface to implement our algorithms and handle
+ * calls from the IPU PipelineHandler to satisfy requests from the
  * application.
  *
- * The IPU7 has further processing blocks to support image quality
+ * The IPU has further processing blocks to support image quality
  * improvements through bayer and temporal noise reductions, however those are
  * not supported in the current implementation, and will use default settings as
  * provided by the kernel driver.
@@ -66,10 +66,10 @@ namespace ipa::ipu7 {
  * sensor-specific tuning to adapt for Black Level compensation (BLC), Lens
  * shading correction (SHD) and Color correction (CCM).
  */
-class IPAIPU7 : public IPAIPU7Interface, public Loggable, public IIPAIPU7Callback {
+class IPAIPU : public IPAIPU7Interface, public Loggable, public IIPAIPUCallback {
 public:
-    IPAIPU7();
-    ~IPAIPU7();
+    IPAIPU();
+    ~IPAIPU();
 
     int init(const uint32_t bufferId) override;
 
@@ -82,7 +82,7 @@ public:
     void mapBuffers(const std::vector<IPABuffer> &buffers) override;
     void unmapBuffers(const std::vector<unsigned int> &ids) override;
 
-    void notifyIPACallback(int cameraId, int tuningMode, uint32_t cmd, int ret) override;
+    void returnRequestReady(int cameraId, int tuningMode, uint32_t cmd, int ret) override;
     void* getBuffer(uint32_t bufferId) override;
 
 protected:
@@ -90,26 +90,26 @@ protected:
 
 private:
     std::map<unsigned int, MappedFrameBuffer> buffers_;
-    std::unique_ptr<IntelAlgoServer> mIntelAlgoServer;
+    std::unique_ptr<IPAServer> mIPAServer;
 };
 
-IPAIPU7::IPAIPU7() {
-    mIntelAlgoServer = std::make_unique<IntelAlgoServer>(this);
+IPAIPU::IPAIPU() {
+    mIPAServer = std::make_unique<IPAServer>(this);
 }
 
-IPAIPU7::~IPAIPU7() {
+IPAIPU::~IPAIPU() {
 }
 
-void IPAIPU7::notifyIPACallback(int cameraId, int tuningMode, uint32_t cmd, int ret) {
+void IPAIPU::returnRequestReady(int cameraId, int tuningMode, uint32_t cmd, int ret) {
     IPACmdInfo cmdInfo = { cameraId, tuningMode, cmd, 0 };
 
-    notifyCallback.emit(cmdInfo, ret);
+    requestReady.emit(cmdInfo, ret);
 }
 
-void* IPAIPU7::getBuffer(uint32_t bufferId) {
+void* IPAIPU::getBuffer(uint32_t bufferId) {
     auto it = buffers_.find(bufferId);
     if (it == buffers_.end()) {
-        LOG(IPAIPU7, Error) << " buffer id " << bufferId << " isn't found";
+        LOG(IPAIPU, Error) << " buffer id " << bufferId << " isn't found";
         return nullptr;
     }
 
@@ -118,57 +118,57 @@ void* IPAIPU7::getBuffer(uint32_t bufferId) {
     return mem.data();
 }
 
-int IPAIPU7::init(const uint32_t bufferId) {
-    LOG(IPAIPU7, Debug) << " init bufferId " << bufferId;
+int IPAIPU::init(const uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " init bufferId " << bufferId;
 
-    auto it = buffers_.begin();
+    auto it = buffers_.find(bufferId);
     if (it == buffers_.end()) {
-        LOG(IPAIPU7, Error) << " cca init " << bufferId << " no found";
+        LOG(IPAIPU, Error) << " init " << bufferId << " no found";
         return -1;
     }
 
     Span<uint8_t> mem = it->second.planes()[0];
 
-    return mIntelAlgoServer->init(mem.data());
+    return mIPAServer->init(mem.data());
 }
 
-std::string IPAIPU7::logPrefix() const {
+std::string IPAIPU::logPrefix() const {
     return "ipu7";
 }
 
-int IPAIPU7::requestSync(const IPACmdInfo& cmdInfo) {
-    LOG(IPAIPU7, Debug) << "IPAIPU7::requestSync cameraId " << cmdInfo.cameraId << " tuningMode "
-                        << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
-                        << cmdInfo.bufferId;
+int IPAIPU::requestSync(const IPACmdInfo& cmdInfo) {
+    LOG(IPAIPU, Debug) << "IPAIPU::requestSync cameraId " << cmdInfo.cameraId << " tuningMode "
+                       << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
+                       << cmdInfo.bufferId;
 
     return 0;
 }
 
-void IPAIPU7::requestASync(const IPACmdInfo& cmdInfo) {
-    LOG(IPAIPU7, Debug) << "IPAIPU7::requestASync cameraId " << cmdInfo.cameraId << " tuningMode "
-                        << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
-                        << cmdInfo.bufferId;
+void IPAIPU::requestASync(const IPACmdInfo& cmdInfo) {
+    LOG(IPAIPU, Debug) << "IPAIPU::requestASync cameraId " << cmdInfo.cameraId << " tuningMode "
+                       << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
+                       << cmdInfo.bufferId;
 
     auto it = buffers_.find(cmdInfo.bufferId);
     if (it == buffers_.end()) {
-        LOG(IPAIPU7, Error) << " buffer id " << cmdInfo.bufferId << " isn't found";
+        LOG(IPAIPU, Error) << " buffer id " << cmdInfo.bufferId << " isn't found";
         return;
     }
 
     Span<uint8_t> mem = it->second.planes()[0];
 
-    mIntelAlgoServer->sendRequest(cmdInfo.cameraId, cmdInfo.tuningMode, cmdInfo.cmd, mem);
+    mIPAServer->sendRequest(cmdInfo.cameraId, cmdInfo.tuningMode, cmdInfo.cmd, mem);
 }
 
 /**
  * \brief Map the parameters and stats buffers allocated in the pipeline handler
  * \param[in] buffers The buffers to map
  */
-void IPAIPU7::mapBuffers(const std::vector<IPABuffer> &buffers)
+void IPAIPU::mapBuffers(const std::vector<IPABuffer> &buffers)
 {
     for (const IPABuffer &buffer : buffers) {
         const FrameBuffer fb(buffer.planes);
-        LOG(IPAIPU7, Debug) << " map buffer.id " << buffer.id;
+        LOG(IPAIPU, Debug) << " map buffer.id " << buffer.id;
         buffers_.emplace(buffer.id,
             MappedFrameBuffer(&fb, MappedFrameBuffer::MapFlag::ReadWrite));
     }
@@ -178,14 +178,14 @@ void IPAIPU7::mapBuffers(const std::vector<IPABuffer> &buffers)
  * \brief Unmap the parameters and stats buffers
  * \param[in] ids The IDs of the buffers to unmap
  */
-void IPAIPU7::unmapBuffers(const std::vector<unsigned int> &ids)
+void IPAIPU::unmapBuffers(const std::vector<unsigned int> &ids)
 {
     for (unsigned int id : ids) {
         auto it = buffers_.find(id);
         if (it == buffers_.end())
             continue;
 
-        LOG(IPAIPU7, Debug) << " unmap buffer.id " << id;
+        LOG(IPAIPU, Debug) << " unmap buffer.id " << id;
         buffers_.erase(it);
     }
 }
@@ -204,7 +204,7 @@ void IPAIPU7::unmapBuffers(const std::vector<unsigned int> &ids)
 extern "C" {
 const struct IPAModuleInfo ipaModuleInfo = {
     IPA_MODULE_API_VERSION,
-    1,
+    IPU7_IPA_VERSION,
     "PipelineHandlerIPU7",
     "ipu7",
 };
@@ -219,7 +219,7 @@ const struct IPAModuleInfo ipaModuleInfo = {
  */
 IPAInterface *ipaCreate()
 {
-    return new ipa::ipu7::IPAIPU7();
+    return new ipa::ipu7::IPAIPU();
 }
 }
 

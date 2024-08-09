@@ -27,7 +27,7 @@
 #include "CameraTypes.h"
 #include "iutils/Thread.h"
 
-#include "IPCIntelCca.h"
+#include "IPCCca.h"
 
 namespace icamera {
 
@@ -66,7 +66,8 @@ class IntelCca {
                      const int32_t* statsBufToTermIds);
     ia_err registerAicBuf(const cca::cca_aic_terminal_config& termConfig, int32_t aicId);
     ia_err getAicBuf(cca::cca_aic_terminal_config& termConfig, int32_t aicId);
-    ia_err decodeStats(int32_t groupId, int64_t sequence, int32_t aicId);
+    ia_err decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
+                       cca::cca_out_stats* outStats);
     ia_err runAIC(uint64_t frameId, const cca::cca_pal_input_params* params, uint8_t bitmap,
                   int32_t aicId);
     ia_err updateConfigurationResolutions(const cca::cca_aic_config& aicConf,
@@ -100,7 +101,7 @@ class IntelCca {
     int mCameraId;
     TuningMode mTuningMode;
 
-    IPCIntelCca mIpcIntelCca;
+    IPCCca mIpcCca;
 
     ShmMemInfo mMemStruct;
     ShmMemInfo mMemInit;

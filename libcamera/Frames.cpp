@@ -30,7 +30,7 @@ namespace libcamera {
 
 LOG_DECLARE_CATEGORY(IPU7)
 
-IPU7Frames::IPU7Frames() {
+IPUFrames::IPUFrames() {
     for (uint8_t i = 0; i < kMaxProcessingRequest; i++) {
         mAvailableRequestBuffers.push(&mRequestBuffers[i]);
     }
@@ -38,15 +38,15 @@ IPU7Frames::IPU7Frames() {
     mResultsHandler.init(this);
 }
 
-IPU7Frames::~IPU7Frames() {}
+IPUFrames::~IPUFrames() {}
 
-void IPU7Frames::clear() {
+void IPUFrames::clear() {
     MutexLocker locker(mMutex);
 
     mProcessingRequests.clear();
 }
 
-Info* IPU7Frames::create(Request* request) {
+Info* IPUFrames::create(Request* request) {
     unsigned int id = request->sequence();
 
     MutexLocker locker(mMutex);
@@ -68,7 +68,7 @@ Info* IPU7Frames::create(Request* request) {
     return info;
 }
 
-void IPU7Frames::remove(Info* info) {
+void IPUFrames::remove(Info* info) {
     unsigned int id = info->id;
 
     MutexLocker locker(mMutex);
@@ -78,7 +78,7 @@ void IPU7Frames::remove(Info* info) {
     mProcessingRequests.erase(id);
 }
 
-Info* IPU7Frames::find(unsigned int frameNumber) {
+Info* IPUFrames::find(unsigned int frameNumber) {
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
         Info* info = mProcessingRequests[frameNumber];
 
@@ -88,7 +88,7 @@ Info* IPU7Frames::find(unsigned int frameNumber) {
     return nullptr;
 }
 
-bool IPU7Frames::getBuffer(Info* info, const icamera::stream_t& halStream, FrameBuffer* frameBuffer,
+bool IPUFrames::getBuffer(Info* info, const icamera::stream_t& halStream, FrameBuffer* frameBuffer,
                            icamera::camera_buffer_t* buf) {
     if (!info || !frameBuffer || !buf) return false;
 
@@ -107,10 +107,10 @@ bool IPU7Frames::getBuffer(Info* info, const icamera::stream_t& halStream, Frame
     return true;
 }
 
-void IPU7Frames::returnRequest(Info* info) {
+void IPUFrames::returnRequest(Info* info) {
 }
 
-void IPU7Frames::shutterReady(unsigned int frameNumber) {
+void IPUFrames::shutterReady(unsigned int frameNumber) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
@@ -124,7 +124,7 @@ void IPU7Frames::shutterReady(unsigned int frameNumber) {
     LOG(IPU7, Warning) << "id " << frameNumber << " for shutter isn't found";
 }
 
-void IPU7Frames::metadataReady(unsigned int frameNumber, int64_t sequence) {
+void IPUFrames::metadataReady(unsigned int frameNumber, int64_t sequence) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
@@ -138,7 +138,7 @@ void IPU7Frames::metadataReady(unsigned int frameNumber, int64_t sequence) {
     LOG(IPU7, Warning) << "id " << frameNumber << " for metadata isn't found";
 }
 
-void IPU7Frames::bufferReady(unsigned int frameNumber, unsigned int streamId) {
+void IPUFrames::bufferReady(unsigned int frameNumber, unsigned int streamId) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
@@ -152,7 +152,7 @@ void IPU7Frames::bufferReady(unsigned int frameNumber, unsigned int streamId) {
     LOG(IPU7, Warning) << "id " << frameNumber << " for buffer isn't found";
 }
 
-Info* IPU7Frames::requestComplete(unsigned int frameNumber) {
+Info* IPUFrames::requestComplete(unsigned int frameNumber) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
@@ -166,11 +166,11 @@ Info* IPU7Frames::requestComplete(unsigned int frameNumber) {
     return nullptr;
 }
 
-IPU7Results::IPU7Results() : mState(State::Stopped) {
-    icamera::camera_callback_ops_t::notify = IPU7Results::notifyCallback;
+IPUResults::IPUResults() : mState(State::Stopped) {
+    icamera::camera_callback_ops_t::notify = IPUResults::notifyCallback;
 }
 
-IPU7Results::~IPU7Results() {
+IPUResults::~IPUResults() {
     {
         MutexLocker locker(mMutex);
         mState = State::Stopped;
@@ -182,8 +182,8 @@ IPU7Results::~IPU7Results() {
     LOG(IPU7, Debug) << "Result thread stopped";
 }
 
-void IPU7Results::init(IPU7Frames* frames) {
-    mIPU7Frames = frames;
+void IPUResults::init(IPUFrames* frames) {
+    mIPUFrames = frames;
 
     {
         MutexLocker locker(mMutex);
@@ -195,14 +195,14 @@ void IPU7Results::init(IPU7Frames* frames) {
     LOG(IPU7, Debug) << "Result thread started";
 }
 
-void IPU7Results::sendEvent(const icamera::camera_msg_data_t& data) {
+void IPUResults::sendEvent(const icamera::camera_msg_data_t& data) {
     MutexLocker locker(mMutex);
 
     mEventQueue.push(data);
     mEventCondition.notify_one();
 }
 
-void IPU7Results::run() {
+void IPUResults::run() {
     LOG(IPU7, Debug) << "Enter result thread loop";
 
     while(true) {
@@ -233,16 +233,16 @@ void IPU7Results::run() {
     LOG(IPU7, Debug) << "Exit result thread loop";
 }
 
-void IPU7Results::notifyCallback(const icamera::camera_callback_ops_t* cb,
+void IPUResults::notifyCallback(const icamera::camera_callback_ops_t* cb,
                                  const icamera::camera_msg_data_t& data) {
     if (!cb) return;
 
-    IPU7Results* callback = const_cast<IPU7Results*>(static_cast<const IPU7Results*>(cb));
+    IPUResults* callback = const_cast<IPUResults*>(static_cast<const IPUResults*>(cb));
 
     callback->sendEvent(data);
 }
 
-void IPU7Results::handleEvent(const icamera::camera_msg_data_t& data) {
+void IPUResults::handleEvent(const icamera::camera_msg_data_t& data) {
     switch(data.type) {
         case icamera::CAMERA_ISP_BUF_READY: {
             shutterDone(data.data.buffer_ready.frameNumber, data.data.buffer_ready.timestamp);
@@ -262,15 +262,15 @@ void IPU7Results::handleEvent(const icamera::camera_msg_data_t& data) {
     }
 }
 
-void IPU7Results::shutterDone(unsigned int frameNumber, uint64_t timestamp) {
+void IPUResults::shutterDone(unsigned int frameNumber, uint64_t timestamp) {
     mShutterReady.emit(frameNumber, timestamp);
 }
 
-void IPU7Results::metadataDone(unsigned int frameNumber, int64_t sequence) {
+void IPUResults::metadataDone(unsigned int frameNumber, int64_t sequence) {
     mMetadataAvailable.emit(frameNumber, sequence);
 }
 
-void IPU7Results::bufferDone(unsigned int streamId) {
+void IPUResults::bufferDone(unsigned int streamId) {
     mBufferAvailable.emit(streamId);
 }
 

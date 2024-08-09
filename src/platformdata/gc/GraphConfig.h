@@ -27,17 +27,7 @@
 #include "IGraphType.h"
 #include "iutils/Thread.h"
 
-#ifdef IPU_SYSVER_ipu7
 #include "GraphResolutionConfigurator.h"
-#endif
-
-#ifndef IPU_SYSVER_ipu7
-#ifdef ENABLE_SANDBOXING
-#include "modules/sandboxing/client/GraphConfigImplClient.h"
-#else
-#include "modules/algowrapper/graph/GraphConfigImpl.h"
-#endif
-#endif
 
 namespace icamera {
 
@@ -70,7 +60,6 @@ class GraphConfig {
 
     status_t parse(int cameraId, const char* settingsXmlFile);
 
-#ifdef IPU_SYSVER_ipu7
     int32_t getGraphId(void);
     status_t getStagesByStreamId(int32_t streamId, std::map<int32_t, std::string>* stages);
     // return <contextId, outerNode>
@@ -79,29 +68,19 @@ class GraphConfig {
 
     status_t updateGraphSettingForPtz(const PtzInfo& cur, const PtzInfo& prev,
                                       bool* isKeyResChanged);
-    status_t getStaticGraphKernelRes(const uint32_t kernel_id, StaticGraphKernelRes& res);
+    status_t getIspRawCropInfo(IspRawCropInfo& info);
+    status_t getIspTuningModeByStreamId(int32_t streamId, uint32_t& ispTuningMode);
 
     // Not support the below API in ipu7, keep them only for ipu7 build
-    void addCustomKeyMap() {}
     int getSelectedMcId() { return -1; }
     void getCSIOutputResolution(camera_resolution_t &reso) {}
     status_t getGdcKernelSetting(uint32_t *kernelId,
                                  ia_isp_bxt_resolution_info_t *resolution) {
         return OK;
     }
-    int getStreamIdByPgName(std::string pgName) { return -1; }
-    int getTuningModeByStreamId(const int32_t streamId) { return -1; }
 
     uint8_t getPSysContextId(int32_t streamId, uint8_t outerNodeCtxId);
 
-    ia_isp_bxt_program_group *getProgramGroup(int32_t streamId) { return nullptr; }
-    status_t getMBRData(int32_t streamId, ia_isp_bxt_gdc_limits *data) {
-        return OK;
-    }
-    status_t getPgRbmValue(std::string pgName,
-                           IGraphType::StageAttr *stageAttr) { return OK; }
-    status_t getPgIdForKernel(const uint32_t streamIds,
-                              const int32_t kernelId, int32_t *pgId) { return OK; }
     status_t getPgNames(std::vector<std::string>* pgNames) { return OK; }
     status_t getPgNamesByStreamId(int32_t streamId, std::vector<std::string>* pgNames) {
         return OK;
@@ -113,30 +92,6 @@ class GraphConfig {
         return OK;
     }
 
-#else
-    void addCustomKeyMap();
-
-    int getSelectedMcId() { return mGraphData.mcId; }
-    int getGraphId(void) { return mGraphData.graphId; }
-    void getCSIOutputResolution(camera_resolution_t& reso) { reso = mGraphData.csiReso; }
-
-    status_t getGdcKernelSetting(uint32_t* kernelId,
-                                         ia_isp_bxt_resolution_info_t* resolution);
-    int getStreamIdByPgName(std::string pgName);
-    int getPgIdByPgName(std::string pgName);
-    int getTuningModeByStreamId(const int32_t streamId);
-    ia_isp_bxt_program_group* getProgramGroup(int32_t streamId);
-    status_t getPgRbmValue(std::string pgName, IGraphType::StageAttr* stageAttr);
-    status_t getMBRData(int32_t streamId, ia_isp_bxt_gdc_limits* data);
-    status_t getPgNames(std::vector<std::string>* pgNames);
-    status_t getPgIdForKernel(const uint32_t streamId, const int32_t kernelId,
-                                      int32_t* pgId);
-    status_t pipelineGetConnections(
-        const std::vector<std::string>& pgList,
-        std::vector<IGraphType::PipelineConnection>* confVector,
-        std::vector<IGraphType::PrivPortFormat>* tnrPortFormat = nullptr);
-    status_t getPgNamesByStreamId(int32_t streamId, std::vector<std::string>* pgNames);
-#endif
     StageType getPGType(int32_t pgId);
 
     status_t pipelineGetConnections(int32_t streamId,
@@ -158,7 +113,6 @@ class GraphConfig {
         bool enabled;
     };
 
-#ifdef IPU_SYSVER_ipu7
     struct IpuStageInfo {
         IpuStageInfo() : streamId(0), stageId(-1), node(nullptr) {}
         int32_t streamId;
@@ -213,7 +167,7 @@ class GraphConfig {
     OuterNode* findFrameTerminalOwner(const GraphLink* link);
     const StaticGraphRunKernel* findKernalForFrameTerminal(const OuterNode* node,
                                                            int32_t terminalId);
-#endif
+
     status_t queryGraphSettings(const std::vector<HalStream*>& outStreams);
 
     status_t createPipeGraphConfigData(const std::vector<HalStream*>& outStreams,
@@ -233,16 +187,13 @@ class GraphConfig {
                                       std::vector<IGraphType::PipelineConnection>* postVector,
                                       std::map<int32_t, PostStageInfo>& postStageInfos);
     void dumpPostStageInfo();
-#ifdef IPU_SYSVER_ipu7
     void dumpLink(const GraphLink* link);
     void dumpLink(const IpuGraphLink& ipuLink);
     void dumpNodes(const StaticGraphInfo& graph);
-#endif
 
  private:
     int32_t mCameraId;
 
-#ifdef IPU_SYSVER_ipu7
     // <camera id, binary>
     // TODO: Save different bin data (depends on use case, ...) for one camera?
     static Mutex sLock;
@@ -252,10 +203,6 @@ class GraphConfig {
 
     // <stream id, graph>
     std::map<int32_t, StaticGraphInfo> mStaticGraphs;
-#else
-    IGraphType::GraphConfigData mGraphData;
-    std::unique_ptr<GraphConfigImpl> mGraphConfigImpl;
-#endif
     float mSensorRatio;
     // <HalStream id, info>, HalStream could be user input stream or output stream (use ipu output)
     std::map<int32_t, PostStageInfo> mPostStageInfos;

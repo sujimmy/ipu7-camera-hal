@@ -215,16 +215,23 @@ struct CommonConfig {
     std::vector<std::string> availableSensors;
     int cameraNumber;
     int videoStreamNum;
-    bool supportIspTuningUpdate;
     bool useGpuProcessor;
 
     CommonConfig() {
         xmlVersion = 1.0;
         cameraNumber = -1;
         videoStreamNum = DEFAULT_VIDEO_STREAM_NUM;
-        supportIspTuningUpdate = false;
         useGpuProcessor = false;
     }
+};
+
+struct IspRawCropInfo {
+    int32_t left;
+    int32_t top;
+    int32_t right;
+    int32_t bottom;
+    int32_t outputWidth;
+    int32_t outputHeight;
 };
 
 struct OBSetting {
@@ -269,14 +276,6 @@ struct FrameInfo {
     int mBpp = 0;
 };
 typedef std::map<uuid, FrameInfo> FrameInfoPortMap;
-
-/**
- * Indicate if the graph setting for video and still is coupled or dispersed
- */
-typedef enum {
-    COUPLED,
-    DISPERSED,
-} GraphSettingType;
 
 typedef enum {
     CAMERA_STREAM_START = CAMERA_STREAM_MAX,

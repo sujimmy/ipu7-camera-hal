@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -253,18 +253,6 @@ void CameraSensorsParser::parseYUVColorRangeMode(const Json::Value& node) {
         mCurCam->mYuvColorRangeMode = CAMERA_FULL_MODE_YUV_COLOR_RANGE;
     else if (typeStr == "reduced")
         mCurCam->mYuvColorRangeMode = CAMERA_REDUCED_MODE_YUV_COLOR_RANGE;
-}
-
-void CameraSensorsParser::parseGraphSettingsType(const Json::Value& node) {
-    auto typeStr = node.asString();
-    if (typeStr == "coupled")
-        mCurCam->mGraphSettingsType = COUPLED;
-    else if (typeStr == "dispersed")
-        mCurCam->mGraphSettingsType = DISPERSED;
-    else {
-        LOGW("unknown graph settings type %s, set to COUPLED", typeStr.c_str());
-        mCurCam->mGraphSettingsType = COUPLED;
-    }
 }
 
 void CameraSensorsParser::parseNvmeDeviceInfo(const Json::Value& node) {
@@ -587,6 +575,8 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
     if (node.isMember("supportedISysSizes")) parseSupportedISysSizes(node["supportedISysSizes"]);
     if (node.isMember("supportedISysFormat")) parseSupportedISysFormat(node["supportedISysFormat"]);
     if (node.isMember("enableAIQ")) mCurCam->mEnableAIQ = node["enableAIQ"].asBool();
+    if (node.isMember("ispTuningUpdate"))
+        mCurCam->mIspTuningUpdate = node["ispTuningUpdate"].asBool();
     if (node.isMember("iSysRawFormat")) parseiSysRawFormat(node["iSysRawFormat"]);
     if (node.isMember("maxRawDataNum")) mCurCam->mMaxRawDataNum = node["maxRawDataNum"].asInt();
     if (node.isMember("initialSkipFrame"))
@@ -599,7 +589,6 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
 
     if (node.isMember("graphSettingsFile"))
         mCurCam->mGraphSettingsFile = node["graphSettingsFile"].asString();
-    if (node.isMember("graphSettingsType")) parseGraphSettingsType(node["graphSettingsType"]);
     if (node.isMember("dvsType")) parseDVSType(node["dvsType"]);
     if (node.isMember("nvmDeviceInfo")) parseNvmeDeviceInfo(node["nvmDeviceInfo"]);
     if (node.isMember("supportModuleNames")) parsesupportModuleNames(node["supportModuleNames"]);
@@ -631,6 +620,7 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
     if (node.isMember("enableAIQ")) mCurCam->mEnableAIQ = node["enableAIQ"].asBool();
     if (node.isMember("dummyStillSink")) mCurCam->mDummyStillSink = node["dummyStillSink"].asBool();
     if (node.isMember("useGpuTnr")) mCurCam->mGpuTnrEnabled = node["useGpuTnr"].asBool();
+    if (node.isMember("useGpuIpa")) mCurCam->mGpuIpaEnabled = node["useGpuIpa"].asBool();
     if (node.isMember("psysAlignWithSystem"))
         mCurCam->mMsPsysAlignWithSystem = node["psysAlignWithSystem"].asInt();
 

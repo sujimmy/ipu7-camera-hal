@@ -35,6 +35,8 @@
 #include "Ipu7xStaticGraphTypesAutogen.h"
 #include "Ipu7xStaticGraphBinaryAutogen.h"
 
+#define SUPPORT_KEY_RESOLUTIONS 1
+
 enum InnerNodeOption
 {
     None = 0,
@@ -74,10 +76,11 @@ public:
     NodeTypes type;
     HwBitmaps bitmaps;
     StaticGraphNodeKernels nodeKernels;
-    uint8_t numberOfFragments;
 
+    uint8_t numberOfFragments;
     OuterNode() {}
     ~OuterNode();
+
     void Init(uint8_t nodeResourceId,
         NodeTypes nodeType,
         uint32_t kernelCount,
@@ -87,7 +90,9 @@ public:
         uint8_t nodeNumberOfFragments);
 
     StaticGraphStatus UpdateKernelsSelectedConfiguration(uint32_t selectedIndex);
+
     uint8_t GetNumberOfFragments();
+
     void SetDisabledKernels(uint64_t disabledRunKernelsBitmap);
 
 protected:
@@ -522,6 +527,7 @@ class IsysOuterNode : public OuterNode
 public:
     IsysOuterNode(): OuterNode(){}
     void Init(IsysOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffBayerOuterNode : public OuterNode
@@ -529,6 +535,7 @@ class LbffBayerOuterNode : public OuterNode
 public:
     LbffBayerOuterNode(): OuterNode(){}
     void Init(LbffBayerOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class BbpsNoTnrOuterNode : public OuterNode
@@ -536,6 +543,7 @@ class BbpsNoTnrOuterNode : public OuterNode
 public:
     BbpsNoTnrOuterNode(): OuterNode(){}
     void Init(BbpsNoTnrOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class BbpsWithTnrOuterNode : public OuterNode
@@ -543,6 +551,7 @@ class BbpsWithTnrOuterNode : public OuterNode
 public:
     BbpsWithTnrOuterNode(): OuterNode(){}
     void Init(BbpsWithTnrOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffBayerWithGmvOuterNode : public OuterNode
@@ -550,6 +559,7 @@ class LbffBayerWithGmvOuterNode : public OuterNode
 public:
     LbffBayerWithGmvOuterNode(): OuterNode(){}
     void Init(LbffBayerWithGmvOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class SwGdcOuterNode : public OuterNode
@@ -557,6 +567,7 @@ class SwGdcOuterNode : public OuterNode
 public:
     SwGdcOuterNode(): OuterNode(){}
     void Init(SwGdcOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffRgbIrOuterNode : public OuterNode
@@ -564,6 +575,7 @@ class LbffRgbIrOuterNode : public OuterNode
 public:
     LbffRgbIrOuterNode(): OuterNode(){}
     void Init(LbffRgbIrOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffIrNoGmvIrStreamOuterNode : public OuterNode
@@ -571,6 +583,7 @@ class LbffIrNoGmvIrStreamOuterNode : public OuterNode
 public:
     LbffIrNoGmvIrStreamOuterNode(): OuterNode(){}
     void Init(LbffIrNoGmvIrStreamOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class BbpsIrWithTnrOuterNode : public OuterNode
@@ -578,6 +591,7 @@ class BbpsIrWithTnrOuterNode : public OuterNode
 public:
     BbpsIrWithTnrOuterNode(): OuterNode(){}
     void Init(BbpsIrWithTnrOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffBayerBurstOutNo3AOuterNode : public OuterNode
@@ -585,6 +599,7 @@ class LbffBayerBurstOutNo3AOuterNode : public OuterNode
 public:
     LbffBayerBurstOutNo3AOuterNode(): OuterNode(){}
     void Init(LbffBayerBurstOutNo3AOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class BbpsIrNoTnrOuterNode : public OuterNode
@@ -592,6 +607,7 @@ class BbpsIrNoTnrOuterNode : public OuterNode
 public:
     BbpsIrNoTnrOuterNode(): OuterNode(){}
     void Init(BbpsIrNoTnrOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffIrNoGmvOuterNode : public OuterNode
@@ -599,6 +615,7 @@ class LbffIrNoGmvOuterNode : public OuterNode
 public:
     LbffIrNoGmvOuterNode(): OuterNode(){}
     void Init(LbffIrNoGmvOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class IsysPdaf2OuterNode : public OuterNode
@@ -606,6 +623,7 @@ class IsysPdaf2OuterNode : public OuterNode
 public:
     IsysPdaf2OuterNode(): OuterNode(){}
     void Init(IsysPdaf2OuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffBayerPdaf2OuterNode : public OuterNode
@@ -613,6 +631,7 @@ class LbffBayerPdaf2OuterNode : public OuterNode
 public:
     LbffBayerPdaf2OuterNode(): OuterNode(){}
     void Init(LbffBayerPdaf2OuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffBayerPdaf3OuterNode : public OuterNode
@@ -620,6 +639,7 @@ class LbffBayerPdaf3OuterNode : public OuterNode
 public:
     LbffBayerPdaf3OuterNode(): OuterNode(){}
     void Init(LbffBayerPdaf3OuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class IsysDolOuterNode : public OuterNode
@@ -627,6 +647,7 @@ class IsysDolOuterNode : public OuterNode
 public:
     IsysDolOuterNode(): OuterNode(){}
     void Init(IsysDolOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class SwDolOuterNode : public OuterNode
@@ -634,6 +655,7 @@ class SwDolOuterNode : public OuterNode
 public:
     SwDolOuterNode(): OuterNode(){}
     void Init(SwDolOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class LbffDolOuterNode : public OuterNode
@@ -641,6 +663,7 @@ class LbffDolOuterNode : public OuterNode
 public:
     LbffDolOuterNode(): OuterNode(){}
     void Init(LbffDolOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 class SwGtmOuterNode : public OuterNode
@@ -648,6 +671,7 @@ class SwGtmOuterNode : public OuterNode
 public:
     SwGtmOuterNode(): OuterNode(){}
     void Init(SwGtmOuterNodeConfiguration** selectedGraphConfigurations, uint32_t kernelConfigurationsOptionsCount);
+
     void setInnerNode(InnerNodeOptionsFlags nodeInnerOptions);
 };
 

@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-#include "IntelCcaWorker.h"
+#include "CcaWorker.h"
 
 #include <libcamera/base/log.h>
 
 #include "IPAHeader.h"
-#include "IPCIntelCca.h"
+#include "IPCCca.h"
 
 namespace libcamera {
 
-LOG_DECLARE_CATEGORY(IPAIPU7)
+LOG_DECLARE_CATEGORY(IPAIPU)
 
 namespace ipa::ipu7 {
 
-IntelCcaWorker::IntelCcaWorker(int cameraId, int tuningMode, IIPAServerCallback* callback)
+CcaWorker::CcaWorker(int cameraId, int tuningMode, IIPAServerCallback* callback)
         : mCameraId(cameraId),
           mTuningMode(tuningMode),
           mIPACallback(callback),
           mCca(nullptr) {
-    LOG(IPAIPU7, Debug) << "IntelCcaWorker cameraId " << cameraId << " tuningMode " << tuningMode;
+    LOG(IPAIPU, Debug) << "CcaWorker cameraId " << cameraId << " tuningMode " << tuningMode;
 
     mCca = std::make_unique<cca::IntelCCA>();
     mServerToClientPayloadMap.clear();
@@ -48,21 +48,21 @@ IntelCcaWorker::IntelCcaWorker(int cameraId, int tuningMode, IIPAServerCallback*
     INIT_SERVER_THREAD_MAP(start, end, mIPAServerThreadMap, "pac");
 }
 
-IntelCcaWorker::~IntelCcaWorker() {
-    LOG(IPAIPU7, Debug) << "~IntelCcaWorker cameraId " << mCameraId << " tuningMode "
-                        << mTuningMode;
+CcaWorker::~CcaWorker() {
+    LOG(IPAIPU, Debug) << "~CcaWorker cameraId " << mCameraId << " tuningMode "
+                       << mTuningMode;
 
     mServerToClientPayloadMap.clear();
 }
 
-int IntelCcaWorker::sendRequest(uint32_t cmd, const Span<uint8_t>& mem) {
-    LOG(IPAIPU7, Debug) << " " << __func__ << " cmd " << cmd;
+int CcaWorker::sendRequest(uint32_t cmd, const Span<uint8_t>& mem) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cmd " << cmd;
 
     mIPAServerThreadMap[cmd]->sendRequest(cmd, mem);
     return 0;
 }
 
-void IntelCcaWorker::handleEvent(const cmd_event& event) {
+void CcaWorker::handleEvent(const cmd_event& event) {
     int ret = 0;
 
     switch (event.cmd) {
@@ -115,30 +115,30 @@ void IntelCcaWorker::handleEvent(const cmd_event& event) {
             ret = decodeStats(event.data);
             break;
         default:
-            LOG(IPAIPU7, Warning) << "Unknown cmd " << event.cmd;
+            LOG(IPAIPU, Warning) << "Unknown cmd " << event.cmd;
             break;
     }
 
     if (ret != 0) {
-        LOG(IPAIPU7, Error) << "handleEvent error " << event.cmd;
+        LOG(IPAIPU, Error) << "handleEvent error " << event.cmd;
     }
 
-    mIPACallback->notifyCallback(mCameraId, mTuningMode, event.cmd, ret);
+    mIPACallback->returnRequestReady(mCameraId, mTuningMode, event.cmd, ret);
 }
 
-int IntelCcaWorker::init(uint8_t* pData) {
+int CcaWorker::init(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_init_data* params = reinterpret_cast<intel_cca_init_data*>(pData);
 
     ia_err ret = mCca->init(params->inParams);
-    LOG(IPAIPU7, Debug) << "bitmap: " << params->inParams.bitmap << " version: "
-                        << mCca->getVersion();
+    LOG(IPAIPU, Debug) << "bitmap: " << params->inParams.bitmap << " version: "
+                       << mCca->getVersion();
 
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::reinitAic(uint8_t* pData) {
+int CcaWorker::reinitAic(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_reinit_aic_data* params = reinterpret_cast<intel_cca_reinit_aic_data*>(pData);
@@ -148,7 +148,7 @@ int IntelCcaWorker::reinitAic(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::deinit(uint8_t* pData) {
+int CcaWorker::deinit(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     ia_err ret = mCca->deinit();
@@ -156,7 +156,7 @@ int IntelCcaWorker::deinit(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::setStats(uint8_t* pData) {
+int CcaWorker::setStats(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_set_stats_data* params = reinterpret_cast<intel_cca_set_stats_data*>(pData);
@@ -166,7 +166,7 @@ int IntelCcaWorker::setStats(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::runAEC(uint8_t* pData) {
+int CcaWorker::runAEC(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_run_aec_data* params = reinterpret_cast<intel_cca_run_aec_data*>(pData);
@@ -176,7 +176,7 @@ int IntelCcaWorker::runAEC(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::runAIQ(uint8_t* pData) {
+int CcaWorker::runAIQ(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_run_aiq_data* params = reinterpret_cast<intel_cca_run_aiq_data*>(pData);
@@ -186,7 +186,7 @@ int IntelCcaWorker::runAIQ(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::updateTuning(uint8_t* pData) {
+int CcaWorker::updateTuning(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_update_tuning_data* params = reinterpret_cast<intel_cca_update_tuning_data*>(pData);
@@ -197,7 +197,7 @@ int IntelCcaWorker::updateTuning(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-ia_err IntelCcaWorker::getTerminalBuf(intel_cca_aic_control_data* params) {
+ia_err CcaWorker::getTerminalBuf(intel_cca_aic_control_data* params) {
     for (uint32_t cb = 0; cb < params->termConfig.cb_num; cb++) {
         for (uint32_t terminal = 0; terminal < params->termConfig.cb_terminal_buf[cb].num_terminal;
              terminal++) {
@@ -206,7 +206,7 @@ ia_err IntelCcaWorker::getTerminalBuf(intel_cca_aic_control_data* params) {
             if (handle >= 0) {
                 void* bufferAddr = mIPACallback->getBuffer(handle);
                 if (!bufferAddr) {
-                    LOG(IPAIPU7, Error) << "failed to get payloadInfo";
+                    LOG(IPAIPU, Error) << "failed to get payloadInfo";
                     return ia_err_argument;
                 }
                 params->termConfig.cb_terminal_buf[cb].terminal_buf[terminal].payloadServerAddr =
@@ -218,7 +218,7 @@ ia_err IntelCcaWorker::getTerminalBuf(intel_cca_aic_control_data* params) {
     return ia_err_none;
 }
 
-int IntelCcaWorker::configAIC(uint8_t* pData, int dataSize) {
+int CcaWorker::configAIC(uint8_t* pData, int dataSize) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     cca::cca_aic_config config = {};
@@ -232,7 +232,7 @@ int IntelCcaWorker::configAIC(uint8_t* pData, int dataSize) {
         params->kernelOffset.offsetBuffer =
             static_cast<uint32_t*>(mIPACallback->getBuffer(params->kernelOffset.offsetHandle));
         if (!params->kernelOffset.offsetBuffer) {
-            LOG(IPAIPU7, Error) << "failed to get offsetBuffer";
+            LOG(IPAIPU, Error) << "failed to get offsetBuffer";
             return static_cast<int>(ia_err_argument);
         }
     }
@@ -240,19 +240,19 @@ int IntelCcaWorker::configAIC(uint8_t* pData, int dataSize) {
     ia_err ret = getTerminalBuf(params);
     if (ret != ia_err_none) return static_cast<int>(ret);
 
-    bool rt = mIpcIntelCca.serverUnflattenConfigAic(pData, dataSize, config, kernelOffset,
-                                                    termConfig, aicId, statsBufToTermIds);
+    bool rt = mIpcCca.serverUnflattenConfigAic(pData, dataSize, config, kernelOffset, termConfig,
+                                               aicId, statsBufToTermIds);
     if (!rt) return static_cast<int>(ia_err_internal);
 
     ret = mCca->configAIC(config, kernelOffset, termConfig, aicId,
                           statsBufToTermIds);
-    mIpcIntelCca.flattenTerminalConfig(
+    mIpcCca.flattenTerminalConfig(
         reinterpret_cast<intel_cca_aic_control_data*>(pData)->termConfig, termConfig);
 
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::registerAicBuf(uint8_t* pData) {
+int CcaWorker::registerAicBuf(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_aic_control_data* params = reinterpret_cast<intel_cca_aic_control_data*>(pData);
@@ -261,7 +261,7 @@ int IntelCcaWorker::registerAicBuf(uint8_t* pData) {
     if (ret != ia_err_none) return static_cast<int>(ret);
 
     cca::cca_aic_terminal_config termConfig = {};
-    mIpcIntelCca.unFlattenTerminalConfig(params->termConfig, termConfig);
+    mIpcCca.unFlattenTerminalConfig(params->termConfig, termConfig);
 
     for (uint32_t cb = 0; cb < params->termConfig.cb_num; cb++) {
         for (uint32_t terminal = 0; terminal < params->termConfig.cb_terminal_buf[cb].num_terminal;
@@ -283,7 +283,7 @@ int IntelCcaWorker::registerAicBuf(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::getAicBuf(uint8_t* pData) {
+int CcaWorker::getAicBuf(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_aic_control_data* params = reinterpret_cast<intel_cca_aic_control_data*>(pData);
@@ -292,7 +292,7 @@ int IntelCcaWorker::getAicBuf(uint8_t* pData) {
     if (ret != ia_err_none) return static_cast<int>(ret);
 
     cca::cca_aic_terminal_config termConfig = {};
-    mIpcIntelCca.unFlattenTerminalConfig(params->termConfig, termConfig);
+    mIpcCca.unFlattenTerminalConfig(params->termConfig, termConfig);
     ret = mCca->getAICBuf(termConfig, params->aicId);
     if (ret != ia_err_none) return static_cast<int>(ret);
 
@@ -309,19 +309,18 @@ int IntelCcaWorker::getAicBuf(uint8_t* pData) {
             }
         }
     }
-    mIpcIntelCca.flattenTerminalConfig(params->termConfig, termConfig);
+    mIpcCca.flattenTerminalConfig(params->termConfig, termConfig);
 
     return 0;
 }
 
-int IntelCcaWorker::updateConfigurationResolutions(uint8_t* pData, int dataSize) {
+int CcaWorker::updateConfigurationResolutions(uint8_t* pData, int dataSize) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     cca::cca_aic_config config = {};
     int32_t aicId = 0;
     bool isKeyResChanged = false;
-    bool rt = mIpcIntelCca.serverUnflattenUpdateCfgRes(pData, dataSize, config, aicId,
-                                                       isKeyResChanged);
+    bool rt = mIpcCca.serverUnflattenUpdateCfgRes(pData, dataSize, config, aicId, isKeyResChanged);
     if (!rt) return static_cast<int>(ia_err_internal);
 
     ia_err ret = mCca->updateConfigurationResolutions(config, aicId, isKeyResChanged);
@@ -329,7 +328,7 @@ int IntelCcaWorker::updateConfigurationResolutions(uint8_t* pData, int dataSize)
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::runAIC(uint8_t* pData) {
+int CcaWorker::runAIC(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
     cca::cca_multi_pal_output output = {};
 
@@ -338,7 +337,7 @@ int IntelCcaWorker::runAIC(uint8_t* pData) {
     if (params->inParamsHandle >= 0) {
         void* bufferAddr = mIPACallback->getBuffer(params->inParamsHandle);
         if (!bufferAddr) {
-            LOG(IPAIPU7, Error) << "failed to get inParams";
+            LOG(IPAIPU, Error) << "failed to get inParams";
             return static_cast<int>(ia_err_argument);
         }
         params->inParams = static_cast<cca::cca_pal_input_params*>(bufferAddr);
@@ -350,20 +349,20 @@ int IntelCcaWorker::runAIC(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::getCMC(uint8_t* pData) {
+int CcaWorker::getCMC(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_get_cmc_data* params = reinterpret_cast<intel_cca_get_cmc_data*>(pData);
 
     ia_err ret = mCca->getCMC(params->results);
 
-    LOG(IPAIPU7, Debug) << "iso: " << params->results.base_iso << " max_ag: "
-                        << params->results.max_ag << " max_dg: " << params->results.max_dg;
+    LOG(IPAIPU, Debug) << "iso: " << params->results.base_iso << " max_ag: "
+                       << params->results.max_ag << " max_dg: " << params->results.max_dg;
 
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::getMKN(uint8_t* pData) {
+int CcaWorker::getMKN(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_mkn_data* params = reinterpret_cast<intel_cca_mkn_data*>(pData);
@@ -373,7 +372,7 @@ int IntelCcaWorker::getMKN(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::getAiqd(uint8_t* pData) {
+int CcaWorker::getAiqd(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_get_aiqd_data* params = reinterpret_cast<intel_cca_get_aiqd_data*>(pData);
@@ -383,17 +382,32 @@ int IntelCcaWorker::getAiqd(uint8_t* pData) {
     return static_cast<int>(ret);
 }
 
-int IntelCcaWorker::decodeStats(uint8_t* pData) {
+int CcaWorker::decodeStats(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_decode_stats_data* params = reinterpret_cast<intel_cca_decode_stats_data*>(pData);
-    if (params->statsBuffer.size > 0 && params->statsHandle >= 0) {
-        params->statsBuffer.data = mIPACallback->getBuffer(params->statsHandle);;
-    } else {
-        params->statsBuffer.data = nullptr;
-    }
+    auto& outStats = params->outStats;
 
     ia_err ret = mCca->decodeStats(params->groupId, params->sequence, params->aicId);
+
+    if (ret == ia_err_none && outStats.get_rgbs_stats) {
+        auto stats = mCca->queryStatsBuf(cca::STATS_BUF_LATEST);
+        if (stats) {
+            outStats.rgbs_grid[0].grid_width = stats->stats.rgbs_grids[0].grid_width;
+            outStats.rgbs_grid[0].grid_height = stats->stats.rgbs_grids[0].grid_height;
+            outStats.rgbs_grid[0].shading_correction = stats->stats.shading_corrected;
+
+            unsigned int width = stats->stats.rgbs_grids[0].grid_width;
+            unsigned int height = stats->stats.rgbs_grids[0].grid_height;
+            for (unsigned int i = 0; i < width * height; i++) {
+                outStats.rgbs_blocks[0][i].avg_gr = stats->stats.rgbs_grids[0].avg[i].gr;
+                outStats.rgbs_blocks[0][i].avg_r = stats->stats.rgbs_grids[0].avg[i].r;
+                outStats.rgbs_blocks[0][i].avg_b = stats->stats.rgbs_grids[0].avg[i].b;
+                outStats.rgbs_blocks[0][i].avg_gb = stats->stats.rgbs_grids[0].avg[i].gb;
+                outStats.rgbs_blocks[0][i].sat = stats->stats.rgbs_grids[0].sat[i];
+            }
+        }
+    }
 
     return static_cast<int>(ret);
 }

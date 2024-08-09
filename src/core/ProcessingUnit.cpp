@@ -393,18 +393,6 @@ int ProcessingUnit::processNewFrame() {
         mScheduler->executeNode(source, inputSequence);
     }
 
-    // run PAL for next frame only when task scheduled
-    if (inputSequence > -1) {
-        auto cameraContext = CameraContext::getInstance(mCameraId);
-        // Check if next sequence is requested or not
-        if (cameraContext->checkUserRequestBySeq(inputSequence + 1)) {
-            LOG2("%s sequence %ld is ready for PAL", __func__, inputSequence + 1);
-            AutoWMutex wl(mIspSettingsLock);
-            // Predict to run AIC with video pipe for next frame
-            mPipeManager->prepareIpuParams(&mIspSettings, inputSequence + 1);
-        }
-    }
-
     return OK;
 }
 

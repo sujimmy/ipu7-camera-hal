@@ -35,7 +35,6 @@ IStaticGraphConfig::IStaticGraphConfig(SensorMode* selectedSensorMode, VirtualSi
 _selectedSensorMode(selectedSensorMode), _graphId(graphId), _settingsId(settingsId)
 {
     memcpy(_sinkMappingConfiguration, sinkMappingConfiguration, sizeof(VirtualSinkMapping));
-
     // Copy zoom key resolutions
     _zoomKeyResolutions.numberOfZoomKeyOptions = zoomKeyResolutions->numberOfZoomKeyOptions;
 
@@ -210,10 +209,10 @@ void OuterNode::Init(uint8_t nodeResourceId,
 
     selectedKernelConfigurationIndex = 0;
     nodeKernels.kernelList = kernelListOptions[0];
+
     nodeKernels.operationMode = operationMode;
     nodeKernels.streamId = streamId;
 }
-
 OuterNode::~OuterNode()
 {
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; i++)
@@ -299,7 +298,6 @@ StaticGraphStatus OuterNode::UpdateKernelsSelectedConfiguration(uint32_t selecte
     selectedKernelConfigurationIndex = selectedIndex;
     return StaticGraphStatus::SG_OK;
 }
-
 uint8_t OuterNode::GetNumberOfFragments()
 {
     return numberOfFragments;

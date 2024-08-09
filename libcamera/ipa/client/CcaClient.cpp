@@ -16,19 +16,19 @@
 
 #define LOG_TAG IntelCcaClient
 
-#include "IntelCcaClient.h"
+#include "CcaClient.h"
 
 #include <vector>
 
 #include "iutils/CameraLog.h"
 #include "iutils/Utils.h"
 
-#include "IntelAlgoClient.h"
+#include "IPAClient.h"
 
 namespace icamera {
 
 #define SHM_NAME "shm"
-#define mAlgoClient libcamera::IntelAlgoClient::getInstance()
+#define mAlgoClient libcamera::IPAClient::getInstance()
 
 std::vector<IntelCca::CCAHandle> IntelCca::sCcaInstance;
 Mutex IntelCca::sLock;
@@ -204,12 +204,12 @@ ia_err IntelCca::configAic(const cca::cca_aic_config& aicConf,
     prepareAicKernelOffsetIPC(kernelOffset, offsetPtr, &aicControl->kernelOffset);
     prepareAicBufIPC(termConfig, &aicControl->termConfig);
 
-    rt = mIpcIntelCca.clientFlattenConfigAic(mMemAICControl.mAddr, mMemAICControl.mSize, aicConf,
-                                             kernelOffset, termConfig, aicId, statsBufToTermIds);
+    rt = mIpcCca.clientFlattenConfigAic(mMemAICControl.mAddr, mMemAICControl.mSize, aicConf,
+                                        kernelOffset, termConfig, aicId, statsBufToTermIds);
     CheckAndLogError(!rt, ia_err_general, "clientFlattenConfigAic fails");
 
     int ret = mAlgoClient->configAic(mCameraId, mTuningMode, mMemAICControl.mHandle);
-    mIpcIntelCca.unFlattenTerminalConfig(aicControl->termConfig, termConfig);
+    mIpcCca.unFlattenTerminalConfig(aicControl->termConfig, termConfig);
 
     return static_cast<ia_err>(ret);
 }
@@ -220,7 +220,7 @@ ia_err IntelCca::registerAicBuf(const cca::cca_aic_terminal_config& termConfig, 
     aicControl->aicId = aicId;
     prepareAicBufIPC(termConfig, &aicControl->termConfig);
 
-    mIpcIntelCca.flattenTerminalConfig(aicControl->termConfig, termConfig);
+    mIpcCca.flattenTerminalConfig(aicControl->termConfig, termConfig);
 
     int ret = mAlgoClient->registerAicBuf(mCameraId, mTuningMode, mMemAICControl.mHandle);
 
@@ -233,16 +233,17 @@ ia_err IntelCca::getAicBuf(cca::cca_aic_terminal_config& termConfig, int32_t aic
     aicControl->aicId = aicId;
     prepareAicBufIPC(termConfig, &aicControl->termConfig);
 
-    mIpcIntelCca.flattenTerminalConfig(aicControl->termConfig, termConfig);
+    mIpcCca.flattenTerminalConfig(aicControl->termConfig, termConfig);
 
     int ret = mAlgoClient->getAicBuf(mCameraId, mTuningMode, mMemAICControl.mHandle);
     if (ret != 0) return ia_err_argument;
 
-    mIpcIntelCca.unFlattenTerminalConfig(aicControl->termConfig, termConfig);
+    mIpcCca.unFlattenTerminalConfig(aicControl->termConfig, termConfig);
     return ia_err_none;
 }
 
-ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId) {
+ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
+                             cca::cca_out_stats* outStats) {
     intel_cca_decode_stats_data* decodeStats =
         static_cast<intel_cca_decode_stats_data*>(mMemDecodeStats.mAddr);
 
@@ -250,13 +251,21 @@ ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId) {
     decodeStats->sequence = sequence;
     decodeStats->aicId = aicId;
 
-    // To do, read stats to buffer
     decodeStats->statsHandle = -1;
     decodeStats->statsBuffer.data = nullptr;
     decodeStats->statsBuffer.size = 0;
     decodeStats->outStats.get_rgbs_stats = false;
 
+    if (outStats) {
+        decodeStats->outStats.get_rgbs_stats = outStats->get_rgbs_stats;
+    }
+
     int ret = mAlgoClient->decodeStats(mCameraId, mTuningMode, mMemDecodeStats.mHandle);
+
+    if (outStats && decodeStats->outStats.get_rgbs_stats) {
+        *outStats = decodeStats->outStats;
+        outStats->rgbs_grid[0].blocks_ptr = outStats->rgbs_blocks[0];
+    }
 
     return static_cast<ia_err>(ret);
 }
@@ -282,8 +291,8 @@ ia_err IntelCca::updateConfigurationResolutions(const cca::cca_aic_config& aicCo
     bool rt = prepareAicConfigIPC(aicConf, &aicControl->config);
     CheckAndLogError(!rt, ia_err_general, "prepareAicConfigIPC for res update fails");
 
-    rt = mIpcIntelCca.clientFlattenUpdateCfgRes(mMemAICControl.mAddr, mMemAICControl.mSize, aicConf,
-                                                aicId, isKeyResChanged);
+    rt = mIpcCca.clientFlattenUpdateCfgRes(mMemAICControl.mAddr, mMemAICControl.mSize, aicConf,
+                                           aicId, isKeyResChanged);
     CheckAndLogError(!rt, ia_err_general, "clientFlattenUpdateCfgRes fails");
 
     int ret = mAlgoClient->updateConfigurationResolutions(mCameraId, mTuningMode,
@@ -430,13 +439,11 @@ void* IntelCca::allocMem(int streamId, const std::string& name, int index, int s
     ShmMemInfo memInfo = {};
     bool ret = mAlgoClient->allocShmMem(finalName, size, &memInfo.mAddr, memInfo.mHandle);
     CheckAndLogError(ret == false, nullptr, "%s, allocShmMem fails for pal buf", __func__);
-    LOG1(
-        "<id%d> @%s, tuningMode:%d, name:%s, index:%d, streamId:%d, size:%d, handle: %d,"
-        "address: %p",
-        mCameraId, __func__, mTuningMode, name.c_str(), index, streamId, size, memInfo.mHandle,
-        memInfo.mAddr);
+    LOG1("<id%d> @%s, mode:%d, name:%s, index:%d, streamId:%d, size:%d, handle: %d, addr: %p",
+         mCameraId, __func__, mTuningMode, name.c_str(), index, streamId, size, memInfo.mHandle,
+         memInfo.mAddr);
 
-    memInfo.mName = name;
+    memInfo.mName = finalName;
     memInfo.mSize = size;
 
     mMemsOuter[memInfo.mAddr] = memInfo;
@@ -478,4 +485,4 @@ void IntelCca::releaseAllShmMems(const std::vector<ShmMem>& mems) {
     }
 }
 
-} /* namespace libcamera */
+} /* namespace icamera */

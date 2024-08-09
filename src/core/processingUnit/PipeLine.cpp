@@ -49,6 +49,31 @@ PipeLine::~PipeLine() {
     }
 }
 
+void PipeLine::updateIspTuningMode(TuningMode tuningMode) {
+    if (PlatformData::supportUpdateTuning(mCameraId)) {
+        uint32_t ispTuningMode = 0;
+        auto ret = mGraphConfig->getIspTuningModeByStreamId(mStreamId, ispTuningMode);
+        if (ret == OK) {
+            ia_lard_input_params lardParam = {
+                IA_MKN_CHTOUL('D', 'F', 'L', 'T'),
+                IA_MKN_CHTOUL('D', 'F', 'L', 'T'),
+                ispTuningMode,
+                IA_MKN_CHTOUL('D', 'F', 'L', 'T'),
+            };
+            cca::cca_nvm tmpNvm = {};
+
+            auto intelCca = IntelCca::getInstance(mCameraId, tuningMode);
+            CheckAndLogError(!intelCca, VOID_VALUE, "Failed to get IntelCca");
+
+            ia_err iaErr = intelCca->updateTuning(cca::CCA_LARD_ISP, lardParam, tmpNvm, mStreamId);
+            CheckAndLogError(iaErr != ia_err_none, VOID_VALUE, "Failed to update tuning %u",
+                             ispTuningMode);
+
+            LOG1("Update isp tuning mode %u, streamId %d", ispTuningMode, mStreamId);
+        }
+    }
+}
+
 int PipeLine::configure(TuningMode tuningMode, IpuPacAdaptor* adaptor) {
     LOG1("<id%d>@%s, tuningMode:%d", mCameraId, __func__, tuningMode);
     CheckAndLogError(!adaptor, UNKNOWN_ERROR, "%s: nullptr adaptor", __func__);
@@ -56,6 +81,8 @@ int PipeLine::configure(TuningMode tuningMode, IpuPacAdaptor* adaptor) {
     releasePipeStage();
     mTuningMode = tuningMode;
     mPacAdaptor = adaptor;
+
+    updateIspTuningMode(tuningMode);
 
     int ret = createPipeStages();
     CheckAndLogError(ret != OK, ret, "%s, Create pipeStages failed about stream %d", __func__,

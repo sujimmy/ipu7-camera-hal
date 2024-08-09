@@ -20,7 +20,7 @@
 #include <map>
 
 #include "IntelCCA.h"
-#include "IPCIntelCca.h"
+#include "IPCCca.h"
 #include "IPAHeader.h"
 #include "IPAServerThread.h"
 
@@ -34,10 +34,10 @@ namespace ipa::ipu7 {
  * \brief The IPU7 IPA CCA implementation
  *
  */
-class IntelCcaWorker : public IAlgoWorker {
+class CcaWorker : public IAlgoWorker {
  public:
-    IntelCcaWorker(int cameraId, int tuningMode, IIPAServerCallback* callback);
-    virtual ~IntelCcaWorker();
+    CcaWorker(int cameraId, int tuningMode, IIPAServerCallback* callback);
+    virtual ~CcaWorker();
 
     int sendRequest(uint32_t cmd, const Span<uint8_t>& mem);
     void handleEvent(const cmd_event& event) override;
@@ -69,7 +69,7 @@ class IntelCcaWorker : public IAlgoWorker {
     IPAServerThreadMap mIPAServerThreadMap;
 
     std::unique_ptr<cca::IntelCCA> mCca;
-    IPCIntelCca mIpcIntelCca;
+    IPCCca mIpcCca;
     std::map<void*, void*> mServerToClientPayloadMap;
 };
 

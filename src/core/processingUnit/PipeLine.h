@@ -113,6 +113,7 @@ class PipeLine {
     void getTerminalFrameInfos(const std::vector<uuid>& terminals,
                                std::map<uuid, FrameInfo>& infoMap) const;
 
+    void updateIspTuningMode(TuningMode tuningMode);
     void dumpPipeStages() const;
 
  private:

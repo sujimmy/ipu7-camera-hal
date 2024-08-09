@@ -64,8 +64,8 @@ bool PnpDebugControl::isBypass3A() {
     return getInstance()->mStaticCfg.isBypass3A;
 }
 
-bool PnpDebugControl::isBypassPAL() {
-    return getInstance()->mStaticCfg.isBypassPAL;
+bool PnpDebugControl::isBypassPAC() {
+    return getInstance()->mStaticCfg.isBypassPAC;
 }
 
 bool PnpDebugControl::isBypassCB() {
@@ -127,7 +127,7 @@ bool PnpDebugParser::run(const std::string& filename) {
         if (ele.isMember("useMockPipes")) mStaticCfg->useMockPipes = ele["useMockPipes"].asBool();
         if (ele.isMember("pnpMockFps")) mStaticCfg->mockAALFps = ele["pnpMockFps"].asInt();
         if (ele.isMember("bypass3A")) mStaticCfg->isBypass3A = ele["bypass3A"].asBool();
-        if (ele.isMember("bypassPAL")) mStaticCfg->isBypassPAL = ele["bypassPAL"].asBool();
+        if (ele.isMember("bypassPAC")) mStaticCfg->isBypassPAC = ele["bypassPAC"].asBool();
         if (ele.isMember("bypassCB")) mStaticCfg->isBypassCB = ele["bypassCB"].asBool();
         if (ele.isMember("disableFace")) mStaticCfg->isFaceDisabled = ele["disableFace"].asBool();
         if (ele.isMember("disableFaceAe")) mStaticCfg->isFaceAeDisabled =

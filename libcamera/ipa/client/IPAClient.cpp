@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "IntelAlgoClient.h"
+#include "IPAClient.h"
 
 #include <string>
 #include <vector>
@@ -33,76 +33,75 @@
 
 namespace libcamera {
 
-LOG_DECLARE_CATEGORY(IPU7)
+LOG_DEFINE_CATEGORY(IPAIPU)
 
-IntelAlgoClient* IntelAlgoClient::sIntelAlgoClient = nullptr;
-std::mutex IntelAlgoClient::sLock;
+IPAClient* IPAClient::sIPAClient = nullptr;
+std::mutex IPAClient::sLock;
 
-IntelAlgoClient* IntelAlgoClient::getInstance() {
-    LOG(IPU7, Debug) << "IntelAlgoClient " << __func__;
+IPAClient* IPAClient::getInstance() {
     std::lock_guard<std::mutex> locker(sLock);
 
-    if (!sIntelAlgoClient) {
-        LOG(IPU7, Error) << "sIntelAlgoClient is nullptr";
+    if (!sIPAClient) {
+        LOG(IPAIPU, Error) << "sIPAClient is nullptr";
     }
 
-    return sIntelAlgoClient;
+    return sIPAClient;
 }
 
-IntelAlgoClient* IntelAlgoClient::createInstance(PipelineHandler* handler) {
-    LOG(IPU7, Debug) << "IntelAlgoClient " << __func__;
+IPAClient* IPAClient::createInstance(PipelineHandler* handler) {
+    LOG(IPAIPU, Debug) << "IPAClient " << __func__;
     std::lock_guard<std::mutex> locker(sLock);
 
-    if (sIntelAlgoClient) {
-        LOG(IPU7, Warning) << "sIntelAlgoClient isn't nullptr";
-        return sIntelAlgoClient;
+    if (sIPAClient) {
+        LOG(IPAIPU, Warning) << "sIPAClient isn't nullptr";
+        return sIPAClient;
     }
 
-    sIntelAlgoClient = new IntelAlgoClient(handler);
+    sIPAClient = new IPAClient(handler);
 
-    return sIntelAlgoClient;
+    return sIPAClient;
 }
 
-void IntelAlgoClient::removeInstance() {
-    LOG(IPU7, Debug) << "IntelAlgoClient " << __func__;
+void IPAClient::removeInstance() {
+    LOG(IPAIPU, Debug) << "IPAClient " << __func__;
     std::lock_guard<std::mutex> locker(sLock);
 
-    delete sIntelAlgoClient;
-    sIntelAlgoClient = nullptr;
+    delete sIPAClient;
+    sIPAClient = nullptr;
 }
 
-IntelAlgoClient::SyncMessage::SyncMessage(IntelAlgoClient* client) {
+IPAClient::SyncMessage::SyncMessage(IPAClient* client) {
     mClient = client;
 }
 
-IntelAlgoClient::SyncMessage::~SyncMessage() {
+IPAClient::SyncMessage::~SyncMessage() {
 }
 
-void IntelAlgoClient::SyncMessage::exit() {
-    LOG(IPU7, Debug) << "IntelAlgoClient " << __func__;
+void IPAClient::SyncMessage::exit() {
+    LOG(IPAIPU, Debug) << "IPAClient " << __func__;
     mClient->exitIPA();
 }
 
-void IntelAlgoClient::SyncMessage::init(uint32_t bufferId) {
-    LOG(IPU7, Debug) << "IntelAlgoClient " << __func__;
+void IPAClient::SyncMessage::init(uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << "IPAClient " << __func__;
     mClient->init(bufferId);
 }
 
-void IntelAlgoClient::SyncMessage::mapBuffers(const std::vector<IPABuffer>& buffers) {
-    LOG(IPU7, Debug) << "IntelAlgoClient " << __func__;
+void IPAClient::SyncMessage::mapBuffers(const std::vector<IPABuffer>& buffers) {
+    LOG(IPAIPU, Debug) << "IPAClient " << __func__;
     mClient->mapBuffers(buffers);
 }
 
-void IntelAlgoClient::SyncMessage::unmapBuffers(const std::vector<unsigned int>& ids) {
-    LOG(IPU7, Debug) << "IntelAlgoClient " << __func__;
+void IPAClient::SyncMessage::unmapBuffers(const std::vector<unsigned int>& ids) {
+    LOG(IPAIPU, Debug) << "IPAClient " << __func__;
     mClient->unmapBuffers(ids);
 }
 
-IntelAlgoClient::IntelAlgoClient(PipelineHandler* handler)
+IPAClient::IPAClient(PipelineHandler* handler)
     : mPipelineHandler(handler),
       mValidated(false),
       mIPAFine(false) {
-    LOG(IPU7, Debug) << "IntelAlgoClient";
+    LOG(IPAIPU, Debug) << "IPAClient";
 
     std::string filename("validateIPA");
     mMemValidIPA.filename = filename + std::to_string(reinterpret_cast<uintptr_t>(this));
@@ -113,11 +112,11 @@ IntelAlgoClient::IntelAlgoClient(PipelineHandler* handler)
     mSyncMessage->moveToThread(this);
 
     start();
-    LOG(IPU7, Debug) << "IntelAlgoClient started";
+    LOG(IPAIPU, Debug) << "IPAClient started";
 }
 
-IntelAlgoClient::~IntelAlgoClient() {
-    LOG(IPU7, Debug) << "~IntelAlgoClient";
+IPAClient::~IPAClient() {
+    LOG(IPAIPU, Debug) << "~IPAClient";
 
     if (mMemValidIPA.memAddr) {
         freeShmMem(mMemValidIPA.filename, mMemValidIPA.memAddr, mMemValidIPA.handle);
@@ -127,20 +126,22 @@ IntelAlgoClient::~IntelAlgoClient() {
 
     wait();
 
-    LOG(IPU7, Debug) << "IntelAlgoClient exited";
+    LOG(IPAIPU, Debug) << "IPAClient exited";
 }
 
-void IntelAlgoClient::init(uint32_t bufferId) {
+void IPAClient::init(uint32_t bufferId) {
     mIpa->init(bufferId);
+    mIpa->start();
 }
 
-void IntelAlgoClient::exitIPA() {
+void IPAClient::exitIPA() {
+    mIpa->stop();
     mIpa = nullptr;
 
     exit();
 }
 
-bool IntelAlgoClient::isIPAFine() {
+bool IPAClient::isIPAFine() {
     if (!mValidated) {
         validate();
         mValidated = true;
@@ -149,7 +150,7 @@ bool IntelAlgoClient::isIPAFine() {
     return mIPAFine;
 }
 
-void IntelAlgoClient::validate() {
+void IPAClient::validate() {
     int size = 1024;
     if (!mMemValidIPA.memAddr) {
         bool alloc = allocShmMem(mMemValidIPA.filename, size, &mMemValidIPA.memAddr,
@@ -166,24 +167,30 @@ void IntelAlgoClient::validate() {
 
     if (*addr == IPC_MATCHED_KEY) {
         mIPAFine = true;
-        LOG(IPU7, Debug) << "IPC matched key is " << *addr;
+        LOG(IPAIPU, Debug) << "IPC matched key is " << *addr;
     }
 }
 
-void IntelAlgoClient::run() {
-    LOG(IPU7, Debug) << "Load IPA Proxy in IntelAlgoClient";
+void IPAClient::run() {
+    LOG(IPAIPU, Debug) << "Load IPA Proxy in IPAClient";
 
-    mIpa = IPAManager::createIPA<ipa::ipu7::IPAProxyIPU7>(mPipelineHandler, 1, 1);
-    mIpa->notifyCallback.connect(this, &IntelAlgoClient::notifyCallback);
+#ifdef CAL_BUILD
+    mIpa = IPAManager::createIPA<ipa::ipu7::IPAProxyIPU7>(mPipelineHandler, IPU7_IPA_VERSION,
+                                                          IPU7_IPA_VERSION, true);
+#else
+    mIpa = IPAManager::createIPA<ipa::ipu7::IPAProxyIPU7>(mPipelineHandler, IPU7_IPA_VERSION,
+                                                          IPU7_IPA_VERSION);
+#endif
+    mIpa->requestReady.connect(this, &IPAClient::returnRequestReady);
 
     exec();
 }
 
-bool IntelAlgoClient::allocShmMem(const std::string& name, int size, void** addr,
+bool IPAClient::allocShmMem(const std::string& name, int size, void** addr,
                                   uint32_t& handle) {
     auto buffer = mIPAMemory.allocateBuffer(name, size, addr);
     if (!buffer) {
-        LOG(IPU7, Error) << " failed to allocate shm" << __func__;
+        LOG(IPAIPU, Error) << " failed to allocate shm" << __func__;
         return false;
     }
 
@@ -198,11 +205,10 @@ bool IntelAlgoClient::allocShmMem(const std::string& name, int size, void** addr
     mShmMap[*addr] = handle;
     mFrameBufferMap[*addr] = buffer;
 
-    LOG(IPU7, Warning) << "found buffer " << handle;
     return true;
 }
 
-void IntelAlgoClient::freeShmMem(const std::string& name, void* addr, uint32_t handle) {
+void IPAClient::freeShmMem(const std::string& name, void* addr, uint32_t handle) {
     MutexLocker locker(mMapMutex);
     if (mFrameBufferMap.find(addr) != mFrameBufferMap.end()) {
         auto& buffer = mFrameBufferMap[addr];
@@ -217,10 +223,10 @@ void IntelAlgoClient::freeShmMem(const std::string& name, void* addr, uint32_t h
         return;
     }
 
-    LOG(IPU7, Warning) << "no found buffer " << handle;
+    LOG(IPAIPU, Warning) << "no found buffer " << handle;
 }
 
-uint32_t IntelAlgoClient::getShmMemHandle(void* addr) {
+uint32_t IPAClient::getShmMemHandle(void* addr) {
     MutexLocker locker(mMapMutex);
     if (mShmMap.find(addr) != mShmMap.end()) {
         return mShmMap[addr];
@@ -229,9 +235,9 @@ uint32_t IntelAlgoClient::getShmMemHandle(void* addr) {
     return 0;
 }
 
-int IntelAlgoClient::initCca(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::initCca(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     initClientWorkerMap(cameraId, tuningMode, mIPAClientWorkerMaps);
 
@@ -239,128 +245,128 @@ int IntelAlgoClient::initCca(int cameraId, int tuningMode, uint32_t bufferId) {
                              mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::reinitAic(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::reinitAic(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_REINIT_AIC, bufferId,
                              mIPAClientWorkerMaps);
 }
 
-void IntelAlgoClient::deinitCca(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+void IPAClient::deinitCca(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_DEINIT, bufferId,
                       mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::setStats(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::setStats(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_SET_STATS,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::runAec(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::runAec(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_RUN_AEC,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::runAiq(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::runAiq(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_RUN_AIQ,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::updateTuning(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::updateTuning(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_UPDATE_TUNING,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::getCmc(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::getCmc(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_GET_CMC,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::getMkn(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::getMkn(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_GET_MKN,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::getAiqd(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::getAiqd(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_GET_AIQD,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::configAic(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::configAic(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_CONFIG_AIC,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::runAic(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::runAic(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_RUN_AIC,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::updateConfigurationResolutions(int cameraId, int tuningMode,
+int IPAClient::updateConfigurationResolutions(int cameraId, int tuningMode,
                                                     uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_UPDATE_CONFIG_RES,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::registerAicBuf(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::registerAicBuf(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_REGISTER_AIC_BUFFER,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::getAicBuf(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::getAicBuf(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_GET_AIC_BUFFER,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-int IntelAlgoClient::decodeStats(int cameraId, int tuningMode, uint32_t bufferId) {
-    LOG(IPU7, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
-                     << " bufferId " << bufferId;
+int IPAClient::decodeStats(int cameraId, int tuningMode, uint32_t bufferId) {
+    LOG(IPAIPU, Debug) << " " << __func__ << " cameraId " << cameraId << " tuningMode " << tuningMode
+                       << " bufferId " << bufferId;
 
     return sendCmdWithWorker(cameraId, tuningMode, ipa::ipu7::IPC_CCA_DECODE_STATS,
                              bufferId, mIPAClientWorkerMaps);
 }
 
-void IntelAlgoClient::initClientWorkerMap(int cameraId, int tuningMode,
+void IPAClient::initClientWorkerMap(int cameraId, int tuningMode,
                                           IPAClientWorkerMaps& clientWorkerMaps) {
     auto key = std::make_pair(cameraId, tuningMode);
 
@@ -383,7 +389,7 @@ void IntelAlgoClient::initClientWorkerMap(int cameraId, int tuningMode,
     }
 }
 
-int IntelAlgoClient::sendCmdWithWorker(int cameraId, int tuningMode, uint32_t cmd,
+int IPAClient::sendCmdWithWorker(int cameraId, int tuningMode, uint32_t cmd,
                                        uint32_t bufferId,
                                        IPAClientWorkerMaps& clientWorkerMaps) {
     auto key = std::make_pair(cameraId, tuningMode);
@@ -393,29 +399,29 @@ int IntelAlgoClient::sendCmdWithWorker(int cameraId, int tuningMode, uint32_t cm
         if (map.find(cmd) != map.end()) {
             int ret = map[cmd]->sendRequest(cameraId, tuningMode, cmd, bufferId);
             if (ret != 0) {
-                LOG(IPU7, Error) << "cameraId " << cameraId << " tuningMode " << tuningMode
-                                 << " cmd " << cmd;
+                LOG(IPAIPU, Error) << "cameraId " << cameraId << " tuningMode " << tuningMode
+                                   << " cmd " << cmd;
             }
             return ret;
         }
     }
 
-    LOG(IPU7, Warning) << " " << __func__ << " cameraId " << cameraId << " tuningMode "
-                       << tuningMode << " cmd" << cmd << " bufferId " << bufferId;
+    LOG(IPAIPU, Warning) << " " << __func__ << " cameraId " << cameraId << " tuningMode "
+                         << tuningMode << " cmd" << cmd << " bufferId " << bufferId;
     return -1;
 }
 
-void IntelAlgoClient::sendRequest(int cameraId, int tuningMode, uint32_t cmd, uint32_t bufferId) {
+void IPAClient::sendRequest(int cameraId, int tuningMode, uint32_t cmd, uint32_t bufferId) {
     ipa::ipu7::IPACmdInfo cmdInfo = { cameraId, tuningMode, cmd, bufferId };
 
     MutexLocker locker(mIpaLock);
     mIpa->requestASync(cmdInfo);
 }
 
-void IntelAlgoClient::notifyCallback(const ipa::ipu7::IPACmdInfo& cmdInfo, int ret) {
-    LOG(IPU7, Debug) << "notify callback cameraId " << cmdInfo.cameraId << " tuningMode "
-                     << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
-                     << cmdInfo.bufferId << " ret " << ret;
+void IPAClient::returnRequestReady(const ipa::ipu7::IPACmdInfo& cmdInfo, int ret) {
+    LOG(IPAIPU, Debug) << "notify callback cameraId " << cmdInfo.cameraId << " tuningMode "
+                       << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
+                       << cmdInfo.bufferId << " ret " << ret;
     auto key = std::make_pair(cmdInfo.cameraId, cmdInfo.tuningMode);
 
     if (mIPAClientWorkerMaps.find(key) != mIPAClientWorkerMaps.end()) {
@@ -427,4 +433,4 @@ void IntelAlgoClient::notifyCallback(const ipa::ipu7::IPACmdInfo& cmdInfo, int r
     }
 }
 
-} /* namespace icamera */
+} /* namespace libcamera */

@@ -20,16 +20,16 @@
 
 namespace libcamera {
 
-LOG_DECLARE_CATEGORY(IPU7)
+LOG_DECLARE_CATEGORY(IPAIPU)
 
 IPAClientWorker::IPAClientWorker(IAlgoClient* client, const char* name)
     : mIAlgoClient(client),
       mName(name) {
-    LOG(IPU7, Debug) << " " << __func__ << " name " << mName.c_str();
+    LOG(IPAIPU, Debug) << " " << __func__ << " name " << mName.c_str();
 }
 
 IPAClientWorker::~IPAClientWorker() {
-    LOG(IPU7, Debug) << " " << __func__ << " name " << mName.c_str();
+    LOG(IPAIPU, Debug) << " " << __func__ << " name " << mName.c_str();
 }
 
 void IPAClientWorker::setIPCRet(uint32_t cmd, int ret) {
@@ -38,20 +38,20 @@ void IPAClientWorker::setIPCRet(uint32_t cmd, int ret) {
     if (mSendingCmdMap.find(cmd) != mSendingCmdMap.end()) {
         mSendingCmdMap[cmd] = ret;
     } else {
-        LOG(IPU7, Warning) << " cmd " << cmd << " isn't found ";
+        LOG(IPAIPU, Warning) << " cmd " << cmd << " isn't found ";
     }
 }
 
 void IPAClientWorker::signal() {
     std::unique_lock<std::mutex> locker(mWaitLock);
-    LOG(IPU7, Debug) << "signal" << " name " << mName.c_str();
+    LOG(IPAIPU, Debug) << "signal" << " name " << mName.c_str();
 
     mWaitCallDone.notify_one();
 }
 
 std::cv_status IPAClientWorker::wait(uint32_t cmd) {
     std::unique_lock<std::mutex> locker(mWaitLock);
-    LOG(IPU7, Debug) << "wait" << " name " << mName.c_str();
+    LOG(IPAIPU, Debug) << "wait" << " name " << mName.c_str();
 
     if (mSendingCmdMap[cmd] >= 0) {
         // signal arrived before waiting
@@ -62,7 +62,7 @@ std::cv_status IPAClientWorker::wait(uint32_t cmd) {
 }
 
 int IPAClientWorker::sendRequest(int cameraId, int tuningMode, uint32_t cmd, uint32_t bufferId) {
-    LOG(IPU7, Debug) << "sendRequest cmd " << cmd << " name " << mName.c_str();
+    LOG(IPAIPU, Debug) << "sendRequest cmd " << cmd << " name " << mName.c_str();
 
     {
         std::unique_lock<std::mutex> locker(mWaitLock);
@@ -73,7 +73,7 @@ int IPAClientWorker::sendRequest(int cameraId, int tuningMode, uint32_t cmd, uin
 
     std::cv_status status = wait(cmd);
     if (status == std::cv_status::timeout) {
-        LOG(IPU7, Warning) << "wait timeout cmd " << cmd;
+        LOG(IPAIPU, Warning) << "wait timeout cmd " << cmd;
     }
 
     int ret = -1;

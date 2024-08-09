@@ -26,44 +26,44 @@
 #include <libcamera/base/thread.h>
 
 #include "IPAHeader.h"
-#include "IntelCcaWorker.h"
+#include "CcaWorker.h"
 
 namespace libcamera {
 
 namespace ipa::ipu7 {
 
-class IIPAIPU7Callback {
+class IIPAIPUCallback {
  public:
-    IIPAIPU7Callback() {}
-    virtual ~IIPAIPU7Callback() {}
+    IIPAIPUCallback() {}
+    virtual ~IIPAIPUCallback() {}
 
-    virtual void notifyIPACallback(int cameraId, int tuningMode, uint32_t cmd, int ret) = 0;
+    virtual void returnRequestReady(int cameraId, int tuningMode, uint32_t cmd, int ret) = 0;
     virtual void* getBuffer(uint32_t bufferId) = 0;
 };
 
 /**
- * \brief The IPU7 IPA Algo Sever implementation
+ * \brief The IPU IPA Algo Sever implementation
  *
  */
-class IntelAlgoServer : public IIPAServerCallback {
+class IPAServer : public IIPAServerCallback {
  public:
-    IntelAlgoServer(IIPAIPU7Callback* callback);
-    ~IntelAlgoServer();
+    IPAServer(IIPAIPUCallback* callback);
+    ~IPAServer();
 
     int init(uint8_t* data);
 
     int sendRequest(int cameraId, int tuningMode, uint32_t cmd, const Span<uint8_t>& mem);
-    void notifyCallback(int cameraId, int tuningMode, uint32_t cmd, int ret) override;
+    void returnRequestReady(int cameraId, int tuningMode, uint32_t cmd, int ret) override;
     void* getBuffer(uint32_t bufferId) override;
 
  private:
-    IIPAIPU7Callback* mIIPAIPU7Callback;
+    IIPAIPUCallback* mIIPAIPUCallback;
 
     /* All async cmds run synchronously and are protected by mIpaLock */
     mutable Mutex mIpaLock;
 
     mutable Mutex mWorkersMapLock;
-    std::map<std::pair<int, int>, std::unique_ptr<IntelCcaWorker>> mIntelCcaWorkers;
+    std::map<std::pair<int, int>, std::unique_ptr<CcaWorker>> mCcaWorkers;
 };
 
 } /* namespace ipa::ipu7 */

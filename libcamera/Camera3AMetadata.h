@@ -21,9 +21,9 @@
 
 #include "AiqResult.h"
 #include "CameraContext.h"
-#include "IntelAEStateMachine.h"
-#include "IntelAFStateMachine.h"
-#include "IntelAWBStateMachine.h"
+#include "AEStateMachine.h"
+#include "AFStateMachine.h"
+#include "AWBStateMachine.h"
 #include "ParamDataType.h"
 #include "Utils.h"
 
@@ -50,9 +50,9 @@ class Camera3AMetadata {
  private:
     int mCameraId;
 
-    IntelAEStateMachine* mIntelAEStateMachine;
-    IntelAFStateMachine* mIntelAFStateMachine;
-    IntelAWBStateMachine* mIntelAWBStateMachine;
+    AEStateMachine* mAEStateMachine;
+    AFStateMachine* mAFStateMachine;
+    AWBStateMachine* mAWBStateMachine;
 };
 
 }  // namespace libcamera

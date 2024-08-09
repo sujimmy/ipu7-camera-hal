@@ -37,7 +37,7 @@ struct AwbControls {
 };
 
 /**
- * \class IntelAWBModeBase
+ * \class AWBModeBase
  *
  * Base class for all the Auto white balance modes as defined by the Android
  * camera device V3.x API.
@@ -45,10 +45,10 @@ struct AwbControls {
  * android.control.awbState
  *
  */
-class IntelAWBModeBase {
+class AWBModeBase {
  public:
-    IntelAWBModeBase();
-    virtual ~IntelAWBModeBase() {}
+    AWBModeBase();
+    virtual ~AWBModeBase() {}
 
     virtual int processState(uint8_t controlMode, uint8_t sceneMode,
                              const AwbControls& awbControls) = 0;
@@ -68,13 +68,13 @@ class IntelAWBModeBase {
 };
 
 /**
- * \class IntelAWBModeAuto
- * Derived class from IntelAWBModeBase for Auto mode
+ * \class AWBModeAuto
+ * Derived class from AWBModeBase for Auto mode
  *
  */
-class IntelAWBModeAuto : public IntelAWBModeBase {
+class AWBModeAuto : public AWBModeBase {
  public:
-    IntelAWBModeAuto();
+    AWBModeAuto();
     virtual int processState(uint8_t controlMode, uint8_t sceneMode,
                              const AwbControls& awbControls);
 
@@ -82,13 +82,13 @@ class IntelAWBModeAuto : public IntelAWBModeBase {
 };
 
 /**
- * \class IntelAWBModeOFF
- * Derived class from IntelAWBModeBase for OFF mode
+ * \class AWBModeOFF
+ * Derived class from AWBModeBase for OFF mode
  *
  */
-class IntelAWBModeOff : public IntelAWBModeBase {
+class AWBModeOff : public AWBModeBase {
  public:
-    IntelAWBModeOff();
+    AWBModeOff();
     virtual int processState(uint8_t controlMode, uint8_t sceneMode,
                              const AwbControls& awbControls);
 
@@ -96,18 +96,18 @@ class IntelAWBModeOff : public IntelAWBModeBase {
 };
 
 /**
- * \class IntelAWBStateMachine
+ * \class AWBStateMachine
  *
  * This class adapts the Android V3 AWB triggers and state transitions to
  * the ones implemented by the Intel AIQ algorithm
  * This class is platform independent. Platform specific behaviors should be
- * implemented in derived classes from this one or from the IntelAWBModeBase
+ * implemented in derived classes from this one or from the AWBModeBase
  *
  */
-class IntelAWBStateMachine {
+class AWBStateMachine {
  public:
-    IntelAWBStateMachine(int CameraId);
-    virtual ~IntelAWBStateMachine();
+    AWBStateMachine(int CameraId);
+    virtual ~AWBStateMachine();
 
     int processState(uint8_t controlMode, uint8_t sceneMode, const AwbControls& awbControls);
 
@@ -115,17 +115,17 @@ class IntelAWBStateMachine {
 
  private:
     // prevent copy constructor and assignment operator
-    DISALLOW_COPY_AND_ASSIGN(IntelAWBStateMachine);
+    DISALLOW_COPY_AND_ASSIGN(AWBStateMachine);
 
  private: /* members*/
     int mCameraId;
     AwbControls mLastAwbControls;
     uint8_t mLastControlMode;
     uint8_t mLastSceneMode;
-    IntelAWBModeBase* mCurrentAwbMode;
+    AWBModeBase* mCurrentAwbMode;
 
-    IntelAWBModeOff mOffMode;
-    IntelAWBModeAuto mAutoMode;
+    AWBModeOff mOffMode;
+    AWBModeAuto mAutoMode;
 };
 
 }  // namespace libcamera

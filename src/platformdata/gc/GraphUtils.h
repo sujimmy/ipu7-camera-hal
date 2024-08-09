@@ -22,14 +22,12 @@
 namespace icamera {
 namespace GraphUtils {
 
-#ifdef IPU_SYSVER_ipu7
 int32_t createStageId(uint8_t resourceId, uint8_t contextId);
 uint8_t getResourceId(int32_t stageId);
 uint8_t getContextId(int32_t stageId);
 
 const char* getStageName(int32_t stageId, int32_t streamId);
 int32_t getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t bpp);
-#endif
 
 void dumpConnections(const std::vector<IGraphType::PipelineConnection>& connections);
 void dumpKernelInfo(const ia_isp_bxt_program_group& programGroup);

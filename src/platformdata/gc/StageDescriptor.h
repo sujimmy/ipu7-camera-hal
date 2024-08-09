@@ -20,15 +20,8 @@
 #include <string>
 #include <vector>
 
-#ifndef IPU_SYSVER_ipu7
-extern "C" {
-#include <ia_cipf_css/ia_cipf_css.h>
-}
-#endif
-
 namespace icamera {
 
-#ifdef IPU_SYSVER_ipu7  // For ipu7
 #define STAGE_UID(stream, stage)          ((((stream)&0xFFFF) << 16) | (((stage)&0xFF) << 8))
 #define PORT_UID(stream, stage, terminal) (STAGE_UID(stream, stage) + ((terminal) & 0xFF)+ 1)
 
@@ -36,21 +29,8 @@ namespace icamera {
 #define GET_STAGE_ID(uuid)    (((uuid) >> 8) & 0xFF)
 #define GET_TERMINAL_ID(uuid) (((uuid) & 0xFF) - 1)
 
-#else  // for ipu6
-// UID of ipu stage has no stream id info in ipu6 platform
-#define STAGE_UID(stream, stage)          psys_2600_pg_uid(stage)
-#define PORT_UID(stream, stage, terminal) (STAGE_UID(stream, stage) + (terminal) + 1)
-// Don't support gpu stage now, because it uses different difinition in ia_cipf_common.h
-// #define ia_cipf_external_stage_uid(id) ia_fourcc(((id & 0xFF00) >> 8),id,'E','X')
-
-#define GET_STAGE_ID(uuid)    (((uuid) >> 16) & 0xFFFF)
-#define GET_TERMINAL_ID(uuid) (uuid - psys_2600_pg_uid(GET_STAGE_ID(uuid)) - 1)
-#endif
-
-#ifdef IPU_SYSVER_ipu7
 // IPU stage start with 0x10
 #define IPU_STAGE_ID_BASE   0x10
-#endif
 
 // GPU stage start with 0x80
 #define GPU_TNR_STAGE_ID    0x80

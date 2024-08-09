@@ -16,10 +16,6 @@
 
 #pragma once
 
-#ifndef IPU_SYSVER_ipu7
-#include <gcss.h>
-#endif
-
 #include <memory>
 #include <utility>
 #include <vector>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "IPCIntelCca.h"
+#include "IPCCca.h"
 
 namespace icamera {
 
@@ -24,8 +24,8 @@ namespace icamera {
     memcpy((dest), (src), std::min((size_t)(dmax), (size_t)(smax)))
 #endif
 
-void IPCIntelCca::flattenTerminalConfig(ipc_cca_aic_terminal_config& terminalConfig,
-                                        const cca::cca_aic_terminal_config& termConfig) {
+void IPCCca::flattenTerminalConfig(ipc_cca_aic_terminal_config& terminalConfig,
+                                   const cca::cca_aic_terminal_config& termConfig) {
     terminalConfig.cb_num = termConfig.cb_num;
     for (uint32_t cb = 0; cb < termConfig.cb_num; cb++) {
         terminalConfig.cb_terminal_buf[cb].group_id = termConfig.cb_terminal_buf[cb].group_id;
@@ -49,8 +49,8 @@ void IPCIntelCca::flattenTerminalConfig(ipc_cca_aic_terminal_config& terminalCon
     }
 }
 
-void IPCIntelCca::unFlattenTerminalConfig(ipc_cca_aic_terminal_config& terminalConfig,
-                                          cca::cca_aic_terminal_config& termConfig) {
+void IPCCca::unFlattenTerminalConfig(ipc_cca_aic_terminal_config& terminalConfig,
+                                     cca::cca_aic_terminal_config& termConfig) {
     termConfig.cb_num = terminalConfig.cb_num;
     for (uint32_t cb = 0; cb < terminalConfig.cb_num; cb++) {
         termConfig.cb_terminal_buf[cb].group_id = terminalConfig.cb_terminal_buf[cb].group_id;
@@ -76,8 +76,7 @@ void IPCIntelCca::unFlattenTerminalConfig(ipc_cca_aic_terminal_config& terminalC
     }
 }
 
-void IPCIntelCca::flattenAicConfig(const cca::cca_aic_config& aicCfg,
-                                   ipc_cca_aic_config* ipcCfg) {
+void IPCCca::flattenAicConfig(const cca::cca_aic_config& aicCfg, ipc_cca_aic_config* ipcCfg) {
     ipcCfg->cbNum = aicCfg.cb_num;
     for (uint32_t cb = 0; cb < aicCfg.cb_num; cb++) {
         const cca::cca_cb_config& aicCb = aicCfg.cb_config[cb];
@@ -140,11 +139,10 @@ void IPCIntelCca::flattenAicConfig(const cca::cca_aic_config& aicCfg,
     }
 }
 
-bool IPCIntelCca::clientFlattenConfigAic(void* pData, uint32_t size,
-                                         const cca::cca_aic_config& aicConf,
-                                         const cca::cca_aic_kernel_offset& kernelOffset,
-                                         cca::cca_aic_terminal_config& termConfig, int32_t aicId,
-                                         const int32_t* statsBufToTermIds) {
+bool IPCCca::clientFlattenConfigAic(void* pData, uint32_t size, const cca::cca_aic_config& aicConf,
+                                    const cca::cca_aic_kernel_offset& kernelOffset,
+                                    cca::cca_aic_terminal_config& termConfig, int32_t aicId,
+                                    const int32_t* statsBufToTermIds) {
     if (!pData || size < sizeof(intel_cca_aic_control_data)) return false;
 
     intel_cca_aic_control_data* aicControl = static_cast<intel_cca_aic_control_data*>(pData);
@@ -192,9 +190,9 @@ bool IPCIntelCca::clientFlattenConfigAic(void* pData, uint32_t size,
     return true;
 }
 
-bool IPCIntelCca::clientFlattenUpdateCfgRes(void* pData, uint32_t size,
-                                            const cca::cca_aic_config& aicConf, int32_t aicId,
-                                            bool isKeyResChanged) {
+bool IPCCca::clientFlattenUpdateCfgRes(void* pData, uint32_t size,
+                                       const cca::cca_aic_config& aicConf, int32_t aicId,
+                                       bool isKeyResChanged) {
     if (!pData || size < sizeof(intel_cca_aic_control_data)) return false;
 
     intel_cca_aic_control_data* aicControl = static_cast<intel_cca_aic_control_data*>(pData);
@@ -207,8 +205,7 @@ bool IPCIntelCca::clientFlattenUpdateCfgRes(void* pData, uint32_t size,
     return true;
 }
 
-void IPCIntelCca::unflattenAicConfig(ipc_cca_aic_config& ipcCfg,
-                                     cca::cca_aic_config& aicCfg) {
+void IPCCca::unflattenAicConfig(ipc_cca_aic_config& ipcCfg, cca::cca_aic_config& aicCfg) {
     aicCfg.cb_num = ipcCfg.cbNum;
     MEMCPY_S(&aicCfg.cb_config, sizeof(aicCfg.cb_config), &ipcCfg.cbConfig,
              sizeof(ipcCfg.cbConfig));
@@ -244,10 +241,10 @@ void IPCIntelCca::unflattenAicConfig(ipc_cca_aic_config& ipcCfg,
     }
 }
 
-bool IPCIntelCca::serverUnflattenConfigAic(void* pData, uint32_t size, cca::cca_aic_config& aicConf,
-                                           cca::cca_aic_kernel_offset& kernelOffset,
-                                           cca::cca_aic_terminal_config& termConfig,
-                                           int32_t& aicId, int32_t*& statsBufToTermIds) {
+bool IPCCca::serverUnflattenConfigAic(void* pData, uint32_t size, cca::cca_aic_config& aicConf,
+                                      cca::cca_aic_kernel_offset& kernelOffset,
+                                      cca::cca_aic_terminal_config& termConfig,
+                                      int32_t& aicId, int32_t*& statsBufToTermIds) {
     if (!pData || size < sizeof(intel_cca_aic_control_data)) return false;
 
     intel_cca_aic_control_data* aicControl = static_cast<intel_cca_aic_control_data*>(pData);
@@ -289,9 +286,8 @@ bool IPCIntelCca::serverUnflattenConfigAic(void* pData, uint32_t size, cca::cca_
     return true;
 }
 
-bool IPCIntelCca::serverUnflattenUpdateCfgRes(void* pData, uint32_t size,
-                                              cca::cca_aic_config& aicConf, int32_t& aicId,
-                                              bool& isKeyResChanged) {
+bool IPCCca::serverUnflattenUpdateCfgRes(void* pData, uint32_t size, cca::cca_aic_config& aicConf,
+                                         int32_t& aicId, bool& isKeyResChanged) {
     if (!pData || size < sizeof(intel_cca_aic_control_data)) return false;
 
     intel_cca_aic_control_data* aicControl = static_cast<intel_cca_aic_control_data*>(pData);

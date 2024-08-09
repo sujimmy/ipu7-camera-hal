@@ -48,9 +48,9 @@ class IntelCca {
 
 #ifndef PAC_ENABLE
 
+#endif
     ia_err updateTuning(uint8_t lardTags, const ia_lard_input_params& lardParams,
                         const cca::cca_nvm& nvm, int32_t streamId);
-#endif
 
     ia_err getCMC(cca::cca_cmc* cmc);
     ia_err getMKN(ia_mkn_trg type, cca::cca_mkn* mkn);

@@ -13,14 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG IntelAFStateMachine
 
-#include "IntelAFStateMachine.h"
+#include "AFStateMachine.h"
 
 #include <libcamera/base/log.h>
-
-#include "CameraLog.h"
-#include "Errors.h"
 
 namespace libcamera {
 LOG_DECLARE_CATEGORY(IPU7MetaData)
@@ -60,19 +56,20 @@ static const long int MIN_AF_TIMEOUT = 2000000;  // 2 seconds
  */
 static const int MAX_AF_FRAME_COUNT_TIMEOUT = 60;  // 2 seconds if 30fps
 
-IntelAFStateMachine::IntelAFStateMachine(int cameraId) : mCameraId(cameraId) {
-    LOG1("<id%d>%s", mCameraId, __func__);
+AFStateMachine::AFStateMachine(int cameraId) : mCameraId(cameraId) {
+    LOG(IPU7MetaData, Debug) << "id" << mCameraId << " " << __func__;
     mCurrentAfMode = &mAutoMode;
     mLastAfControls = {controls::AfModeAuto, controls::AfTriggerIdle};
 }
 
-IntelAFStateMachine::~IntelAFStateMachine() {
-    LOG1("<id%d>%s", mCameraId, __func__);
+AFStateMachine::~AFStateMachine() {
+    LOG(IPU7MetaData, Debug) << "id" << mCameraId << " " << __func__;
 }
 
-int IntelAFStateMachine::processTriggers(uint8_t afTrigger, uint8_t afMode) {
+int AFStateMachine::processTriggers(uint8_t afTrigger, uint8_t afMode) {
     if (afMode != mLastAfControls.afMode) {
-        LOG1("Change of AF mode from %d to %d", mLastAfControls.afMode, afMode);
+        LOG(IPU7MetaData, Debug) << "Change of AF mode from " << mLastAfControls.afMode << " to "
+                                 << afMode;
         switch (afMode) {
             case controls::AfModeAuto:
             case controls::AfModeMacro:
@@ -86,7 +83,7 @@ int IntelAFStateMachine::processTriggers(uint8_t afTrigger, uint8_t afMode) {
                 mCurrentAfMode = &mOffMode;
                 break;
             default:
-                LOGE("INVALID AF mode requested defaulting to AUTO");
+                LOG(IPU7MetaData, Error) << "INVALID AF mode requested defaulting to AUTO";
                 mCurrentAfMode = &mAutoMode;
                 break;
         }
@@ -94,12 +91,12 @@ int IntelAFStateMachine::processTriggers(uint8_t afTrigger, uint8_t afMode) {
     }
     mLastAfControls.afTrigger = afTrigger;
     mLastAfControls.afMode = afMode;
-    LOG2("%s: afMode %d", __func__, mLastAfControls.afMode);
+    LOG(IPU7MetaData, Debug) << __func__ << ": afMode " << mLastAfControls.afMode;
 
     return mCurrentAfMode->processTriggers(afTrigger, afMode);
 }
 
-int IntelAFStateMachine::processResult(int internalAfState, bool lensMoving,
+int AFStateMachine::processResult(int internalAfState, bool lensMoving,
                                        ControlList& controls) {
     return mCurrentAfMode->processResult(internalAfState, lensMoving, controls);
 }
@@ -107,7 +104,7 @@ int IntelAFStateMachine::processResult(int internalAfState, bool lensMoving,
 /******************************************************************************
  * AF MODE   -  BASE
  ******************************************************************************/
-IntelAfModeBase::IntelAfModeBase()
+AFModeBase::AFModeBase()
         : mLastAfControls{controls::AfModeAuto, controls::AfTriggerIdle},
           mCurrentAfState(controls::AfStateIdle),
           mLensState(controls::LensStateStationary),
@@ -123,8 +120,8 @@ IntelAfModeBase::IntelAfModeBase()
  * Other parameters from the capture request settings not filled in the input
  * params structure is passed as argument
  */
-int IntelAfModeBase::processTriggers(uint8_t afTrigger, uint8_t afMode) {
-    LOG2("%s", __func__);
+int AFModeBase::processTriggers(uint8_t afTrigger, uint8_t afMode) {
+    LOG(IPU7MetaData, Debug) << __func__;
 
     if (afTrigger == controls::AfTriggerStart) {
         resetTrigger(icamera::CameraUtils::systemTime() / 1000);
@@ -136,12 +133,13 @@ int IntelAfModeBase::processTriggers(uint8_t afTrigger, uint8_t afMode) {
     mLastAfControls.afTrigger = afTrigger;
     mLastAfControls.afMode = afMode;
 
-    return icamera::OK;
+    return 0;
 }
 
-void IntelAfModeBase::updateResult(ControlList& controls) {
-    LOG2("%s afMode = %d state = %d lens state: %d", __func__, mLastAfControls.afMode,
-         mCurrentAfState, mLensState);
+void AFModeBase::updateResult(ControlList& controls) {
+    LOG(IPU7MetaData, Debug) << __func__ << ": afMode = " << mLastAfControls.afMode
+                             << " state = " << mCurrentAfState
+                             << " lens state = " << mLensState;
 
     controls.set(controls::AfMode, mLastAfControls.afMode);
     controls.set(controls::AfTrigger, mLastAfControls.afTrigger);
@@ -149,16 +147,16 @@ void IntelAfModeBase::updateResult(ControlList& controls) {
     controls.set(controls::LensState, mLensState);
 }
 
-void IntelAfModeBase::resetTrigger(usecs_t triggerTime) {
+void AFModeBase::resetTrigger(usecs_t triggerTime) {
     mLastActiveTriggerTime = triggerTime;
     mFramesSinceTrigger = 0;
 }
 
-void IntelAfModeBase::resetState() {
+void AFModeBase::resetState() {
     mCurrentAfState = controls::AfTriggerIdle;
 }
 
-void IntelAfModeBase::checkIfFocusTimeout() {
+void AFModeBase::checkIfFocusTimeout() {
     // give up if AF was iterating for too long
     if (mLastActiveTriggerTime != 0) {
         mFramesSinceTrigger++;
@@ -185,73 +183,73 @@ void IntelAfModeBase::checkIfFocusTimeout() {
  * AF MODE   -  OFF
  ******************************************************************************/
 
-IntelAFModeOff::IntelAFModeOff() : IntelAfModeBase() {}
+AFModeOff::AFModeOff() : AFModeBase() {}
 
-int IntelAFModeOff::processTriggers(uint8_t afTrigger, uint8_t afMode) {
-    LOG2("%s", __func__);
+int AFModeOff::processTriggers(uint8_t afTrigger, uint8_t afMode) {
+    LOG(IPU7MetaData, Debug) << __func__;
 
     mLastAfControls.afTrigger = afTrigger;
     mLastAfControls.afMode = afMode;
 
-    return icamera::OK;
+    return 0;
 }
 
-int IntelAFModeOff::processResult(int internalAfState, bool lensMoving, ControlList& controls) {
+int AFModeOff::processResult(int internalAfState, bool lensMoving, ControlList& controls) {
     UNUSED(internalAfState);
-    LOG2("%s", __func__);
+    LOG(IPU7MetaData, Debug) << __func__;
 
     mCurrentAfState = controls::AfStateIdle;
     mLensState = lensMoving ? controls::LensStateMoving : controls::LensStateStationary;
     updateResult(controls);
 
-    return icamera::OK;
+    return 0;
 }
 
 /******************************************************************************
  * AF MODE   -  AUTO
  ******************************************************************************/
 
-IntelAFModeAuto::IntelAFModeAuto() : IntelAfModeBase() {}
+AFModeAuto::AFModeAuto() : AFModeBase() {}
 
-int IntelAFModeAuto::processTriggers(uint8_t afTrigger, uint8_t afMode) {
-    LOG2("%s afMode:%d trigger:%d", __func__, afMode, afTrigger);
+int AFModeAuto::processTriggers(uint8_t afTrigger, uint8_t afMode) {
+    LOG(IPU7MetaData, Debug) << __func__ << " afMode: " << afMode << " trigger " << afTrigger;
 
-    IntelAfModeBase::processTriggers(afTrigger, afMode);
+    AFModeBase::processTriggers(afTrigger, afMode);
 
     // Override AF state if we just got an AF TRIGGER Start
     // This is only valid for the AUTO/MACRO state machine
     if (mLastAfControls.afTrigger == controls::AfTriggerStart) {
         mCurrentAfState = controls::AfStateScanning;
-        LOG1("@%s AF state ACTIVE_SCAN (trigger start)", __PRETTY_FUNCTION__);
+        LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state ACTIVE_SCAN (trigger start)";
     } else if (mLastAfControls.afTrigger == controls::AfTriggerCancel) {
         mCurrentAfState = controls::AfStateIdle;
-        LOG1("@%s AF state INACTIVE (trigger cancel)", __PRETTY_FUNCTION__);
+        LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state INACTIVE (trigger cancel)";
     }
 
-    return icamera::OK;
+    return 0;
 }
 
-int IntelAFModeAuto::processResult(int internalAfState, bool lensMoving, ControlList& controls) {
+int AFModeAuto::processResult(int internalAfState, bool lensMoving, ControlList& controls) {
     mLensState = lensMoving ? controls::LensStateMoving : controls::LensStateStationary;
     if (mLastActiveTriggerTime != 0) {
         switch (internalAfState) {
             case icamera::AF_STATE_LOCAL_SEARCH:
             case icamera::AF_STATE_EXTENDED_SEARCH:
-                LOG2("@%s AF state SCANNING", __PRETTY_FUNCTION__);
+                LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state SCANNING";
                 break;
             case icamera::AF_STATE_SUCCESS:
                 mCurrentAfState = controls::AfStateFocused;
                 resetTrigger(0);
-                LOG2("@%s AF state FOCUSED_LOCKED", __PRETTY_FUNCTION__);
+                LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state FOCUSED_LOCKED";
                 break;
             case icamera::AF_STATE_FAIL:
                 mCurrentAfState = controls::AfStateFailed;
                 resetTrigger(0);
-                LOG2("@%s AF state FAILED", __PRETTY_FUNCTION__);
+                LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state FAILED";
                 break;
             case icamera::AF_STATE_IDLE:
             default:
-                LOG2("@%s AF state IDLE", __PRETTY_FUNCTION__);
+                LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state IDLE";
                 break;
         }
     }
@@ -259,24 +257,24 @@ int IntelAFModeAuto::processResult(int internalAfState, bool lensMoving, Control
     checkIfFocusTimeout();
     updateResult(controls);
 
-    return icamera::OK;
+    return 0;
 }
 
 /******************************************************************************
  * AF MODE   -  CONTINUOUS PICTURE
  ******************************************************************************/
 
-IntelAFModeContinuousPicture::IntelAFModeContinuousPicture() : IntelAfModeBase() {
+AFModeContinuousPicture::AFModeContinuousPicture() : AFModeBase() {
     mCurrentAfState = controls::AfStateScanning;
 }
 
-int IntelAFModeContinuousPicture::processTriggers(uint8_t afTrigger, uint8_t afMode) {
-    LOG2("%s afMode:%d trigger:%d", __func__, afMode, afTrigger);
-    IntelAfModeBase::processTriggers(afTrigger, afMode);
+int AFModeContinuousPicture::processTriggers(uint8_t afTrigger, uint8_t afMode) {
+    LOG(IPU7MetaData, Debug) << __func__ << " afMode " << afMode << " trigger " << afTrigger;
+    AFModeBase::processTriggers(afTrigger, afMode);
     // Override AF state if we just got an AF TRIGGER CANCEL
     if (mLastAfControls.afTrigger == controls::AfTriggerCancel) {
         /* Scan is supposed to be restarted, which we try by triggering a new
-         * scan. (see IntelAFStateMachine::processTriggers)
+         * scan. (see AFStateMachine::processTriggers)
          * This however, doesn't do anything at all, because AIQ does not
          * want to play ball, at least yet.
          *
@@ -298,10 +296,10 @@ int IntelAFModeContinuousPicture::processTriggers(uint8_t afTrigger, uint8_t afM
         mCurrentAfState = controls::AfStateScanning;
     }
 
-    return icamera::OK;
+    return 0;
 }
 
-int IntelAFModeContinuousPicture::processResult(int internalAfState, bool lensMoving,
+int AFModeContinuousPicture::processResult(int internalAfState, bool lensMoving,
                                                 ControlList& controls) {
     mLensState = lensMoving ? controls::LensStateMoving : controls::LensStateStationary;
     // state transition from locked state are only allowed via triggers, which
@@ -311,17 +309,17 @@ int IntelAFModeContinuousPicture::processResult(int internalAfState, bool lensMo
         switch (internalAfState) {
             case icamera::AF_STATE_LOCAL_SEARCH:
             case icamera::AF_STATE_EXTENDED_SEARCH:
-                LOG2("@%s AF state SCANNING", __PRETTY_FUNCTION__);
+                LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state SCANNING";
                 mCurrentAfState = controls::AfStateScanning;
                 break;
             case icamera::AF_STATE_SUCCESS:
                 mCurrentAfState = controls::AfStateFocused;
-                LOG2("@%s AF state FOCUSED", __PRETTY_FUNCTION__);
+                LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state FOCUSED";
                 if (mLastActiveTriggerTime != 0) resetTrigger(0);
                 break;
             case icamera::AF_STATE_FAIL:
                 mCurrentAfState = controls::AfStateFailed;
-                LOG2("@%s AF state FAILED", __PRETTY_FUNCTION__);
+                LOG(IPU7MetaData, Debug) << __PRETTY_FUNCTION__ << " AF state FAILED";
                 if (mLastActiveTriggerTime != 0) resetTrigger(0);
                 break;
             case icamera::AF_STATE_IDLE:
@@ -333,7 +331,7 @@ int IntelAFModeContinuousPicture::processResult(int internalAfState, bool lensMo
     checkIfFocusTimeout();
     updateResult(controls);
 
-    return icamera::OK;
+    return 0;
 }
 
 }  // namespace libcamera

@@ -44,7 +44,6 @@ typedef enum
     enStills,
     enRaw,
     enIr,
-    enRawDolLong,
     enNumOfOutPins
 
 } DataRangePins;

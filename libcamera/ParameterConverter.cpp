@@ -812,8 +812,6 @@ void ParameterConverter::dataContext2Controls(int cameraId, const DataContext* c
     controls.set(controls::FrameDuration, aiqResult->mFrameDuration * 1000); // us -> ns
     // controls::SensorTimestamp: done in shutterReady()
     controls.set(controls::draft::SensorRollingShutterSkew, aiqResult->mFrameDuration);
-    // TODO, set default depth
-    controls.set(controls::draft::PipelineDepth, 7);
 
     Rectangle crop = {context->zoomRegion.left, context->zoomRegion.top,
                       static_cast<uint32_t>(context->zoomRegion.right - context->zoomRegion.left),

@@ -62,17 +62,12 @@ namespace icamera {
 
 #define DEFAULT_TNR_EXTRA_FRAME_NUM 2
 
-/* Max number of the RAW buffer number is 32.
- * Max number size of the pipeline depth is 6.
- * Max setting count should be larger than raw buffer number + pipeline depth.
- */
-#define CAMERA_PORT_NAME "CSI2"
+#define CSI_PORT_NAME "CSI2"
 
 #ifdef CAL_BUILD
 #define MAX_CAMERA_NUMBER 2
 #define CAMERA_CACHE_DIR "/var/cache/camera/"
 #define CAMERA_DEFAULT_CFG_PATH "/etc/camera/"
-#define CAMERA_GRAPH_DESCRIPTOR_FILE "gcss/graph_descriptor.xml"
 #define CAMERA_GRAPH_SETTINGS_DIR "gcss/"
 #endif
 
@@ -80,7 +75,6 @@ namespace icamera {
 #define MAX_CAMERA_NUMBER 2
 #define CAMERA_CACHE_DIR "./"
 #define CAMERA_DEFAULT_CFG_PATH "/vendor/etc/"
-#define CAMERA_GRAPH_DESCRIPTOR_FILE "graph_descriptor.xml"
 #define CAMERA_GRAPH_SETTINGS_DIR ""
 #endif
 
@@ -88,8 +82,9 @@ namespace icamera {
 #define MAX_CAMERA_NUMBER 100
 // Temporarily using current path to save aiqd file for none CAL platforms.
 #define CAMERA_CACHE_DIR "./"
+#ifndef CAMERA_DEFAULT_CFG_PATH
 #define CAMERA_DEFAULT_CFG_PATH "/etc/camera/"
-#define CAMERA_GRAPH_DESCRIPTOR_FILE "gcss/graph_descriptor.xml"
+#endif
 #define CAMERA_GRAPH_SETTINGS_DIR "gcss/"
 #endif
 
@@ -177,7 +172,6 @@ class StaticMetadata {
     std::unordered_map<std::string, std::vector<double>> mDoubleMetadata;
 };
 
-class GraphConfigNodes;
 class PlatformData {
  private:
     // Prevent to create multiple instances
@@ -224,6 +218,7 @@ class PlatformData {
                       mAiqRunningInterval(1),
                       mStatsRunningRate(false),
                       mEnableMkn(true),
+                      mIspTuningUpdate(true),
                       mSkipFrameV4L2Error(false),
                       mCITMaxMargin(0),
                       mYuvColorRangeMode(CAMERA_FULL_MODE_YUV_COLOR_RANGE),
@@ -255,7 +250,6 @@ class PlatformData {
                       // FRAME_SYNC_E
                       mEnableAiqd(false),
                       mCurrentMcConf(nullptr),
-                      mGraphSettingsType(COUPLED),
                       mDVSType(MORPH_TABLE),
                       mPSACompression(false),
                       mOFSCompression(false),
@@ -270,6 +264,7 @@ class PlatformData {
                       mMaxNvmDataSize(0),
                       mNvmOverwrittenFileSize(0),
                       mGpuTnrEnabled(false),
+                      mGpuIpaEnabled(false),
                       mTnrExtraFrameNum(DEFAULT_TNR_EXTRA_FRAME_NUM),
                       mMsPsysAlignWithSystem(0),
                       mDummyStillSink(false),
@@ -309,6 +304,7 @@ class PlatformData {
             int mAiqRunningInterval;
             bool mStatsRunningRate;
             bool mEnableMkn;
+            bool mIspTuningUpdate;
             // first: one algo type in imaging_algorithm_t, second: running rate
             std::unordered_map<int, float> mAlgoRunningRateMap;
             bool mSkipFrameV4L2Error;
@@ -354,7 +350,6 @@ class PlatformData {
             std::map<int, stream_array_t> mStreamToMcMap;
 
             std::string mGraphSettingsFile;
-            GraphSettingType mGraphSettingsType;
             std::vector<MultiExpRange> mMultiExpRanges;
             std::vector<uint32_t> mSupportedIspControlFeatures;
             int mDVSType;
@@ -386,6 +381,7 @@ class PlatformData {
             // TODO enable camera module after switch to Json
             std::vector<IGraphType::ScalerInfo> mScalerInfo;
             bool mGpuTnrEnabled;
+            bool mGpuIpaEnabled;
             int mTnrExtraFrameNum;
             int mMsPsysAlignWithSystem;  // Scheduling aligned with system time
             bool mDummyStillSink;
@@ -713,6 +709,15 @@ class PlatformData {
      */
     static int isUseFixedHDRExposureInfo(int cameraId);
     // HDR_FEATURE_E
+
+    /**
+     * Get if multi exposure cases or not
+     *
+     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
+     * \param[in] TuningMode: tuningMode
+     * \return true if multi exposure case
+     */
+    static bool isMultiExposureCase(int cameraId, TuningMode tuningMode);
 
     /**
      * Get sensor exposure type
@@ -1228,22 +1233,6 @@ class PlatformData {
     static int getCpf(int cameraId, TuningMode mode, ia_binary_data* aiqbData);
 
     /**
-     * If dynamic graph config enabled
-     *
-     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return true if use graphConfig file.
-     */
-    static bool getGraphConfigNodes(int cameraId);
-
-    /**
-     * to get the type of graph settings
-     *
-     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return the graph settings type: COUPLED or DISPERSED.
-     */
-    static GraphSettingType getGraphSettingsType(int cameraId);
-
-    /**
      * if ISYS CSI Back End capture enabled
      *
      * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
@@ -1362,14 +1351,6 @@ class PlatformData {
      * \return the value of camera cfg path.
      */
     static std::string getCameraCfgPath();
-
-    /**
-     * Get camera graph descriptor file path
-     *
-     * \param void
-     * \return the value of camera graph descriptor file path.
-     */
-    static std::string getGraphDescFilePath();
 
     /**
      * Get camera graph setting file path.
@@ -1495,8 +1476,11 @@ class PlatformData {
 
     /**
      * Check if support to update tuning data or not
+     *
+     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
+     * \return true if enable update tuning.
      */
-    static bool supportUpdateTuning();
+    static bool supportUpdateTuning(int cameraId);
 
     /**
      * Check should connect gpu algo or not
@@ -1504,6 +1488,13 @@ class PlatformData {
      * \return true if should connect gpu algo.
      */
     static bool isUsingGpuAlgo();
+
+    /**
+     * Check should connect gpu ipa or not on libcamera
+     * should connect gpu algo service if any gpu algorithm is used
+     * \return true if should connect gpu ipa.
+     */
+    static bool isUsingGpuIpa();
 
     /**
      * the extra frame count for still stream

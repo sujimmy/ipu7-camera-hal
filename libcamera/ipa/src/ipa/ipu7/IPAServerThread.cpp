@@ -20,7 +20,7 @@
 
 namespace libcamera {
 
-LOG_DECLARE_CATEGORY(IPAIPU7)
+LOG_DECLARE_CATEGORY(IPAIPU)
 
 namespace ipa::ipu7 {
 
@@ -28,11 +28,11 @@ IPAServerThread::IPAServerThread(IAlgoWorker* worker, const char* name)
     : mIAlgoWorker(worker),
       mName(name),
       mState(State::Stopped) {
-    LOG(IPAIPU7, Debug) << " " << __func__ << " " << mName.c_str();
+    LOG(IPAIPU, Debug) << " " << __func__ << " " << mName.c_str();
 
     start();
 
-    LOG(IPAIPU7, Debug) << " " << __func__ << " started " << mName.c_str();
+    LOG(IPAIPU, Debug) << " " << __func__ << " started " << mName.c_str();
     {
         MutexLocker locker(mMutex);
         mState = State::Running;
@@ -40,7 +40,7 @@ IPAServerThread::IPAServerThread(IAlgoWorker* worker, const char* name)
 }
 
 IPAServerThread::~IPAServerThread() {
-    LOG(IPAIPU7, Debug) << " " << __func__ << " " << mName.c_str();
+    LOG(IPAIPU, Debug) << " " << __func__ << " " << mName.c_str();
     {
         MutexLocker locker(mMutex);
         mState = State::Stopped;
@@ -49,12 +49,12 @@ IPAServerThread::~IPAServerThread() {
 
     wait();
 
-    LOG(IPAIPU7, Debug) << " " << __func__ << " stopped " << mName.c_str();
+    LOG(IPAIPU, Debug) << " " << __func__ << " stopped " << mName.c_str();
 }
 
 void IPAServerThread::sendRequest(uint32_t cmd, const Span<uint8_t>& mem) {
     MutexLocker locker(mMutex);
-    LOG(IPAIPU7, Debug) << "sendRequest cmd " << cmd << " " << mName.c_str() << " this " << this;
+    LOG(IPAIPU, Debug) << "sendRequest cmd " << cmd << " " << mName.c_str() << " this " << this;
 
     cmd_event event = {cmd, mem.data(), static_cast<int>(mem.size())};
     mEventQueue.push(std::move(event));
@@ -62,7 +62,7 @@ void IPAServerThread::sendRequest(uint32_t cmd, const Span<uint8_t>& mem) {
 }
 
 void IPAServerThread::run() {
-    LOG(IPAIPU7, Debug) << " " << __func__ << " run thread " << mName.c_str();
+    LOG(IPAIPU, Debug) << " " << __func__ << " run thread " << mName.c_str();
     while (true) {
         cmd_event event;
         {

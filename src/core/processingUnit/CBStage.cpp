@@ -73,6 +73,7 @@ int CBStage::init() {
         static_cast<uint32_t*>(mPacAdapt->allocateBuffer(mStreamId, mContextId, -1, size));
 
     mIaAicBuf = new aic::IaAicBuffer[mTerminalDescCount * kMaxTerminalBufArray];
+    memset(mIaAicBuf, 0, sizeof(aic::IaAicBuffer) * mTerminalDescCount * kMaxTerminalBufArray);
 
     return OK;
 }
@@ -695,7 +696,7 @@ int CBStage::allocPayloadBuffer(const cca::cca_aic_terminal_config& pacConfig,
     for (uint32_t i = 0; i < pacConfig.cb_terminal_buf[0].num_terminal; i++) {
         if (pacConfig.cb_terminal_buf[0].terminal_buf[i].buf_size == 0) continue;
 
-        uint32_t size = pacConfig.cb_terminal_buf[0].terminal_buf[i].buf_size;
+        uint32_t size = ALIGN_64(pacConfig.cb_terminal_buf[0].terminal_buf[i].buf_size);
         uint8_t terminalId = pacConfig.cb_terminal_buf[0].terminal_buf[i].terminal_index;
 
         bool inplaceBufAllocated = false;
