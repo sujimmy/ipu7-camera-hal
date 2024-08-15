@@ -292,8 +292,8 @@ endif() # USE_STATIC_GRAPH
 # Add libcamhal using the specified sources
 
 if (WITH_PLUGINS)
-    set(CAMHAL_TARGET ${IPU_VER}hal)
-    set(CAMHAL_STATIC_TARGET ${IPU_VER}hal_static)
+    set(CAMHAL_TARGET ${IPU_VER})
+    set(CAMHAL_STATIC_TARGET ${IPU_VER}_static)
 else()
     set(CAMHAL_TARGET camhal)
     set(CAMHAL_STATIC_TARGET camhal_static)

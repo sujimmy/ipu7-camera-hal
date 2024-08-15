@@ -111,7 +111,7 @@ static void load_camera_hal_library() {
         return;
     }
 
-    libName += "hal.so";
+    libName += ".so";
     LOG1("%s, the library name: %s", __func__, libName.c_str());
 
     gCameraHalLib = dlopen(libName.c_str(), RTLD_NOW);
