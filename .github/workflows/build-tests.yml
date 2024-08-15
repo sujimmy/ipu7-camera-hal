@@ -1,0 +1,72 @@
+name: Build tests
+
+on:
+  push:
+
+  pull_request:
+
+permissions: {}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        version: ["ipu7"]
+        os: ["ubuntu:24.04"]
+    runs-on: ubuntu-latest
+    container: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: intel/ipu7-camera-bins
+          path: bins
+
+      - name: Install from intel/ipu7-camera-bins
+        run: |
+          cd "${GITHUB_WORKSPACE}/bins"
+
+          cat README.md | \
+            awk 'BEGIN { \
+                FS="/"; \
+              } \
+              /^```/ { \
+                getline; \
+                if ($1 == "# Runtime files") { \
+                  while ($1 != "```") { \
+                    print $0; \
+                    getline; \
+                  } \
+                } \
+              }' | \
+            sed 's,ipu7-camera-bins/,./,' | \
+            sh -x
+
+      - uses: actions/checkout@v4
+        with:
+          path: hal
+
+      - name: Install prerequisite packages
+        run: |
+          echo 'APT::Get::Always-Include-Phased-Updates True;' | tee -a /etc/apt/apt.conf
+          echo 'Acquire::http::User-Agent-Non-Interactive "true";' | tee -a /etc/apt/apt.conf
+          apt-get update -q
+          export TZ=Asia/Shanghai
+          echo "" | apt-get install -qy tzdata
+          echo "" | apt-get install git build-essential cmake libexpat-dev automake libtool libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev libjsoncpp-dev --yes
+      - name: Build test for ${{ matrix.version }} on ${{ matrix.os }}
+        timeout-minutes: 10
+        run: |
+          cd "${GITHUB_WORKSPACE}/hal"
+
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release \
+            -DIPU_VERSIONS=ipu7 \
+            -DWITH_PLUGINS=ON \
+            -DBUILD_CAMHAL_TESTS=OFF \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DUSE_STATIC_GRAPH=ON \
+            -DUSE_STATIC_GRAPH_AUTOGEN=ON \
+            -DSTATIC_GRAPH_IPU_PREFIXS=Ipu7x \
+            ..
+          VERBOSE=1 make
+          make install
