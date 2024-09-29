@@ -64,9 +64,6 @@ int AiqUnit::init() {
             mAiqEngine->deinit();
             return ret;
         }
-
-#ifndef PAC_ENABLE
-#endif
     }
 
     mAiqUnitState = AIQ_UNIT_INIT;
@@ -77,9 +74,6 @@ int AiqUnit::init() {
 int AiqUnit::deinit() {
     AutoMutex l(mAiqUnitLock);
     LOG1("<id%d>@%s", mCameraId, __func__);
-
-#ifndef PAC_ENABLE
-#endif
 
     mAiqEngine->deinit();
 
@@ -108,9 +102,6 @@ int AiqUnit::configure(const stream_config_t *streamList) {
 
     ret = mAiqEngine->configure();
     CheckAndLogError(ret != OK, ret, "configure AIQ engine error: %d", ret);
-
-#ifndef PAC_ENABLE
-#endif
 
     mAiqUnitState = AIQ_UNIT_CONFIGURED;
     return OK;
@@ -179,8 +170,8 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
         }
 
 #ifndef PAC_ENABLE
-
 #endif
+
         std::shared_ptr<GraphConfig> graphConfig =
             CameraContext::getInstance(mCameraId)->getGraphConfig(cfg);
         if (graphConfig != nullptr) {
@@ -258,8 +249,6 @@ int AiqUnit::start() {
         return BAD_VALUE;
     }
 
-#ifndef PAC_ENABLE
-#endif
     int ret = mAiqEngine->startEngine();
     if (ret == OK) {
         mAiqUnitState = AIQ_UNIT_START;
@@ -274,8 +263,6 @@ int AiqUnit::stop() {
 
     if (mAiqUnitState == AIQ_UNIT_START) {
         mAiqEngine->stopEngine();
-#ifndef PAC_ENABLE
-#endif
     }
 
     mAiqUnitState = AIQ_UNIT_STOP;
@@ -320,7 +307,7 @@ void AiqUnit::dumpCcaInitParam(const cca::cca_init_params& params) {
     LOG3("bitmap:%x", params.bitmap);
     LOG3("frameUse: %d", params.frameUse);
     LOG3("aecFrameDelay:%d", params.aecFrameDelay);
-    LOG3("streamId num:%d", params.aic_stream_ids.count);
+    LOG3("streamId num:%zu", params.aic_stream_ids.count);
 
     LOG3("horizontal_crop_offset:%d", params.frameParams.horizontal_crop_offset);
     LOG3("vertical_crop_offset:%d", params.frameParams.vertical_crop_offset);

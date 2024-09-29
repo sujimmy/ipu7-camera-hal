@@ -51,7 +51,7 @@ typedef std::map<uint8_t, PacTerminalBuf> PacTerminalBufMap;
 class IpuPacAdaptor {
 public:
     explicit IpuPacAdaptor(int cameraId);
-    virtual ~IpuPacAdaptor();
+    virtual ~IpuPacAdaptor() {}
 
     int init(std::vector<int> streamIds);
     int reinitAic(const int32_t aicId);
@@ -111,5 +111,9 @@ public:
 
     std::map<std::pair<int, uint8_t>, std::vector<CBTerminalResult> > mTerminalResult;
     std::map<int, cca::cca_pal_input_params*> mStreamIdToInputParams;
+
+    static const uint8_t MAX_CACHE_PAC_HIST = 6;
+    // key: pair<streamId, sequence> --> bool (true means stats decoded)
+    std::map<std::pair<int, int64_t>, bool> mPacRunHistMap;
 };
 } // namespace icamera

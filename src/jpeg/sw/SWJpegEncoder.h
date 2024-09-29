@@ -61,6 +61,7 @@ class SWJpegEncoder : public IJpegEncoder {
     ~SWJpegEncoder();
 
     virtual bool doJpegEncode(EncodePackage* package);
+    virtual int getMemoryType() { return V4L2_MEMORY_USERPTR; }
 
  private:
     // prevent copy constructor and assignment operator

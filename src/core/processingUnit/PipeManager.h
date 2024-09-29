@@ -87,9 +87,6 @@ class PipeManager : public IPipeManager {
     // map of sequence and taskinfo
     std::multimap<int64_t, TaskInfo> mOngoingTasks;
 
-    Mutex mOngoingPalMapLock;
-    // first is sequence id, second is a set of stream id
-    std::map<int64_t, std::set<int32_t>> mOngoingPalMap;
     // map of output stream to stream id
     std::map<uuid, int32_t> mOutputPortToStreamId;
     PipeManagerCallback* mPMCallback;

@@ -17,7 +17,6 @@
 
 #include <string>
 #include "HalStream.h"
-#include "iutils/CameraLog.h"
 #include "iutils/Errors.h"
 #include "iutils/Utils.h"
 
@@ -97,10 +96,6 @@ class ConnectionConfig {
                          mSinkTerminal(sinkTerminal),
                          mSinkIteration(sinkIteration),
                          mConnectionType(connectionType) {}
-    void dump() {
-        LOG1("connection src 0x%x (0x%x) sink 0x%x(0x%x)",
-             mSourceStage, mSourceTerminal, mSinkStage, mSinkTerminal);
-    }
 
     uuid mSourceStage;
     uuid mSourceTerminal;

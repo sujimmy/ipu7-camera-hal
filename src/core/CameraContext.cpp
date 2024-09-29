@@ -22,6 +22,7 @@
 
 #include "PlatformData.h"
 #include "AiqResultStorage.h"
+#include "iutils/CameraLog.h"
 
 namespace icamera {
 

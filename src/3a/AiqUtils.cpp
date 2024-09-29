@@ -26,7 +26,7 @@
 #include "AiqSetting.h"
 #include "CameraTypes.h"
 #include "IntelCCATypes.h"
-#include "modules/algowrapper/IntelCca.h"
+#include "ia_coordinate.h"
 
 namespace icamera {
 

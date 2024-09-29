@@ -50,6 +50,7 @@ class PostProcessorCore {
 
     bool isPostProcessTypeSupported(PostProcessType type);
     status_t configure(const std::vector<PostProcessInfo>& processorOrder);
+    int getMemoryType() { return mMemoryType; }
     bool isBypassed(int64_t sequence);
 
     status_t doPostProcessing(const std::shared_ptr<CameraBuffer>& mainBuf,
@@ -64,6 +65,7 @@ class PostProcessorCore {
 
  private:
     int mCameraId;
+    int mMemoryType;
     std::map<std::shared_ptr<PostProcessorBase>, std::shared_ptr<CameraBuffer>> mInterBuffersMap;
 
     std::vector<PostProcessInfo> mProcessorsInfo;

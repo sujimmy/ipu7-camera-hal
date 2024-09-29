@@ -16,6 +16,7 @@
 
 #include "CcaWorker.h"
 
+#include <libcamera/ipa/ipu7_ipa_interface.h>
 #include <libcamera/base/log.h>
 
 #include "IPAHeader.h"
@@ -366,6 +367,15 @@ int CcaWorker::getMKN(uint8_t* pData) {
     if (!pData) return static_cast<int>(ia_err_argument);
 
     intel_cca_mkn_data* params = reinterpret_cast<intel_cca_mkn_data*>(pData);
+
+    if (params->resultsHandle >= 0) {
+        void* bufferAddr = mIPACallback->getBuffer(params->resultsHandle);
+        if (!bufferAddr) {
+            LOG(IPAIPU, Error) << "failed to get mkn address";
+            return static_cast<int>(ia_err_argument);
+        }
+        params->results = static_cast<cca::cca_mkn*>(bufferAddr);
+    }
 
     ia_err ret = mCca->getMKN(params->type, *params->results);
 

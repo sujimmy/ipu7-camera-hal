@@ -129,8 +129,8 @@ ia_err IntelCca::runAIQ(uint64_t frameId, const cca::cca_aiq_params& params,
 }
 
 #ifndef PAC_ENABLE
-
 #endif
+
 ia_err IntelCca::updateTuning(uint8_t lardTags, const ia_lard_input_params& lardParams,
                               const cca::cca_nvm& nvm, int32_t streamId) {
     ia_lard_input_params& lardInputParam = const_cast<ia_lard_input_params&>(lardParams);

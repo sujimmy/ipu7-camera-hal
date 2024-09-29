@@ -175,8 +175,8 @@ void IPAClient::run() {
     LOG(IPAIPU, Debug) << "Load IPA Proxy in IPAClient";
 
 #ifdef CAL_BUILD
-    mIpa = IPAManager::createIPA<ipa::ipu7::IPAProxyIPU7>(mPipelineHandler, IPU7_IPA_VERSION,
-                                                          IPU7_IPA_VERSION, true);
+    mIpa = IPAManager::createIPA<ipa::ipu7::IPAProxyIPU7>(
+        mPipelineHandler, IPU7_IPA_VERSION, IPU7_IPA_VERSION, true, IPCPipeUnixSocket::kCpuPath);
 #else
     mIpa = IPAManager::createIPA<ipa::ipu7::IPAProxyIPU7>(mPipelineHandler, IPU7_IPA_VERSION,
                                                           IPU7_IPA_VERSION);
@@ -415,7 +415,7 @@ void IPAClient::sendRequest(int cameraId, int tuningMode, uint32_t cmd, uint32_t
     ipa::ipu7::IPACmdInfo cmdInfo = { cameraId, tuningMode, cmd, bufferId };
 
     MutexLocker locker(mIpaLock);
-    mIpa->requestASync(cmdInfo);
+    mIpa->sendRequest(cmdInfo);
 }
 
 void IPAClient::returnRequestReady(const ipa::ipu7::IPACmdInfo& cmdInfo, int ret) {

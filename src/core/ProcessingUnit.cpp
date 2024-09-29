@@ -336,7 +336,7 @@ void ProcessingUnit::handleEvent(EventData eventData) {
 
 // ProcessingUnit ThreadLoop
 int ProcessingUnit::processNewFrame() {
-    LOG2("<id%d>@%s", mCameraId, __func__);
+    LOG3("<id%d>@%s", mCameraId, __func__);
     CheckAndLogError(!mBufferProducer, INVALID_OPERATION, "No available producer");
 
     /* Will trigger the Scheduler in this Loop. trigger chance:
@@ -376,7 +376,7 @@ int ProcessingUnit::processNewFrame() {
             CameraBufQ& outputQueue = output.second;
             if (outputQueue.empty()) {
                 taskReady = false;
-                LOG1("<id%d>@%s, port %d, output buffer not ready", mCameraId, __func__, port);
+                LOG3("<id%d>@%s, port %d, output buffer not ready", mCameraId, __func__, port);
                 break;
             }
             dstBuffers[port] = outputQueue.front();
@@ -411,7 +411,7 @@ int ProcessingUnit::handleYuvReprocessing(CameraBufferPortMap* buffersMap) {
             inputBuffer = item.second;
             timestamp = TIMEVAL2NSECS(item.second->getTimestamp());
             bufSequence = item.second->getSequence();
-            LOG2("%s, YUV reprocessing input buf port id %d, usage %d, timestamp %ld, sequence %d",
+            LOG2("%s, YUV reprocessing input buf port id %d, usage %d, timestamp %lu, sequence %ld",
                  __func__, item.first, item.second->getStreamUsage(), timestamp, bufSequence);
         } else {
             dstBuffers[item.first] = item.second;
@@ -575,7 +575,7 @@ void ProcessingUnit::returnRawBuffer() {
     AutoMutex lock(mBufferMapLock);
     // If too many buffers are holden in mRawQueue, return back to producer
     if (mRawBufferMap.size() > (PlatformData::getMaxRawDataNum(mCameraId) -
-                                PlatformData::getMaxRequestsInflight(mCameraId))) {
+                                PlatformData::getMaxRequestsInHAL(mCameraId))) {
         auto it = mRawBufferMap.cbegin();
         {
             AutoMutex l(mBufferQueueLock);
@@ -585,9 +585,11 @@ void ProcessingUnit::returnRawBuffer() {
             }
         }
 
-        const CameraBufferPortMap& bufferPortMap = it->second;
-        for (auto& item : bufferPortMap) {
-            mBufferProducer->qbuf(item.first, item.second);
+        if (mBufferProducer) {
+            const CameraBufferPortMap& bufferPortMap = it->second;
+            for (auto& item : bufferPortMap) {
+                 mBufferProducer->qbuf(item.first, item.second);
+            }
         }
         LOG2("@%s, returned sequence %ld", __func__, it->first);
         mRawBufferMap.erase(it);
@@ -692,7 +694,7 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
             callbackRgbs = true;
         }
 
-        if (PlatformData::isGpuTnrEnabled(mCameraId)) {
+        if (aiqResult && PlatformData::isGpuTnrEnabled(mCameraId)) {
             handleExtraTasksForTnr(inputSequence, dstBuffers, aiqResult);
         }
 
@@ -726,7 +728,7 @@ void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMa
     }
     if (!hasStill) return;
 
-    int startSequence = sequence - (getTnrFrameCount(aiqResult) - 1);
+    int64_t startSequence = sequence - (getTnrFrameCount(aiqResult) - 1);
     StageControl ctl;
     ctl.stillTnrReferIn = true;
     PipeControl control;
@@ -846,9 +848,7 @@ void ProcessingUnit::onStatsReady(EventData& eventData) {
 void ProcessingUnit::sendPsysFrameDoneEvent(const CameraBufferPortMap* dstBuffers) {
     for (auto& dst : *dstBuffers) {
         shared_ptr<CameraBuffer> outBuf = dst.second;
-        if (!outBuf || outBuf->getSequence() < 0) {
-            continue;
-        }
+        if (!outBuf) continue;
 
         EventData frameData;
         frameData.type = EVENT_PSYS_FRAME;
@@ -953,26 +953,10 @@ void ProcessingUnit::outputRawImage(shared_ptr<CameraBuffer>& srcBuf,
     }
 
     // Copy from source buffer
-    int srcBufferSize = srcBuf->getBufferSize();
-    int srcMemoryType = srcBuf->getMemory();
-    void* pSrcBuf = (srcMemoryType == V4L2_MEMORY_DMABUF)
-                        ? CameraBuffer::mapDmaBufferAddr(srcBuf->getFd(), srcBufferSize)
-                        : srcBuf->getBufferAddr();
+    CameraBufferMapper srcMapper(srcBuf);
+    CameraBufferMapper dstMapper(dstBuf);
 
-    int dstBufferSize = dstBuf->getBufferSize();
-    int dstMemoryType = dstBuf->getMemory();
-    void* pDstBuf = (dstMemoryType == V4L2_MEMORY_DMABUF)
-                        ? CameraBuffer::mapDmaBufferAddr(dstBuf->getFd(), dstBufferSize)
-                        : dstBuf->getBufferAddr();
-
-    MEMCPY_S(pDstBuf, dstBufferSize, pSrcBuf, srcBufferSize);
-
-    if (srcMemoryType == V4L2_MEMORY_DMABUF) {
-        CameraBuffer::unmapDmaBufferAddr(pSrcBuf, srcBufferSize);
-    }
-    if (dstMemoryType == V4L2_MEMORY_DMABUF) {
-        CameraBuffer::unmapDmaBufferAddr(pDstBuf, dstBufferSize);
-    }
+    MEMCPY_S(dstMapper.addr(), dstMapper.size(), srcMapper.addr(), srcMapper.size());
 
     // Send output buffer to its consumer
     for (auto& it : mBufferConsumerList) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2022 Intel Corporation
+ * Copyright (C) 2013-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #include "Camera3Stream.h"
-#include "BufferAllocator.h"
 #include "HALv3Utils.h"
 #include "iutils/CameraDump.h"
 #include "iutils/Errors.h"
@@ -129,7 +128,7 @@ Camera3Buffer::~Camera3Buffer() {
                     LOG1("release internal buffer");
                     // For HAL buffer, need to unlock before free it
                     unlock();
-                    icamera::BufferAllocator::freeGbmBuffer(mHandle);
+                    mGbmBufferManager->Free(mHandle);
                 }
                 break;
             default:
@@ -159,8 +158,14 @@ icamera::status_t Camera3Buffer::init(const camera3_stream_buffer* aBuffer, int 
     mHalBuffer.s.format = mGbmBufferManager->GetV4L2PixelFormat(mHandle);
     // Use actual width from platform native handle for stride
     mHalBuffer.s.stride = mGbmBufferManager->GetPlaneStride(*aBuffer->buffer, 0);
-    mHalBuffer.s.size = CameraUtils::getFrameSize(mHalBuffer.s.format, mHalBuffer.s.width,
-                                                  mHalBuffer.s.height, false, false, false);
+    if (V4L2_PIX_FMT_JPEG == mHalBuffer.s.format) {
+        for (uint32_t i = 0; i < mGbmBufferManager->GetNumPlanes(mHandle); i++) {
+            mHalBuffer.s.size += mGbmBufferManager->GetPlaneSize(mHandle, i);
+        }
+    } else {
+        mHalBuffer.s.size = CameraUtils::getFrameSize(mHalBuffer.s.format, mHalBuffer.s.width,
+                                                      mHalBuffer.s.height, false, false, false);
+    }
     mLocked = false;
     mUsage = aBuffer->stream->usage;
     mHalBuffer.flags =
@@ -180,6 +185,9 @@ icamera::status_t Camera3Buffer::init(const camera3_stream_buffer* aBuffer, int 
     }
 
     mHalBuffer.dmafd = mHandle->data[0];
+    // Use privateHandle to store the user buffer handle
+    mHalBuffer.privateHandle = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*mHandlePtr));
+
     int ret = registerBuffer();
     if (ret) {
         mUserBuffer.status = CAMERA3_BUFFER_STATUS_ERROR;
@@ -204,7 +212,9 @@ icamera::status_t Camera3Buffer::init(const camera3_stream_t* stream, buffer_han
     mHalBuffer.s.format = mGbmBufferManager->GetV4L2PixelFormat(handle);
     // Use actual width from platform native handle for stride
     mHalBuffer.s.stride = mGbmBufferManager->GetPlaneStride(handle, 0);
-    mHalBuffer.s.size = 0;
+    for (uint32_t i = 0; i < mGbmBufferManager->GetNumPlanes(handle); i++) {
+        mHalBuffer.s.size += mGbmBufferManager->GetPlaneSize(handle, i);
+    }
     mHalBuffer.flags =
         camera_buffer_flags_t::BUFFER_FLAG_SW_WRITE | camera_buffer_flags_t::BUFFER_FLAG_SW_READ;
     mLocked = false;
@@ -213,8 +223,11 @@ icamera::status_t Camera3Buffer::init(const camera3_stream_t* stream, buffer_han
     mHalBuffer.addr = nullptr;
     mCameraId = cameraId;
     mHalBuffer.dmafd = mHandle->data[0];
-    LOG2("@%s, mHandle:%p, mFormat:%d, width:%d, height:%d, stride:%d", __func__, mHandle, mFormat,
-         mHalBuffer.s.width, mHalBuffer.s.height, mHalBuffer.s.stride);
+    // Use privateHandle to store the user buffer handle
+    mHalBuffer.privateHandle = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*mHandlePtr));
+
+    LOG2("@%s, mHandle:%p, mFormat:%d, width:%d, height:%d, stride:%d, size %d", __func__, mHandle,
+         mFormat, mHalBuffer.s.width, mHalBuffer.s.height, mHalBuffer.s.stride, mHalBuffer.s.size);
 
     return icamera::OK;
 }
@@ -282,6 +295,47 @@ icamera::status_t Camera3Buffer::deregisterBuffer() {
     return icamera::OK;
 }
 
+icamera::status_t Camera3Buffer::lockBuf() {
+    HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
+    mHalBuffer.addr = nullptr;
+    mHalBuffer.s.size = 0;
+    int ret = 0;
+    uint32_t planeNum = mGbmBufferManager->GetNumPlanes(mHandle);
+    LOG2("@%s, planeNum:%d, mHandle:%p, mFormat:%d", __func__, planeNum, mHandle, mFormat);
+
+    if (planeNum == 1) {
+        void* data = nullptr;
+        ret = (mFormat == HAL_PIXEL_FORMAT_BLOB) ?
+                  mGbmBufferManager->Lock(mHandle, 0, 0, 0, mHalBuffer.s.stride, 1, &data) :
+                  mGbmBufferManager->Lock(mHandle, 0, 0, 0, mHalBuffer.s.width, mHalBuffer.s.height,
+                                          &data);
+        mHalBuffer.addr = data;
+    } else if (planeNum > 1) {
+        struct android_ycbcr ycbrData;
+        ret = mGbmBufferManager->LockYCbCr(mHandle, 0, 0, 0, mHalBuffer.s.width,
+                                           mHalBuffer.s.height, &ycbrData);
+        mHalBuffer.addr = ycbrData.y;
+    } else {
+        LOGE("ERROR @%s: planeNum is 0", __func__);
+        return UNKNOWN_ERROR;
+    }
+
+    CheckAndLogError(ret, UNKNOWN_ERROR, "@%s: Failed to lock buffer, mHandle:%p planeNum: %d",
+                     __func__, mHandle, planeNum);
+
+    for (uint32_t i = 0; i < planeNum; i++) {
+        mHalBuffer.s.size += mGbmBufferManager->GetPlaneSize(mHandle, i);
+    }
+
+    LOG2("@%s, addr:%p, size:%d", __func__, mHalBuffer.addr, mHalBuffer.s.size);
+    CheckAndLogError(!mHalBuffer.s.size, UNKNOWN_ERROR, "ERROR @%s: Failed to GetPlaneSize, it's 0",
+                     __func__);
+
+    mLocked = true;
+
+    return icamera::OK;
+}
+
 icamera::status_t Camera3Buffer::lock() {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
     CheckAndLogError(!mInit, INVALID_OPERATION,
@@ -302,19 +356,12 @@ icamera::status_t Camera3Buffer::lock() {
         return INVALID_OPERATION;
     }
 
-    mHalBuffer.s.size = icamera::BufferAllocator::getSize(mHandle);
-    CheckAndLogError(!mHalBuffer.s.size, UNKNOWN_ERROR, "ERROR @%s: Failed to GetPlaneSize, it's 0",
-                     __func__);
-    mHalBuffer.addr =
-        icamera::BufferAllocator::lock(mHalBuffer.s.width, mHalBuffer.s.height, mFormat, mHandle);
-    CheckAndLogError(!mHalBuffer.addr, UNKNOWN_ERROR, "@%s: Failed to lock buffer, mHandle:%p",
-                     __func__, mHandle);
+    icamera::status_t status = lockBuf();
+    if (status != icamera::OK) {
+        mUserBuffer.status = CAMERA3_BUFFER_STATUS_ERROR;
+    }
 
-    LOG2("@%s, addr:%p, size:%d", __func__, mHalBuffer.addr, mHalBuffer.s.size);
-
-    mLocked = true;
-
-    return icamera::OK;
+    return status;
 }
 
 icamera::status_t Camera3Buffer::unlock() {
@@ -326,7 +373,7 @@ icamera::status_t Camera3Buffer::unlock() {
 
     if (mLocked) {
         LOG2("@%s, mHandle:%p, mFormat:%d", __func__, mHandle, mFormat);
-        int ret = icamera::BufferAllocator::unlock(mHandle);
+        int ret = mGbmBufferManager->Unlock(mHandle);
         if (ret) {
             LOGE("@%s: call Unlock fail, mHandle:%p, ret:%d", __func__, mHandle, ret);
             return UNKNOWN_ERROR;
@@ -404,22 +451,36 @@ std::shared_ptr<Camera3Buffer> allocateHeapBuffer(int w, int h, int stride, int 
 /**
  * Allocates internal GBM buffer
  */
-std::shared_ptr<Camera3Buffer> allocateHandleBuffer(int w, int h, int v4l2Fmt, int usage,
+std::shared_ptr<Camera3Buffer> allocateHandleBuffer(int w, int h, int gfxFmt, int usage,
                                                     int cameraId) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL1);
-    LOG1("%s, width %d, height %d, format 0x%x, usage 0x%x", __func__, w, h, v4l2Fmt, usage);
+    cros::CameraBufferManager* bufManager = cros::CameraBufferManager::GetInstance();
+    buffer_handle_t handle;
+    uint32_t stride = 0;
 
-    buffer_handle_t handle =
-        icamera::BufferAllocator::allocateGbmBuffer(w, h, v4l2Fmt, usage);
-    CheckAndLogError(!handle, nullptr, "Allocate handle failed!");
+    int width = w;
+    int height = h;
+    if (gfxFmt == HAL_PIXEL_FORMAT_BLOB) {
+        width = CameraUtils::getFrameSize(
+            HalV3Utils::HALFormatToV4l2Format(cameraId, gfxFmt, usage), w, h, false, false, false);
+        height = 1;
+    }
+
+    LOG1("%s, [wxh] = [%dx%d], format 0x%x, usage 0x%x", __func__, width, height, gfxFmt, usage);
+    int ret = bufManager->Allocate(width, height, gfxFmt, usage, &handle, &stride);
+    CheckAndLogError(ret != 0, nullptr, "Allocate handle failed! ret:%d", ret);
 
     std::shared_ptr<Camera3Buffer> buffer(new Camera3Buffer());
     camera3_stream_t stream{};
     stream.width = w;
     stream.height = h;
-    stream.format = icamera::BufferAllocator::V4l2FormatToHALFormat(v4l2Fmt);
+    stream.format = gfxFmt;
     stream.usage = usage;
-    buffer->init(&stream, handle, cameraId);
+    ret = buffer->init(&stream, handle, cameraId);
+    if (ret != icamera::OK) {
+        // buffer handle will free in Camera3Buffer destructure function
+        return nullptr;
+    }
 
     return buffer;
 }

@@ -18,9 +18,14 @@
 
 #include <stdarg.h>
 
-#include "utils/ScopedAtrace.h"
 #ifdef HAVE_ANDROID_OS
 #include <log/log.h>
+#endif
+
+#ifdef CAL_BUILD
+#include "utils/PerfettoTrace.h"
+#else
+#include "utils/ScopedAtrace.h"
 #endif
 
 #ifdef CAMERA_TRACE

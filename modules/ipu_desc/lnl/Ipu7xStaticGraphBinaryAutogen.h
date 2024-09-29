@@ -66,6 +66,7 @@ enum class GraphConfigurationKeyAttributes : uint32_t
     PipelineLowLight = 0x00000040,
     PipelineNormalLight = 0x00000080,
     VaiActive = 0x00000100,
+    StillsModeCpHdr = 0x00000200,
 };
 
 struct GraphConfigurationKey {

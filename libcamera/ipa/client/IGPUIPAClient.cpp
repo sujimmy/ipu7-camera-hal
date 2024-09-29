@@ -104,9 +104,8 @@ int IGPUIPAClient::init() {
 
 int IGPUIPAClient::IpaProxy::init(PipelineHandler* handler) {
     LOG(GPUClient, Debug) << " IpaProxy " << __func__;
-    // todo, connect gpu socket
-    mIpa = IPAManager::createIPA<ipa::igpu::IPAProxyGPU>(handler, IGPU_IPA_VERSION,
-                                                         IGPU_IPA_VERSION, false);
+    mIpa = IPAManager::createIPA<ipa::igpu::IPAProxyGPU>(
+        handler, IGPU_IPA_VERSION, IGPU_IPA_VERSION, true, IPCPipeUnixSocket::kGpuPath);
     int ret = mIpa->init(IC2_LIB_PATH);
     if (ret) {
         mIpa = nullptr;

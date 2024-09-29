@@ -31,6 +31,7 @@ class JpegEncoderCore : public IJpegEncoder {
     ~JpegEncoderCore();
 
     virtual bool doJpegEncode(EncodePackage* pa);
+    virtual int getMemoryType() { return V4L2_MEMORY_DMABUF; }
 
  private:
     DISALLOW_COPY_AND_ASSIGN(JpegEncoderCore);

@@ -21,9 +21,12 @@
 #include "CBStage.h"
 #include "IpuPacAdaptor.h"
 #include "GraphUtils.h"
+#include "iutils/CameraLog.h"
 #ifdef CAL_BUILD
 #include "PostProcessStage.h"
+// GPU_STAGE_S
 #include "GPUPostStage.h"
+// GPU_STAGE_E
 #endif
 #include "StageDescriptor.h"
 namespace icamera {
@@ -220,9 +223,11 @@ status_t PipeLine::createPipeStages() {
         if (mGraphConfig->getPGType(stageId) == STAGE_SW_POST) {
             unit.ipuStage = nullptr;
             unit.pipeStage = new PostProcessStage(mCameraId, stageId, stageName);
+// GPU_STAGE_S
         } else if (mGraphConfig->getPGType(stageId) == STAGE_GPU_TNR) {
             unit.ipuStage = nullptr;
             unit.pipeStage = new GPUPostStage(mCameraId, stageId, stageName);
+// GPU_STAGE_E
         } else {
 #endif
             unit.contextId = GraphUtils::getContextId(stageId);
@@ -388,7 +393,7 @@ void PipeLine::dumpPSysGraph() {
 
     LOG3("Dump psys graph node for stream %d", mStreamId);
     for (auto& node : mPSysGraph.nodes) {
-        LOG3("    c%d:r%u, has %d terminals", node.nodeCtxId, node.nodeRsrcId,
+        LOG3("    c%d:r%u, has %zu terminals", node.nodeCtxId, node.nodeRsrcId,
              node.terminalConfig.size());
         LOG3("             ted %x%x, deb %x%x%x%x", node.bitmaps.teb[1], node.bitmaps.teb[0],
              node.bitmaps.deb[3], node.bitmaps.deb[2], node.bitmaps.deb[1], node.bitmaps.deb[0]);

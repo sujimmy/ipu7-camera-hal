@@ -622,7 +622,7 @@ int CameraDevice::analyzeStream(stream_config_t* streamList, int* inputRawStream
     for (int i = 0; i < streamList->num_streams; i++) {
         stream_t& stream = streamList->streams[i];
         stream.id = i;
-        stream.max_buffers = PlatformData::getMaxRequestsInflight(mCameraId);
+        stream.max_buffers = PlatformData::getMaxRequestsInHAL(mCameraId);
 
         if (stream.streamType == CAMERA_STREAM_INPUT) {
             CheckAndLogError(*inputRawStreamId >= 0, BAD_VALUE, "Don't support two INPUT streams!");
@@ -829,7 +829,7 @@ int CameraDevice::handleQueueBuffer(int bufferNum, camera_buffer_t** ubuffer, in
             CheckAndLogError(streamIdInBuf < 0 || streamIdInBuf > mStreamNum, BAD_VALUE,
                              "@%s: Wrong stream id %d", __func__, streamIdInBuf);
 
-            if (IS_INPUT_BUFFER(buffer->sequence, buffer->timestamp)) hasInput = true;
+            if (IS_INPUT_BUFFER(buffer->timestamp, buffer->sequence)) hasInput = true;
             if (buffer->s.usage == CAMERA_STREAM_PREVIEW ||
                 buffer->s.usage == CAMERA_STREAM_VIDEO_CAPTURE) {
                 hasYuvOutput = true;
@@ -1001,9 +1001,9 @@ void CameraDevice::handleEvent(EventData eventData) {
 
                 data.data.buffer_ready.timestamp = eventData.data.requestReady.timestamp;
                 data.data.buffer_ready.frameNumber = eventData.data.requestReady.frameNumber;
-                mCallback->notify(mCallback, data);
                 PlatformData::updateMakernoteTimeStamp(mCameraId, sequence,
                                                        data.data.buffer_ready.timestamp);
+                mCallback->notify(mCallback, data);
             }
             break;
         }

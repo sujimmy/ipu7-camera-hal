@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG Camera3HAL
 
 #include "HwPrivacyControl.h"
 
@@ -48,7 +47,8 @@ bool HwPrivacyControl::init() {
 #else
     int ret = mHwPriModeSubDev->SubscribeEvent(V4L2_EVENT_CTRL, V4L2_CID_PRIVACY);
 #endif
-    if (ret != OK) {
+
+    if (ret != icamera::OK) {
         LOG(IPU7Privacy, Info)
             << "Failed to subscribe sync event V4L2_EVENT_CTRL, Privacy Mode not supported";
         mHwPriModeSubDev = nullptr;
@@ -56,7 +56,7 @@ bool HwPrivacyControl::init() {
     }
     int privacy = -1;
     int status = mHwPriModeSubDev->GetControl(V4L2_CID_PRIVACY, &privacy);
-    if (status != OK) {
+    if (status != icamera::OK) {
         LOG(IPU7Privacy, Error) << "Couldn't get V4L2_CID_PRIVACY, status: "
                                 << std::to_string(status);
         mHwPriModeSubDev = nullptr;
@@ -72,23 +72,20 @@ bool HwPrivacyControl::init() {
 int HwPrivacyControl::start() {
     LOG(IPU7Privacy, Debug) << __func__;
 
-    if (!mInitialized) return NO_INIT;
-
-    std::string threadName = "HwPrivacyControl";
-    run(threadName);
+    if (!mInitialized) return icamera::NO_INIT;
 
     mThreadRunning = true;
+    Thread::start();
 
-    return OK;
+    return icamera::OK;
 }
 
 int HwPrivacyControl::stop() {
     LOG(IPU7Privacy, Debug) << __func__;
-    if (!mInitialized) return NO_INIT;
-    icamera::Thread::requestExit();
-    mThreadRunning = false;
+    if (!mInitialized) return icamera::NO_INIT;
 
-    icamera::Thread::requestExitAndWait();
+    mThreadRunning = false;
+    wait();
 
     if (mHwPriModeSubDev) {
         mHwPriModeSubDev->UnsubscribeEvent(V4L2_EVENT_CTRL);
@@ -96,15 +93,15 @@ int HwPrivacyControl::stop() {
         mHwPriModeSubDev = nullptr;
     }
 
-    return OK;
+    return icamera::OK;
 }
 
 bool HwPrivacyControl::getPrivacyStatus() {
-    std::unique_lock<std::mutex> lock(sLock);
+    MutexLocker locker(mLock);
     return mState;
 }
 
-bool HwPrivacyControl::threadLoop() {
+void HwPrivacyControl::run() {
     int ret = 0;
     const int pollTimeoutMs = 100;
 
@@ -114,24 +111,25 @@ bool HwPrivacyControl::threadLoop() {
 
     std::vector<icamera::V4L2Device*> readyDevices;
 
-    ret = poller.Poll(pollTimeoutMs, POLLPRI | POLLIN | POLLOUT | POLLERR, &readyDevices);
-    if (ret == 0) return true;          // time out
-    if (!mThreadRunning) return false;  // thread exit
+    while (true) {
+        if (!mThreadRunning) return;
 
-    if (ret < 0) {
-        LOG(IPU7Privacy, Error) << "Poll error, ret: " << std::to_string(ret);
-        return false;
+        ret = poller.Poll(pollTimeoutMs, POLLPRI | POLLIN | POLLOUT | POLLERR, &readyDevices);
+        if (ret == 0) continue;  // time out
+
+        if (ret < 0) {
+            LOG(IPU7Privacy, Error) << "Poll error, ret: " << std::to_string(ret);
+            return;
+        }
+
+        // Get privacy mode state
+        struct v4l2_event event;
+        CLEAR(event);
+        ret = mHwPriModeSubDev->DequeueEvent(&event);
+        if (ret == icamera::OK) {
+            MutexLocker locker(mLock);
+            mState = (event.u.ctrl.value == 1);
+        }
     }
-
-    // Get privacy mode state
-    struct v4l2_event event;
-    CLEAR(event);
-    ret = mHwPriModeSubDev->DequeueEvent(&event);
-    if (ret == OK) {
-        std::unique_lock<std::mutex> lock(sLock);
-        mState = (event.u.ctrl.value == 1);
-    }
-
-    return true;
 }
 }  // namespace libcamera

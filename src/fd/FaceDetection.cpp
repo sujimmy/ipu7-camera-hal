@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022 Intel Corporation
+ * Copyright (C) 2019-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,13 @@
 namespace icamera {
 #define FPS_FD_COUNT 60  // the face detection interval to print fps
 
-FaceDetection::FaceDetection(int cameraId, int width, int height)
+FaceDetection::FaceDetection(int cameraId, int width, int height, int memoryType)
         : mCameraId(cameraId),
           mInitialized(false),
           mWidth(width),
           mHeight(height),
           mMaxFaceNum(PlatformData::getMaxFaceDetectionNumber(cameraId)),
+          mMemoryType(memoryType),
           mLastFaceNum(-1),
           mDefaultInterval(PlatformData::faceEngineRunningInterval(cameraId)),
           mNoFaceInterval(PlatformData::faceEngineRunningIntervalNoFace(cameraId)),
@@ -115,11 +116,16 @@ int FaceDetection::getFaceNum() {
     return mLastFaceNum;
 }
 
-void FaceDetection::printfFDRunRate(int64_t sequence) {
+void FaceDetection::printfFDRunRate() {
     if (!Log::isLogTagEnabled(ST_FPS)) return;
 
+    static int runCount = 0;
     static timeval lastTime = {};
-    if (sequence % FPS_FD_COUNT != 0) return;
+    if (runCount == 0) {
+        gettimeofday(&lastTime, nullptr);
+    }
+
+    if (++runCount % FPS_FD_COUNT != 0) return;
 
     struct timeval curTime;
     gettimeofday(&curTime, nullptr);

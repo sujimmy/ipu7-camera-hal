@@ -56,6 +56,7 @@ class PostProcessStage : public IPipeStage {
 
  private:
     int32_t mCameraId;
+    int mMemoryType;
     uuid mInputPort;
     std::map<uuid, std::unique_ptr<SwPostProcessUnit>> mPostProcessors;
 

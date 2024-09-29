@@ -27,7 +27,6 @@
             "ov02c10-uf-1",
             "ov05c10-uf-1"
         ],
-        "videoStreamNum" : 2,
-        "cameraNumber" : 1
+        "videoStreamNum" : 2
     }
 }

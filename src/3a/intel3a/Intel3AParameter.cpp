@@ -251,12 +251,8 @@ void Intel3AParameter::setAeManualLimits(const aiq_parameter_t& param) {
     }
 
     if (gainRange.min >= 0 && gainRange.max >= gainRange.min) {
-        int isoMin = static_cast<int>(convertdBGainToISO(gainRange.min, mCMC.base_iso));
-        int isoMax = static_cast<int>(convertdBGainToISO(gainRange.max, mCMC.base_iso));
-        if (isoMin <= INT_MAX && isoMax <= INT_MAX) {
-            limit->manual_iso_min = isoMin;
-            limit->manual_iso_max = isoMax;
-        }
+        limit->manual_iso_min = static_cast<int>(convertdBGainToISO(gainRange.min, mCMC.base_iso));
+        limit->manual_iso_max = static_cast<int>(convertdBGainToISO(gainRange.max, mCMC.base_iso));
     }
 }
 

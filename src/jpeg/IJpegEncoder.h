@@ -71,6 +71,7 @@ class IJpegEncoder {
 
     static std::unique_ptr<IJpegEncoder> createJpegEncoder();
     virtual bool doJpegEncode(EncodePackage* package) = 0;
+    virtual int getMemoryType() = 0;
 
  private:
     DISALLOW_COPY_AND_ASSIGN(IJpegEncoder);

@@ -130,8 +130,8 @@ class CBStage : public IPipeStage, public IPSysDeviceCallback {
     uint8_t  mLinkStreamMode;
 
     std::mutex mDataLock;
-    static const uint8_t MAX_FRAME_NUM = 10;
-    std::map<int64_t, StageTask> mSeqToStageTaskMap;
+    static const uint8_t MAX_FRAME_NUM = 2;
+    std::list<StageTask> mStageTaskList;
 
     // Used to dump all used terminal buffers
     // Ignore (psys) ctx id of consumer or producer because they are invalid

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation
+ * Copyright (C) 2022-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 
 #define LOG_TAG BufferAllocator
 
-#include "BufferAllocator.h"
+#include "modules/memory/BufferAllocator.h"
 
 #include <unistd.h>
+#include <hardware/gralloc.h>
 
 #include "iutils/CameraLog.h"
 #include "iutils/Errors.h"
@@ -26,46 +27,78 @@
 
 namespace icamera {
 
-namespace BufferAllocator {
+int BufferAllocator::allocateDmaBuffer(camera_buffer_t* ubuffer) {
+    if (!ubuffer) return BAD_VALUE;
 
-buffer_handle_t allocateGbmBuffer(int width, int height, int format, int gbmUsage) {
-    LOG2("@%s, width:%d, height:%d, format:0x%x, usage:0x%x", __func__, width, height, format,
-         gbmUsage);
-
-    int gbmFmt = V4l2FormatToHALFormat(format);
-    int w = width;
-    int h = height;
+    LOG2("@%s, width:%d, height:%d, format:0x%x", __func__, ubuffer->s.width, ubuffer->s.height,
+         ubuffer->s.format);
+    int usage =
+        GRALLOC_USAGE_SW_READ_MASK | GRALLOC_USAGE_SW_WRITE_MASK | GRALLOC_USAGE_HW_CAMERA_MASK;
+    int gbmFmt = V4l2FormatToHALFormat(ubuffer->s.format);
+    int w = ubuffer->s.width;
+    int h = ubuffer->s.height;
     if (gbmFmt == HAL_PIXEL_FORMAT_BLOB) {
-        w = CameraUtils::getFrameSize(V4L2_PIX_FMT_NV12, width, height, false, false, false);
+        w = CameraUtils::getFrameSize(V4L2_PIX_FMT_NV12, w, h, false, false, false);
         h = 1;
     }
 
     cros::CameraBufferManager* bufManager = cros::CameraBufferManager::GetInstance();
-    CheckAndLogError(bufManager == nullptr, nullptr, "Get CameraBufferManager instance failed!");
+    CheckAndLogError(!bufManager, NO_INIT, "Get CameraBufferManager instance failed!");
 
     buffer_handle_t handle;
     uint32_t stride = 0;
-    int ret = bufManager->Allocate(w, h, gbmFmt, gbmUsage, &handle, &stride);
-    CheckAndLogError(ret != 0, nullptr, "Allocate handle failed! ret:%d", ret);
+    int ret = bufManager->Allocate(w, h, gbmFmt, usage, &handle, &stride);
+    CheckAndLogError(ret != 0, NO_MEMORY, "Allocate handle failed! ret:%d", ret);
 
-    return handle;
+    mHandle = handle;
+    ubuffer->dmafd = handle->data[0];
+
+    void* addr = lock(w, h, ubuffer->s.format, handle);
+    if (!addr) {
+        freeDmaBuffer();
+        LOGE("@%s: Failed to lock buffer, handle:%p", __func__, handle);
+        return UNKNOWN_ERROR;
+    }
+
+    mUsrAddr = addr;
+    ubuffer->addr = addr;
+    ubuffer->privateHandle = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(handle));
+
+    uint32_t planeNum = bufManager->GetNumPlanes(handle);
+    for (uint32_t i = 0; i < planeNum; i++) {
+        ubuffer->s.size += bufManager->GetPlaneSize(handle, i);
+    }
+    LOG2("@%s, planeNum:%d, size:%d", __func__, planeNum, ubuffer->s.size);
+
+    ubuffer->s.stride = bufManager->GetPlaneStride(handle, 0);
+
+    return OK;
 }
 
-void freeGbmBuffer(buffer_handle_t handle) {
-    CheckAndLogError(!handle, VOID_VALUE, "@%s, handle is invalid", __func__);
-    LOG2("@%s, free GBM buf:%p", __func__, handle);
+void BufferAllocator::freeDmaBuffer() {
+    CheckAndLogError(!mHandle, VOID_VALUE, "@%s, handle is invalid", __func__);
+    LOG2("@%s, free GBM buf:%p", __func__, mHandle);
 
     cros::CameraBufferManager* bufManager = cros::CameraBufferManager::GetInstance();
-    CheckAndLogError(bufManager == nullptr, VOID_VALUE, "Get CameraBufferManager instance failed!");
+    CheckAndLogError(!bufManager, VOID_VALUE, "Get CameraBufferManager instance failed!");
 
-    bufManager->Free(handle);
+    if (mUsrAddr) {
+        int ret = bufManager->Unlock(mHandle);
+        if (ret) {
+            LOGE("Unlock fail, handle:%p, ret:%d", mHandle, ret);
+        }
+    }
+
+    bufManager->Free(mHandle);
+
+    mHandle = nullptr;
 }
 
-void* lock(int width, int height, int format, buffer_handle_t handle) {
+void* BufferAllocator::lock(int width, int height, int format, buffer_handle_t handle) {
     CheckAndLogError(!handle, nullptr, "@%s, handle is invalid", __func__);
 
     cros::CameraBufferManager* bufManager = cros::CameraBufferManager::GetInstance();
-    CheckAndLogError(bufManager == nullptr, nullptr, "Get CameraBufferManager instance failed!");
+    CheckAndLogError(!bufManager, nullptr, "Get CameraBufferManager instance failed!");
 
     void* dataPtr = nullptr;
     int ret = 0;
@@ -93,49 +126,7 @@ void* lock(int width, int height, int format, buffer_handle_t handle) {
     return dataPtr;
 }
 
-int unlock(buffer_handle_t handle) {
-    CheckAndLogError(!handle, UNKNOWN_ERROR, "@%s, handle is invalid", __func__);
-    LOG2("@%s, handle:%p", __func__, handle);
-
-    cros::CameraBufferManager* bufManager = cros::CameraBufferManager::GetInstance();
-    CheckAndLogError(bufManager == nullptr, UNKNOWN_ERROR,
-                     "Get CameraBufferManager instance failed!");
-
-    int ret = bufManager->Unlock(handle);
-    CheckAndLogError(ret, UNKNOWN_ERROR, "@%s: call Unlock fail, handle:%p, ret:%d", __func__,
-                     handle, ret);
-
-    return OK;
-}
-
-int getSize(buffer_handle_t handle) {
-    CheckAndLogError(!handle, 0, "@%s, handle is invalid", __func__);
-    LOG2("@%s, handle:%p", __func__, handle);
-
-    cros::CameraBufferManager* bufManager = cros::CameraBufferManager::GetInstance();
-    CheckAndLogError(bufManager == nullptr, 0, "Get CameraBufferManager instance failed!");
-
-    int len = 0;
-    uint32_t planeNum = bufManager->GetNumPlanes(handle);
-    for (uint32_t i = 0; i < planeNum; i++) {
-        len += bufManager->GetPlaneSize(handle, i);
-    }
-    LOG2("@%s, planeNum:%d, size:%d", __func__, planeNum, len);
-
-    return len;
-}
-
-int getStride(buffer_handle_t handle) {
-    CheckAndLogError(!handle, 0, "@%s, handle is invalid", __func__);
-    LOG2("@%s, handle:%p", __func__, handle);
-
-    cros::CameraBufferManager* bufManager = cros::CameraBufferManager::GetInstance();
-    CheckAndLogError(bufManager == nullptr, 0, "Get CameraBufferManager instance failed!");
-
-    return bufManager->GetPlaneStride(handle, 0);
-}
-
-int V4l2FormatToHALFormat(int v4l2Format) {
+int BufferAllocator::V4l2FormatToHALFormat(int v4l2Format) {
     int format = HAL_PIXEL_FORMAT_YCBCR_420_888;
     switch (v4l2Format) {
         case V4L2_PIX_FMT_P010:
@@ -151,5 +142,4 @@ int V4l2FormatToHALFormat(int v4l2Format) {
     return format;
 }
 
-}  // namespace BufferAllocator
 }  // namespace icamera

@@ -56,7 +56,7 @@ class PnpDebugControl {
      * \return fps if set, otherwise return 30.
      */
 
-    static int mockAALFps();
+    static int mockAPPFps();
     /**
      * check if 3A algo is skipped for PNP test
      *
@@ -136,7 +136,7 @@ class PnpDebugControl {
      public:
         StaticCfg()
                 : useMockAAL(false),
-                  mockAALFps(30),
+                  mockAPPFps(30),
                   isBypass3A(false),
                   isBypassPAC(false),
                   isBypassCB(false),
@@ -148,7 +148,7 @@ class PnpDebugControl {
                   useMockHal(false),
                   useMockPipes(false) {}
         bool useMockAAL;
-        int mockAALFps;
+        int mockAPPFps;
         bool isBypass3A;
         bool isBypassPAC;
         bool isBypassCB;

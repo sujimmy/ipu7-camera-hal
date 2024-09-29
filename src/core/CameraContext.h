@@ -24,7 +24,9 @@
 #include "AiqSetting.h"
 #include "CameraTypes.h"
 #include "ParamDataType.h"
+// JPEG_ENCODE_S
 #include "EXIFMetaData.h"
+// JPEG_ENCODE_E
 
 namespace icamera {
 
@@ -49,6 +51,7 @@ struct IspParameters {
     }
 };
 
+// JPEG_ENCODE_S
 struct JpegParameters {
     double latitude;
     double longitude;
@@ -70,21 +73,7 @@ struct JpegParameters {
         thumbQuality = DEFAULT_JPEG_QUALITY;
     }
 };
-
-// ENABLE_EVCP_S
-struct EvcpParameters {
-    uint8_t eccMode;
-    uint8_t bcMode;
-    uint8_t ffMode;
-    int brWidth;
-    int brHeight;
-    int brBgFd;
-
-    EvcpParameters() {
-        memset(this, 0, sizeof(*this));
-    }
-};
-// ENABLE_EVCP_E
+// JPEG_ENCODE_E
 
 class DataContext {
  public:
@@ -101,11 +90,9 @@ class DataContext {
 
     struct aiq_parameter_t mAiqParams;
     struct IspParameters mIspParams;
+// JPEG_ENCODE_S
     struct JpegParameters mJpegParams;
-
-// ENABLE_EVCP_S
-    struct EvcpParameters mEvcpParams;
-// ENABLE_EVCP_E
+// JPEG_ENCODE_E
 
     DataContext(int cameraId);
     ~DataContext() {}
@@ -118,11 +105,9 @@ class DataContext {
         zoomRegion = other.zoomRegion;
         mAiqParams = other.mAiqParams;
         mIspParams = other.mIspParams;
+// JPEG_ENCODE_S
         mJpegParams = other.mJpegParams;
-// ENABLE_EVCP_S
-        mEvcpParams = other.mEvcpParams;
-// ENABLE_EVCP_E
-
+// JPEG_ENCODE_E
         return *this;
     }
 

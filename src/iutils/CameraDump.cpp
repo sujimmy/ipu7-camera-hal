@@ -394,17 +394,9 @@ void CameraDump::dumpImage(int cameraId, const shared_ptr<CameraBuffer>& camBuff
         CameraUtils::format2string(camBuffer->getFormat()).c_str(), camBuffer->getSequence(),
         camBuffer->getWidth(), camBuffer->getHeight());
 
-    int fd = camBuffer->getFd();
-    int bufferSize = camBuffer->getBufferSize();
-    int memoryType = camBuffer->getMemory();
-    void* pBuf = (memoryType == V4L2_MEMORY_DMABUF) ? CameraBuffer::mapDmaBufferAddr(fd, bufferSize)
-                                                    : camBuffer->getBufferAddr();
-    LOG1("@%s, fd:%d, buffersize:%d, buf:%p, memoryType:%d, fileName:%s", __func__, fd, bufferSize,
-         pBuf, memoryType, fileName.c_str());
-    writeData(pBuf, bufferSize, fileName.c_str());
-    if (memoryType == V4L2_MEMORY_DMABUF) {
-        CameraBuffer::unmapDmaBufferAddr(pBuf, bufferSize);
-    }
+    CameraBufferMapper mapper(camBuffer);
+    LOG1("dumpImage size:%d, buf:%p, fileName:%s", mapper.size(), mapper.addr(), fileName.c_str());
+    writeData(mapper.addr(), mapper.size(), fileName.c_str());
 }
 
 void CameraDump::dumpBinary(int cameraId, const void* data, int size, BinParam_t* binParam) {

@@ -62,6 +62,7 @@ Info* IPUFrames::create(Request* request) {
     info->request = request;
     info->metadataReady = false;
     info->shutterReady = false;
+    info->isStill = false;
 
     mProcessingRequests[id] = info;
 

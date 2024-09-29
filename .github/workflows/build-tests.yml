@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: intel/ipu7-camera-bins
+          ref: main
           path: bins
 
       - name: Install from intel/ipu7-camera-bins
@@ -52,7 +53,14 @@ jobs:
           apt-get update -q
           export TZ=Asia/Shanghai
           echo "" | apt-get install -qy tzdata
-          echo "" | apt-get install git build-essential cmake libexpat-dev automake libtool libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev libjsoncpp-dev --yes
+          echo "" | apt-get install git build-essential cmake libexpat-dev automake libtool rpm libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev libdrm-dev libva-dev libunwind-dev libdrm-dev libjsoncpp-dev --yes
+
+      - uses: actions/checkout@v4
+        with:
+          repository: intel/icamerasrc
+          ref: icamerasrc_slim_api
+          path: icamerasrc
+
       - name: Build test for ${{ matrix.version }} on ${{ matrix.os }}
         timeout-minutes: 10
         run: |
@@ -60,13 +68,21 @@ jobs:
 
           mkdir build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release \
-            -DIPU_VERSIONS=ipu7 \
-            -DWITH_PLUGINS=ON \
-            -DBUILD_CAMHAL_TESTS=OFF \
-            -DCMAKE_INSTALL_PREFIX=/usr \
-            -DUSE_STATIC_GRAPH=ON \
-            -DUSE_STATIC_GRAPH_AUTOGEN=ON \
-            -DSTATIC_GRAPH_IPU_PREFIXS=Ipu7x \
-            ..
-          VERBOSE=1 make
+                -DCMAKE_INSTALL_PREFIX=/usr \
+                -DCMAKE_INSTALL_LIBDIR=lib \
+                -DBUILD_CAMHAL_ADAPTOR=ON \
+                -DBUILD_CAMHAL_PLUGIN=ON \
+                -DIPU_VERSIONS="ipu7x;ipu75xa" \
+                -DUSE_STATIC_GRAPH=ON \
+                -DUSE_STATIC_GRAPH_AUTOGEN=ON \
+                ..
+          VERBOSE=1 make -j16
+          make install
+
+          cd "${GITHUB_WORKSPACE}/icamerasrc"
+          export CHROME_SLIM_CAMHAL=ON
+          ./autogen.sh
+          ./configure --prefix=/usr
+          make -j16
+          make rpm
           make install

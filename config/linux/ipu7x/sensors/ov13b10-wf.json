@@ -18,7 +18,7 @@
   "CameraSettings": {
     "Sensor": [
       {
-        "name": "ov13b10-uf",
+        "name": "ov13b10-wf",
         "description": "ov13b10 as sensor.",
         "MediaCtlConfig": [
           {
@@ -142,13 +142,13 @@
               "format": "V4L2_PIX_FMT_NV12", "size": [3840, 2160], "field": 0, "mcId": 0
             },
             {
-              "format": "V4L2_PIX_FMT_NV12", "size": [1920, 1080], "field": 0, "mcId": 0
+              "format": "V4L2_PIX_FMT_NV12", "size": [1920, 1080], "field": 0, "mcId": 1
             },
             {
               "format": "V4L2_PIX_FMT_NV12", "size": [1280, 960], "field": 0, "mcId": 0
             },
             {
-              "format": "V4L2_PIX_FMT_NV12", "size": [1280, 720], "field": 0, "mcId": 0
+              "format": "V4L2_PIX_FMT_NV12", "size": [1280, 720], "field": 0, "mcId": 2
             },
             {
               "format": "V4L2_PIX_FMT_NV12", "size": [640, 480], "field": 0, "mcId": 0
@@ -202,7 +202,6 @@
             "control.maxRegions" : [ 1, 0, 0 ],
             // 0: OFF, 1: SMPLE, 2: FULL
             "statistics.info.availableFaceDetectModes" : [0],
-            // "statistics.info.maxFaceCount" : [10],
             "sensor.orientation" : [0],
             // 43*15.9
             "sensor.maxAnalogSensitivity" : [699],
@@ -356,11 +355,6 @@
           [[640, 360], [1280, 960]]
         ],
         "maxRequestsInflight": 6,
-        // "faceEngineRunningInterval": 10,
-        // "faceEngineRunningIntervalNoFace": 10,
-        // "faceAeEnabled": true,
-        // pvl face detection:0, google facessd:1
-        // "faceEngineVendor": 1,
         "psysBundleWithAic": false,
         "skipFrameV4L2Error": true,
         "isISYSCompression": false,

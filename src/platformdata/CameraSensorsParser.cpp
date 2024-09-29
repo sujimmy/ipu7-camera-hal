@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "iutils/CameraLog.h"
 namespace icamera {
 
 CameraSensorsParser::CameraSensorsParser(MediaControl* mc, PlatformData::StaticCfg* cfg,
@@ -236,7 +237,7 @@ void CameraSensorsParser::parseSupportedISysFormat(const Json::Value& node) {
         std::string fmt = node[i].asString();
         int fmtDsc = CameraUtils::string2PixelCode(fmt.c_str());
         if (fmtDsc == -1) {
-            LOGW("%s, Unknown ISYS format: %s", fmt.c_str());
+            LOGW("%s, Unknown ISYS format: %s", __func__, fmt.c_str());
             continue;
         }
         mCurCam->mSupportedISysFormat.push_back(fmtDsc);
@@ -584,7 +585,6 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
     if (node.isMember("exposureLag")) mCurCam->mExposureLag = node["exposureLag"].asInt();
     if (node.isMember("gainLag")) mCurCam->mAnalogGainLag = node["gainLag"].asInt();
     if (node.isMember("digitalGainLag")) mCurCam->mDigitalGainLag = node["digitalGainLag"].asInt();
-    if (node.isMember("ltmGainLag")) mCurCam->mLtmGainLag = node["ltmGainLag"].asInt();
     if (node.isMember("yuvColorRangeMode")) parseYUVColorRangeMode(node["yuvColorRangeMode"]);
 
     if (node.isMember("graphSettingsFile"))
@@ -666,12 +666,17 @@ int CameraSensorsParser::getCameraModuleNameFromEEPROM(const std::string& nvmDir
         return NOT_ENOUGH_DATA;
     }
 
-    fseek(eepromFile, -1 * moduleInfoOffset, SEEK_END);
+    int ret = fseek(eepromFile, -1 * moduleInfoOffset, SEEK_END);
+    if (ret != 0) {
+        LOGE("Failed to fseek file");
+        fclose(eepromFile);
+        return NOT_ENOUGH_DATA;
+    }
 
     const int moduleInfoSize = CAMERA_MODULE_INFO_SIZE;
     struct CameraModuleInfo cameraModuleInfo;
     CLEAR(cameraModuleInfo);
-    int ret = fread(&cameraModuleInfo, moduleInfoSize, 1, eepromFile);
+    ret = fread(&cameraModuleInfo, moduleInfoSize, 1, eepromFile);
     fclose(eepromFile);
     CheckAndLogError(!ret, UNKNOWN_ERROR, "Failed to read module info %d", ret);
 
@@ -721,6 +726,10 @@ void CameraSensorsParser::updateNVMDir() {
             if (fp) {
                 fseek(fp, 0, SEEK_END);
                 int size = static_cast<int>(ftell(fp));
+                if (size <= 0) {
+                    fclose(fp);
+                    continue;
+                }
                 fseek(fp, 0, SEEK_SET);
                 std::unique_ptr<char[]> ptr(new char[size + 1]);
                 ptr[size] = 0;

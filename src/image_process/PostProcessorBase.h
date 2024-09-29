@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022 Intel Corporation.
+ * Copyright (C) 2019-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,24 @@
 #include <memory>
 
 #include "CameraBuffer.h"
-#include "EXIFMetaData.h"
 #include "IImageProcessor.h"
-#include "IJpegEncoder.h"
-#include "JpegMaker.h"
 #include "iutils/Errors.h"
 #include "iutils/Utils.h"
+// JPEG_ENCODE_S
+#include "EXIFMetaData.h"
+#include "IJpegEncoder.h"
+#include "JpegMaker.h"
+// JPEG_ENCODE_E
 
 namespace icamera {
 
 class PostProcessorBase {
  public:
-    PostProcessorBase(std::string processName);
+    explicit PostProcessorBase(std::string processName);
     virtual ~PostProcessorBase() {}
 
     std::string getName() { return mName; }
+    int getMemoryType() { return mMemoryType; }
 
     virtual status_t doPostProcessing(const std::shared_ptr<CameraBuffer>& inBuf,
                                       std::shared_ptr<CameraBuffer>& outBuf) {
@@ -46,6 +49,7 @@ class PostProcessorBase {
 
  protected:
     std::string mName;
+    int mMemoryType;
     std::unique_ptr<IImageProcessor> mProcessor;
 };
 
@@ -84,6 +88,7 @@ class ConvertProcess : public PostProcessorBase {
                                       std::shared_ptr<CameraBuffer>& outBuf);
 };
 
+// JPEG_ENCODE_S
 class JpegProcess : public PostProcessorBase {
  public:
     JpegProcess(int cameraId);
@@ -112,5 +117,5 @@ class JpegProcess : public PostProcessorBase {
     std::unique_ptr<IJpegEncoder> mJpegEncoder;
     std::unique_ptr<unsigned char[]> mExifData;
 };
-
+// JPEG_ENCODE_E
 }  // namespace icamera
