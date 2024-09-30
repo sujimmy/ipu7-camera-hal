@@ -39,6 +39,7 @@ struct Info {
     std::map<int, FrameBuffer*> inBuffer;
     bool metadataReady;
     bool shutterReady;
+    bool isStill;
 
     Info() {
         id = 0;
@@ -46,6 +47,7 @@ struct Info {
 
         metadataReady = false;
         shutterReady = false;
+        isStill = false;
     }
 };
 

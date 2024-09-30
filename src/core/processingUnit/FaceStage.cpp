@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,14 @@ FaceStage::FaceStage(int cameraId, int streamId, const stream_t& stream, bool is
     LOG1("%s, mIsPrivate: %d, width: %d, height: %d", __func__, mIsPrivate,
          mStreamInfo.width, mStreamInfo.height);
 
-    if (mIsPrivate || (!mIsPrivate && !PlatformData::runFaceWithSyncMode(mCameraId))) {
-        mInternalBufferPool = std::unique_ptr<CameraBufferPool>(new CameraBufferPool());
-        mInternalBufferPool->createBufferPool(mCameraId, MAX_BUFFER_COUNT, mStreamInfo);
-    }
     mFaceDetection = std::unique_ptr<FaceDetection>(
             IFaceDetection::createFaceDetection(mCameraId, stream.width, stream.height));
+
+    if (mIsPrivate || (!mIsPrivate && !PlatformData::runFaceWithSyncMode(mCameraId))) {
+        mInternalBufferPool = std::unique_ptr<CameraBufferPool>(new CameraBufferPool());
+        mStreamInfo.memType = mFaceDetection->getMemoryType();
+        mInternalBufferPool->createBufferPool(mCameraId, MAX_BUFFER_COUNT, mStreamInfo);
+    }
 }
 
 FaceStage::~FaceStage() {
@@ -113,23 +115,12 @@ shared_ptr<CameraBuffer> FaceStage::copyToInternalBuffer(
     shared_ptr<CameraBuffer> faceBuffer = mInternalBufferPool->acquireBuffer();
     CheckAndLogError(!faceBuffer, nullptr, "%s, No available internal buffer", __func__);
 
-#ifdef CAL_BUILD
-    // Need to lock for gbm buffer from user
-    if (camBuffer->getMemory() == V4L2_MEMORY_DMABUF) {
-        camBuffer->lock();
-    }
-#endif
+    CameraBufferMapper mapper(camBuffer);
     CheckAndLogError(!camBuffer->getBufferAddr(), nullptr,
                      "%s, Failed to get addr for camBuffer", __func__);
 
     MEMCPY_S(faceBuffer->getBufferAddr(), faceBuffer->getBufferSize(),
              camBuffer->getBufferAddr(), camBuffer->getBufferSize());
-
-#ifdef CAL_BUILD
-    if (camBuffer->getMemory() == V4L2_MEMORY_DMABUF) {
-        camBuffer->unlock();
-    }
-#endif
 
     return faceBuffer;
 }
@@ -200,7 +191,7 @@ bool FaceStage::process(int64_t triggerId) {
         faceBuffer = mPendingBufferQ.front();
         mPendingBufferQ.pop();
 
-        if (mPendingBufferQ.size() > PlatformData::getMaxRequestsInflight(mCameraId)) {
+        if (mPendingBufferQ.size() > PlatformData::getMaxRequestsInHAL(mCameraId)) {
             LOG2("%s, Skip this time due to many buffer in pendding: %d", __func__,
                  mPendingBufferQ.size());
 

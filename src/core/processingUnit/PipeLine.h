@@ -25,7 +25,6 @@
 #include "CameraScheduler.h"
 #include "IPipeStage.h"
 #include "PlatformData.h"
-#include "ShareReferBufferPool.h"
 #include "PSysDevice.h"
 
 namespace icamera {

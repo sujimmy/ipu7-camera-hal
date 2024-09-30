@@ -19,15 +19,15 @@ set(PLATFORMDATA_SRCS
     CACHE INTERNAL "platformdata sources"
    )
 
-if (IPU_VER MATCHES "ipu7")
-    set(PLATFORMDATA_SRCS ${PLATFORMDATA_SRCS}
-        ${PLATFORMDATA_DIR}/CameraParserInvoker.cpp
-        ${PLATFORMDATA_DIR}/CameraSensorsParser.cpp
-        ${PLATFORMDATA_DIR}/JsonCommonParser.cpp
-        ${PLATFORMDATA_DIR}/JsonParserBase.cpp
-        CACHE INTERNAL "platformdata sources"
-        )
-endif ()
+# IPU7_SOURCE_FILE_S
+set(PLATFORMDATA_SRCS ${PLATFORMDATA_SRCS}
+    ${PLATFORMDATA_DIR}/CameraParserInvoker.cpp
+    ${PLATFORMDATA_DIR}/CameraSensorsParser.cpp
+    ${PLATFORMDATA_DIR}/JsonCommonParser.cpp
+    ${PLATFORMDATA_DIR}/JsonParserBase.cpp
+    CACHE INTERNAL "platformdata sources"
+)
+# IPU7_SOURCE_FILE_E
 
     set(PLATFORMDATA_SRCS
         ${PLATFORMDATA_SRCS}

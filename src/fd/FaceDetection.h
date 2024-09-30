@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022 Intel Corporation
+ * Copyright (C) 2019-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,14 +34,15 @@ struct RatioInfo {
 
 class FaceDetection {
  public:
-    FaceDetection(int cameraId, int width, int height);
+    FaceDetection(int cameraId, int width, int height, int memoryType = V4L2_MEMORY_USERPTR);
     virtual ~FaceDetection();
 
     bool needRunFace(int64_t sequence);
     virtual void runFaceDetection(const std::shared_ptr<CameraBuffer>& camBuffer) = 0;
+    int getMemoryType() { return mMemoryType; }
 
  protected:
-    void printfFDRunRate(int64_t sequence);
+    void printfFDRunRate();
     void convertFaceCoordinate(camera_coordinate_system_t& sysCoord, int* left, int* top,
                                int* right, int* bottom);
 
@@ -55,6 +56,7 @@ class FaceDetection {
     int mWidth;
     int mHeight;
     unsigned int mMaxFaceNum;
+    int mMemoryType;
 
     // Guard for mLastFaceNum
     std::mutex mFaceResultLock;

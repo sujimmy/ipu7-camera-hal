@@ -24,33 +24,6 @@ namespace ipa::ipu7 {
 #define IPC_MATCHING_KEY 0x56  // the value is randomly chosen
 #define IPC_MATCHED_KEY 0x47  // the value is randomly chosen
 
-// each group shared one thread and one waiting condition
-enum IPC_CMD {
-    // worked in IPC_CCA group
-    IPC_CCA_GROUP_START,
-    IPC_CCA_INIT,
-    IPC_CCA_SET_STATS,
-    IPC_CCA_RUN_AEC,
-    IPC_CCA_RUN_AIQ,
-    IPC_CCA_GET_CMC,
-
-    IPC_CCA_GET_MKN,
-    IPC_CCA_GET_AIQD,
-    IPC_CCA_UPDATE_TUNING,
-    IPC_CCA_DEINIT,
-    IPC_CCA_GROUP_END,
-
-    IPC_CCA_PAC_GROUP_START,
-    IPC_CCA_REINIT_AIC,
-    IPC_CCA_CONFIG_AIC,
-    IPC_CCA_REGISTER_AIC_BUFFER,
-    IPC_CCA_GET_AIC_BUFFER,
-    IPC_CCA_UPDATE_CONFIG_RES,
-    IPC_CCA_RUN_AIC,
-    IPC_CCA_DECODE_STATS,
-    IPC_CCA_PAC_GROUP_END,
-};
-
 struct cmd_event {
     uint32_t cmd;
     uint8_t* data;

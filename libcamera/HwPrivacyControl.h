@@ -21,16 +21,17 @@
 #else
 #include <v4l2_device.h>
 #endif
+#include <libcamera/base/mutex.h>
+#include <libcamera/base/thread.h>
+
 #include <vector>
 
 #include "CameraEvent.h"
-#include "iutils/Thread.h"
 #include "iutils/Utils.h"
 
 namespace libcamera {
-using namespace icamera;
 
-class HwPrivacyControl : public icamera::Thread {
+class HwPrivacyControl : Thread {
  public:
     HwPrivacyControl(int cameraId);
     ~HwPrivacyControl();
@@ -39,8 +40,8 @@ class HwPrivacyControl : public icamera::Thread {
     bool init();
     bool getPrivacyStatus();
 
- private:
-    virtual bool threadLoop() override;
+ protected:
+    virtual void run() override;
 
  private:
     int mCameraId;
@@ -49,7 +50,7 @@ class HwPrivacyControl : public icamera::Thread {
     icamera::V4L2Subdevice* mHwPriModeSubDev;
     bool mThreadRunning;
 
-    std::mutex sLock;
+    Mutex mLock;
     bool mState;
 
     DISALLOW_COPY_AND_ASSIGN(HwPrivacyControl);

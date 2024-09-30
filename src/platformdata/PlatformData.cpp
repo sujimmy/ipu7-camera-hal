@@ -219,10 +219,6 @@ bool PlatformData::isStatsRunningRateSupport(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mStatsRunningRate;
 }
 
-bool PlatformData::isEnableLtmThread(int cameraId) {
-    return getInstance()->mStaticCfg.mCameras[cameraId].mEnableLtmThread;
-}
-
 bool PlatformData::isFaceDetectionSupported(int cameraId) {
     const std::string str = "statistics.info.availableFaceDetectModes";
     auto v = getByteStaticMetadata(cameraId, str);
@@ -297,10 +293,6 @@ bool PlatformData::isEnableFrameSyncCheck(int cameraId) {
 }
 // FRAME_SYNC_E
 
-bool PlatformData::isEnableDefog(int cameraId) {
-    return getInstance()->mStaticCfg.mCameras[cameraId].mEnableLtmDefog;
-}
-
 int PlatformData::getExposureNum(int cameraId, bool multiExposure) {
     if (multiExposure) {
         return getInstance()->mStaticCfg.mCameras[cameraId].mSensorExposureNum;
@@ -309,16 +301,6 @@ int PlatformData::getExposureNum(int cameraId, bool multiExposure) {
     int exposureNum = 1;
 
     return exposureNum;
-}
-
-bool PlatformData::isLtmEnabled(int cameraId) {
-    // HDR_FEATURE_S
-    if (isEnableHDR(cameraId)) {
-        return true;
-    }
-    // HDR_FEATURE_E
-
-    return getInstance()->mStaticCfg.mCameras[cameraId].mLtmEnabled;
 }
 
 // HDR_FEATURE_S
@@ -383,10 +365,6 @@ bool PlatformData::isPsysContinueStats(int cameraId) {
 
 unsigned int PlatformData::getPreferredBufQSize(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mPreferredBufQSize;
-}
-
-int PlatformData::getLtmGainLag(int cameraId) {
-    return getInstance()->mStaticCfg.mCameras[cameraId].mLtmGainLag;
 }
 
 int PlatformData::getMaxSensorDigitalGain(int cameraId) {
@@ -1102,6 +1080,16 @@ int PlatformData::getTuningConfigByConfigMode(int cameraId, ConfigMode mode, Tun
 int PlatformData::getStreamIdByConfigMode(int cameraId, ConfigMode configMode) {
     std::map<int, int> modeMap = getInstance()->mStaticCfg.mCameras[cameraId].mConfigModeToStreamId;
     return modeMap.find(configMode) == modeMap.end() ? -1 : modeMap[configMode];
+}
+
+int PlatformData::getMaxRequestsInHAL(int cameraId) {
+    const std::string str = "request.pipelineMaxDepth";
+    auto v = getByteStaticMetadata(cameraId, str);
+    if (v.size() == 1) {
+        return v[0];
+    }
+
+    return MAX_BUFFER_COUNT;
 }
 
 int PlatformData::getMaxRequestsInflight(int cameraId) {

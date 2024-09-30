@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include "iutils/CameraLog.h"
 
 namespace icamera {
 CameraParserInvoker::CameraParserInvoker(MediaControl* mc, PlatformData::StaticCfg* cfg)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2021-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ void FaceDetectionPVL::runFaceDetection(const shared_ptr<CameraBuffer>& camBuffe
     CheckAndLogError(ret != OK, VOID_VALUE, "%s, Failed to run face for sequence: %ld",
                      __func__, sequence);
 
-    printfFDRunRate(sequence);
+    printfFDRunRate();
     LOG2("@%s: ret:%d, mFace runs %ums", __func__, ret,
          (unsigned)((CameraUtils::systemTime() - startTime) / 1000000));
 

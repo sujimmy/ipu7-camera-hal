@@ -26,6 +26,7 @@ namespace icamera {
 PostProcessStage::PostProcessStage(int cameraId, int stageId, const std::string& stageName)
         : IPipeStage(stageName.c_str(), stageId),
           mCameraId(cameraId),
+          mMemoryType(V4L2_MEMORY_USERPTR),
           mInputPort(INVALID_PORT),
           mOutputBuffersNum(0) {}
 PostProcessStage::~PostProcessStage() {}
@@ -47,6 +48,10 @@ void PostProcessStage::setFrameInfo(const std::map<uuid, stream_t>& inputInfo,
         mPostProcessors[info.first] =
             std::unique_ptr<SwPostProcessUnit>(new SwPostProcessUnit(mCameraId));
         mPostProcessors[info.first]->configure(input, output);
+
+        // If DMA buffer is preferred, use DMA buffer for post-processing
+        int memoryType = mPostProcessors[info.first]->getMemoryType();
+        if (memoryType == V4L2_MEMORY_DMABUF) mMemoryType = V4L2_MEMORY_DMABUF;
 
         LOG1("%s created, out port %u, post type %d", getName(), info.first,
              mPostProcessors[info.first]->getPostProcessType());
@@ -149,13 +154,11 @@ bool PostProcessStage::process(int64_t triggerId) {
 
         // Do processing only it is for usr request
         if (!control.stillTnrReferIn) {
-            bool needLock = (inBuffer != output.second);  // need access to output buffer
-            if (needLock) output.second->lock();
+            CameraBufferMapper mapper(output.second);
 
             int32_t ret = mPostProcessors[outPort]->doPostProcessing(inBuffer, output.second);
             CheckWarningNoReturn(ret != OK, false, "%s: Process errorfor port %d", getName(),
                                  outPort);
-            if (needLock) output.second->unlock();
         }
 
         updateInfoAndSendEvents(inV4l2Buf, output.second, outPort);
@@ -199,11 +202,6 @@ int32_t PostProcessStage::allocateBuffers() {
     mInternalBuffers.clear();
     while (!mQueuedInputBuffers.empty()) mQueuedInputBuffers.pop();
     CheckAndLogError(!mBufferProducer, BAD_VALUE, "@%s: Buffer Producer is nullptr", __func__);
-#ifdef CAL_BUILD
-    int memoryType = V4L2_MEMORY_DMABUF;
-#else
-    int memoryType = V4L2_MEMORY_USERPTR;
-#endif
 
     if (mInputFrameInfo.empty()) return OK;
 
@@ -215,7 +213,7 @@ int32_t PostProcessStage::allocateBuffers() {
     int32_t size = CameraUtils::getFrameSize(input.format, input.width, input.height);
     for (int i = 0; i < MAX_BUFFER_COUNT; i++) {
         std::shared_ptr<CameraBuffer> camBuffer =
-            CameraBuffer::create(memoryType, size, i, input.format, input.width, input.height);
+            CameraBuffer::create(mMemoryType, size, i, input.format, input.width, input.height);
         CheckAndLogError(!camBuffer, NO_MEMORY, "Allocate producer userptr buffer failed");
 
         camBuffer->setUserBufferFlags(BUFFER_FLAG_SW_READ);

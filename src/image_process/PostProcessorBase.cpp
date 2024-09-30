@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022 Intel Corporation.
+ * Copyright (C) 2019-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ namespace icamera {
 
 PostProcessorBase::PostProcessorBase(std::string processName)
         : mName(processName),
+          mMemoryType(V4L2_MEMORY_USERPTR),
           mProcessor(nullptr) {}
 
 ScaleProcess::ScaleProcess() : PostProcessorBase("Scaler") {
@@ -111,6 +112,7 @@ status_t ConvertProcess::doPostProcessing(const shared_ptr<CameraBuffer>& inBuf,
     return OK;
 }
 
+// JPEG_ENCODE_S
 JpegProcess::JpegProcess(int cameraId)
         : PostProcessorBase("JpegEncode"),
           mCameraId(cameraId),
@@ -122,6 +124,7 @@ JpegProcess::JpegProcess(int cameraId)
 
     mProcessor = IImageProcessor::createImageProcessor();
     mJpegEncoder = IJpegEncoder::createJpegEncoder();
+    mMemoryType = mJpegEncoder->getMemoryType();
     mJpegMaker = std::unique_ptr<JpegMaker>(new JpegMaker());
 }
 
@@ -167,12 +170,7 @@ std::shared_ptr<CameraBuffer> JpegProcess::cropAndDownscaleThumbnail(
         if (!mCropBuf) {
             int bufSize = CameraUtils::getFrameSize(inBuf->getFormat(), width, height,
                                                     false, false, false);
-#ifdef CAL_BUILD
-            int memoryType = V4L2_MEMORY_DMABUF;
-#else
-            int memoryType = V4L2_MEMORY_USERPTR;
-#endif
-            mCropBuf = CameraBuffer::create(memoryType, bufSize, 0, inBuf->getFormat(),
+            mCropBuf = CameraBuffer::create(mMemoryType, bufSize, 0, inBuf->getFormat(),
                                             width, height);
             CheckAndLogError(!mCropBuf, nullptr,
                              "%s, Failed to allocate the internal crop buffer", __func__);
@@ -192,12 +190,7 @@ std::shared_ptr<CameraBuffer> JpegProcess::cropAndDownscaleThumbnail(
         if (!mScaleBuf) {
             int bufSize = CameraUtils::getFrameSize(inBuf->getFormat(), thumbWidth, thumbHeight,
                                                     false, false, false);
-#ifdef CAL_BUILD
-            int memoryType = V4L2_MEMORY_DMABUF;
-#else
-            int memoryType = V4L2_MEMORY_USERPTR;
-#endif
-            mScaleBuf = CameraBuffer::create(memoryType, bufSize, 0, inBuf->getFormat(),
+            mScaleBuf = CameraBuffer::create(mMemoryType, bufSize, 0, inBuf->getFormat(),
                                              thumbWidth, thumbHeight);
             CheckAndLogError(!mScaleBuf, nullptr,
                              "%s, Failed to allocate the internal crop buffer", __func__);
@@ -227,12 +220,13 @@ void JpegProcess::fillEncodeInfo(const shared_ptr<CameraBuffer>& inBuf,
     package.inputFormat = inBuf->getFormat();
     package.inputSize = inBuf->getBufferSize();
 
-#ifdef CAL_BUILD
     if (inBuf->getMemory() == V4L2_MEMORY_DMABUF && outBuf->getMemory() == V4L2_MEMORY_DMABUF) {
-        package.inputBufferHandle = static_cast<void*>(inBuf->getGbmBufferHandle());
-        package.outputBufferHandle = static_cast<void*>(outBuf->getGbmBufferHandle());
+        camera_buffer_t* uInBuf = inBuf->getUserBuffer();
+        package.inputBufferHandle = &(uInBuf->privateHandle);
+
+        camera_buffer_t* uOutBuf = outBuf->getUserBuffer();
+        package.outputBufferHandle = &(uOutBuf->privateHandle);
     }
-#endif
 
     package.inputData = inBuf->getBufferAddr();
     package.outputData = outBuf->getBufferAddr();
@@ -269,12 +263,8 @@ status_t JpegProcess::doPostProcessing(const shared_ptr<CameraBuffer>& inBuf,
                                                     exifMetadata.mJpegSetting.thumbWidth,
                                                     exifMetadata.mJpegSetting.thumbHeight,
                                                     false, false, false);
-#ifdef CAL_BUILD
-            int memoryType = V4L2_MEMORY_DMABUF;
-#else
-            int memoryType = V4L2_MEMORY_USERPTR;
-#endif
-            mThumbOut = CameraBuffer::create(memoryType, bufSize, 0, V4L2_PIX_FMT_JPEG,
+
+            mThumbOut = CameraBuffer::create(mMemoryType, bufSize, 0, V4L2_PIX_FMT_JPEG,
                                              exifMetadata.mJpegSetting.thumbWidth,
                                              exifMetadata.mJpegSetting.thumbHeight);
             CheckAndLogError(!mThumbOut, NO_MEMORY,
@@ -326,4 +316,5 @@ status_t JpegProcess::doPostProcessing(const shared_ptr<CameraBuffer>& inBuf,
 
     return OK;
 }
+// JPEG_ENCODE_E
 }  // namespace icamera

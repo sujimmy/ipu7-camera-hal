@@ -40,6 +40,7 @@ class SwPostProcessUnit {
 
     status_t configure(const stream_t& srcStream, const stream_t& dstStream);
     int getPostProcessType() { return mPostProcessType; }
+    int getMemoryType();
     bool isBypassed(int64_t sequence);
     status_t doPostProcessing(const std::shared_ptr<CameraBuffer>& inBuf,
                               std::shared_ptr<CameraBuffer> outBuf);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,6 @@
 
 #include <memory>
 #include <vector>
-#ifdef CAL_BUILD
-#include <hardware/gralloc.h>
-#endif
 
 #include "PlatformData.h"
 #include "iutils/CameraLog.h"
@@ -38,9 +35,6 @@ CameraBuffer::CameraBuffer(int memory, uint32_t size, int index)
         : mAllocatedMemory(false),
           mU(nullptr),
           mSettingSequence(-1),
-#ifdef CAL_BUILD
-          mHandle(nullptr),
-#endif
           mMmapAddrs(nullptr),
           mDmaFd(-1) {
     LOG2("%s: construct buffer with memory:%d, size:%d, index:%d",  __func__, memory, size, index);
@@ -114,44 +108,6 @@ std::shared_ptr<CameraBuffer> CameraBuffer::create(int srcWidth, int srcHeight, 
     return camBuffer;
 }
 
-#ifdef CAL_BUILD
-int CameraBuffer::allocateGbmBuffer() {
-    int usage =
-        GRALLOC_USAGE_SW_READ_MASK | GRALLOC_USAGE_SW_WRITE_MASK | GRALLOC_USAGE_HW_CAMERA_MASK;
-    buffer_handle_t handle =
-        BufferAllocator::allocateGbmBuffer(mU->s.width, mU->s.height, mU->s.format, usage);
-    CheckAndLogError(!handle, UNKNOWN_ERROR, "Allocate handle failed!");
-    mHandle = handle;
-    mU->dmafd = handle->data[0];
-
-    void* addr = BufferAllocator::lock(mU->s.width, mU->s.height, mU->s.format, handle);
-    if (!addr) {
-        icamera::BufferAllocator::freeGbmBuffer(mHandle);
-        LOGE("@%s: Failed to lock buffer, handle:%p", __func__, handle);
-        return UNKNOWN_ERROR;
-    }
-    mU->addr = addr;
-
-    mU->s.size = icamera::BufferAllocator::getSize(mHandle);
-    mU->s.stride = icamera::BufferAllocator::getStride(mHandle);
-    mV.SetLength(mU->s.size, 0);
-
-    return OK;
-}
-
-void CameraBuffer::freeGbmBuffer() {
-    if (mHandle) {
-        if (mU->addr) {
-            icamera::BufferAllocator::unlock(mHandle);
-            mU->addr = nullptr;
-        }
-        icamera::BufferAllocator::freeGbmBuffer(mHandle);
-        mU->dmafd = -1;
-        mHandle = nullptr;
-    }
-}
-#endif
-
 // Internal frame Buffer
 void CameraBuffer::setUserBufferInfo(int format, int width, int height) {
     mU->s.width = width;
@@ -186,13 +142,8 @@ void CameraBuffer::setUserBufferInfo(camera_buffer_t* ubuffer) {
             mV.SetUserptr(reinterpret_cast<uintptr_t>(ubuffer->addr), 0);
             break;
         case V4L2_MEMORY_DMABUF:
-#ifdef CAL_BUILD
-            // For user buffer, it's memory type is V4L2_MEMORY_DMABUF,
-            // and the buffer handle is stored in reserved of ubuffer
-            mHandle =
-                reinterpret_cast<buffer_handle_t>(static_cast<uintptr_t>(ubuffer->reserved));
+            mV.SetLength(mU->s.size, 0);
             break;
-#endif
         case V4L2_MEMORY_MMAP:
             /* do nothing */
             break;
@@ -245,9 +196,7 @@ int CameraBuffer::allocateMemory(V4L2VideoNode* vDevice) {
             ret = allocateMmap(vDevice);
             break;
         case V4L2_MEMORY_DMABUF:
-#ifdef CAL_BUILD
-            ret = allocateGbmBuffer();
-#endif
+            ret = allocateDmaBuffer(mU);
             break;
         default:
             LOGE("memory type %d is incorrect for allocateMemory.", mV.Memory());
@@ -270,9 +219,7 @@ void CameraBuffer::freeMemory() {
             freeMmap();
             break;
         case V4L2_MEMORY_DMABUF:
-#ifdef CAL_BUILD
-            freeGbmBuffer();
-#endif
+            freeDmaBuffer();
             break;
         default:
             LOGE("Free camera buffer failed, due to memory %d type is not implemented yet.",
@@ -327,41 +274,6 @@ void CameraBuffer::unmapDmaBufferAddr(void* addr, unsigned int bufferSize) {
     munmap(addr, bufferSize);
 }
 
-bool CameraBuffer::lock() {
-#ifdef CAL_BUILD
-    /* GBM buffer not implemented in libcamera yet, map out the addr to compatible
-    ** with libcamera when lock() is called
-    */
-    if (getMemory() == V4L2_MEMORY_DMABUF && mU && !mU->addr) {
-        if (mHandle) {
-            mU->addr = BufferAllocator::lock(mU->s.width, mU->s.height, mU->s.format, mHandle);
-            mU->s.size = icamera::BufferAllocator::getSize(mHandle);
-            mU->s.stride = icamera::BufferAllocator::getStride(mHandle);
-            mV.SetLength(mU->s.size, 0);
-        } else {
-            mU->addr = mapDmaBufferAddr(getFd(), getBufferSize());
-        }
-    }
-
-    return (mU->addr != nullptr);
-#else
-    return true;
-#endif
-}
-
-void CameraBuffer::unlock() {
-#ifdef CAL_BUILD
-    if (getMemory() == V4L2_MEMORY_DMABUF && mU && mU->addr) {
-        if (mHandle) {
-            BufferAllocator::unlock(mHandle);
-        } else {
-            unmapDmaBufferAddr(mU->addr, getBufferSize());
-        }
-        mU->addr = nullptr;
-    }
-#endif
-}
-
 void CameraBuffer::updateUserBuffer(void) {
     mU->timestamp = TIMEVAL2NSECS(getTimestamp());
     mU->s.field = getField();
@@ -410,6 +322,33 @@ void* CameraBuffer::getBufferAddr() {
             LOGE("%s: Not supported memory type %u", __func__, mV.Memory());
             return nullptr;
     }
+}
+
+CameraBufferMapper::CameraBufferMapper(std::shared_ptr<CameraBuffer> buffer)
+        : mBuffer(buffer),
+          mDMAMapped(false) {
+    if (buffer->getMemory() == V4L2_MEMORY_DMABUF && mBuffer->getUserBuffer()->addr == nullptr) {
+        void* addr = CameraBuffer::mapDmaBufferAddr(mBuffer->getFd(), mBuffer->getBufferSize());
+
+        mBuffer->getUserBuffer()->addr = addr;
+        mDMAMapped = true;
+    }
+}
+
+CameraBufferMapper::~CameraBufferMapper() {
+    if (mDMAMapped) {
+        CameraBuffer::unmapDmaBufferAddr(mBuffer->getBufferAddr(), mBuffer->getBufferSize());
+
+        mBuffer->getUserBuffer()->addr = nullptr;
+    }
+}
+
+void* CameraBufferMapper::addr() {
+    return mBuffer->getBufferAddr();
+}
+
+int CameraBufferMapper::size() {
+    return mBuffer->getBufferSize();
 }
 
 }  // namespace icamera

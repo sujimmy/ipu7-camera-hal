@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,11 @@
 
 #ifdef CAL_BUILD
 #include <cros-camera/v4l2_device.h>
-
-#include "BufferAllocator.h"
 #else
 #include <v4l2_device.h>
 #endif
 
+#include "modules/memory/BufferAllocator.h"
 #include "ParamDataType.h"
 #include "iutils/Utils.h"
 
@@ -37,7 +36,7 @@ namespace icamera {
 
 typedef struct v4l2_buffer v4l2_buffer_t;
 
-class CameraBuffer {
+class CameraBuffer : public BufferAllocator {
  public:
     /* Construct an internal CameraBuffer, use memory to indicate the memory type.
      * memory: V4L2_MEMORY_USERPTR heap buffer
@@ -134,16 +133,9 @@ class CameraBuffer {
     // Buffers are allocated the buffers by Camera
     int allocateMemory(V4L2VideoNode* vDevice = nullptr);
 
-#ifdef CAL_BUILD
-    buffer_handle_t* getGbmBufferHandle() { return &mHandle; }
-#endif
-
  public:
     static void* mapDmaBufferAddr(int fd, unsigned int bufferSize);
     static void unmapDmaBufferAddr(void* addr, unsigned int bufferSize);
-    // For GBM buffer
-    bool lock();
-    void unlock();
 
  private:
     CameraBuffer(const CameraBuffer&);
@@ -157,10 +149,6 @@ class CameraBuffer {
     void freeMmap();
     int allocateUserPtr();
     void freeUserPtr();
-#ifdef CAL_BUILD
-    int allocateGbmBuffer();
-    void freeGbmBuffer();
-#endif
 
     // Use for GFX/DMA/GBM buffer
     void setFd(int val);
@@ -176,15 +164,24 @@ class CameraBuffer {
     camera_buffer_t* mU;
     int64_t mSettingSequence;
 
-#ifdef CAL_BUILD
-    buffer_handle_t mHandle;
-#endif
-
     void* mMmapAddrs;
     int mDmaFd;
 };
 
 typedef std::vector<std::shared_ptr<CameraBuffer> > CameraBufVector;
 typedef std::queue<std::shared_ptr<CameraBuffer> > CameraBufQ;
+
+class CameraBufferMapper {
+ public:
+    explicit CameraBufferMapper(std::shared_ptr<CameraBuffer> buffer);
+    ~CameraBufferMapper();
+
+    void* addr();
+    int size();
+
+ private:
+    std::shared_ptr<CameraBuffer> mBuffer;
+    bool mDMAMapped;
+};
 
 }  // namespace icamera

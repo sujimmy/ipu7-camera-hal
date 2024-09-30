@@ -179,7 +179,7 @@ status_t GraphConfig::configStreams(const vector<HalStream*>& halStreams,
             if (outStreams[i]->useCase() == USE_CASE_VIDEO)
                 videoIpuStreamNum++;
         }
-        LOG3("%s: %d: stream %d, %dx%d, usecase %d, owner stream idx %d", __func__, i,
+        LOG3("%s: %zu: stream %d, %dx%d, usecase %d, owner stream idx %d", __func__, i,
              outStreams[i]->streamId(), outStreams[i]->width(), outStreams[i]->height(),
              outStreams[i]->useCase(), outStreamIpuFlags[i]);
     }
@@ -572,8 +572,7 @@ int32_t GraphConfig::loadStaticGraphConfig(const std::string& name) {
     size_t len = fread(binData.data, 1, binData.size, file);
     fclose(file);
     if (len != binData.size) {
-        LOGE("%s, read data %u from file %s, should be %u", __func__, len, binData.size,
-             fileName);
+        LOGE("%s, read data %zu from file %s, should be %u", __func__, len, fileName, binData.size);
         free(binData.data);
         binData.data = nullptr;
         return BAD_VALUE;
@@ -969,7 +968,7 @@ void GraphConfig::checkAndUpdatePostConnection(int32_t streamId,
         conn->hasEdgePort = true;
     } else {
         // Add post stage as outEdge, update conn
-        LOG2("%s: add post %s after stage: %d, port %d", __func__, info.stageName.c_str(),
+        LOG2("%s: add post %s after stage: %d, size %zu", __func__, info.stageName.c_str(),
              conn->connectionConfig.mSourceStage, info.outputStreams.size());
         // Original: ipu output -> user stream
         // Changed: ipu output -> post stage sink
@@ -1094,8 +1093,8 @@ status_t GraphConfig::getIspRawCropInfo(IspRawCropInfo& info) {
 status_t GraphConfig::getIspTuningModeByStreamId(int32_t streamId, uint32_t& ispTuningMode) {
     for (auto& gc : mStaticGraphs) {
         if (streamId != gc.first) continue;
-        for (uint32_t i = 0; i < gc.second.stageInfos.size();) {
-            auto& info = gc.second.stageInfos[i];
+        if (gc.second.stageInfos.size() > 0) {
+            auto& info = gc.second.stageInfos[0];
             ispTuningMode = info.node->nodeKernels.operationMode;
 
             return OK;

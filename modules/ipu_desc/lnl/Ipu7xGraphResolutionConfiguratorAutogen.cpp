@@ -68,6 +68,9 @@ StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHisto
     kernelUuids.push_back(57148);  // tnr_scale_fp_bodr_yuv4n_regs_1_1
     kernelUuids.push_back(33179);  // slim_tnr_sp_bc_bifd_rs4nm1_regs_1_1
     kernelUuids.push_back(6326);  // tnr_sp_bc_bifd_yuv4n_regs_1_1
+    kernelUuids.push_back(27830);  // slim_tnr_fp_blend_bifd_yuvnm1_regs_1_1
+    kernelUuids.push_back(2565);  // gdc7_1
+    kernelUuids.push_back(40423);  // tm_app
     return StaticGraphStatus::SG_OK;
 }
 

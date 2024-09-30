@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022 Intel Corporation
+ * Copyright (C) 2019-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ using std::shared_ptr;
 
 namespace icamera {
 
-PostProcessorCore::PostProcessorCore(int cameraId) : mCameraId(cameraId) {}
+PostProcessorCore::PostProcessorCore(int cameraId)
+        : mCameraId(cameraId),
+          mMemoryType(V4L2_MEMORY_USERPTR) {}
 
 bool PostProcessorCore::isPostProcessTypeSupported(PostProcessType type) {
     return IImageProcessor::isProcessingTypeSupported(type);
@@ -47,9 +49,11 @@ status_t PostProcessorCore::createProcessor() {
             case POST_PROCESS_CONVERT:
                 processor = std::make_shared<ConvertProcess>();
                 break;
+// JPEG_ENCODE_S
             case POST_PROCESS_JPEG_ENCODING:
                 processor = std::make_shared<JpegProcess>(mCameraId);
                 break;
+// JPEG_ENCODE_E
             case POST_PROCESS_NONE:
                 break;
             default:
@@ -59,6 +63,11 @@ status_t PostProcessorCore::createProcessor() {
 
         CheckAndLogError(!processor, UNKNOWN_ERROR, "%s, Failed to create the post processor: 0x%x",
                          __func__, order.type);
+
+        int memoryType = processor->getMemoryType();
+        // If DMA buffer is preferred, use DMA buffer for post-processing
+        if (memoryType == V4L2_MEMORY_DMABUF) mMemoryType = V4L2_MEMORY_DMABUF;
+
         mProcessorVector.push_back(processor);
     }
 
@@ -91,14 +100,10 @@ status_t PostProcessorCore::allocateInternalBuffers() {
     LOG1("<id%d>@%s,mProcessorVector.size: %zu", mCameraId, __func__, mProcessorVector.size());
 
     mInterBuffersMap.clear();
-#ifdef CAL_BUILD
-    int memoryType = V4L2_MEMORY_DMABUF;
-#else
-    int memoryType = V4L2_MEMORY_USERPTR;
-#endif
+
     for (size_t i = 0; i < mProcessorsInfo.size() - 1; i++) {
         const stream_t& info = mProcessorsInfo[i].outputInfo;
-        std::shared_ptr<CameraBuffer> buf = CameraBuffer::create(memoryType, info.size, i,
+        std::shared_ptr<CameraBuffer> buf = CameraBuffer::create(mMemoryType, info.size, i,
                                       mProcessorsInfo[i].inputInfo.format, info.width, info.height);
         if (!buf) {
             mInterBuffersMap.clear();

@@ -16,6 +16,7 @@
 
 #include "IPAServer.h"
 
+#include <libcamera/ipa/ipu7_ipa_interface.h>
 #include <libcamera/base/log.h>
 
 namespace libcamera {

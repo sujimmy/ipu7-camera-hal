@@ -20,6 +20,7 @@
 #include "PlatformData.h"
 #include "ParameterHelper.h"
 #include "AiqResultStorage.h"
+#include "iutils/CameraLog.h"
 
 namespace icamera {
 
@@ -105,8 +106,6 @@ void ParameterConvert::setAiqSettings(const Parameters& param, DataContext* data
     param.getSceneMode(dataContext->mAiqParams.sceneMode);
 
     param.getAeDistributionPriority(dataContext->mAiqParams.aeDistributionPriority);
-
-    param.getWdrLevel(dataContext->mAiqParams.ltmStrength);
 
     unsigned int length = sizeof(dataContext->mAiqParams.customAicParam.data);
     if (param.getCustomAicParam(dataContext->mAiqParams.customAicParam.data, &length) == OK) {

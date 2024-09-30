@@ -21,6 +21,7 @@
 #include "ImageScalerCore.h"
 #include "SwImageConverter.h"
 #include "CameraContext.h"
+#include "iutils/CameraLog.h"
 
 namespace icamera {
 
@@ -88,6 +89,7 @@ int PipeManagerStub::start() {
 }
 
 int PipeManagerStub::stop() {
+    Thread::requestExit();
     mTaskReadyCondition.notify_one();
     Thread::requestExitAndWait();
     LOG1("<id%d>@%s size %d", mCameraId, __func__, mOngoingTasks.size());
@@ -277,22 +279,13 @@ int PipeManagerStub::processTask(const PipeTaskData& task) {
             cOutBuffer = outputFrame.second;
 
             if (sequence < kStartingFrameCount) {
-                int fd = cOutBuffer->getFd();
-                int memoryType = cOutBuffer->getMemory();
-                int bufferSize = cOutBuffer->getBufferSize();
-                void* outPtr = (memoryType == V4L2_MEMORY_DMABUF)
-                                   ? CameraBuffer::mapDmaBufferAddr(fd, bufferSize)
-                                   : cOutBuffer->getBufferAddr();
-                if (!outPtr) return UNKNOWN_ERROR;
+                CameraBufferMapper mapper(cOutBuffer);
 
                 ImageScalerCore::downScaleImage(
-                    mIntermBuffer->getBufferAddr(), outPtr, cOutBuffer->getWidth(),
+                    mIntermBuffer->getBufferAddr(), mapper.addr(), cOutBuffer->getWidth(),
                     cOutBuffer->getHeight(), cOutBuffer->getStride(), mIntermBuffer->getWidth(),
                     mIntermBuffer->getHeight(), mIntermBuffer->getStride(),
                     mIntermBuffer->getFormat());
-                if (memoryType == V4L2_MEMORY_DMABUF) {
-                    CameraBuffer::unmapDmaBufferAddr(outPtr, bufferSize);
-                }
             }
             cOutBuffer->updateV4l2Buffer(*cInBuffer->getV4L2Buffer().Get());
             onBufferDone(outputFrame.first, cOutBuffer);

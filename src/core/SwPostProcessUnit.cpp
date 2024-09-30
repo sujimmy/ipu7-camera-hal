@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation
+ * Copyright (C) 2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,6 +164,7 @@ status_t SwPostProcessUnit::configure(const stream_t& srcStream, const stream_t&
         processingOrder.push_back(info);
     }
 
+// JPEG_ENCODE_S
     // Encode
     if (dstStream.format == V4L2_PIX_FMT_JPEG &&
         mPostProcessorCore->isPostProcessTypeSupported(POST_PROCESS_JPEG_ENCODING)) {
@@ -180,6 +181,7 @@ status_t SwPostProcessUnit::configure(const stream_t& srcStream, const stream_t&
         inputStreamInfo = info.outputInfo;
         processingOrder.push_back(info);
     }
+// JPEG_ENCODE_E
 
     if (inputStreamInfo.width != dstStream.width ||
         inputStreamInfo.height != dstStream.height) {
@@ -193,6 +195,10 @@ status_t SwPostProcessUnit::configure(const stream_t& srcStream, const stream_t&
     mPostProcessorCore->configure(processingOrder);
 
     return OK;
+}
+
+int SwPostProcessUnit::getMemoryType() {
+    return mPostProcessorCore->getMemoryType();
 }
 
 bool SwPostProcessUnit::isBypassed(int64_t sequence) {

@@ -44,10 +44,6 @@ IpuPacAdaptor::IpuPacAdaptor(int cameraId) :
     mAiqResultStorage = cameraContext->getAiqResultStorage();
 }
 
-IpuPacAdaptor::~IpuPacAdaptor() {
-    deinit();
-}
-
 int IpuPacAdaptor::init(std::vector<int> streamIds) {
     LOG1("<id%d>@%s", mCameraId, __func__);
     PERF_CAMERA_ATRACE();
@@ -318,6 +314,13 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
     CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
+
+    std::pair<int, int64_t> pacItem = std::make_pair(streamId, settingSequence);
+    if (mPacRunHistMap.find(pacItem) != mPacRunHistMap.end()) {
+        LOG1("%s, streamId %d, sequence %ld had run before", __func__, streamId, settingSequence);
+        return OK;
+    }
+
     auto aiqResults = const_cast<AiqResult*>(mAiqResultStorage->getAiqResult(settingSequence));
     if (aiqResults == nullptr) {
         LOGW("<seq%ld>@%s: no result! use the latest instead", settingSequence, __func__);
@@ -419,6 +422,8 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
 
     storeTerminalResult(settingSequence, streamId);
 
+    mPacRunHistMap[pacItem] = false;
+
     return OK;
 }
 
@@ -468,10 +473,20 @@ status_t IpuPacAdaptor::getAllBuffers(int streamId, uint8_t contextId, int64_t s
 
 status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t sequenceId,
                                     unsigned long long timestamp) {
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     AutoMutex l(mPacAdaptorLock);
+    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
+
+    std::pair<int, int64_t> pacItem = std::make_pair(streamId, sequenceId);
+    if (mPacRunHistMap.find(pacItem) == mPacRunHistMap.end()) {
+        LOG1("%s, no stream %d and sequence %ld found", __func__, streamId, sequenceId);
+        return OK;
+    } else if (mPacRunHistMap[pacItem]) {
+        LOG1("%s, stream %d and sequence %ld decoded", __func__, streamId, sequenceId);
+        return OK;
+    }
+
     LOG2("<seq:%ld>@%s, decode 3A stats. streamId: %d, contextId: %d",
          sequenceId, __func__, streamId, contextId);
 
@@ -498,6 +513,17 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
     aiqStatistics->mTuningMode = TUNING_MODE_VIDEO;
 
     mAiqResultStorage->updateAiqStatistics(sequenceId);
+
+    mPacRunHistMap[pacItem] = true;
+
+    if (mPacRunHistMap.size() >= MAX_CACHE_PAC_HIST) {
+        for (auto iter = mPacRunHistMap.begin(); iter != mPacRunHistMap.end(); iter++) {
+            if (iter->second) {
+                mPacRunHistMap.erase(iter);
+                break;
+            }
+        }
+    }
 
     return OK;
 }

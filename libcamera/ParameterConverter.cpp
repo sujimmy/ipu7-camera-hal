@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG Camera3HAL
 
 #include <libcamera/control_ids.h>
 #include <libcamera/controls.h>
 #include <libcamera/property_ids.h>
+#include <libcamera/base/log.h>
 
 #include "ParameterConverter.h"
 #include "PlatformData.h"
 #include "ParamDataType.h"
-#include "CameraLog.h"
 
 namespace libcamera {
-
 using namespace icamera;
+LOG_DECLARE_CATEGORY(IPU7)
 
 #define FLICKER_50HZ_PERIOD 10000
 #define FLICKER_60HZ_PERIOD 8333
@@ -88,8 +87,7 @@ static const ValuePair<camera_statistics_face_detect_mode_t> faceDetectModeMap[]
 
 template <typename T>
 static bool getCtlValue(T halValue, const ValuePair<T>* table, int tableCount, int* ctrlValue) {
-    CheckAndLogError(!table, false, "null table!");
-    CheckAndLogError(!ctrlValue, false, "androidValue is nullptr!");
+    if (!table || !ctrlValue) return false;
 
     for (int i = 0; i < tableCount; i++) {
         if (halValue == table[i].halValue) {
@@ -102,8 +100,7 @@ static bool getCtlValue(T halValue, const ValuePair<T>* table, int tableCount, i
 
 template <typename T>
 static bool getHalValue(int ctrlValue, const ValuePair<T>* table, int tableCount, T* halValue) {
-    CheckAndLogError(!table, false, "null table!");
-    CheckAndLogError(!halValue, false, "halValue is nullptr!");
+    if (!table || !halValue) return false;
 
     for (int i = 0; i < tableCount; i++) {
         if (ctrlValue == table[i].ctrlValue) {
@@ -528,12 +525,12 @@ void ParameterConverter::convertTonemapControls(const ControlList& controls,
 
     if (curves.rSize > 0 && curves.gSize > 0 && curves.bSize > 0) {
         if (context->mAiqParams.tonemapMode == icamera::TONEMAP_MODE_CONTRAST_CURVE) {
-            CheckWarningNoReturn(curves.rSize > DEFAULT_TONEMAP_CURVE_POINT_NUM,
-                                 "user r curve size is too big %d", curves.rSize);
-            CheckWarningNoReturn(curves.gSize > DEFAULT_TONEMAP_CURVE_POINT_NUM,
-                                 "user g curve size is too big %d", curves.gSize);
-            CheckWarningNoReturn(curves.bSize > DEFAULT_TONEMAP_CURVE_POINT_NUM,
-                                 "user v curve size is too big %d", curves.bSize);
+            if (curves.rSize > DEFAULT_TONEMAP_CURVE_POINT_NUM ||
+                curves.gSize > DEFAULT_TONEMAP_CURVE_POINT_NUM ||
+                curves.bSize > DEFAULT_TONEMAP_CURVE_POINT_NUM) {
+                LOG(IPU7, Warning) << "user curve size is too big, use default size";
+            }
+
             int curveSize = sizeof(float) * DEFAULT_TONEMAP_CURVE_POINT_NUM;
             MEMCPY_S(&context->mAiqParams.tonemapCurveMem[0], curveSize,
                      curves.rCurve, sizeof(float) * curves.rSize);
@@ -827,43 +824,37 @@ void ParameterConverter::dataContext2Controls(int cameraId, const DataContext* c
 }
 
 void ParameterConverter::dumpControls(const ControlList& controls) {
-    if (!Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3)) return;
-
     const ControlIdMap* idM = controls.idMap();
     const ControlInfoMap* infoM = controls.infoMap();
 
     if (idM) dumpControlIdMap(*idM);
     if (infoM) dumpControlInfoMap(*infoM);
 
-    LOG3("%s: count %u", __func__, controls.size());
+    LOG(IPU7, Debug) << "count: " << controls.size();
     for (const auto &ctrl : controls) {
         const ControlValue& val = controls.get(ctrl.first);
-        LOG3("    %u: %s", ctrl.first, val.toString().c_str());
+        LOG(IPU7, Debug) << "    " << ctrl.first << ": " << val.toString();
     }
 }
 
 void ParameterConverter::dumpControlInfoMap(const ControlInfoMap& controls) {
-    if (!Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3)) return;
-
-    LOG3("%s: count %u", __func__, controls.size());
+    LOG(IPU7, Debug) << "count: " << controls.size();
     for (auto const& ctl : controls) {
         const ControlId* id = ctl.first;
         const ControlInfo& info = ctl.second;
 
         const ControlValue& defV = info.def();
-        LOG3("    %u:%s: %s, def %s", id->id(), id->name().c_str(), info.toString().c_str(),
-             defV.toString().c_str());
+        LOG(IPU7, Debug) << "    " << id->id() << ": " << id->name() << ": " << info.toString()
+                         << ", def " << defV.toString();
         const std::vector<ControlValue>& vals = info.values();
         for (auto const& val : vals) {
-            LOG3("        val: %s", val.toString().c_str());
+            LOG(IPU7, Debug) << "        val: " << val.toString();
         }
     }
 }
 
 void ParameterConverter::dumpControlIdMap(const ControlIdMap& ids) {
-    if (!Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3)) return;
-
-    LOG3("%s: count %u", __func__, ids.size());
+    LOG(IPU7, Debug) << "count " << ids.size();
     for (auto const& id : ids) {
         unsigned int index = id.first;
         const ControlId* val = id.second;
@@ -876,7 +867,8 @@ void ParameterConverter::dumpControlIdMap(const ControlIdMap& ids) {
                          : val->type() == ControlTypeRectangle ? "rect"
                          : val->type() == ControlTypeSize ? "size"
                          : "none";
-        LOG3("    %u: %u: %s, type %s", index, val->id(), val->name().c_str(), type);
+        LOG(IPU7, Debug) << "    " << index << ": " << val->id() << ": " << val->name() << ", type "
+                         << type;
     }
 }
 

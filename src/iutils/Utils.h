@@ -286,12 +286,6 @@ camera_awb_mode_t getAwbModeByName(const char* awbName);
 
 unsigned int getMBusFormat(int cameraId, unsigned int isysFmt);
 
-// ENABLE_EVCP_S
-void* dlopenLibrary(const char* name, int flags);
-void* dlsymLibrary(void* handle, const char* str);
-int dlcloseLibrary(void* handle);
-// ENABLE_EVCP_E
-
 /**
  * Spit the given srcStr by delim into a vector of sub strings.
  */

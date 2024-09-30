@@ -22,6 +22,7 @@
 #include <algorithm>
 
 #include "CameraContext.h"
+#include "iutils/CameraLog.h"
 
 namespace icamera {
 
@@ -444,18 +445,6 @@ int PipeManager::prepareIpuParams(IspSettings* settings, int64_t sequence, int s
         return BAD_VALUE;
     }
 
-    {
-        // Make sure the AIC is executed once.
-        AutoMutex l(mOngoingPalMapLock);
-        if (mOngoingPalMap.find(sequence) != mOngoingPalMap.end()) {
-            // Check if stream id is available.
-            if (mOngoingPalMap[sequence].find(streamId) != mOngoingPalMap[sequence].end()) {
-                // This means aic for the sequence has been executed.
-                return OK;
-            }
-        }
-    }
-
     PtzInfo ptz;
     bool zoomChanged = updateZoomSettings(settings->zoom, &ptz);
     if (zoomChanged) {
@@ -478,9 +467,6 @@ int PipeManager::prepareIpuParams(IspSettings* settings, int64_t sequence, int s
     int ret = mPacAdaptor->runAIC(settings, sequence, streamId);
     CheckAndLogError(ret != OK, UNKNOWN_ERROR, "%s, <seq%ld> Failed to run AIC: streamId: %d",
                      __func__, sequence, streamId);
-
-    AutoMutex l(mOngoingPalMapLock);
-    mOngoingPalMap[sequence].insert(streamId);
 
     return ret;
 }
@@ -667,10 +653,6 @@ int PipeManager::onBufferDone(uuid port, const std::shared_ptr<CameraBuffer>& bu
                      sequence, task.mNumOfReturnedBuffers);
                 // Remove the task data from mOngoingTasks since it's already processed.
                 mOngoingTasks.erase(iter);
-
-                // Remove the sequence when finish to process the task
-                AutoMutex l(mOngoingPalMapLock);
-                mOngoingPalMap.erase(sequence);
             }
             break;
             // No need check other if other tasks are matched with the returned buffer since

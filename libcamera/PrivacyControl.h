@@ -16,20 +16,20 @@
 
 #pragma once
 
-#include <libcamera/controls.h>
+#include <libcamera/base/mutex.h>
+#include <libcamera/base/thread.h>
 #include <libcamera/control_ids.h>
+#include <libcamera/controls.h>
 #include <sys/time.h>
 
 #include <map>
 #include <memory>
-#include <mutex>
 #include <queue>
 #include <vector>
 
 #include "Errors.h"
 #include "HwPrivacyControl.h"
 #include "ParamDataType.h"
-#include "Thread.h"
 #include "Utils.h"
 
 namespace libcamera {
@@ -41,10 +41,10 @@ using namespace icamera;
  *
  * This class is used to handle the request in privacy mode
  */
-class PrivacyControl : public icamera::Thread {
+class PrivacyControl : public Thread {
  public:
     PrivacyControl(int cameraId);
-    virtual ~PrivacyControl() { mHwPrivacyControl = nullptr; }
+    virtual ~PrivacyControl();
     int configure(stream_config_t* streamList) { return OK; }
     void callbackRegister(const camera_callback_ops_t* callback) { mCallbackOps = callback; }
     int start();
@@ -55,7 +55,7 @@ class PrivacyControl : public icamera::Thread {
     void updateMetadataResult(ControlList& metadata);
 
  private:
-    virtual bool threadLoop() override;
+    virtual void run() override;
 
  private:
     static const uint32_t kMaxStreamNum = 6;
@@ -67,15 +67,15 @@ class PrivacyControl : public icamera::Thread {
     };
 
     const int mCameraId;
-    const uint64_t kMaxDuration = 2000000000;  // 2000ms
     uint64_t mLastTimestamp;
     std::unique_ptr<HwPrivacyControl> mHwPrivacyControl;
 
     // lock for capture request and thread
-    std::mutex mLock;
+    Mutex mLock;
     bool mThreadRunning;
-    std::condition_variable mRequestCondition;
-    std::condition_variable mResultCondition[kMaxStreamNum];
+
+    ConditionVariable mRequestCondition;
+    ConditionVariable mResultCondition[kMaxStreamNum];
     std::queue<std::shared_ptr<CaptureRequest>> mCaptureRequest;
     // buffer result queue for each stream id
     std::map<int, std::queue<camera_buffer_t*>> mStreamQueueMap;

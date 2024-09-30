@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2022 Intel Corporation.
+ * Copyright (C) 2016-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ int CsiMetaDevice::initEmdMetaData() {
 
     mEmbeddedMetaData.bpl = bpl;
     mEmbeddedMetaData.planesNum = CameraUtils::getNumOfPlanes(V4L2_FMT_IPU_ISYS_META);
-    LOG2("%s, mEmbeddedMetaData.planesNum:%d", mEmbeddedMetaData.planesNum);
+    LOG2("%s, mEmbeddedMetaData.planesNum:%d", __func__, mEmbeddedMetaData.planesNum);
 
     return OK;
 }

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 Intel Corporation
+// Copyright (C) 2024 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,43 +23,6 @@
         "MediaCtlConfig": [
           {
             "id":  0 ,
-            "configMode": "AUTO",
-            "output": [4208, 3120],
-            "format": "V4L2_PIX_FMT_SGRBG10",
-            "formats": [
-              {
-                "name": "ov13b10 $I2CBUS", "pad": 0, "width": 4208, "height": 3120,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 $CSI_PORT", "pad": 0, "width": 4208, "height": 3120,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              }
-            ],
-            "link": [
-              {
-                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI2 $CSI_PORT",
-                "sinkPad": 0, "enable": true
-              },
-              {
-                "srcName": "Intel IPU7 CSI2 $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 ISYS Capture $CAP_N", "sinkPad": 0, "enable": true
-              }
-            ],
-            "videonode": [
-              {
-                "name": "Intel IPU7 ISYS Capture $CAP_N", "videoNodeType": "VIDEO_GENERIC"
-              },
-              {
-                "name": "Intel IPU7 CSI2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
-              },
-              {
-                "name": "ov13b10 $I2CBUS", "videoNodeType": "VIDEO_PIXEL_ARRAY"
-              }
-            ]
-          },
-          {
-            "id":  1 ,
             "configMode": "AUTO",
             "output": [2104, 1560],
             "format": "V4L2_PIX_FMT_SGRBG10",
@@ -94,53 +57,10 @@
                 "name": "ov13b10 $I2CBUS", "videoNodeType": "VIDEO_PIXEL_ARRAY"
               }
             ]
-          },
-          {
-            "id":  2 ,
-            "configMode": "AUTO",
-            "output": [1364, 768],
-            "format": "V4L2_PIX_FMT_SGRBG10",
-            "formats": [
-              {
-                "name": "ov13b10 $I2CBUS", "pad": 0, "width": 1364, "height": 768,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              },
-              {
-                "name": "Intel IPU7 CSI2 $CSI_PORT", "pad": 0, "width": 1364, "height": 768,
-                "format": "V4L2_MBUS_FMT_SGRBG10_1X10"
-              }
-            ],
-            "link": [
-              {
-                "srcName": "ov13b10 $I2CBUS", "srcPad": 0, "sinkName": "Intel IPU7 CSI2 $CSI_PORT",
-                "sinkPad": 0, "enable": true
-              },
-              {
-                "srcName": "Intel IPU7 CSI2 $CSI_PORT", "srcPad": 1,
-                "sinkName": "Intel IPU7 ISYS Capture $CAP_N", "sinkPad": 0, "enable": true
-              }
-            ],
-            "videonode": [
-              {
-                "name": "Intel IPU7 ISYS Capture $CAP_N", "videoNodeType": "VIDEO_GENERIC"
-              },
-              {
-                "name": "Intel IPU7 CSI2 $CSI_PORT", "videoNodeType": "VIDEO_ISYS_RECEIVER"
-              },
-              {
-                "name": "ov13b10 $I2CBUS", "videoNodeType": "VIDEO_PIXEL_ARRAY"
-              }
-            ]
           }
         ],
         "StaticMetadata": {
           "supportedStreamConfig": [
-            {
-              "format": "V4L2_PIX_FMT_NV12", "size": [4096, 3072], "field": 0, "mcId": 0
-            },
-            {
-              "format": "V4L2_PIX_FMT_NV12", "size": [3840, 2160], "field": 0, "mcId": 0
-            },
             {
               "format": "V4L2_PIX_FMT_NV12", "size": [1920, 1080], "field": 0, "mcId": 0
             },
@@ -157,10 +77,7 @@
               "format": "V4L2_PIX_FMT_NV12", "size": [640, 360], "field": 0, "mcId": 0
             },
             {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [4096, 3072], "field": 0, "mcId": 0
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [3840, 2160], "field": 0, "mcId": 0
+              "format": "V4L2_PIX_FMT_NV12", "size": [320, 240], "field": 0, "mcId": 0
             },
             {
               "format": "V4L2_PIX_FMT_JPEG", "size": [1920, 1080], "field": 0, "mcId": 0
@@ -176,7 +93,10 @@
             },
             {
               "format": "V4L2_PIX_FMT_JPEG", "size": [640, 360], "field": 0, "mcId": 0
-            }
+            },
+            {
+              "format": "V4L2_PIX_FMT_JPEG", "size": [320, 240], "field": 0, "mcId": 0
+            },
           ],
           "supportedFeatures": [
             "MANUAL_EXPOSURE", "MANUAL_WHITE_BALANCE", "IMAGE_ENHANCEMENT",
@@ -191,18 +111,17 @@
           "supportedAwbMode": [ "AUTO", "INCANDESCENT", "FLUORESCENT", "DAYLIGHT", "FULL_OVERCAST",
             "PARTLY_OVERCAST", "SUNSET", "VIDEO_CONFERENCE", "MANUAL_CCT_RANGE", "MANUAL_WHITE_POINT",
             "MANUAL_GAIN", "MANUAL_COLOR_TRANSFORM" ],
-          "supportedAfMode": [ "AUTO,MACRO,CONTINUOUS_VIDEO,CONTINUOUS_PICTURE,OFF" ],
+          "supportedAfMode": [ "OFF" ],
           "metadata":{
             "ae.lockAvailable": [1],
             "awb.lockAvailable": [1],
             // 0: OFF, 1: AUTO, 2: USE_SCENE_MODE, 3: OFF_KEEP_STATE
             "control.availableModes" : [ 0, 1 ],
             // 0: DISABLE, 1: FACE_PRIORITY
-            "control.availableSceneModes": [0],
+            "control.availableSceneModes": [1],
             "control.maxRegions" : [ 1, 0, 0 ],
             // 0: OFF, 1: SMPLE, 2: FULL
             "statistics.info.availableFaceDetectModes" : [0],
-            // "statistics.info.maxFaceCount" : [10],
             "sensor.orientation" : [0],
             // 43*15.9
             "sensor.maxAnalogSensitivity" : [699],
@@ -219,7 +138,7 @@
             "sensor.info.colorFilterArrangement": [2],
             // shading 0:OFF,1:FAST,2:HIGH_QUALITY
             "shading.availableModes": [ 0, 1, 2 ],
-            "lens.facing": [0],
+            "lens.facing": [1],
             "lens.info.availableApertures": [2.2],
             "lens.info.availableFilterDensities": [0.0],
             "lens.info.availableFocalLengths": [3.39],
@@ -237,67 +156,61 @@
             "request.availableCapabilities": [ 0, 1, 2, 4, 5, 6 ],
             // input fmt, output fmt number, output fmts; fmt: YCbCr_420_888:0x23 (35), IMPLEMENTATION_DEFINED:0x22 (34), Blob:0x21 (33)
             "scaler.availableInputOutputFormatsMap": [ 34, 2, 33, 35 ],
-            "sensor.opaqueRawSize": [4208, 3120, 100],
+            "sensor.opaqueRawSize": [2104, 1560, 100],
             // available stream configurations: format: IMPLEMENTATION_DEFINED(34)|YCbCr_420_888:0x23(35)|BLOB(33), widthxheight, type: output(0)|input(1)
             "scaler.availableStreamConfigurations": [
-              33,4096,3072,0,
-              33,3840,2160,0,
-              33,1920,1080,0,
-              33,1280,960,0,
-              33,1280,720,0,
-              33,640,480,0,
-              33,640,360,0,
-              35,4096,3072,0,
-              35,3840,2160,0,
-              35,1920,1080,0,
-              35,1280,960,0,
-              35,1280,720,0,
-              35,640,480,0,
-              35,640,360,0,
-              34,4096,3072,0,
-              34,3840,2160,0,
-              34,1920,1080,0,
-              34,1280,960,0,
-              34,1280,720,0,
-              34,640,480,0,
-              34,640,360,0
+                  33, 1920, 1080, 0,
+                  33, 1280,  960, 0,
+                  33, 1280,  720, 0,
+                  33,  640,  480, 0,
+                  33,  640,  360, 0,
+                  33,  320,  240, 0,
+                  35, 1920, 1080, 0,
+                  35, 1280,  960, 0,
+                  35, 1280,  720, 0,
+                  35,  640,  480, 0,
+                  35,  640,  360, 0,
+                  35,  320,  240, 0,
+                  34, 1920, 1080, 0,
+                  34, 1280,  960, 0,
+                  34, 1280,  720, 0,
+                  34,  640,  480, 0,
+                  34,  640,  360, 0,
+                  34,  320,  240, 0,
+                  34, 2104, 1560, 1,
             ],
             // minimum frame duration: format: IMPLEMENTATION_DEFINED(34)|YCbCr_420_888:0x23(35)|BLOB(33), widthxheight, duration:(ns)
             "scaler.availableMinFrameDurations": [
-              33,4096,3072,66666666,
-              33,3840,2160,66666666,
-              33,1920,1080,33333333,
-              33,1280,960,33333333,
-              33,1280,720,33333333,
-              33,640,480,33333333,
-              33,640,360,33333333,
-              35,4096,3072,66666666,
-              35,3840,2160,66666666,
-              35,1920,1080,33333333,
-              35,1280,960,33333333,
-              35,1280,720,33333333,
-              35,640,480,33333333,
-              35,640,360,33333333,
-              34,4096,3072,66666666,
-              34,3840,2160,66666666,
-              34,1920,1080,33333333,
-              34,1280,960,33333333,
-              34,1280,720,33333333,
-              34,640,480,33333333,
-              34,640,360,33333333
+                  33, 1920, 1080, 33333333,
+                  33, 1280,  960, 33333333,
+                  33, 1280,  720, 33333333,
+                  33,  640,  480, 33333333,
+                  33,  640,  360, 33333333,
+                  33,  320,  240, 33333333,
+                  35, 1920, 1080, 33333333,
+                  35, 1280,  960, 33333333,
+                  35, 1280,  720, 33333333,
+                  35,  640,  480, 33333333,
+                  35,  640,  360, 33333333,
+                  35,  320,  240, 33333333,
+                  34, 1920, 1080, 33333333,
+                  34, 1280,  960, 33333333,
+                  34, 1280,  720, 33333333,
+                  34,  640,  480, 33333333,
+                  34,  640,  360, 33333333,
+                  34,  320,  240, 33333333,
             ],
             // maximum stall duration: format: IMPLEMENTATION_DEFINED(34)|YCbCr_420_888:0x23(35)|BLOB(33), widthxheight, duration:(ns)
             "scaler.availableStallDurations": [
-              33,4096,3072,66666666,
-              33,3840,2160,66666666,
-              33,1920,1080,33333333,
-              33,1280,960,33333333,
-              33,1280,720,33333333,
-              33,640,480,33333333,
-              33,640,360,33333333
+                  33, 1920, 1080, 33333333,
+                  33, 1280,  960, 33333333,
+                  33, 1280,  720, 33333333,
+                  33,  640,  480, 33333333,
+                  33,  640,  360, 33333333,
+                  33,  320,  240, 33333333,
             ],
-            // 4096*3072*1.5
-            "jpeg.maxSize": [18874368],
+            // 1920*1080*1.5
+            "jpeg.maxSize": [3110400],
             // INCREASING ORDER
             "jpeg.availableThumbnailSizes": [ 0, 0, 320, 180, 320, 240 ],
             // 0:off, 1:fast, 2:high_quality, 3:zero_shutter_lag
@@ -317,12 +230,12 @@
             "sync.maxLatency": [0]
           }
         },
-        "supportedTuningConfig": [ ["NORMAL", "VIDEO", "ov13b10"], ["STILL_CAPTURE", "VIDEO", "ov13b10"]],
+        "supportedTuningConfig": [ ["NORMAL", "VIDEO", "OV13B10_09B13_PTL"], ["STILL_CAPTURE", "VIDEO", "OV13B10_09B13_PTL"]],
         // The lard tags configuration. Every tag should be 4-characters.
         // TuningMode, cmc tag, aiq tag, isp tag, others tag
         "lardTags": [[ "VIDEO", "DFLT", "DFLT", "DFLT", "DFLT" ]],
         // ascending order request
-        "supportedISysSizes": [[1364, 768], [2104, 1560], [4208, 3120]],
+        "supportedISysSizes": [[2104, 1560]],
         "supportedISysFormat": ["V4L2_PIX_FMT_SGRBG10"],
         "enableAIQ": true,
         "iSysRawFormat": "V4L2_PIX_FMT_SGRBG10",
@@ -331,11 +244,10 @@
         "exposureLag":  2,
         "gainLag": 2,
         "digitalGainLag": 0,
-        "ltmGainLag": 1,
         // There are 2 yuv color range mode, like full, reduced.
         "yuvColorRangeMode": "full",
         "pipeSwitchDelayFrame": 60,
-        "graphSettingsFile": "OV13B10_09B13.IPU7X.bin",
+        "graphSettingsFile": "OV13B10.IPU75XA.bin",
         "graphSettingsType": "dispersed",
         "enablePSysProcessor": true,
         "dvsType": "IMG_TRANS",
@@ -347,25 +259,18 @@
         "enableAiqd": true,
         "useCrlModule": false,
         "pslOutputMapForRotation": [
-          [[4096, 3072], [4096, 3072]],
-          [[3840, 2160], [3840, 2160]],
           [[1920, 1080], [1920, 1080]],
           [[1280, 960], [1280, 960]],
           [[1280, 720], [1280, 720]],
           [[640, 480], [1280, 960]],
-          [[640, 360], [1280, 960]]
+          [[640, 360], [1280, 720]],
         ],
         "maxRequestsInflight": 6,
-        // "faceEngineRunningInterval": 10,
-        // "faceEngineRunningIntervalNoFace": 10,
-        // "faceAeEnabled": true,
-        // pvl face detection:0, google facessd:1
-        // "faceEngineVendor": 1,
         "psysBundleWithAic": false,
         "skipFrameV4L2Error": true,
         "isISYSCompression": false,
         "isPSACompression": false,
-        "usingMockPSys": false
+        "usingMockPSys": false,
       }
     ]
   }

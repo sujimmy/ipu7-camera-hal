@@ -72,7 +72,6 @@ struct aiq_parameter_t {
     camera_converge_speed_t aeConvergeSpeed;
     camera_converge_speed_t awbConvergeSpeed;
     int run3ACadence;
-    uint8_t ltmStrength;
     camera_weight_grid_mode_t weightGridMode;
     camera_ae_distribution_priority_t aeDistributionPriority;
     custom_aic_param_t customAicParam;

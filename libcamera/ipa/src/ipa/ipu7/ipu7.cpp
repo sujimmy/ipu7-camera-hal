@@ -76,8 +76,7 @@ public:
     int start() override { return 0; }
     void stop() override {}
 
-    int requestSync(const IPACmdInfo& cmdInfo) override;
-    void requestASync(const IPACmdInfo& cmdInfo) override;
+    void sendRequest(const IPACmdInfo& cmdInfo) override;
 
     void mapBuffers(const std::vector<IPABuffer> &buffers) override;
     void unmapBuffers(const std::vector<unsigned int> &ids) override;
@@ -136,16 +135,8 @@ std::string IPAIPU::logPrefix() const {
     return "ipu7";
 }
 
-int IPAIPU::requestSync(const IPACmdInfo& cmdInfo) {
-    LOG(IPAIPU, Debug) << "IPAIPU::requestSync cameraId " << cmdInfo.cameraId << " tuningMode "
-                       << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
-                       << cmdInfo.bufferId;
-
-    return 0;
-}
-
-void IPAIPU::requestASync(const IPACmdInfo& cmdInfo) {
-    LOG(IPAIPU, Debug) << "IPAIPU::requestASync cameraId " << cmdInfo.cameraId << " tuningMode "
+void IPAIPU::sendRequest(const IPACmdInfo& cmdInfo) {
+    LOG(IPAIPU, Debug) << "IPAIPU::sendRequest cameraId " << cmdInfo.cameraId << " tuningMode "
                        << cmdInfo.tuningMode << " cmd " << cmdInfo.cmd << " bufferId "
                        << cmdInfo.bufferId;
 

@@ -58,7 +58,6 @@ void aiq_parameter_t::reset() {
     aeConvergeSpeed = CONVERGE_NORMAL;
     awbConvergeSpeed = CONVERGE_NORMAL;
     run3ACadence = 1;
-    ltmStrength = 100;
     weightGridMode = WEIGHT_GRID_AUTO;
     aeDistributionPriority = DISTRIBUTION_AUTO;
     CLEAR(customAicParam);
@@ -158,7 +157,6 @@ void aiq_parameter_t::dump() {
         LOG3("camera mode:%d", tuningMode);
     }
     LOG3("blc area mode:%d", blcAreaMode);
-    LOG3("ltm strength:(%u)", ltmStrength);
     LOG3("weight grid mode:%d", weightGridMode);
     LOG3("Yuv Color Range Mode:%d", yuvColorRangeMode);
     LOG3("DVS mode %d", videoStabilizationMode);

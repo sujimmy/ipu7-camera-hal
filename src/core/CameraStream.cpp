@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,10 +50,10 @@ int CameraStream::start() {
 int CameraStream::stop() {
     LOG1("<id%d>@%s, %p", mCameraId, __func__, this);
 
-    mBufferInProcessing = 0;
     if (mBufferProducer != nullptr) mBufferProducer->removeFrameAvailableListener(this);
 
     AutoMutex poolLock(mBufferPoolLock);
+    mBufferInProcessing = 0;
     mInputBuffersPool.clear();
 
     return OK;

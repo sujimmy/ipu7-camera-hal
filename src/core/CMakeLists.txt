@@ -24,40 +24,29 @@ set(CORE_SRCS
     CACHE INTERNAL "core sources"
     )
 
-if (IPU_VER MATCHES "ipu7")
+# IPU7_SOURCE_FILE_S
+set(CORE_SRCS
+    ${CORE_SRCS}
+    ${CORE_DIR}/CameraBufferPool.cpp
+    ${CORE_DIR}/CameraDevice.cpp
+    ${CORE_DIR}/CameraContext.cpp
+    ${CORE_DIR}/CameraStream.cpp
+    ${CORE_DIR}/CaptureUnit.cpp
+    ${CORE_DIR}/DeviceBase.cpp
+    ${CORE_DIR}/IProcessingUnitFactory.cpp
+    ${CORE_DIR}/ProcessingUnit.cpp
+    ${CORE_DIR}/RequestThread.cpp
+    ${CORE_DIR}/PSysDevice.cpp
+    CACHE INTERNAL "core sources"
+    )
+if (CAL_BUILD)
     set(CORE_SRCS
         ${CORE_SRCS}
-        ${CORE_DIR}/CameraBufferPool.cpp
-        ${CORE_DIR}/CameraDevice.cpp
-        ${CORE_DIR}/CameraContext.cpp
-        ${CORE_DIR}/CameraStream.cpp
-        ${CORE_DIR}/CaptureUnit.cpp
-        ${CORE_DIR}/DeviceBase.cpp
-        ${CORE_DIR}/IProcessingUnitFactory.cpp
-        ${CORE_DIR}/ProcessingUnit.cpp
-        ${CORE_DIR}/RequestThread.cpp
-        ${CORE_DIR}/PSysDevice.cpp
+        ${CORE_DIR}/SwPostProcessUnit.cpp
         CACHE INTERNAL "core sources"
         )
-    if (CAL_BUILD)
-        set(CORE_SRCS
-            ${CORE_SRCS}
-            ${CORE_DIR}/SwPostProcessUnit.cpp
-            CACHE INTERNAL "core sources"
-            )
-    endif() #CAL_BUILD
-else ()
-    set(CORE_SRCS
-        ${CORE_SRCS}
-        ${CORE_DIR}/CaptureUnit.cpp
-        ${CORE_DIR}/DeviceBase.cpp
-        ${CORE_DIR}/CameraStream.cpp
-        ${CORE_DIR}/CameraDevice.cpp
-        ${CORE_DIR}/IProcessingUnitFactory.cpp
-        ${CORE_DIR}/RequestThread.cpp
-        CACHE INTERNAL "core sources"
-        )
-endif ()
+endif() #CAL_BUILD
+# IPU7_SOURCE_FILE_E
 
 # FRAME_SYNC_S
     set(CORE_SRCS
@@ -101,25 +90,18 @@ endif()
         ${CORE_DIR}/ProcessingUnit.cpp
         ${CORE_DIR}/processingUnit/IPipeManagerFactory.cpp
         CACHE INTERNAL "core sources"
-       )
-    if (IPU_VER MATCHES "ipu7")
-        set(CORE_SRCS
-            ${CORE_SRCS}
-            ${CORE_DIR}/IpuPacAdaptor.cpp
-            ${CORE_DIR}/processingUnit/PipeManager.cpp
-            ${CORE_DIR}/processingUnit/PipeLine.cpp
-            ${CORE_DIR}/processingUnit/CBStage.cpp
-            ${CORE_DIR}/processingUnit/ShareReferBufferPool.cpp
-            CACHE INTERNAL "core sources"
-        )
-    endif()
+    )
 
-    if (USE_PG_LITE_PIPE)
-        set(CORE_SRCS
-            ${CORE_SRCS}
-            ${CORE_DIR}/processingUnit/ShareReferBufferPool.cpp
-            CACHE INTERNAL "core sources"
-        )
-    endif()
+# IPU7_SOURCE_FILE_S
+    set(CORE_SRCS
+        ${CORE_SRCS}
+        ${CORE_DIR}/IpuPacAdaptor.cpp
+        ${CORE_DIR}/processingUnit/PipeManager.cpp
+        ${CORE_DIR}/processingUnit/PipeLine.cpp
+        ${CORE_DIR}/processingUnit/CBStage.cpp
+        CACHE INTERNAL "core sources"
+    )
+# IPU7_SOURCE_FILE_E
+
 # IPU_PROCESSING_E
 

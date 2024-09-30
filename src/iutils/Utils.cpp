@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -773,53 +773,6 @@ unsigned int CameraUtils::getMBusFormat(int cameraId, unsigned int isysFmt) {
 
     return pixelCode;
 }
-
-// ENABLE_EVCP_S
-void* CameraUtils::dlopenLibrary(const char* name, int flags) {
-    CheckAndLogError((name == nullptr), nullptr, "%s, invalid parameters", __func__);
-
-    void* handle = dlopen(name, flags);
-
-    const char* lError = dlerror();
-    if (lError) {
-        if (handle == nullptr) {
-            LOGW("%s, handle is NULL", __func__);
-        }
-        LOGW("%s, dlopen Error: %s", __func__, lError);
-        return nullptr;
-    }
-
-    LOG1("%s, handle %p, name %s has been opened", __func__, handle, name);
-    return handle;
-}
-
-void* CameraUtils::dlsymLibrary(void* handle, const char* str) {
-    CheckAndLogError((handle == nullptr || str == nullptr), nullptr, "%s, invalid parameters",
-                     __func__);
-
-    void* sym = dlsym(handle, str);
-
-    const char* lError = dlerror();
-    if (lError) {
-        if (sym == nullptr) {
-            LOGW("%s, symbol is nullptr", __func__);
-        }
-        LOGW("%s, dlopen Error: %s", __func__, lError);
-        return nullptr;
-    }
-
-    LOG1("%s, handle %p, str %s has been found", __func__, handle, str);
-    return sym;
-}
-
-int CameraUtils::dlcloseLibrary(void* handle) {
-    CheckAndLogError((handle == nullptr), BAD_VALUE, "%s, invalid parameters", __func__);
-
-    dlclose(handle);
-    LOG1("%s, handle %p has been closed", __func__, handle);
-    return OK;
-}
-// ENABLE_EVCP_E
 
 std::vector<string> CameraUtils::splitString(const char* srcStr, char delim) {
     std::vector<string> tokens;

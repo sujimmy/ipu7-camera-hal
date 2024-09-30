@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Intel Corporation
+ * Copyright (C) 2021-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace icamera {
 using namespace std;
 
 FaceSSD::FaceSSD(int cameraId, int width, int height)
-        : FaceDetection(cameraId, width, height),
+        : FaceDetection(cameraId, width, height, V4L2_MEMORY_DMABUF),
           mFaceDetector(nullptr) {
     int ret = initFaceDetection();
     CheckAndLogError(ret != OK, VOID_VALUE, "failed to init face detection, ret %d", ret);
@@ -59,17 +59,19 @@ void FaceSSD::runFaceDetection(const shared_ptr<CameraBuffer>& camBuffer) {
     LOG2("@%s", __func__);
     CheckAndLogError(mInitialized == false, VOID_VALUE, "@%s, mInitialized is false", __func__);
     CheckAndLogError(!camBuffer, VOID_VALUE, "@%s, ccBuf buffer is nullptr", __func__);
-    CheckAndLogError(!camBuffer->getGbmBufferHandle(), VOID_VALUE,
-                     "@%s, Face SSD only supports gbm handle buffer", __func__);
+
+    camera_buffer_t* ubuffer = camBuffer->getUserBuffer();
+    auto handle = reinterpret_cast<buffer_handle_t>(static_cast<uintptr_t>(ubuffer->privateHandle));
+    CheckAndLogError(!handle, VOID_VALUE, "Face SSD only supports gbm handle buffer", __func__);
 
     int64_t sequence = camBuffer->getSequence();
     nsecs_t startTime = CameraUtils::systemTime();
     std::vector<human_sensing::CrosFace> faces;
-    cros::FaceDetectResult ret = mFaceDetector->Detect(*camBuffer->getGbmBufferHandle(), &faces);
+    cros::FaceDetectResult ret = mFaceDetector->Detect(handle, &faces);
     CheckAndLogError(ret != cros::FaceDetectResult::kDetectOk, VOID_VALUE,
                      "%s, Failed to run face for sequence: %ld", __func__, sequence);
 
-    printfFDRunRate(sequence);
+    printfFDRunRate();
     LOG2("<seq%u>%s: ret:%d, it takes need %ums", camBuffer->getSequence(), __func__, ret,
          (unsigned)((CameraUtils::systemTime() - startTime) / 1000000));
 

@@ -152,6 +152,12 @@ void CBStage::removeListener(EventType eventType, EventListener* eventListener) 
 
 bool CBStage::process(int64_t triggerId) {
     PERF_CAMERA_ATRACE_PARAM1(getName(), triggerId);
+
+    {
+        std::lock_guard<std::mutex> l(mDataLock);
+        if (mStageTaskList.size() >= MAX_FRAME_NUM) return true;
+    }
+
     StageTask task;
     if (fetchTask(&task) != OK) return true;
 
@@ -216,10 +222,7 @@ int32_t CBStage::processTask(StageTask* task) {
 
     {
         std::lock_guard<std::mutex> l(mDataLock);
-        if (mSeqToStageTaskMap.size() >= MAX_FRAME_NUM) {
-            mSeqToStageTaskMap.erase(mSeqToStageTaskMap.begin());
-        }
-        mSeqToStageTaskMap[task->sequence] = *task;
+        mStageTaskList.push_back(*task);
     }
 
     ret = addTask(&terminalBuffers, bufferMap, task->sequence);
@@ -236,8 +239,8 @@ int32_t CBStage::processTask(StageTask* task) {
 int CBStage::bufferDone(int64_t sequence) {
     std::lock_guard<std::mutex> l(mDataLock);
 
-    if (mSeqToStageTaskMap.find(sequence) != mSeqToStageTaskMap.end()) {
-        StageTask& task = mSeqToStageTaskMap[sequence];
+    if (mStageTaskList.size() > 0) {
+        auto task = mStageTaskList.front();
 
         // Remove internal output buffers
         for (auto& item : task.outBuffers) {
@@ -254,6 +257,12 @@ int CBStage::bufferDone(int64_t sequence) {
         } else {
             returnBuffers(task.inBuffers, task.outBuffers);
         }
+
+        if (sequence != task.sequence) LOGW("Buffer returned out of order");
+
+        mStageTaskList.pop_front();
+    } else {
+        LOGW("%s, sequence %ld wasn't missing", __func__, sequence);
     }
 
     return OK;
@@ -413,8 +422,8 @@ int CBStage::setTerminalLinkAndAllocNode2SelfBuffers(const GraphLink** links, ui
                 LOGW("unsupported type %d", link->type);
                 break;
         }
-        if (link->linkConfiguration)
-            psysLink.streamingMode = link->linkConfiguration->streamingMode;
+
+        psysLink.streamingMode = link->linkConfiguration->streamingMode;
         psysLink.delayedLink = link->frameDelay;
 
         if (link->type == LinkType::Node2Self) {
@@ -795,7 +804,7 @@ int CBStage::addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* term
             terminalBuf.handle = buf->getFd();
             terminalBuf.flags |= IPU_BUFFER_FLAG_DMA_HANDLE | IPU_BUFFER_FLAG_NO_FLUSH;
 
-            LOG2("%s, mStreamId %d, mContextId %u, terminalId %u, fd %d, size %d", __func__,
+            LOG2("%s, mStreamId %d, mContextId %u, terminalId %u, fd %lu, size %d", __func__,
                  mStreamId, mContextId, terminalId, terminalBuf.handle, terminalBuf.size);
         } else {
             terminalBuf.userPtr = buf->getBufferAddr();
@@ -879,7 +888,7 @@ void CBStage::dumpTerminalData(const PacTerminalBufMap& bufferMap, int64_t seque
         snprintf(fileName, (MAX_NAME_LEN - 1), "cam%d_cb_context%u_resource%u_termId%u_%s_%ld.bin",
                  mCameraId, mContextId, mResourceId, buf.first, typeStr, sequence);
 
-        LOGI("<id%d:seq%ld> filename %s, ctx %u, resource %d, ptr %p, size %d, pac %d, termId %u",
+        LOGI("<id%d:seq%ld> filename %s, ctx %u, resource %d, ptr %p, size %zu, pac %d, termId %u",
              mCameraId, sequence, fileName, mContextId, mResourceId, buf.second.payloadPtr,
              buf.second.size, pacType, buf.first);
 

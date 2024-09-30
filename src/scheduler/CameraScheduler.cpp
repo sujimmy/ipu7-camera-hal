@@ -204,9 +204,13 @@ int CameraScheduler::Executor::waitTrigger() {
 
 bool CameraScheduler::Executor::threadLoop() {
     int64_t tick = waitTrigger();
-    if (!mActive) return false;
 
-    LOG2("%s process, tick %d", getName(), tick);
+    {
+        std::lock_guard<std::mutex> l(mNodeLock);
+        if (!mActive) return false;
+    }
+
+    LOG3("%s process, tick %d", getName(), tick);
     for (auto& node : mNodes) {
         bool ret = node->process(tick);
         CheckAndLogError(!ret, true, "%s: node %s process error", getName(), node->getName());

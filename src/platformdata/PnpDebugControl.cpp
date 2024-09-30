@@ -56,8 +56,8 @@ bool PnpDebugControl::useMockAAL() {
     return getInstance()->mStaticCfg.useMockAAL;
 }
 
-int PnpDebugControl::mockAALFps() {
-    return getInstance()->mStaticCfg.mockAALFps;
+int PnpDebugControl::mockAPPFps() {
+    return getInstance()->mStaticCfg.mockAPPFps;
 }
 
 bool PnpDebugControl::isBypass3A() {
@@ -125,7 +125,7 @@ bool PnpDebugParser::run(const std::string& filename) {
         if (ele.isMember("useMockAAL")) mStaticCfg->useMockAAL = ele["useMockAAL"].asBool();
         if (ele.isMember("useMockHal")) mStaticCfg->useMockHal = ele["useMockHal"].asBool();
         if (ele.isMember("useMockPipes")) mStaticCfg->useMockPipes = ele["useMockPipes"].asBool();
-        if (ele.isMember("pnpMockFps")) mStaticCfg->mockAALFps = ele["pnpMockFps"].asInt();
+        if (ele.isMember("pnpMockFps")) mStaticCfg->mockAPPFps = ele["pnpMockFps"].asInt();
         if (ele.isMember("bypass3A")) mStaticCfg->isBypass3A = ele["bypass3A"].asBool();
         if (ele.isMember("bypassPAC")) mStaticCfg->isBypassPAC = ele["bypassPAC"].asBool();
         if (ele.isMember("bypassCB")) mStaticCfg->isBypassCB = ele["bypassCB"].asBool();

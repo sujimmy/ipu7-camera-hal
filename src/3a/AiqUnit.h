@@ -146,8 +146,8 @@ private:
     } mAiqUnitState;
 
 #ifndef PAC_ENABLE
-
 #endif
+
     AiqEngine *mAiqEngine;
 
     // Guard for AiqUnit public API.

@@ -82,10 +82,11 @@ namespace icamera {
 #define MAX_CAMERA_NUMBER 100
 // Temporarily using current path to save aiqd file for none CAL platforms.
 #define CAMERA_CACHE_DIR "./"
-#ifndef CAMERA_DEFAULT_CFG_PATH
-#define CAMERA_DEFAULT_CFG_PATH "/etc/camera/"
-#endif
 #define CAMERA_GRAPH_SETTINGS_DIR "gcss/"
+#endif
+
+#ifndef CAMERA_DEFAULT_CFG_PATH
+#error CAMERA_DEFAULT_CFG_PATH not defined
 #endif
 
 #define NVM_DATA_PATH "/sys/bus/i2c/devices/"
@@ -209,7 +210,6 @@ class PlatformData {
                       mHdrStatsOutputBitDepth(0),
                       mUseFixedHdrExposureInfo(true),
                       // HDR_FEATURE_E
-                      mLtmEnabled(false),
                       mSensorExposureNum(2),
                       mSensorExposureType(SENSOR_EXPOSURE_SINGLE),
                       mSensorGainType(SENSOR_GAIN_NONE),
@@ -231,9 +231,6 @@ class PlatformData {
                       mDigitalGainLag(-1),
                       mExposureLag(MAX_BUFFER_COUNT),
                       mAnalogGainLag(0),
-                      mLtmGainLag(0),
-                      mEnableLtmThread(false),
-                      mEnableLtmDefog(false),
                       mMaxSensorDigitalGain(0),
                       mSensorDgType(SENSOR_DG_TYPE_NONE),
                       mISysFourcc(V4L2_PIX_FMT_SGRBG8),
@@ -295,7 +292,6 @@ class PlatformData {
             int mHdrStatsOutputBitDepth;
             bool mUseFixedHdrExposureInfo;
             // HDR_FEATURE_E
-            bool mLtmEnabled;
             int mSensorExposureNum;
             int mSensorExposureType;
             int mSensorGainType;
@@ -319,9 +315,6 @@ class PlatformData {
             int mDigitalGainLag;
             int mExposureLag;
             int mAnalogGainLag;
-            int mLtmGainLag;
-            bool mEnableLtmThread;
-            bool mEnableLtmDefog;
             int mMaxSensorDigitalGain;
             SensorDgType mSensorDgType;
             std::string mCustomAicLibraryName;
@@ -641,14 +634,6 @@ class PlatformData {
      */
     static bool isNeedToPreRegisterBuffer(int cameraId);
 
-    /**
-     * Check Defog(LTM) is enabled or not
-     *
-     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return if Defog is enabled or not.
-     */
-    static bool isEnableDefog(int cameraId);
-
     // FRAME_SYNC_S
     /**
      * Check Frame Sync is enabled or not
@@ -667,14 +652,6 @@ class PlatformData {
      * \return the value of exposure number according to different cases
      */
     static int getExposureNum(int cameraId, bool multiExposure);
-
-    /**
-     * Check LTM is enabled or not
-     *
-     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return if LTM is enabled or not.
-     */
-    static bool isLtmEnabled(int cameraId);
 
     // HDR_FEATURE_S
     /**
@@ -774,22 +751,6 @@ class PlatformData {
      * \return the value of preferred buffer queue size
      */
     static unsigned int getPreferredBufQSize(int cameraId);
-
-    /**
-     * Get Ltm Gain lag
-     *
-     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return the value of LTM gain lag
-     */
-    static int getLtmGainLag(int cameraId);
-
-    /**
-     * Check ltm thread is enabled or not
-     *
-     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return if ltm thread is enabled or not.
-     */
-    static bool isEnableLtmThread(int cameraId);
 
     /**
      * Check face engine is enabled or not
@@ -1187,6 +1148,14 @@ class PlatformData {
      * \return the stream id if succeeds, otherwise return -1.
      */
     static int getStreamIdByConfigMode(int cameraId, ConfigMode configMode);
+
+    /*
+     * Get the max requests number in HAL
+     *
+     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
+     * \return the max requests number in HAL
+     */
+    static int getMaxRequestsInHAL(int cameraId);
 
     /*
      * Get the max requests number in flight
