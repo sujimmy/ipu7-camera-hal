@@ -46,15 +46,15 @@ AEStateMachine::~AEStateMachine() {
 int AEStateMachine::processState(uint8_t controlMode, uint8_t sceneMode,
                                       const AeControls& aeControls) {
     if (controlMode == controls::Mode3AOff) {
-        LOG(IPU7MetaData, Info) << " Set AE offMode";
+        LOG(IPU7MetaData, Debug) << " Set AE offMode";
         mCurrentAeMode = &mOffMode;
     } else {
         // Mode3AAuto
         if (aeControls.aeMode == controls::AeModeOff) {
-            LOG(IPU7MetaData, Info) << " Set AE offMode with AE mode " << aeControls.aeMode;
+            LOG(IPU7MetaData, Debug) << " Set AE offMode with AE mode " << aeControls.aeMode;
             mCurrentAeMode = &mOffMode;
         } else {
-            LOG(IPU7MetaData, Info) << " Set AE autoMode with AE mode " << aeControls.aeMode;
+            LOG(IPU7MetaData, Debug) << " Set AE autoMode with AE mode " << aeControls.aeMode;
             mCurrentAeMode = &mAutoMode;
         }
     }

@@ -73,6 +73,7 @@ struct GraphConfigurationKey {
     uint32_t attributes = 0;
     StreamConfig preview;
     StreamConfig video;
+    StreamConfig postProcessingVideo;
     StreamConfig stills;
     StreamConfig raw;
     StreamConfig videoIr;

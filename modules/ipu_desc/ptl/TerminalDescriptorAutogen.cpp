@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Intel Corporation.
+ * Copyright (C) 2023-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -460,16 +460,47 @@ TerminalDescriptor SW_GDCTerminalDesc[] =
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_IN,
-        2565, // gdc7_1
+        5637, // gdc7_1
     },
     {
-        SW_GDC_TERMINAL_CONNECT_OUTPUT,
+        SW_GDC_TERMINAL_CONNECT_OUTPUT_1,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT_1",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        0,
+    },
+    {
+        SW_GDC_TERMINAL_CONNECT_OUTPUT_2,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT_2",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        0,
+    },
+};
+
+TerminalDescriptor SW_SCALERTerminalDesc[] =
+{
+    {
+        SW_SCALER_TERMINAL_CONNECT_INPUT,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_INPUT",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_IN,
+        0, // sw_scaler
+    },
+    {
+        SW_SCALER_TERMINAL_CONNECT_OUTPUT,
         TERMINAL_TYPE_CONNECT,
         "TERMINAL_CONNECT_OUTPUT",
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_OUT,
-        2565, // gdc7_1
+        0, // sw_scaler
     },
 };
 
@@ -477,3 +508,4 @@ int CountOfSW_ISYSTerminalDesc = sizeof(SW_ISYSTerminalDesc) / sizeof(SW_ISYSTer
 int CountOfLBFFTerminalDesc = sizeof(LBFFTerminalDesc) / sizeof(LBFFTerminalDesc[0]);
 int CountOfBBPSTerminalDesc = sizeof(BBPSTerminalDesc) / sizeof(BBPSTerminalDesc[0]);
 int CountOfSW_GDCTerminalDesc = sizeof(SW_GDCTerminalDesc) / sizeof(SW_GDCTerminalDesc[0]);
+int CountOfSW_SCALERTerminalDesc = sizeof(SW_SCALERTerminalDesc) / sizeof(SW_SCALERTerminalDesc[0]);

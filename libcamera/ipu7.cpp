@@ -91,8 +91,9 @@ class IPU7CameraData : public Camera::Private, public icamera::EventListener {
 
     void start();
     void stop();
+    bool acquireDevice();
+    void releaseDevice();
 
-    void connectCallback();
     void handleNewRequest(Request* request);
     void processNewRequest();
 
@@ -119,7 +120,7 @@ class IPU7CameraData : public Camera::Private, public icamera::EventListener {
     Stream mStillStreams[kStillStreamNum];
     Stream mRawStream;
 
-    IPUFrames mFrameInfo;
+    IPUFrames* mFrameInfo;
     icamera::stream_config_t mStreamList;
     std::map<Stream*, unsigned int> mStreamToStreamIndexMap;
 
@@ -132,17 +133,15 @@ class IPU7CameraData : public Camera::Private, public icamera::EventListener {
     void waitAllRequestsDone();
 
     int startStream();
-    int stopStream();
+    void stopStream();
     int deviceDqbuf(int streamId, camera_buffer_t** ubuffer);
     int deviceQbuf(camera_buffer_t** ubuffer, int bufferNum = 1);
     int deviceConfigure(stream_config_t* streamList);
-    void callbackRegister(const camera_callback_ops_t* callback);
 
     StreamSource* createBufferProducer();
     std::map<uuid, stream_t> selectProducerConfig(const stream_config_t* streamList, int mcId);
     bool isProcessorNeeded(const stream_config_t* streamList, const stream_t& producerConfig);
-    int analyzeStream(stream_config_t* streamList, int* inputStreamId, int* preStreamIdForFace,
-                      int* inputYuvStreamId);
+    int analyzeStream(stream_config_t* streamList, int* inputStreamId, int* inputYuvStreamId);
     int assignPortForStreams(const stream_config_t* streamList, int inputStreamId,
                              int inputYuvStreamId, int configuredStreamNum);
     int createStreams(stream_config_t* streamList, int configuredStreamNum);
@@ -154,15 +153,6 @@ class IPU7CameraData : public Camera::Private, public icamera::EventListener {
     void handleEvent(EventData eventData);
 
  private:
-    enum {
-        DEVICE_UNINIT = 0,
-        DEVICE_INIT,
-        DEVICE_CONFIGURE,  // means stream configured
-        DEVICE_START,
-        DEVICE_STOP,
-        DEVICE_BUFFER_READY,  // At least one buffer is queued to ISP
-    } mState;
-
     // Pipeline elements
     CameraStream* mCameraStream[MAX_STREAM_NUMBER];
     std::map<int, uuid> mStreamIdToPortMap;
@@ -180,24 +170,32 @@ class IPU7CameraData : public Camera::Private, public icamera::EventListener {
     // CSI_META_E
     // Internal used variable
     int mStreamNum;
-    DataContext* mDataContext;
     bool mPerframeControlSupport;
     GraphConfigManager* mGcMgr;
 
     RequestThread* mRequestThread;
-    stream_t mInputConfig;
-    camera_callback_ops_t* mCallback;
+    class ResultHandler : public Object {
+     public:
+        ResultHandler(IPU7CameraData* cameraData) : mCameraData(cameraData) {}
+        ~ResultHandler() {}
+
+        void bufferReady(unsigned int streamId) { mCameraData->bufferReady(streamId); }
+        void metadataReady(unsigned int frameNumber, int64_t sequence) {
+            mCameraData->metadataReady(frameNumber, sequence);
+        }
+        void shutterReady(unsigned int frameNumber, int64_t timestamp) {
+            mCameraData->shutterReady(frameNumber, timestamp);
+        }
+     private:
+        IPU7CameraData* mCameraData;
+    };
+    ResultHandler* mResultHandler;
+    Thread* mResultThread;
+
     std::shared_ptr<CameraScheduler> mScheduler;
 
  private:
     icamera::stream_t mStreams[kMaxStreamNum];
-    struct CameraBufferInfo {
-        icamera::camera_buffer_t halBuffer[kMaxStreamNum];
-        uint32_t frameNumber;
-        bool frameInProcessing;
-    };
-    static const int8_t kMaxProcessRequestNum = 10;
-    CameraBufferInfo mCameraBufferInfo[kMaxProcessRequestNum];
 
     mutable Mutex mMutex;
     std::queue<Request*> mPendingRequests;
@@ -243,6 +241,8 @@ class PipelineHandlerIPU7 : public PipelineHandler {
     int queueRequestDevice(Camera* camera, Request* request) override;
 
     bool match(DeviceEnumerator* enumerator) override;
+    bool acquireDevice(Camera *camera) override;
+    void releaseDevice(Camera *camera) override;
 
  private:
     IPU7CameraData *cameraData(Camera* camera) {
@@ -259,20 +259,13 @@ class PipelineHandlerIPU7 : public PipelineHandler {
 IPU7CameraData::IPU7CameraData(PipelineHandler* pipe, int32_t cameraId)
     : Camera::Private(pipe),
       mCameraId(cameraId),
-      mState(DEVICE_UNINIT),
       mProcessingUnit(nullptr),
       mStreamNum(0),
-      mDataContext(nullptr),
       mGcMgr(nullptr),
-      mCallback(nullptr),
       mScheduler(nullptr),
       mCameraStarted(false),
       mPrivacyStarted(false) {
     LOG(IPU7, Info) << "<id" << mCameraId << ">@" << __func__;
-
-    memset(&mStreamList, 0, sizeof(mStreamList));
-    mStreamList.streams = mStreams;
-    memset(&mCameraBufferInfo, 0, sizeof(mCameraBufferInfo));
 
     icamera::MediaControl* mc = icamera::MediaControl::getInstance();
     if (!mc) {
@@ -283,13 +276,10 @@ IPU7CameraData::IPU7CameraData(PipelineHandler* pipe, int32_t cameraId)
 
     icamera::CameraContext::getInstance(mCameraId);
 
-    CLEAR(mCameraStream);
+    bool zslEnable = PlatformData::isHALZslSupported(mCameraId);
+    mFrameInfo = new IPUFrames(zslEnable);
 
     V4l2DeviceFactory::createDeviceFactory(mCameraId);
-    CLEAR(mInputConfig);
-    mInputConfig.format = -1;
-
-    mDataContext = new DataContext(cameraId);
     mProducer = createBufferProducer();
     mSofSource = new SofSource(mCameraId);
     // CSI_META_S
@@ -311,33 +301,16 @@ IPU7CameraData::IPU7CameraData(PipelineHandler* pipe, int32_t cameraId)
 
     mMakerNoteBuilder = std::make_unique<MakerNoteBuilder>();
 
-    mPrivacyControl->callbackRegister(&mFrameInfo.mResultsHandler);
-    callbackRegister(&mFrameInfo.mResultsHandler);
-
-    mProducer->init();
-    mSofSource->init();
-    // CSI_META_S
-    mCsiMetaDevice->init();
-    // CSI_META_E
-    m3AControl->init();
-    mLensCtrl->init();
-    mState = DEVICE_INIT;
+    mResultThread = new Thread();
+    mResultHandler = new ResultHandler(this);
+    mResultHandler->moveToThread(mResultThread);
 }
 
 IPU7CameraData::~IPU7CameraData() {
     LOG(IPU7, Info) << "<id" << mCameraId << ">@" << __func__;
 
-    deleteStreams();
-
-    delete mProcessingUnit;
-    m3AControl->deinit();
-    mSofSource->deinit();
-    // CSI_META_S
-    mCsiMetaDevice->deinit();
-    // CSI_META_E
-    mProducer->deinit();
-    mState = DEVICE_UNINIT;
-
+    delete mResultThread;
+    delete mResultHandler;
     // Clear the media control when close the device.
     MediaControl* mc = MediaControl::getInstance();
     MediaCtlConf* mediaCtl = PlatformData::getMediaCtlConf(mCameraId);
@@ -361,7 +334,7 @@ IPU7CameraData::~IPU7CameraData() {
 
     V4l2DeviceFactory::releaseDeviceFactory(mCameraId);
 
-    delete mDataContext;
+    delete mFrameInfo;
 
     if (mCamera3AMetadata) delete mCamera3AMetadata;
     mPrivacyControl = nullptr;
@@ -382,6 +355,7 @@ void IPU7CameraData::initProperties() {
 
 void IPU7CameraData::start() {
     bindListeners();
+    mResultThread->start();
     mRequestThread->run("RequestThread", PRIORITY_NORMAL);
     mScheduler->start();
 }
@@ -399,7 +373,59 @@ void IPU7CameraData::stop() {
     mScheduler->stop();
     mRequestThread->requestExit();
     mRequestThread->join();
+    mResultThread->exit();
+    mResultThread->wait();
     unbindListeners();
+}
+
+bool IPU7CameraData::acquireDevice() {
+    memset(&mStreamList, 0, sizeof(mStreamList));
+    mStreamList.streams = mStreams;
+    CLEAR(mCameraStream);
+    mStreamNum = 0;
+
+    if (mProducer->init() < 0) {
+        LOG(IPU7, Error) << "Init capture unit failed";
+        return false;
+    }
+
+    if (mSofSource->init() != icamera::OK) {
+        LOG(IPU7, Error) << "Init sync manager failed";
+        return false;
+    }
+    // CSI_META_S
+    if (mCsiMetaDevice->init() != icamera::OK) {
+        LOG(IPU7, Error) << "Init csi meta device failed";
+        return false;
+    }
+    // CSI_META_E
+
+    if (m3AControl->init() != icamera::OK) {
+        LOG(IPU7, Error) << "Init 3A Unit falied";
+        return false;
+    }
+
+    if (mLensCtrl->init() != icamera::OK) {
+        LOG(IPU7, Error) << "Init Lens falied";
+        return false;
+    }
+
+    return true;
+}
+
+void IPU7CameraData::releaseDevice() {
+    deleteStreams();
+    if (mProcessingUnit) {
+        delete mProcessingUnit;
+        mProcessingUnit = nullptr;
+    }
+
+    m3AControl->deinit();
+    mSofSource->deinit();
+    // CSI_META_S
+    mCsiMetaDevice->deinit();
+    // CSI_META_E
+    mProducer->deinit();
 }
 
 void IPU7CameraData::handleNewRequest(Request* request) {
@@ -418,20 +444,8 @@ void IPU7CameraData::processNewRequest() {
 
     if (mPendingRequests.empty()) return;
 
-    int8_t index = -1;
-    for (int8_t i = 0; i < kMaxProcessRequestNum; i++) {
-        if (!mCameraBufferInfo[i].frameInProcessing) {
-            index = i;
-            break;
-        }
-    }
-    if (index < 0) {
-        LOG(IPU7, Warning) << "No empty CameraBufferInfo is available";
-        return;
-    }
-
     Request* request = mPendingRequests.front();
-    Info* info = mFrameInfo.create(request);
+    Info* info = mFrameInfo->create(request);
     if (!info) {
         LOG(IPU7, Warning) << "Failed to create Info";
         return;
@@ -453,64 +467,50 @@ void IPU7CameraData::processNewRequest() {
         unsigned int id = mStreamToStreamIndexMap[usrStream];
         icamera::stream_t halStream = mStreamList.streams[id];
 
-        mFrameInfo.getBuffer(info, halStream, buffer.second,
-                              &mCameraBufferInfo[index].halBuffer[bufferNum]);
-        mCameraBufferInfo[index].halBuffer[bufferNum].sequence = -1;
-        mCameraBufferInfo[index].halBuffer[bufferNum].timestamp = 0;
-        halBuffer[bufferNum] = &mCameraBufferInfo[index].halBuffer[bufferNum];
+        bool status = mFrameInfo->getBuffer(info, halStream, buffer.second,
+                                            &info->halBuffer[bufferNum]);
+        if (!status) {
+            LOG(IPU7, Error) << "Failed to get buffer id " << id;
+            mFrameInfo->recycle(info);
+            return;
+        }
+        halBuffer[bufferNum] = &info->halBuffer[bufferNum];
         bufferNum++;
     }
 
     int ret = qbuf(halBuffer, bufferNum);
     if (ret != 0) {
         LOG(IPU7, Error) << "Failed to queue buffers";
+        mFrameInfo->recycle(info);
         return;
     }
-
-    mCameraBufferInfo[index].frameInProcessing = true;
-    mCameraBufferInfo[index].frameNumber = request->sequence();
 
     mPendingRequests.pop();
 
     LOG(IPU7, Debug) << " request processing " << info->id;
 }
 
-void IPU7CameraData::connectCallback() {
-    LOG(IPU7, Info) << "IPU7CameraData::connectCallback()";
-
-    mFrameInfo.mResultsHandler.mMetadataAvailable.connect(this, &IPU7CameraData::metadataReady);
-    mFrameInfo.mResultsHandler.mBufferAvailable.connect(this, &IPU7CameraData::bufferReady);
-    mFrameInfo.mResultsHandler.mShutterReady.connect(this, &IPU7CameraData::shutterReady);
-}
-
 void IPU7CameraData::returnRequestDone(unsigned int frameNumber) {
-    Info* info = mFrameInfo.requestComplete(frameNumber);
+    Info* info = mFrameInfo->requestComplete(frameNumber);
     if (!info) return;
 
-    mFrameInfo.remove(info);
+    mFrameInfo->recycle(info);
 
     pipe()->completeRequest(info->request);
-
-    for (int8_t i = 0; i < kMaxProcessRequestNum; i++) {
-        if (frameNumber == mCameraBufferInfo[i].frameNumber) {
-            memset(&mCameraBufferInfo[i], 0, sizeof(mCameraBufferInfo[i]));
-            break;
-        }
-    }
 
     LOG(IPU7, Debug) << " request done " << info->id << " frameNumber " << frameNumber;
     processNewRequest();
 }
 
 void IPU7CameraData::metadataReady(unsigned int frameNumber, int64_t sequence) {
-    Info* info = mFrameInfo.find(frameNumber);
+    Info* info = mFrameInfo->find(frameNumber);
     ControlList metadata;
     if (info) {
         updateMetadataResult(sequence, info->request->controls(), metadata);
         pipe()->completeMetadata(info->request, metadata);
     }
 
-    mFrameInfo.metadataReady(frameNumber, sequence);
+    mFrameInfo->metadataReady(frameNumber, sequence, metadata);
 
     returnRequestDone(frameNumber);
 }
@@ -524,19 +524,19 @@ void IPU7CameraData::bufferReady(unsigned int streamId) {
         return;
     }
 
-    Info* info = mFrameInfo.find(buffer->frameNumber);
+    Info* info = mFrameInfo->find(buffer->frameNumber);
     if (info && info->outBuffers.find(streamId) != info->outBuffers.end()) {
         FrameBuffer* frameBuffer = info->outBuffers[streamId];
         pipe()->completeBuffer(info->request, frameBuffer);
 
-        mFrameInfo.bufferReady(buffer->frameNumber, streamId);
+        mFrameInfo->bufferReady(buffer->frameNumber, streamId);
 
         returnRequestDone(buffer->frameNumber);
     }
 }
 
 void IPU7CameraData::shutterReady(unsigned int frameNumber, int64_t timestamp) {
-    Info* info = mFrameInfo.find(frameNumber);
+    Info* info = mFrameInfo->find(frameNumber);
     ControlList metadata;
     if (info) {
         if (info->isStill) {
@@ -546,7 +546,7 @@ void IPU7CameraData::shutterReady(unsigned int frameNumber, int64_t timestamp) {
         pipe()->completeMetadata(info->request, metadata);
     }
 
-    mFrameInfo.shutterReady(frameNumber);
+    mFrameInfo->shutterReady(frameNumber, timestamp);
 }
 
 void IPU7CameraData::setup() {
@@ -603,10 +603,9 @@ void IPU7CameraData::processControls(Request* request, bool isStill) {
     if (isStill) {
         dataContext->mAiqParams.frameUsage = icamera::FRAME_USAGE_STILL;
         dataContext->mAiqParams.makernoteMode = icamera::MAKERNOTE_MODE_JPEG;
-    }
-
-    else
+    } else {
         dataContext->mAiqParams.frameUsage = icamera::FRAME_USAGE_PREVIEW;
+    }
 
     ParameterConverter::controls2DataContext(mCameraId, request->controls(), dataContext);
 }
@@ -695,10 +694,6 @@ void IPU7CameraData::processPrivacySwitch() {
     mPrivacyStarted = !mPrivacyStarted;
 }
 
-void IPU7CameraData::callbackRegister(const camera_callback_ops_t* callback) {
-    mCallback = const_cast<camera_callback_ops_t*>(callback);
-}
-
 StreamSource* IPU7CameraData::createBufferProducer() {
     // FILE_SOURCE_S
     if (PlatformData::isFileSourceEnabled()) {
@@ -752,6 +747,7 @@ void IPU7CameraData::bindListeners() {
         mProducer->registerListener(EVENT_ISYS_SOF, mRequestThread);
     }
     // FILE_SOURCE_E
+    mPrivacyControl->frameEvents.connect(this, &IPU7CameraData::handleEvent);
 }
 
 void IPU7CameraData::unbindListeners() {
@@ -794,12 +790,13 @@ void IPU7CameraData::unbindListeners() {
         mProducer->removeListener(EVENT_ISYS_SOF, mRequestThread);
     }
     // FILE_SOURCE_E
+    mPrivacyControl->frameEvents.disconnect(this, &IPU7CameraData::handleEvent);
 }
 
 int IPU7CameraData::deviceConfigure(stream_config_t* streamList) {
     // Release the resource created last time
     deleteStreams();
-    delete mProcessingUnit;
+    if (mProcessingUnit) delete mProcessingUnit;
     mProcessingUnit = nullptr;
     mProducer->removeAllFrameAvailableListener();
 
@@ -812,8 +809,8 @@ int IPU7CameraData::deviceConfigure(stream_config_t* streamList) {
      * 5. Create the procesor
      * 6. Bind the CameraStream to processor
      */
-    int inputRawStreamId = -1, preStreamIdForFace = -1, inputYuvStreamId = -1;
-    if (analyzeStream(streamList, &inputRawStreamId, &preStreamIdForFace, &inputYuvStreamId) < 0) {
+    int inputRawStreamId = -1, inputYuvStreamId = -1;
+    if (analyzeStream(streamList, &inputRawStreamId, &inputYuvStreamId) < 0) {
         LOG(IPU7, Error) << "analyzeStream failed";
         return icamera::BAD_VALUE;
     }
@@ -836,8 +833,7 @@ int IPU7CameraData::deviceConfigure(stream_config_t* streamList) {
 
     // Config the H-Scheduler based on graph id
     std::vector<ConfigMode> configModes;
-    PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
-                                                configModes);
+    PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode, configModes);
 
     std::shared_ptr<GraphConfig> gc =
             CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
@@ -895,8 +891,7 @@ int IPU7CameraData::deviceConfigure(stream_config_t* streamList) {
     m3AControl->configure(streamList);
 
     if (needProcessor) {
-        mProcessingUnit =
-            IProcessingUnitFactory::createIProcessingUnit(mCameraId, mScheduler);
+        mProcessingUnit = IProcessingUnitFactory::createIProcessingUnit(mCameraId, mScheduler);
         if (!mProcessingUnit) {
             LOG(IPU7, Error) << "Failed to create ProcessingUnit";
             return icamera::BAD_VALUE;
@@ -920,8 +915,6 @@ int IPU7CameraData::deviceConfigure(stream_config_t* streamList) {
         return icamera::BAD_VALUE;
     }
 
-    mState = DEVICE_CONFIGURE;
-
     return OK;
 }
 
@@ -935,7 +928,7 @@ int IPU7CameraData::deviceConfigure(stream_config_t* streamList) {
  * 4. Select the producerConfigs of SECOND_PORT if DOL enabled
  */
 std::map<uuid, stream_t> IPU7CameraData::selectProducerConfig(const stream_config_t* streamList,
-                                                            int mcId) {
+                                                              int mcId) {
     std::map<uuid, stream_t> producerConfigs;
     if (!PlatformData::isIsysEnabled(mCameraId)) {
         // Input stream id is the last one of mSortedStreamIds
@@ -948,39 +941,25 @@ std::map<uuid, stream_t> IPU7CameraData::selectProducerConfig(const stream_confi
     }
 
     stream_t biggestStream = streamList->streams[mSortedStreamIds[0]];
-    if (mDataContext->cropRegion.flag == 1) {
-        // Use crop region to select MC config
-        PlatformData::selectMcConf(mCameraId, mInputConfig, (ConfigMode)streamList->operation_mode,
-                                   mcId);
-    } else {
-        // Use CSI output to select MC config
-        std::vector<ConfigMode> configModes;
-        PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
-                                                    configModes);
-        stream_t matchedStream = biggestStream;
-        std::shared_ptr<GraphConfig> gc =
-            CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
-        if (!configModes.empty() && gc) {
-            camera_resolution_t csiOutput = {0, 0};
-            gc->getCSIOutputResolution(csiOutput);
-            if (csiOutput.width > 0 && csiOutput.height > 0) {
-                matchedStream.width = csiOutput.width;
-                matchedStream.height = csiOutput.height;
-            }
+    // Use CSI output to select MC config
+    std::vector<ConfigMode> configModes;
+    PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode, configModes);
+    stream_t matchedStream = biggestStream;
+    std::shared_ptr<GraphConfig> gc =
+        CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
+    if (!configModes.empty() && gc) {
+        camera_resolution_t csiOutput = {0, 0};
+        gc->getCSIOutputResolution(csiOutput);
+        if (csiOutput.width > 0 && csiOutput.height > 0) {
+            matchedStream.width = csiOutput.width;
+            matchedStream.height = csiOutput.height;
         }
-        PlatformData::selectMcConf(mCameraId, matchedStream, (ConfigMode)streamList->operation_mode,
-                                   mcId);
     }
+    PlatformData::selectMcConf(mCameraId, matchedStream, (ConfigMode)streamList->operation_mode,
+                               mcId);
 
     // Select the output format.
-    int iSysFmt = biggestStream.format;
-    if (mInputConfig.format != -1) {
-        if (!PlatformData::isISysSupportedFormat(mCameraId, mInputConfig.format)) {
-            return producerConfigs;
-        }
-        iSysFmt = mInputConfig.format;
-    }
-    PlatformData::selectISysFormat(mCameraId, iSysFmt);
+    PlatformData::selectISysFormat(mCameraId, biggestStream.format);
 
     // Use the ISYS output if it's provided in media config section of config file.
     stream_t mainConfig = PlatformData::getISysOutputByPort(mCameraId, MAIN_INPUT_PORT_UID);
@@ -993,19 +972,8 @@ std::map<uuid, stream_t> IPU7CameraData::selectProducerConfig(const stream_confi
         return producerConfigs;
     }
 
-    // Filter the ISYS best resolution with input stream
-    int inputWidth = mInputConfig.width;
-    int inputHeight = mInputConfig.height;
-    camera_resolution_t producerRes = {inputWidth, inputHeight};
-    if (inputWidth == 0 && inputHeight == 0) {
-        // Only get the ISYS resolution when input config is not specified.
-        producerRes = PlatformData::getISysBestResolution(
-            mCameraId, biggestStream.width, biggestStream.height, biggestStream.field);
-    } else if (!PlatformData::isISysSupportedResolution(mCameraId, producerRes)) {
-        LOG(IPU7, Error) << "The stream config: (" << inputWidth << "x" << inputHeight
-                         << ") is not supported.";
-        return producerConfigs;
-    }
+    camera_resolution_t producerRes = PlatformData::getISysBestResolution(
+        mCameraId, biggestStream.width, biggestStream.height, biggestStream.field);
 
     // Update the height according to the field(interlaced).
     mainConfig.format = PlatformData::getISysFormat(mCameraId);
@@ -1025,15 +993,7 @@ std::map<uuid, stream_t> IPU7CameraData::selectProducerConfig(const stream_confi
  * 2. To support specific features such as HW weaving or dewarping.
  */
 bool IPU7CameraData::isProcessorNeeded(const stream_config_t* streamList,
-                                     const stream_t& producerConfig) {
-    if (mDataContext->cropRegion.flag == 1) return true;
-
-    if (producerConfig.field != V4L2_FIELD_ANY) {
-        if (mDataContext->deinterlaceMode == DEINTERLACE_WEAVING) {
-            return true;
-        }
-    }
-
+                                       const stream_t& producerConfig) {
     if (producerConfig.field != V4L2_FIELD_ALTERNATE) {
         int streamCounts = streamList->num_streams;
         for (int streamId = 0; streamId < streamCounts; streamId++) {
@@ -1043,10 +1003,6 @@ bool IPU7CameraData::isProcessorNeeded(const stream_config_t* streamList,
                 return true;
             }
         }
-    }
-
-    if (mDataContext->monoDsMode != MONO_DS_MODE_OFF) {
-        return true;
     }
 
     return false;
@@ -1075,7 +1031,7 @@ int IPU7CameraData::createStreams(stream_config_t* streamList, int configuredStr
  * 2. According resolution and format to store the streamId in descending order.
  */
 int IPU7CameraData::analyzeStream(stream_config_t* streamList, int* inputRawStreamId,
-                                int* preStreamIdForFace, int* inputYuvStreamId) {
+                                  int* inputYuvStreamId) {
     mSortedStreamIds.clear();
     int opaqueRawStreamId = -1;
 
@@ -1107,17 +1063,6 @@ int IPU7CameraData::analyzeStream(stream_config_t* streamList, int* inputRawStre
             continue;
         }
 
-        if (stream.usage == CAMERA_STREAM_PREVIEW && stream.format != V4L2_PIX_FMT_JPEG) {
-            *preStreamIdForFace = i;
-        }
-
-        if (mDataContext->cropRegion.flag == 0) {
-            if (!PlatformData::isSupportedStream(mCameraId, stream)) {
-                LOG(IPU7, Error) << "Stream config is not supported: " << stream.width << "x"
-                    << stream.height << " format:" << CameraUtils::pixelCode2String(stream.format);
-            }
-        }
-
         bool saved = false;
         // Store the streamId in descending order.
         for (size_t j = 0; j < mSortedStreamIds.size(); j++) {
@@ -1135,10 +1080,6 @@ int IPU7CameraData::analyzeStream(stream_config_t* streamList, int* inputRawStre
     if (opaqueRawStreamId >= 0) {
         mSortedStreamIds.push_back(opaqueRawStreamId);
     }
-
-    // Don't create stream for face if it is not supported
-    if (!PlatformData::isFaceDetectionSupported(mCameraId))
-        *preStreamIdForFace = -1;
 
     return OK;
 }
@@ -1198,12 +1139,6 @@ int IPU7CameraData::bindStreams(stream_config_t* streamList) {
 int IPU7CameraData::startStream() {
     mRequestThread->wait1stRequestDone();
 
-    if (mState != DEVICE_BUFFER_READY || mStreamNum == 0) {
-        LOG(IPU7, Error) << "Camera stream starts failed. state:" << mState << " streamNum:"
-                         << mStreamNum;
-        return INVALID_OPERATION;
-    }
-
     for (int i = 0; i < mStreamNum; i++) {
         if(mCameraStream[i]->start() < 0) {
             LOG(IPU7, Error) << "Start stream: " << i <<  " failed";
@@ -1233,11 +1168,10 @@ int IPU7CameraData::startStream() {
         return icamera::BAD_VALUE;
     }
 
-    mState = DEVICE_START;
     return OK;
 }
 
-int IPU7CameraData::stopStream() {
+void IPU7CameraData::stopStream() {
     mRequestThread->clearRequests();
     mSofSource->stop();
     m3AControl->stop();
@@ -1248,10 +1182,6 @@ int IPU7CameraData::stopStream() {
 
     mProducer->stop();
     if (mProcessingUnit) mProcessingUnit->stop();
-
-    mState = DEVICE_STOP;
-
-    return OK;
 }
 
 /**
@@ -1271,10 +1201,6 @@ int IPU7CameraData::deviceDqbuf(int streamId, camera_buffer_t** ubuffer) {
 }
 
 int IPU7CameraData::handleQueueBuffer(int bufferNum, camera_buffer_t** ubuffer, int64_t sequence) {
-    if (mState < DEVICE_CONFIGURE) {
-        LOG(IPU7, Error) << "Wrong state id " << mState;
-        return icamera::BAD_VALUE;
-    }
     // All streams need to be queued with either a real buffer from user or an empty buffer.
     for (int streamId = 0; streamId < mStreamNum; streamId++) {
         if (mCameraStream[streamId] == nullptr) {
@@ -1313,13 +1239,10 @@ int IPU7CameraData::handleQueueBuffer(int bufferNum, camera_buffer_t** ubuffer, 
 }
 
 int IPU7CameraData::deviceQbuf(camera_buffer_t** ubuffer, int bufferNum) {
-    if (mState == DEVICE_CONFIGURE || mState == DEVICE_STOP) {
-        // Start 3A here then the HAL can run 3A for request
-        if (m3AControl->start() < 0) {
-            LOG(IPU7, Error) << "Start 3a unit failed";
-            return icamera::NO_INIT;
-        }
-        mState = DEVICE_BUFFER_READY;
+    // Start 3A before the 1st buffer queued
+    if (!mCameraStarted && m3AControl->start() < 0) {
+        LOG(IPU7, Error) << "Start 3a unit failed";
+        return icamera::NO_INIT;
     }
     return mRequestThread->processRequest(bufferNum, ubuffer);
 }
@@ -1358,37 +1281,22 @@ void IPU7CameraData::handleEvent(EventData eventData) {
             break;
         }
         case EVENT_PSYS_REQUEST_BUF_READY: {
-            if (mCallback) {
-                camera_msg_data_t data = {CAMERA_ISP_BUF_READY, {}};
-                int64_t sequence = eventData.data.requestReady.sequence;
-
-                data.data.buffer_ready.timestamp = eventData.data.requestReady.timestamp;
-                data.data.buffer_ready.frameNumber = eventData.data.requestReady.frameNumber;
-                PlatformData::updateMakernoteTimeStamp(mCameraId, sequence,
-                                                       data.data.buffer_ready.timestamp);
-                mCallback->notify(mCallback, data);
-            }
+            const EventRequestReady& requestReady = eventData.data.requestReady;
+            mResultHandler->invokeMethod(&ResultHandler::shutterReady, ConnectionTypeQueued,
+                                         requestReady.frameNumber, requestReady.timestamp);
             break;
         }
 
         case EVENT_REQUEST_METADATA_READY: {
-            if (mCallback) {
-                camera_msg_data_t data = {CAMERA_METADATA_READY, {}};
-
-                data.data.metadata_ready.sequence = eventData.data.requestReady.sequence;
-                data.data.metadata_ready.frameNumber = eventData.data.requestReady.frameNumber;
-                mCallback->notify(mCallback, data);
-            }
+            const EventRequestReady& requestReady = eventData.data.requestReady;
+            mResultHandler->invokeMethod(&ResultHandler::metadataReady, ConnectionTypeQueued,
+                                         requestReady.frameNumber, requestReady.sequence);
             break;
         }
 
         case EVENT_FRAME_AVAILABLE: {
-            if (mCallback) {
-                camera_msg_data_t data = {CAMERA_FRAME_DONE, };
-
-                data.data.frame_ready.streamId = eventData.data.frameDone.streamId;
-                mCallback->notify(mCallback, data);
-            }
+            mResultHandler->invokeMethod(&ResultHandler::bufferReady, ConnectionTypeQueued,
+                                         eventData.data.frameDone.streamId);
             break;
         }
 
@@ -1636,8 +1544,6 @@ int PipelineHandlerIPU7::registerCameras() {
         data->initProperties();
         data->initializeCapabilities();
 
-        data->connectCallback();
-
         std::set<Stream*> streams;
         for (int i = 0; i < IPU7CameraData::kVideoStreamNum; i++) {
             streams.insert(&(data->mVideoStreams[i]));
@@ -1653,6 +1559,14 @@ int PipelineHandlerIPU7::registerCameras() {
         LOG(IPU7, Info) << "Registered Camera[" << cameraId << "] \"" << cameraName << "\"";
     }
     return numCameras ? 0 : -ENODEV;
+}
+
+bool PipelineHandlerIPU7::acquireDevice(Camera *camera) {
+    return cameraData(camera)->acquireDevice();
+}
+
+void PipelineHandlerIPU7::releaseDevice(Camera *camera) {
+    cameraData(camera)->releaseDevice();
 }
 
 REGISTER_PIPELINE_HANDLER(PipelineHandlerIPU7)

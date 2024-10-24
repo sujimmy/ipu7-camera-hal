@@ -802,15 +802,25 @@ int CBStage::addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* term
         terminalBuf.size = buf->getBufferSize();
         if (buf->getMemory() == V4L2_MEMORY_DMABUF) {
             terminalBuf.handle = buf->getFd();
-            terminalBuf.flags |= IPU_BUFFER_FLAG_DMA_HANDLE | IPU_BUFFER_FLAG_NO_FLUSH;
+            terminalBuf.flags |= IPU_BUFFER_FLAG_DMA_HANDLE;
 
             LOG2("%s, mStreamId %d, mContextId %u, terminalId %u, fd %lu, size %d", __func__,
                  mStreamId, mContextId, terminalId, terminalBuf.handle, terminalBuf.size);
         } else {
             terminalBuf.userPtr = buf->getBufferAddr();
-            terminalBuf.flags |= IPU_BUFFER_FLAG_USERPTR | IPU_BUFFER_FLAG_NO_FLUSH;
+            terminalBuf.flags |= IPU_BUFFER_FLAG_USERPTR;
             LOG2("%s, mStreamId %d, mContextId %u, terminalId %u, ptr %p, size %d", __func__,
                  mStreamId, mContextId, terminalId, terminalBuf.userPtr, terminalBuf.size);
+        }
+
+        bool flush = (!buf->isInternalBuffer()) ? true : false;
+        if (buf->getMemory() == V4L2_MEMORY_DMABUF &&
+            (PlatformData::removeCacheFlushOutputBuffer(mCameraId) ||
+             !buf->isNeedFlush())) {
+            flush = false;
+        }
+        if (!flush) {
+            terminalBuf.flags |= IPU_BUFFER_FLAG_NO_FLUSH;
         }
 
         int ret = mPSysDevice->registerBuffer(&terminalBuf);

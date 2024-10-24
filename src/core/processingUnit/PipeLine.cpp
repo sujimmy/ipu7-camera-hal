@@ -181,7 +181,7 @@ void PipeLine::removeListener(EventType eventType, EventListener* enventListener
             unit.pipeStage->removeListener(eventType, enventListener);
         if (eventType == EVENT_PSYS_STATS_SIS_BUF_READY ||
             eventType == EVENT_PSYS_STATS_BUF_READY)
-            unit.pipeStage->registerListener(eventType, enventListener);
+            unit.pipeStage->removeListener(eventType, enventListener);
     }
 }
 

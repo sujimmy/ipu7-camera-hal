@@ -16,6 +16,7 @@
 libcamera_sources += files([
     'ipu7.cpp',
     'Frames.cpp',
+    'ZslCapture.cpp',
     'ParameterConverter.cpp',
     'Camera3AMetadata.cpp',
     'AEStateMachine.cpp',

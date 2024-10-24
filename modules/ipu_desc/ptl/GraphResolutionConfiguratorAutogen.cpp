@@ -16,40 +16,49 @@
 
 #include "GraphResolutionConfiguratorAutogen.h"
 
-uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuid(GraphResolutionConfiguratorKernelRole role)
-{
-    switch (role)
-    {
-        case GraphResolutionConfiguratorKernelRole::UpScaler:    return 25569; // upscaler_1_0
-        case GraphResolutionConfiguratorKernelRole::DownScaler:  return 40299; // b2i_ds_1_1
-        case GraphResolutionConfiguratorKernelRole::FinalCropper:  return 42330; // lbff_crop_espa_1_3
+uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuid(
+    GraphResolutionConfiguratorKernelRole role) {
+    switch (role) {
+        case GraphResolutionConfiguratorKernelRole::UpScaler:
+            return 25569;  // upscaler_1_0
+        case GraphResolutionConfiguratorKernelRole::DownScaler:
+            return 40299;  // b2i_ds_1_1
+        case GraphResolutionConfiguratorKernelRole::FinalCropper:
+            return 42330;  // lbff_crop_espa_1_3
         default: break;
     }
 
     return 0;
 }
 
-uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId)
-{
+uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId,
+                                                                     GraphLink** links) {
     (void)graphId;
+    (void)links;
 
-    switch (hwSink)
-    {
-        case HwSink::ImageMpSink:    return 18789; // ofs_mp_bodr_regs_1_3
-        case HwSink::ImageDpSink:    return 27847; // ofs_dp_bodr_regs_1_3
-        case HwSink::ProcessedMainSink:    return 2565; // gdc7_1
-        case HwSink::AeOutSink:    return 55073; // aestatistics_2_1
-        default: break;
+    switch (hwSink) {
+        case HwSink::ImageMpSink:
+            return 18789;  // ofs_mp_bodr_regs_1_3
+        case HwSink::ImageDpSink:
+            return 27847;  // ofs_dp_bodr_regs_1_3
+        case HwSink::ProcessedMainSink:
+            return 5637;  // gdc7_1
+        case HwSink::ProcessedSecondarySink:
+            return 0;  // sw_scaler
+        case HwSink::AeOutSink:
+            return 55073;  // aestatistics_2_1
+        default:
+            break;
     }
 
     return 0;
 }
 
-StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHistoryUpdate(std::vector<uint32_t>& kernelUuids)
-{
-    // Must take only one from each resolution history index, since in static graph they all share the same
-    // resolution history instance
-    kernelUuids.push_back(6907);  // slim_tnr_spatial_bifd_yuvn_regs_1_3
+StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHistoryUpdate(
+    std::vector<uint32_t>& kernelUuids) {
+    // Must take only one from each resolution history index, since in static graph they all share
+    // the same resolution history instance
+    kernelUuids.push_back(6907);   // slim_tnr_spatial_bifd_yuvn_regs_1_3
     kernelUuids.push_back(27847);  // ofs_dp_bodr_regs_1_3
     kernelUuids.push_back(25579);  // slim_tnr_sp_bc_bifd_yuv4nm1_regs_1_3
     kernelUuids.push_back(48987);  // tnr7_ims_1_1
@@ -59,5 +68,7 @@ StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHisto
     kernelUuids.push_back(48078);  // slim_tnr_sp_bc_bifd_rs4nm1_regs_1_3
     kernelUuids.push_back(57803);  // tnr_sp_bc_bifd_yuv4n_regs_1_3
     kernelUuids.push_back(26536);  // slim_tnr_fp_blend_bifd_yuvnm1_regs_1_3
+    kernelUuids.push_back(5637);   // gdc7_1
+    kernelUuids.push_back(0);      // sw_scaler
     return StaticGraphStatus::SG_OK;
 }

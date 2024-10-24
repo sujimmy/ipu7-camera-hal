@@ -89,6 +89,12 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
     void handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMap* dstBuffers,
                                 const AiqResult* aiqResult);
 
+    void extractZslInfo(CameraBufferPortMap* dstBuffers, bool& reprocess,
+                        CameraBufferPortMap& videoBuf, CameraBufferPortMap& stillBuf,
+                        int64_t& zslSequence);
+    void handleZslReprocessing(int64_t sequence, const CameraBufferPortMap& videoBuf,
+                               CameraBufferPortMap stillBuf, bool& allBufDone,
+                               CameraBufferPortMap* dstBuffers);
  private:
     int mCameraId;
     static const nsecs_t kWaitDuration = 1000000000;  // 1000ms

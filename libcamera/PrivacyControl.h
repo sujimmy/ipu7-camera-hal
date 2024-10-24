@@ -54,6 +54,9 @@ class PrivacyControl : public Thread {
     bool getPrivacyMode();
     void updateMetadataResult(ControlList& metadata);
 
+ public:
+    Signal<EventData> frameEvents;
+
  private:
     virtual void run() override;
 
@@ -67,7 +70,7 @@ class PrivacyControl : public Thread {
     };
 
     const int mCameraId;
-    uint64_t mLastTimestamp;
+    int64_t mLastTimestamp;
     std::unique_ptr<HwPrivacyControl> mHwPrivacyControl;
 
     // lock for capture request and thread

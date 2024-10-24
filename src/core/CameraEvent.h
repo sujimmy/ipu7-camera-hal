@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@
 
 #include <map>
 #include <set>
-
+#ifdef LIBCAMERA_BUILD
+#include <libcamera/base/signal.h>
+#endif
 #include "CameraEventType.h"
 #include "iutils/Thread.h"
 
@@ -33,10 +35,14 @@ class EventListener {
 
 class EventSource {
  private:
+#ifdef LIBCAMERA_BUILD
+    libcamera::Signal<EventData> mNotifier[EVENT_TYPE_MAX];
+#else
     std::map<EventType, std::set<EventListener*>> mListeners;
 
     // Guard for EventSource public API to protect mListeners.
     Mutex mListenersLock;
+#endif
 
  public:
     EventSource() {}

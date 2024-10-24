@@ -17,7 +17,28 @@
 #pragma once
 
 #include "ParamDataType.h"
+#ifdef LIBCAMERA_BUILD
+#include "libcamera/internal/dma_buf_allocator.h"
 
+namespace icamera {
+using namespace libcamera;
+
+class BufferAllocator {
+ public:
+    BufferAllocator() {}
+    virtual ~BufferAllocator() {}
+
+    int allocateDmaBuffer(camera_buffer_t* ubuffer);
+    // buffer will be released when UniqueFD is destructed
+    void freeDmaBuffer() {}
+    static DmaBufAllocator sDmaBufAllocator;
+
+ private:
+    UniqueFD mUniqueBufferFD;
+};
+
+}  // namespace icamera
+#else
 #ifdef CAL_BUILD
 #include <cros-camera/camera_buffer_manager.h>
 
@@ -41,7 +62,6 @@ class BufferAllocator {
 };
 
 }  // namespace icamera
-
 #else
 
 namespace icamera {
@@ -57,4 +77,5 @@ class BufferAllocator {
 
 }  // namespace icamera
 
+#endif
 #endif

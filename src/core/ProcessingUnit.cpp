@@ -115,8 +115,10 @@ int ProcessingUnit::configure(const std::map<uuid, stream_t>& inputInfo,
 int ProcessingUnit::start() {
     PERF_CAMERA_ATRACE();
     AutoMutex l(mBufferQueueLock);
-    int rawBufferNum = !mOpaqueRawPorts.empty() ? PlatformData::getMaxRawDataNum(mCameraId)
-                                                : PlatformData::getPreferredBufQSize(mCameraId);
+
+    bool pendRaw = PlatformData::isHALZslSupported(mCameraId) || !mOpaqueRawPorts.empty();
+    int rawBufferNum = pendRaw ? PlatformData::getMaxRawDataNum(mCameraId)
+                               : PlatformData::getPreferredBufQSize(mCameraId);
 
     /* Should use MIN_BUFFER_COUNT to optimize frame latency when PSYS processing
      * time is slower than ISYS
@@ -601,9 +603,16 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
     CheckAndLogError(srcBuffers->empty() || dstBuffers->empty(), UNKNOWN_ERROR,
                      "%s, the input or output buffer is empty", __func__);
 
+    // Used for RAW reprocessing
     bool allBufDone = false;
     bool hasRawOutput = false;
     bool hasRawInput = false;
+
+    // Used for HAL ZSL
+    bool reprocess = false;
+    CameraBufferPortMap videoBuf, stillBuf;
+    int64_t zslSequence = -1;
+
     if (!mOpaqueRawPorts.empty()) {
         handleRawReprocessing(srcBuffers, dstBuffers, &allBufDone, &hasRawOutput, &hasRawInput);
         saveRawBuffer(srcBuffers);
@@ -626,6 +635,9 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
         auto iter = dstBuffers->find(YUV_REPROCESSING_INPUT_PORT_ID);
         if (iter != dstBuffers->end() && iter->second.get() != nullptr)
             return handleYuvReprocessing(dstBuffers);
+    } else if (PlatformData::isHALZslSupported(mCameraId)) {
+        extractZslInfo(dstBuffers, reprocess, videoBuf, stillBuf, zslSequence);
+        saveRawBuffer(srcBuffers);
     }
 
     uuid defaultPort = srcBuffers->begin()->first;
@@ -669,7 +681,7 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
         }
 
         // If input buffer will be used later, don't pop it from the queue.
-        if (!holdOnInput && !hasRawInput) {
+        if (!holdOnInput && !hasRawInput && !reprocess) {
             for (auto& input : mInputQueue) {
                 input.second.pop();
             }
@@ -694,8 +706,24 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
             callbackRgbs = true;
         }
 
-        if (aiqResult && PlatformData::isGpuTnrEnabled(mCameraId)) {
-            handleExtraTasksForTnr(inputSequence, dstBuffers, aiqResult);
+        if (aiqResult) {
+            if (PlatformData::isGpuTnrEnabled(mCameraId)) {
+                int64_t sequence = zslSequence >= 0 ? zslSequence : inputSequence;
+                handleExtraTasksForTnr(sequence, dstBuffers, aiqResult);
+            }
+
+            bool allBufDone = false;
+            if (reprocess) {
+                handleZslReprocessing(zslSequence, videoBuf, stillBuf, allBufDone, dstBuffers);
+            }
+            if (allBufDone) {
+                if (!callbackRgbs) {
+                    // handle metadata event after running pal(update metadata from pal result)
+                    sendPsysRequestEvent(dstBuffers, settingSequence, timestamp,
+                                         EVENT_REQUEST_METADATA_READY);
+                }
+                return OK;
+            }
         }
 
         dispatchTask(*srcBuffers, *dstBuffers, false, callbackRgbs);
@@ -712,6 +740,50 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
     }
 
     return OK;
+}
+
+void ProcessingUnit::extractZslInfo(CameraBufferPortMap* dstBuffers, bool& reprocess,
+                                    CameraBufferPortMap& videoBuf, CameraBufferPortMap& stillBuf,
+                                    int64_t& zslSequence) {
+    for (const auto& item : *dstBuffers) {
+        if (item.second && item.second->getStreamUsage() == CAMERA_STREAM_STILL_CAPTURE) {
+            stillBuf[item.first] = item.second;
+        } else if (item.second && item.second->getStreamUsage() != CAMERA_STREAM_OPAQUE_RAW) {
+            videoBuf[item.first] = item.second;
+        }
+    }
+
+    if (!stillBuf.empty() && TIMEVAL2USECS(stillBuf.begin()->second->getTimestamp()) > 0) {
+        zslSequence = stillBuf.begin()->second->getSettingSequence();
+        reprocess = true;
+        LOG2("Handle HAL based ZSL, change target %ld", zslSequence);
+    }
+}
+
+void ProcessingUnit::handleZslReprocessing(int64_t sequence, const CameraBufferPortMap& videoBuf,
+                                           CameraBufferPortMap stillBuf, bool& allBufDone,
+                                           CameraBufferPortMap* dstBuffers) {
+    // Set reprocess task for still
+    CameraBufferPortMap srcBuf;
+    {
+        AutoMutex lock(mBufferMapLock);
+        if (mRawBufferMap.find(sequence) != mRawBufferMap.end()) {
+            for (const auto& item : mRawBufferMap[sequence]) {
+                srcBuf[item.first] = item.second;
+            }
+        }
+        if (!srcBuf.empty()) {
+            dispatchTask(srcBuf, stillBuf);
+
+            if (videoBuf.empty()) {
+                allBufDone = true;
+            } else {
+                dstBuffers->erase(stillBuf.begin()->first);
+            }
+        }
+    }
+
+    LOG2("%s, allBufDone %d, sequence %ld", __func__, allBufDone, sequence);
 }
 
 void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMap* dstBuffers,

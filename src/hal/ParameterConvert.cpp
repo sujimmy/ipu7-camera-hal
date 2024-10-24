@@ -85,7 +85,10 @@ void ParameterConvert::setAiqSettings(const Parameters& param, DataContext* data
             dataContext->mAiqParams.evStep.numerator / dataContext->mAiqParams.evStep.denominator;
     }
 
-    param.getFrameRate(dataContext->mAiqParams.fps);
+    if (OK == param.getFrameRate(dataContext->mAiqParams.fps)) {
+        dataContext->mAiqParams.aeFpsRange.min = dataContext->mAiqParams.fps;
+        dataContext->mAiqParams.aeFpsRange.max = dataContext->mAiqParams.fps;
+    }
     param.getFpsRange(dataContext->mAiqParams.aeFpsRange);
     param.getAntiBandingMode(dataContext->mAiqParams.antibandingMode);
     // Update AWB related parameters
