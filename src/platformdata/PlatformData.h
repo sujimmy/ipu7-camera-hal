@@ -105,6 +105,7 @@ class StaticMetadata {
             {"control.availableSceneModes", TYPE_BYTE},
             {"control.maxRegions", TYPE_INT32},
             {"control.zoomRatioRange", TYPE_FLOAT},
+            {"control.enableZsl", TYPE_BYTE},
             {"statistics.info.availableFaceDetectModes", TYPE_BYTE},
             {"statistics.info.maxFaceCount", TYPE_INT32},
             {"sensor.maxAnalogSensitivity", TYPE_INT32},
@@ -953,6 +954,15 @@ class PlatformData {
      * \return true if supported, otherwise return false.
      */
     static bool isFeatureSupported(int cameraId, camera_features feature);
+
+    /**
+     * \brief Check if the HAL based ZSL is supported
+     *
+     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
+     *
+     * \return true if supported, otherwise return false.
+     */
+    static bool isHALZslSupported(int cameraId);
 
     /**
      * \brief Check if the given stream config is supported

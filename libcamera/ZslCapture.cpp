@@ -102,12 +102,44 @@ void ZslCapture::update3AStatus(unsigned int frameNumber, const ControlList& met
     }
 }
 
-void ZslCapture::getZslSequenceAndTimestamp(uint64_t& timestamp, int64_t& sequence) {
+uint64_t ZslCapture::getCurrentTimestamp() {
+    struct timespec t = {};
+
+    clock_gettime(CLOCK_MONOTONIC, &t);
+
+    return static_cast<uint64_t>(t.tv_sec) * 1000000000LL + t.tv_nsec;
+}
+
+void ZslCapture::getZslSequenceAndTimestamp(const ControlList& controls, uint64_t& timestamp,
+                                            int64_t& sequence) {
     MutexLocker locker(mMutex);
 
     timestamp = 0;
     sequence = -1;
-    // Todo handle later
+
+    /* Do not handle manaul cases */
+    if (isManualExposureSettings(controls)) return;
+
+    uint64_t curTimestamp = getCurrentTimestamp();
+    int64_t idealTimestamp = curTimestamp - kZslDefaultLookbackNs;
+
+    for (auto it = mZslInfoMap.begin(); it != mZslInfoMap.end(); it++) {
+        if (it->second.isManualExposure) continue;
+
+        int diff = it->second.timestamp - idealTimestamp;
+        if (diff > kZslLookbackLengthNs) {
+            continue;
+        } else if (diff < 0) {
+            /* Skip too order ones */
+            break;
+        }
+
+        if (it->second.isAeStable && it->second.isAfStable && it->second.isAwbStable) {
+            timestamp = it->second.timestamp;
+            sequence = it->second.sequence;
+            break;
+        }
+    }
 
     LOG(IPU7, Debug) << "ZSL timestamp " << timestamp << " sequence " << sequence;
 }

@@ -31,11 +31,10 @@ includes += include_directories(
 
 if get_option('android_platform').contains('cros')
     libcamera_sources += files([
-        'memory/chrome/BufferAllocator.cpp',
+        'memory/libcamera/BufferAllocator.cpp',
     ])
 
     includes += include_directories(
         'memory',
-        'memory/chrome',
     )
 endif

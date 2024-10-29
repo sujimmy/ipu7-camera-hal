@@ -39,9 +39,10 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuid(GraphResolutionConf
     return 0;
 }
 
-uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId)
+uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId, GraphLink** links)
 {
     (void)graphId;
+    (void)links;
 
     switch (hwSink)
     {

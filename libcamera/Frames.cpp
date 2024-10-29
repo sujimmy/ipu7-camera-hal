@@ -24,21 +24,23 @@
 
 #include "libcamera/internal/framebuffer.h"
 
-#include "CameraContext.h"
-
 namespace libcamera {
 
 LOG_DECLARE_CATEGORY(IPU7)
 
-IPUFrames::IPUFrames() {
+IPUFrames::IPUFrames(bool zslEnable) : mZslCapture(nullptr) {
+    if (zslEnable) {
+        mZslCapture = new ZslCapture;
+    }
+
     for (uint8_t i = 0; i < kMaxProcessingRequest; i++) {
         mAvailableRequestBuffers.push(&mRequestBuffers[i]);
     }
-
-    mResultsHandler.init(this);
 }
 
-IPUFrames::~IPUFrames() {}
+IPUFrames::~IPUFrames() {
+    delete mZslCapture;
+}
 
 void IPUFrames::clear() {
     MutexLocker locker(mMutex);
@@ -47,6 +49,11 @@ void IPUFrames::clear() {
 }
 
 Info* IPUFrames::create(Request* request) {
+    if (!request) {
+        LOG(IPU7, Error) << "request is nullptr";
+        return nullptr;
+    }
+
     unsigned int id = request->sequence();
 
     MutexLocker locker(mMutex);
@@ -66,10 +73,12 @@ Info* IPUFrames::create(Request* request) {
 
     mProcessingRequests[id] = info;
 
+    if (mZslCapture) mZslCapture->registerFrameInfo(id, request->controls());
+
     return info;
 }
 
-void IPUFrames::remove(Info* info) {
+void IPUFrames::recycle(Info* info) {
     unsigned int id = info->id;
 
     MutexLocker locker(mMutex);
@@ -90,7 +99,7 @@ Info* IPUFrames::find(unsigned int frameNumber) {
 }
 
 bool IPUFrames::getBuffer(Info* info, const icamera::stream_t& halStream, FrameBuffer* frameBuffer,
-                           icamera::camera_buffer_t* buf) {
+                          icamera::camera_buffer_t* buf) {
     if (!info || !frameBuffer || !buf) return false;
 
     const std::vector<FrameBuffer::Plane> &planes = frameBuffer->planes();
@@ -101,6 +110,13 @@ bool IPUFrames::getBuffer(Info* info, const icamera::stream_t& halStream, FrameB
     buf->frameNumber = info->id;
     buf->dmafd = planes[0].fd.get();
     buf->flags = icamera::BUFFER_FLAG_DMA_EXPORT;
+    buf->sequence = -1;
+    buf->timestamp = 0;
+
+    if (mZslCapture && info->isStill) {
+        mZslCapture->getZslSequenceAndTimestamp(info->request->controls(), buf->timestamp,
+                                                buf->sequence);
+    }
 
     info->outBuffers[halStream.id] = frameBuffer;
 
@@ -108,10 +124,7 @@ bool IPUFrames::getBuffer(Info* info, const icamera::stream_t& halStream, FrameB
     return true;
 }
 
-void IPUFrames::returnRequest(Info* info) {
-}
-
-void IPUFrames::shutterReady(unsigned int frameNumber) {
+void IPUFrames::shutterReady(unsigned int frameNumber, uint64_t timestamp) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
@@ -119,19 +132,27 @@ void IPUFrames::shutterReady(unsigned int frameNumber) {
 
         info->shutterReady = true;
 
+        if (mZslCapture) mZslCapture->updateTimeStamp(frameNumber, timestamp);
+
         return;
     }
 
     LOG(IPU7, Warning) << "id " << frameNumber << " for shutter isn't found";
 }
 
-void IPUFrames::metadataReady(unsigned int frameNumber, int64_t sequence) {
+void IPUFrames::metadataReady(unsigned int frameNumber, int64_t sequence,
+                              const ControlList& metadata) {
     MutexLocker locker(mMutex);
 
     if (mProcessingRequests.find(frameNumber) != mProcessingRequests.end()) {
         Info* info = mProcessingRequests[frameNumber];
 
         info->metadataReady = true;
+
+        if (mZslCapture) {
+            mZslCapture->updateSequence(frameNumber, sequence);
+            mZslCapture->update3AStatus(frameNumber, metadata);
+        }
 
         return;
     }
@@ -165,114 +186,6 @@ Info* IPUFrames::requestComplete(unsigned int frameNumber) {
     }
 
     return nullptr;
-}
-
-IPUResults::IPUResults() : mState(State::Stopped) {
-    icamera::camera_callback_ops_t::notify = IPUResults::notifyCallback;
-}
-
-IPUResults::~IPUResults() {
-    {
-        MutexLocker locker(mMutex);
-        mState = State::Stopped;
-        mEventCondition.notify_one();
-    }
-
-    wait();
-
-    LOG(IPU7, Debug) << "Result thread stopped";
-}
-
-void IPUResults::init(IPUFrames* frames) {
-    mIPUFrames = frames;
-
-    {
-        MutexLocker locker(mMutex);
-        mState = State::Running;
-    }
-
-    start();
-
-    LOG(IPU7, Debug) << "Result thread started";
-}
-
-void IPUResults::sendEvent(const icamera::camera_msg_data_t& data) {
-    MutexLocker locker(mMutex);
-
-    mEventQueue.push(data);
-    mEventCondition.notify_one();
-}
-
-void IPUResults::run() {
-    LOG(IPU7, Debug) << "Enter result thread loop";
-
-    while(true) {
-        icamera::camera_msg_data_t data;
-        {
-            MutexLocker locker(mMutex);
-
-            auto isEmpty = ([&]() LIBCAMERA_TSA_REQUIRES(mMutex) {
-                return mState != State::Running || !mEventQueue.empty();
-            });
-
-            auto duration = std::chrono::duration<float, std::ratio<2 / 1>>(10);
-            if (mEventQueue.empty()) {
-                mEventCondition.wait_for(locker, duration, isEmpty);
-            }
-
-            if (mState != State::Running) break;
-
-            if (mEventQueue.empty()) continue;
-
-            data = std::move(mEventQueue.front());
-            mEventQueue.pop();
-        }
-
-        handleEvent(data);
-    }
-
-    LOG(IPU7, Debug) << "Exit result thread loop";
-}
-
-void IPUResults::notifyCallback(const icamera::camera_callback_ops_t* cb,
-                                 const icamera::camera_msg_data_t& data) {
-    if (!cb) return;
-
-    IPUResults* callback = const_cast<IPUResults*>(static_cast<const IPUResults*>(cb));
-
-    callback->sendEvent(data);
-}
-
-void IPUResults::handleEvent(const icamera::camera_msg_data_t& data) {
-    switch(data.type) {
-        case icamera::CAMERA_ISP_BUF_READY: {
-            shutterDone(data.data.buffer_ready.frameNumber, data.data.buffer_ready.timestamp);
-            break;
-        }
-        case icamera::CAMERA_METADATA_READY: {
-            metadataDone(data.data.metadata_ready.frameNumber, data.data.metadata_ready.sequence);
-            break;
-        }
-        case icamera::CAMERA_FRAME_DONE: {
-            bufferDone(data.data.frame_ready.streamId);
-            break;
-        }
-        default: {
-            break;
-        }
-    }
-}
-
-void IPUResults::shutterDone(unsigned int frameNumber, uint64_t timestamp) {
-    mShutterReady.emit(frameNumber, timestamp);
-}
-
-void IPUResults::metadataDone(unsigned int frameNumber, int64_t sequence) {
-    mMetadataAvailable.emit(frameNumber, sequence);
-}
-
-void IPUResults::bufferDone(unsigned int streamId) {
-    mBufferAvailable.emit(streamId);
 }
 
 } /* namespace libcamera */

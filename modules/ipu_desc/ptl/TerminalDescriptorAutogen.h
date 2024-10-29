@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Intel Corporation.
+ * Copyright (C) 2023-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,15 +126,24 @@ enum BBPSTerminalID
 enum SW_GDCTerminalID
 {
     SW_GDC_TERMINAL_CONNECT_INPUT,
-    SW_GDC_TERMINAL_CONNECT_OUTPUT,
+    SW_GDC_TERMINAL_CONNECT_OUTPUT_1,
+    SW_GDC_TERMINAL_CONNECT_OUTPUT_2,
+};
+
+enum SW_SCALERTerminalID
+{
+    SW_SCALER_TERMINAL_CONNECT_INPUT,
+    SW_SCALER_TERMINAL_CONNECT_OUTPUT,
 };
 
 extern TerminalDescriptor SW_ISYSTerminalDesc[];
 extern TerminalDescriptor LBFFTerminalDesc[];
 extern TerminalDescriptor BBPSTerminalDesc[];
 extern TerminalDescriptor SW_GDCTerminalDesc[];
+extern TerminalDescriptor SW_SCALERTerminalDesc[];
 
 extern int CountOfSW_ISYSTerminalDesc;
 extern int CountOfLBFFTerminalDesc;
 extern int CountOfBBPSTerminalDesc;
 extern int CountOfSW_GDCTerminalDesc;
+extern int CountOfSW_SCALERTerminalDesc;

@@ -54,10 +54,15 @@ class ZslCapture {
     void updateSequence(unsigned int frameNumber, int64_t sequence);
     void update3AStatus(unsigned int frameNumber, const ControlList& metadata);
 
-    void getZslSequenceAndTimestamp(uint64_t& timestamp, int64_t& sequence);
+    void getZslSequenceAndTimestamp(const ControlList& controls, uint64_t& timestamp,
+                                    int64_t& sequence);
 
  private:
     bool isManualExposureSettings(const ControlList& controls);
+    uint64_t getCurrentTimestamp();
+
+    static const uint64_t kZslDefaultLookbackNs = 420000000;  /* 420ms */
+    static const uint64_t kZslLookbackLengthNs = 150000000;  /* 150ms */
 
     mutable Mutex mMutex;
 

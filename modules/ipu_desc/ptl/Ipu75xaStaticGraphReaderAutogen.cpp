@@ -190,6 +190,17 @@ StaticGraphStatus StaticGraphReader::GetStaticGraphConfig(GraphConfigurationKey&
             *graph = new StaticGraph100000(
                 reinterpret_cast<GraphConfiguration100000**>(selectedConfigurationData), selectedConfigurationsCount, &_zoomKeyResolutions, &selectedSinkMappingConfiguration, &_sensorModes[selectedGraphConfigurationHeader->sensorModeIndex], selectedGraphConfigurationHeader->settingId);
             break;
+        case 100001:
+            if (StaticGraph100001::hashCode != selectedGraphConfigurationHeader->graphHashCode)
+            {
+                STATIC_GRAPH_LOG("Graph %d hash code is not matching the settings. Binary should be re-created.", selectedGraphConfigurationHeader->graphId);
+                delete[] selectedConfigurationData;
+                delete[] selectedGraphConfigurationHeaders;
+                return StaticGraphStatus::SG_ERROR;
+            }
+            *graph = new StaticGraph100001(
+                reinterpret_cast<GraphConfiguration100001**>(selectedConfigurationData), selectedConfigurationsCount, &_zoomKeyResolutions, &selectedSinkMappingConfiguration, &_sensorModes[selectedGraphConfigurationHeader->sensorModeIndex], selectedGraphConfigurationHeader->settingId);
+            break;
         case 100002:
             if (StaticGraph100002::hashCode != selectedGraphConfigurationHeader->graphHashCode)
             {
@@ -490,6 +501,14 @@ void StaticGraphReader::GetSinkMappingConfiguration(GraphConfigurationHeader* ba
             selectedSinkMappingConfiguration->preview = baseSinkMappingConfiguration->video;
         }
         else
+        if (selectedGraphConfigurationHeader->settingsKey.preview.bpp == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.bpp &&
+            selectedGraphConfigurationHeader->settingsKey.preview.width == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.width &&
+            selectedGraphConfigurationHeader->settingsKey.preview.height == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.height
+            )
+        {
+            selectedSinkMappingConfiguration->preview = baseSinkMappingConfiguration->postProcessingVideo;
+        }
+        else
         {
             STATIC_GRAPH_LOG("Did not find correct mapping for preview sink.");
         }
@@ -512,8 +531,51 @@ void StaticGraphReader::GetSinkMappingConfiguration(GraphConfigurationHeader* ba
             selectedSinkMappingConfiguration->video = baseSinkMappingConfiguration->video;
         }
         else
+        if (selectedGraphConfigurationHeader->settingsKey.video.bpp == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.bpp &&
+            selectedGraphConfigurationHeader->settingsKey.video.width == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.width &&
+            selectedGraphConfigurationHeader->settingsKey.video.height == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.height
+            && selectedSinkMappingConfiguration->preview != baseSinkMappingConfiguration->postProcessingVideo
+            )
+        {
+            selectedSinkMappingConfiguration->video = baseSinkMappingConfiguration->postProcessingVideo;
+        }
+        else
         {
             STATIC_GRAPH_LOG("Did not find correct mapping for video sink.");
+        }
+
+        if (selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.bpp == baseGraphConfigurationHeader->settingsKey.preview.bpp &&
+            selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.width == baseGraphConfigurationHeader->settingsKey.preview.width &&
+            selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.height == baseGraphConfigurationHeader->settingsKey.preview.height
+            && selectedSinkMappingConfiguration->preview != baseSinkMappingConfiguration->preview
+            && selectedSinkMappingConfiguration->video != baseSinkMappingConfiguration->preview
+            )
+        {
+            selectedSinkMappingConfiguration->postProcessingVideo = baseSinkMappingConfiguration->preview;
+        }
+        else
+        if (selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.bpp == baseGraphConfigurationHeader->settingsKey.video.bpp &&
+            selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.width == baseGraphConfigurationHeader->settingsKey.video.width &&
+            selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.height == baseGraphConfigurationHeader->settingsKey.video.height
+            && selectedSinkMappingConfiguration->preview != baseSinkMappingConfiguration->video
+            && selectedSinkMappingConfiguration->video != baseSinkMappingConfiguration->video
+            )
+        {
+            selectedSinkMappingConfiguration->postProcessingVideo = baseSinkMappingConfiguration->video;
+        }
+        else
+        if (selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.bpp == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.bpp &&
+            selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.width == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.width &&
+            selectedGraphConfigurationHeader->settingsKey.postProcessingVideo.height == baseGraphConfigurationHeader->settingsKey.postProcessingVideo.height
+            && selectedSinkMappingConfiguration->preview != baseSinkMappingConfiguration->postProcessingVideo
+            && selectedSinkMappingConfiguration->video != baseSinkMappingConfiguration->postProcessingVideo
+            )
+        {
+            selectedSinkMappingConfiguration->postProcessingVideo = baseSinkMappingConfiguration->postProcessingVideo;
+        }
+        else
+        {
+            STATIC_GRAPH_LOG("Did not find correct mapping for postProcessingVideo sink.");
         }
 
         if (selectedGraphConfigurationHeader->settingsKey.stills.bpp == baseGraphConfigurationHeader->settingsKey.stills.bpp &&
@@ -521,6 +583,7 @@ void StaticGraphReader::GetSinkMappingConfiguration(GraphConfigurationHeader* ba
             selectedGraphConfigurationHeader->settingsKey.stills.height == baseGraphConfigurationHeader->settingsKey.stills.height
             && selectedSinkMappingConfiguration->preview != baseSinkMappingConfiguration->stills
             && selectedSinkMappingConfiguration->video != baseSinkMappingConfiguration->stills
+            && selectedSinkMappingConfiguration->postProcessingVideo != baseSinkMappingConfiguration->stills
             )
         {
             selectedSinkMappingConfiguration->stills = baseSinkMappingConfiguration->stills;

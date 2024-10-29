@@ -197,6 +197,8 @@ int CameraBuffer::allocateMemory(V4L2VideoNode* vDevice) {
             break;
         case V4L2_MEMORY_DMABUF:
             ret = allocateDmaBuffer(mU);
+            // dma allocate buffer size page aligned, update real buffer size.
+            setBufferSize(mU->s.size);
             break;
         default:
             LOGE("memory type %d is incorrect for allocateMemory.", mV.Memory());

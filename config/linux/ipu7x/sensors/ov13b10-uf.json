@@ -136,9 +136,6 @@
         "StaticMetadata": {
           "supportedStreamConfig": [
             {
-              "format": "V4L2_PIX_FMT_NV12", "size": [4096, 3072], "field": 0, "mcId": 0
-            },
-            {
               "format": "V4L2_PIX_FMT_NV12", "size": [3840, 2160], "field": 0, "mcId": 0
             },
             {
@@ -155,9 +152,6 @@
             },
             {
               "format": "V4L2_PIX_FMT_NV12", "size": [640, 360], "field": 0, "mcId": 0
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [4096, 3072], "field": 0, "mcId": 0
             },
             {
               "format": "V4L2_PIX_FMT_JPEG", "size": [3840, 2160], "field": 0, "mcId": 0
@@ -191,7 +185,7 @@
           "supportedAwbMode": [ "AUTO", "INCANDESCENT", "FLUORESCENT", "DAYLIGHT", "FULL_OVERCAST",
             "PARTLY_OVERCAST", "SUNSET", "VIDEO_CONFERENCE", "MANUAL_CCT_RANGE", "MANUAL_WHITE_POINT",
             "MANUAL_GAIN", "MANUAL_COLOR_TRANSFORM" ],
-          "supportedAfMode": [ "AUTO,MACRO,CONTINUOUS_VIDEO,CONTINUOUS_PICTURE,OFF" ],
+          "supportedAfMode": [ "AUTO", "MACRO", "CONTINUOUS_VIDEO", "CONTINUOUS_PICTURE", "OFF" ],
           "metadata":{
             "ae.lockAvailable": [1],
             "awb.lockAvailable": [1],
@@ -239,22 +233,18 @@
             "sensor.opaqueRawSize": [4208, 3120, 100],
             // available stream configurations: format: IMPLEMENTATION_DEFINED(34)|YCbCr_420_888:0x23(35)|BLOB(33), widthxheight, type: output(0)|input(1)
             "scaler.availableStreamConfigurations": [
-              33,4096,3072,0,
               33,3840,2160,0,
               33,1920,1080,0,
               33,1280,960,0,
               33,1280,720,0,
               33,640,480,0,
               33,640,360,0,
-              35,4096,3072,0,
               35,3840,2160,0,
               35,1920,1080,0,
               35,1280,960,0,
               35,1280,720,0,
               35,640,480,0,
               35,640,360,0,
-              34,4096,3072,0,
-              34,3840,2160,0,
               34,1920,1080,0,
               34,1280,960,0,
               34,1280,720,0,
@@ -263,21 +253,18 @@
             ],
             // minimum frame duration: format: IMPLEMENTATION_DEFINED(34)|YCbCr_420_888:0x23(35)|BLOB(33), widthxheight, duration:(ns)
             "scaler.availableMinFrameDurations": [
-              33,4096,3072,66666666,
               33,3840,2160,66666666,
               33,1920,1080,33333333,
               33,1280,960,33333333,
               33,1280,720,33333333,
               33,640,480,33333333,
               33,640,360,33333333,
-              35,4096,3072,66666666,
               35,3840,2160,66666666,
               35,1920,1080,33333333,
               35,1280,960,33333333,
               35,1280,720,33333333,
               35,640,480,33333333,
               35,640,360,33333333,
-              34,4096,3072,66666666,
               34,3840,2160,66666666,
               34,1920,1080,33333333,
               34,1280,960,33333333,
@@ -287,7 +274,6 @@
             ],
             // maximum stall duration: format: IMPLEMENTATION_DEFINED(34)|YCbCr_420_888:0x23(35)|BLOB(33), widthxheight, duration:(ns)
             "scaler.availableStallDurations": [
-              33,4096,3072,66666666,
               33,3840,2160,66666666,
               33,1920,1080,33333333,
               33,1280,960,33333333,
@@ -295,8 +281,8 @@
               33,640,480,33333333,
               33,640,360,33333333
             ],
-            // 4096*3072*1.5
-            "jpeg.maxSize": [18874368],
+            // 3840*2160*1.5
+            "jpeg.maxSize": [12441600],
             // INCREASING ORDER
             "jpeg.availableThumbnailSizes": [ 0, 0, 320, 180, 320, 240 ],
             // 0:off, 1:fast, 2:high_quality, 3:zero_shutter_lag
@@ -346,7 +332,6 @@
         "enableAiqd": true,
         "useCrlModule": false,
         "pslOutputMapForRotation": [
-          [[4096, 3072], [4096, 3072]],
           [[3840, 2160], [3840, 2160]],
           [[1920, 1080], [1920, 1080]],
           [[1280, 960], [1280, 960]],

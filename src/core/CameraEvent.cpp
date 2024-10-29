@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ void EventSource::registerListener(EventType eventType, EventListener* eventList
     CheckAndLogError(eventListener == nullptr, VOID_VALUE,
                      "%s: event listener is nullptr, skip registration.", __func__);
 
+#ifdef LIBCAMERA_BUILD
+    mNotifier[eventType].connect(eventListener, &EventListener::handleEvent);
+#else
     AutoMutex l(mListenersLock);
 
     std::set<EventListener*> listenersOfType;
@@ -37,10 +40,14 @@ void EventSource::registerListener(EventType eventType, EventListener* eventList
 
     listenersOfType.insert(eventListener);
     mListeners[eventType] = listenersOfType;
+#endif
 }
 
 void EventSource::removeListener(EventType eventType, EventListener* eventListener) {
     LOG1("@%s eventType: %d, listener: %p", __func__, eventType, eventListener);
+#ifdef LIBCAMERA_BUILD
+    mNotifier[eventType].disconnect(eventListener, &EventListener::handleEvent);
+#else
     AutoMutex l(mListenersLock);
 
     if (mListeners.find(eventType) == mListeners.end()) {
@@ -51,10 +58,14 @@ void EventSource::removeListener(EventType eventType, EventListener* eventListen
     std::set<EventListener*> listenersOfType = mListeners[eventType];
     listenersOfType.erase(eventListener);
     mListeners[eventType] = listenersOfType;
+#endif
 }
 
 void EventSource::notifyListeners(EventData eventData) {
     LOG2("@%s eventType: %d", __func__, eventData.type);
+#ifdef LIBCAMERA_BUILD
+    mNotifier[eventData.type].emit(eventData);
+#else
     AutoMutex l(mListenersLock);
 
     if (mListeners.find(eventData.type) == mListeners.end()) {
@@ -67,6 +78,7 @@ void EventSource::notifyListeners(EventData eventData) {
              eventData.type);
         listener->handleEvent(eventData);
     }
+#endif
 }
 
 }  // namespace icamera

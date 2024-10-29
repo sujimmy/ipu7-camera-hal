@@ -61,6 +61,7 @@ enum class NodeResourceId : uint8_t {
     Bbps = 1,
     SwIsys = 2,
     SwGdc = 3,
+    SwScaler = 4,
 };
 
 enum class StaticGraphStatus : uint8_t
@@ -73,6 +74,7 @@ enum class VirtualSink : uint8_t
 {
     PreviewSink,
     VideoSink,
+    PostProcessingVideoSink,
     StillsSink,
     ThumbnailSink,
     RawSink,
@@ -93,6 +95,7 @@ enum class HwSink : uint8_t
     ImageDpSink,
     GmvMatchOutSink,
     ProcessedMainSink,
+    ProcessedSecondarySink,
     AwbSveOutSink,
     IrAeOutSink,
     IrAfStdOutSink,
@@ -180,6 +183,7 @@ struct StaticGraphLinkConfiguration {
 struct VirtualSinkMapping {
     uint8_t preview = 0;
     uint8_t video = 0;
+    uint8_t postProcessingVideo = 0;
     uint8_t stills = 0;
     uint8_t thumbnail = 0;
     uint8_t raw = 0;
@@ -267,6 +271,7 @@ enum class GraphElementType : uint8_t {
     ImageDp,
     GmvMatchOut,
     ProcessedMain,
+    ProcessedSecondary,
     AwbSveOut,
     IrAeOut,
     IrAfStdOut,
@@ -281,9 +286,10 @@ enum class GraphElementType : uint8_t {
     Isys,
     LbffBayer,
     BbpsNoTnr,
-    BbpsWithTnr,
     LbffBayerWithGmv,
+    BbpsWithTnr,
     SwGdc,
+    SwScaler,
     LbffRgbIr,
     LbffIrNoGmvIrStream,
     BbpsIrWithTnr,

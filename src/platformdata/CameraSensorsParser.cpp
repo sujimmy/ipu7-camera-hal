@@ -623,6 +623,8 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
     if (node.isMember("useGpuIpa")) mCurCam->mGpuIpaEnabled = node["useGpuIpa"].asBool();
     if (node.isMember("psysAlignWithSystem"))
         mCurCam->mMsPsysAlignWithSystem = node["psysAlignWithSystem"].asInt();
+    if (node.isMember("removeCacheFlushOutputBuffer"))
+        mCurCam->mRemoveCacheFlushOutputBuffer = node["removeCacheFlushOutputBuffer"].asBool();
 
     if (node.isMember("MediaCtlConfig")) parseMediaCtlConfigSection(node["MediaCtlConfig"]);
     if (node.isMember("StaticMetadata")) parseStaticMetaDataSection(node["StaticMetadata"]);

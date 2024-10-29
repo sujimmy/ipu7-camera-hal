@@ -29,8 +29,7 @@ LOG_DEFINE_CATEGORY(IPU7Privacy)
 PrivacyControl::PrivacyControl(int cameraId)
         : mCameraId(cameraId),
           mLastTimestamp(0L),
-          mThreadRunning(false),
-          mCallbackOps(nullptr) {
+          mThreadRunning(false) {
     LOG(IPU7Privacy, Debug) << "id " << std::to_string(mCameraId) << " " << __func__;
     mHwPrivacyControl = std::make_unique<HwPrivacyControl>(mCameraId);
     if (!mHwPrivacyControl->init()) {
@@ -93,18 +92,13 @@ int PrivacyControl::qbuf(icamera::camera_buffer_t** ubuffer, int bufferNum) {
 
 int PrivacyControl::dqbuf(int streamId, icamera::camera_buffer_t** ubuffer) {
     LOG(IPU7Privacy, Debug) << __func__ << std::to_string(streamId);
-    {
-        MutexLocker locker(mLock);
-        auto isReady =
-            ([&]() LIBCAMERA_TSA_REQUIRES(mLock) { return !mStreamQueueMap[streamId].empty(); });
-
-        auto duration = std::chrono::duration<float, std::ratio<2 / 1>>(5);
-        while (mStreamQueueMap[streamId].empty()) {
-            mResultCondition[streamId].wait_for(locker, duration, isReady);
-        }
-        *ubuffer = mStreamQueueMap[streamId].front();
-        mStreamQueueMap[streamId].pop();
+    MutexLocker locker(mLock);
+    if (mStreamQueueMap[streamId].empty()) {
+        LOG(IPU7Privacy, Error) << "No buffer available for stream " << std::to_string(streamId);
+        return -1;
     }
+    *ubuffer = mStreamQueueMap[streamId].front();
+    mStreamQueueMap[streamId].pop();
 
     return icamera::OK;
 }
@@ -165,17 +159,13 @@ void PrivacyControl::run() {
             }
         }
 
-        if (mCallbackOps) {
-            camera_msg_data_t data = {CAMERA_ISP_BUF_READY, {}};
-            data.data.buffer_ready.timestamp = mLastTimestamp;
-            data.data.buffer_ready.frameNumber = frameNumber;
-            mCallbackOps->notify(mCallbackOps, data);
+        EventData eventData;
+        eventData.type = EVENT_PSYS_REQUEST_BUF_READY;
+        eventData.data.requestReady = {mLastTimestamp, -1, frameNumber};
+        frameEvents.emit(eventData);
 
-            data = {CAMERA_METADATA_READY, {}};
-            data.data.metadata_ready.sequence = -1;
-            data.data.metadata_ready.frameNumber = frameNumber;
-            mCallbackOps->notify(mCallbackOps, data);
-        }
+        eventData.type = EVENT_REQUEST_METADATA_READY;
+        frameEvents.emit(eventData);
 
         struct timeval tmpCurTime = {};
         gettimeofday(&tmpCurTime, nullptr);
@@ -192,15 +182,13 @@ void PrivacyControl::run() {
 
         for (size_t i = 0; i < captureReq->mBufferNum; i++) {
             int streamId = captureReq->mBuffer[i]->s.id;
-            mResultCondition[streamId].notify_one();
-            if (mCallbackOps) {
-                camera_msg_data_t data = {CAMERA_FRAME_DONE, {}};
-                data.data.frame_ready.streamId = streamId;
-                mCallbackOps->notify(mCallbackOps, data);
+            {
+                MutexLocker locker(mLock);
+                mStreamQueueMap[streamId].push(captureReq->mBuffer[i]);
             }
-            MutexLocker locker(mLock);
-            mStreamQueueMap[streamId].push(captureReq->mBuffer[i]);
-            mResultCondition[streamId].notify_one();
+            eventData.type = EVENT_FRAME_AVAILABLE;
+            eventData.data.frameDone.streamId = streamId;
+            frameEvents.emit(eventData);
         }
     }
 }

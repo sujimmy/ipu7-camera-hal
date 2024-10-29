@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2024 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ enum EventType {
     EVENT_STAGE_BUF_READY,
     EVENT_PSYS_REQUEST_BUF_READY,
     EVENT_REQUEST_METADATA_READY,
+    EVENT_TYPE_MAX,
 };
 
 struct EventDataStatsReady {

@@ -140,6 +140,16 @@ const char* PlatformData::getSensorName(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].sensorName.c_str();
 }
 
+bool PlatformData::isHALZslSupported(int cameraId) {
+    const std::string str = "control.enableZsl";
+    auto v = getByteStaticMetadata(cameraId, str);
+    if (v.size() == 1) {
+        return static_cast<bool>(v[0]);
+    }
+
+    return false;
+}
+
 float PlatformData::getSensorRatio(int cameraId) {
     const std::string str = "sensor.info.pixelArraySize";
     auto v = getFloatStaticMetadata(cameraId, str);

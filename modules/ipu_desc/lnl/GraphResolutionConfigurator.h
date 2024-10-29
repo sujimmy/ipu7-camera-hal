@@ -110,6 +110,10 @@ public:
     // This function is used for statistics output only
     StaticGraphStatus getStatsRoiFromSensorRoi(const SensorRoi& sensorRoi, const HwSink hwSink, ResolutionRoi& statsRoi);
 
+    StaticGraphStatus undoSensorCropandScale(SensorRoi& sensor_roi);
+
+    StaticGraphStatus sensorCropOrScaleExist(bool& sensor_crop_or_scale_exist);
+
 private:
     StaticGraphStatus initRunKernelCoord(GraphResolutionConfiguratorKernelRole role, RunKernelCoords& coord);
     StaticGraphStatus initOutputRunKernelCoord(RunKernelCoords& coord);
@@ -140,6 +144,11 @@ private:
     double _heightIn2OutScale = 1;
     double _sensorHorizontalScaling = 1.0;
     double _sensorVerticalScaling = 1.0;
-    StaticGraphKernelResCrop _originalOutputCrop = {0,0,0,0};
+    size_t _sensorHorizontalCropLeft;
+    size_t _sensorHorizontalCropRight;
+    size_t _sensorVerticalCropTop;
+    size_t _sensorVerticalCropBottom;
+    StaticGraphKernelResCrop _originalCropInputToScaler = {0,0,0,0};
+    StaticGraphKernelResCrop _originalCropScalerToOutput = { 0,0,0,0 };
 };
 
