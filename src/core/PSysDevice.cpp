@@ -91,6 +91,7 @@ int PSysDevice::addGraph(const PSysGraph& graph) {
     graphDrv.graph_id = INVALID_GRAPH_ID;
     graphDrv.num_nodes = 0;
     graphDrv.nodes = mGraphNode;
+    memset(mGraphNode, 0, sizeof(graph_node) * MAX_GRAPH_NODES);
 
     for (const auto& node : graph.nodes) {
         graph_node& drvNode = graphDrv.nodes[node.nodeCtxId];
@@ -168,6 +169,7 @@ int PSysDevice::addTask(const PSysTask& task) {
     taskData.node_ctx_id = task.nodeCtxId;
     taskData.frame_id = mFrameId[task.nodeCtxId];
     taskData.task_buffers = mTaskBuffers[task.nodeCtxId];
+    memset(mTaskBuffers[task.nodeCtxId], 0, sizeof(ipu_psys_term_buffers) * MAX_GRAPH_TERMINALS);
     taskData.term_buf_count = 0;
 
     for (const auto& item : task.terminalBuffers) {
