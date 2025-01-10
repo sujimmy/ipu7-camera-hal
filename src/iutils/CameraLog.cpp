@@ -146,23 +146,9 @@ namespace Log {
 #define FILELOG_SINK     "FILELOG"
 
 static void initLogSinks() {
-#ifdef CAL_BUILD
-    const char* sinkName = ::getenv("logSink");
-
-    if (!sinkName) {
-        sinkName = DEFAULT_LOG_SINK;
-    }
-
-    if (!::strcmp(sinkName, DEFAULT_LOG_SINK)) {
-        globalLogSink = new GLogSink();
-        LOG2("Enable Google gLOG");
-    } else if (!::strcmp(sinkName, FILELOG_SINK)) {
-        globalLogSink = new FileLogSink;
-        LOG2("Enable File LOG");
-    } else {
-        globalLogSink = new StdconLogSink();
-        LOG2("Enable Stdcon LOG");
-    }
+#ifdef LIBCAMERA_BUILD
+    globalLogSink = new LibcameraLogSink();
+    LOG2("Enable libcamera LOG");
 #else
     globalLogSink = new StdconLogSink();
     LOG2("Enable Stdcon LOG");
@@ -230,7 +216,7 @@ void setDebugLevel(void) {
     // performance
     char* perfLevel = getenv(PROP_CAMERA_HAL_PERF);
     if (perfLevel) {
-#ifdef CAL_BUILD
+#ifdef HAVE_CHROME_OS
         initPerfettoTrace();
 #else
         gPerfLevel = strtoul(perfLevel, nullptr, 0);

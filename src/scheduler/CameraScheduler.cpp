@@ -177,28 +177,32 @@ void CameraScheduler::Executor::start() {
         mActive = true;
         mTriggerTick = 0;
     }
-    icamera::Thread::run(mName, PRIORITY_NORMAL);
+    Thread::start();
 }
 
 void CameraScheduler::Executor::stop() {
     LOG2("%s: %s", getName(), __func__);
-    icamera::Thread::requestExit();
-    std::lock_guard<std::mutex> l(mNodeLock);
-    mActive = false;
-    mTriggerSignal.signal();
+    Thread::exit();
+    {
+        std::lock_guard<std::mutex> l(mNodeLock);
+        mActive = false;
+        mTriggerSignal.notify_one();
+    }
+    Thread::wait();
 }
 
 void CameraScheduler::Executor::trigger(int64_t tick) {
     PERF_CAMERA_ATRACE_PARAM1(getName(), tick);
     std::lock_guard<std::mutex> l(mNodeLock);
     mTriggerTick = tick;
-    mTriggerSignal.signal();
+    mTriggerSignal.notify_one();
 }
 
 int CameraScheduler::Executor::waitTrigger() {
-    ConditionLock lock(mNodeLock);
-    int ret = mTriggerSignal.waitRelative(lock, kWaitDuration * SLOWLY_MULTIPLIER);
-    CheckWarning(ret == TIMED_OUT, true, "%s: wait trigger time out", getName());
+    std::unique_lock<std::mutex> lock(mNodeLock);
+    std::cv_status ret = mTriggerSignal.wait_for(
+        lock, std::chrono::nanoseconds(kWaitDuration * SLOWLY_MULTIPLIER));
+    CheckWarning(ret == std::cv_status::timeout, true, "%s: wait trigger time out", getName());
     return mTriggerTick;
 }
 

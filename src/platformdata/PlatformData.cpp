@@ -63,9 +63,6 @@ void PlatformData::releaseInstance() {
 PlatformData::PlatformData() {
     LOG1("@%s", __func__);
     MediaControl* mc = MediaControl::getInstance();
-    if (mc) {
-        mc->initEntities();
-    }
 
     CameraParserInvoker(mc, &mStaticCfg).runParser();
 
@@ -77,11 +74,7 @@ PlatformData::~PlatformData() {
 
     releaseGraphConfigNodes();
 
-    MediaControl* mc = MediaControl::getInstance();
-    if (mc) {
-        mc->clearEntities();
-        MediaControl::releaseInstance();
-    }
+    MediaControl::releaseInstance();
 
     for (size_t i = 0; i < mAiqInitData.size(); i++) {
         delete mAiqInitData[i];
@@ -308,9 +301,7 @@ int PlatformData::getExposureNum(int cameraId, bool multiExposure) {
         return getInstance()->mStaticCfg.mCameras[cameraId].mSensorExposureNum;
     }
 
-    int exposureNum = 1;
-
-    return exposureNum;
+    return 1;
 }
 
 // HDR_FEATURE_S
@@ -371,6 +362,10 @@ bool PlatformData::getTopBottomReverse(int cameraId) {
 
 bool PlatformData::isPsysContinueStats(int cameraId) {
     return getInstance()->mStaticCfg.mCameras[cameraId].mPsysContinueStats;
+}
+
+bool PlatformData::unregisterExtDmaBuf(int cameraId) {
+    return getInstance()->mStaticCfg.mCameras[cameraId].mUnregisterExtDmaBuf;
 }
 
 unsigned int PlatformData::getPreferredBufQSize(int cameraId) {

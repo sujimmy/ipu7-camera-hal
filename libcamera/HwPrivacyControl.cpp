@@ -42,11 +42,7 @@ HwPrivacyControl::~HwPrivacyControl() {
 
 bool HwPrivacyControl::init() {
     mHwPriModeSubDev = icamera::V4l2DeviceFactory::getSubDev(mCameraId, SUBDEV_NAME);
-#ifdef CAL_BUILD
-    int ret = mHwPriModeSubDev->SubscribeEvent(V4L2_EVENT_CTRL);
-#else
     int ret = mHwPriModeSubDev->SubscribeEvent(V4L2_EVENT_CTRL, V4L2_CID_PRIVACY);
-#endif
 
     if (ret != icamera::OK) {
         LOG(IPU7Privacy, Info)

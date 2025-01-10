@@ -77,6 +77,7 @@ struct TerminalBuffer {
     uint32_t size;
     uint32_t flags;
     struct ipu_psys_buffer psysBuf;
+    bool isExtDmaBuf;
 };
 
 struct PSysTask {
@@ -100,29 +101,26 @@ class PSysDevice {
     virtual int addGraph(const PSysGraph& graph);
     virtual int closeGraph();
     virtual int addTask(const PSysTask& task);
-    virtual int wait(ipu_psys_event& event);
-    virtual int poll(short events, int timeout);
 
     virtual int registerBuffer(TerminalBuffer* buf);
-    virtual int unregisterBuffer(TerminalBuffer* buf);
+    virtual void unregisterBuffer(TerminalBuffer* buf);
+
+    virtual int poll();
 
  private:
+    int wait(ipu_psys_event& event);
+    int poll(short events, int timeout);
     void handleEvent(const ipu_psys_event& event);
     void updatePsysBufMap(TerminalBuffer* buf);
+    void erasePsysBufMap(TerminalBuffer* buf);
     bool getPsysBufMap(TerminalBuffer* buf);
 
  private:
-    class PollThread : public Thread {
-        PSysDevice* mPSysDevice;
-        static const int kEventTimeout = 800;
+    static const int kEventTimeout = 800;
+    PollThread<PSysDevice>* mPollThread;
+    bool mExitPending;
 
-     public:
-        PollThread(PSysDevice* psysDevice);
-
-        virtual bool threadLoop();
-    };
-    friend class PollThread;
-    PollThread* mPollThread;
+    // Set once during pipeline setup, and no lock protection
     std::unordered_map<uint8_t, IPSysDeviceCallback*> mPSysDeviceCallbackMap;
 
     static const uint8_t INVALID_GRAPH_ID = 255;

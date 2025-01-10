@@ -19,14 +19,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/media.h>
-#include <linux/v4l2-subdev.h>
-#include <linux/videodev2.h>
 #include <poll.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <linux/videodev2.h>
+#include <linux/v4l2-subdev.h>
 
 #include "iutils/Thread.h"
 

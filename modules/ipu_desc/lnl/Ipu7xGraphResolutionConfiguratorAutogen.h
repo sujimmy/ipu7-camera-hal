@@ -1,6 +1,6 @@
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -38,4 +38,5 @@ public:
     static uint32_t getRunKernelUuid(GraphResolutionConfiguratorKernelRole role);
     static uint32_t getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId, GraphLink** links);
     static StaticGraphStatus getRunKernelUuidForResHistoryUpdate(std::vector<uint32_t>& kernelUuids);
+    static uint32_t getRunKernelIoBufferSystemApiUuid();
 };

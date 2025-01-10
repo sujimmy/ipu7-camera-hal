@@ -1,6 +1,6 @@
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -48,8 +48,22 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSi
     {
         case HwSink::ImageMpSink:    return 18789; // ofs_mp_bodr_regs_1_3
         case HwSink::ImageDpSink:    return 27847; // ofs_dp_bodr_regs_1_3
-        case HwSink::ProcessedMainSink:    return 5637; // gdc7_1
-        case HwSink::ProcessedSecondarySink:    return 0; // sw_scaler
+        case HwSink::ProcessedMainSink:
+            switch(graphId)
+            {
+                case 100001:    // Bayer_NoPdaf_WithDvs_WithGdc_WithTnr
+                case 100003:    // Bayer_NoPdaf_WithDvs_WithTnr
+                case 100037:    // Bayer_WithPdaf2_WithDvs_WithTnr
+                case 100038:    // Bayer_WithPdaf3_WithDvs_WithTnr
+                case 100039:    // RgbIr_NoPdaf_WithDvs_WithTnr
+                case 100040:    // Dol2Inputs_WithDvs_WithTnr
+                case 100041:    // Dol3Inputs_WithDvs_WithTnr
+                    return 5637; // gdc7_1
+                case 100005:    // Bayer_NoPdaf_WithNntm_WithTnr
+                case 100042:    // Bayer_WithPdaf3_WithNntm_WithTnr
+                    return 46539; // nntm_1_0
+            }
+            break;
         case HwSink::AeOutSink:    return 55073; // aestatistics_2_1
     }
 
@@ -71,7 +85,11 @@ StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHisto
     kernelUuids.push_back(57803);  // tnr_sp_bc_bifd_yuv4n_regs_1_3
     kernelUuids.push_back(26536);  // slim_tnr_fp_blend_bifd_yuvnm1_regs_1_3
     kernelUuids.push_back(5637);  // gdc7_1
-    kernelUuids.push_back(0);  // sw_scaler
+    kernelUuids.push_back(46539);  // nntm_1_0
     return StaticGraphStatus::SG_OK;
 }
 
+uint32_t GraphResolutionConfiguratorHelper::getRunKernelIoBufferSystemApiUuid()
+{
+    return 47358;
+}

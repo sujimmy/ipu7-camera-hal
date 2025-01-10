@@ -16,18 +16,10 @@
 
 #pragma once
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
-#include <v4l2_device.h>
-#endif
-
 #include <string>
 
+#include <v4l2_device.h>
 namespace icamera {
-
-typedef ::cros::V4L2Subdevice V4L2Subdevice;
-
 /**
  * \class LensHw
  * This class adds the methods that are needed

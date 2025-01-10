@@ -16,14 +16,9 @@
 
 #pragma once
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
-#include <v4l2_device.h>
-#endif
-
 #include <vector>
 
+#include <v4l2_device.h>
 #include "CameraEvent.h"
 #include "iutils/Thread.h"
 
@@ -40,28 +35,17 @@ class SofSource : public EventSource {
     int start();
     int stop();
 
+    int poll();
+
  private:
     int initDev();
     int deinitDev();
 
-    class PollThread : public Thread {
-        SofSource* mSofSource;
-
-     public:
-        PollThread(SofSource* sofSource) : mSofSource(sofSource) {}
-
-        virtual bool threadLoop() {
-            int ret = mSofSource->poll();
-            return (ret == 0) ? true : false;
-        }
-    };
-    PollThread* mPollThread;
+    PollThread<SofSource>* mPollThread;
     int mCameraId;
     V4L2Subdevice* mIsysReceiverSubDev;
     bool mExitPending;
     bool mSofDisabled;
-
-    int poll();
 };
 
 }  // namespace icamera

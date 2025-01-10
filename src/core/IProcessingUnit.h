@@ -40,14 +40,6 @@ class IProcessingUnit : public BufferQueue {
     }
 
  protected:
-    void stopThread() {
-        mThreadRunning = false;
-        {
-            AutoMutex l(mBufferQueueLock);
-            mFrameAvailableSignal.signal();
-            mOutputAvailableSignal.signal();
-        }
-    }
     virtual int processNewFrame() = 0;
 
     /**
@@ -61,14 +53,15 @@ class IProcessingUnit : public BufferQueue {
 
      public:
         explicit ProcessThread(IProcessingUnit* p) : mProcessor(p) {}
-
+        void run() {
+            bool ret = true;
+            while (ret) {
+                ret = threadLoop();
+            }
+        }
         virtual bool threadLoop() {
             int ret = mProcessor->processNewFrame();
             return (ret == 0);
-        }
-        virtual void requestExit() {
-            mProcessor->stopThread();
-            Thread::requestExit();
         }
     };
 

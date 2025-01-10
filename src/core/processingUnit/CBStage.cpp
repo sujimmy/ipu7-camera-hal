@@ -177,7 +177,7 @@ bool CBStage::process(int64_t triggerId) {
                 mBufferProducer->qbuf(item.first, item.second);
             }
         }
-        return OK;
+        return true;
     }
 
     return processTask(&task) == OK ? true : false;
@@ -217,7 +217,7 @@ int32_t CBStage::processTask(StageTask* task) {
         CheckAndLogError(ret != OK, ret, "Failed to add terminals for inBuffers");
     }
 
-    ret = addFrameTerminals(&terminalBuffers, task->outBuffers);
+    ret = addFrameTerminals(&terminalBuffers, task->outBuffers, task->sequence);
     CheckAndLogError(ret != OK, ret, "Failed to add terminals for  task->outBuffers");
 
     {
@@ -264,6 +264,9 @@ int CBStage::bufferDone(int64_t sequence) {
     } else {
         LOGW("%s, sequence %ld wasn't missing", __func__, sequence);
     }
+
+    // Unregister external DMA buffers for XE driver
+    unregisterExtDmaBuf(sequence);
 
     return OK;
 }
@@ -793,7 +796,8 @@ int CBStage::registerPayloadBuffer(aic::IaAicBuffer** iaAicBuf, PacTerminalBufMa
 }
 
 int CBStage::addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* terminalBuffers,
-                               const std::map<uuid, std::shared_ptr<CameraBuffer>>& buffers) {
+                               const std::map<uuid, std::shared_ptr<CameraBuffer>>& buffers,
+                               int64_t sequence) {
     for (auto it : buffers) {
         uint8_t terminalId = GET_TERMINAL_ID(it.first);
         std::shared_ptr<CameraBuffer> buf = it.second;
@@ -803,6 +807,9 @@ int CBStage::addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* term
         if (buf->getMemory() == V4L2_MEMORY_DMABUF) {
             terminalBuf.handle = buf->getFd();
             terminalBuf.flags |= IPU_BUFFER_FLAG_DMA_HANDLE;
+            if (PlatformData::unregisterExtDmaBuf(mCameraId)) {
+                terminalBuf.isExtDmaBuf = true;
+            }
 
             LOG2("%s, mStreamId %d, mContextId %u, terminalId %u, fd %lu, size %d", __func__,
                  mStreamId, mContextId, terminalId, terminalBuf.handle, terminalBuf.size);
@@ -827,9 +834,21 @@ int CBStage::addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* term
         CheckAndLogError(ret != OK, ret, "Failed to register outBuffers ret %d", ret);
 
         (*terminalBuffers)[terminalId] = terminalBuf;
+
+        if (terminalBuf.isExtDmaBuf) {
+            std::lock_guard<std::mutex> l(mDataLock);
+            mSeqToTerminalBufferMaps[sequence] = terminalBuf;
+        }
     }
 
     return OK;
+}
+
+void CBStage::unregisterExtDmaBuf(int64_t sequence) {
+    if (mSeqToTerminalBufferMaps.find(sequence) != mSeqToTerminalBufferMaps.end()) {
+        mPSysDevice->unregisterBuffer(&mSeqToTerminalBufferMaps[sequence]);
+        mSeqToTerminalBufferMaps.erase(sequence);
+    }
 }
 
 int CBStage::addTask(std::unordered_map<uint8_t, TerminalBuffer>* terminalBuffers,
@@ -895,8 +914,9 @@ void CBStage::dumpTerminalData(const PacTerminalBufMap& bufferMap, int64_t seque
             : "UNKNOWN";
 
         char fileName[MAX_NAME_LEN] = {'\0'};
-        snprintf(fileName, (MAX_NAME_LEN - 1), "cam%d_cb_context%u_resource%u_termId%u_%s_%ld.bin",
-                 mCameraId, mContextId, mResourceId, buf.first, typeStr, sequence);
+        snprintf(fileName, (MAX_NAME_LEN - 1), "%s/cam%d_cb%u_resource%u_termId%u_%s_%ld.bin",
+                 CameraDump::getDumpPath(), mCameraId, mContextId, mResourceId,
+                 buf.first, typeStr, sequence);
 
         LOGI("<id%d:seq%ld> filename %s, ctx %u, resource %d, ptr %p, size %zu, pac %d, termId %u",
              mCameraId, sequence, fileName, mContextId, mResourceId, buf.second.payloadPtr,

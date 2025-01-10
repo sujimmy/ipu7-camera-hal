@@ -43,8 +43,7 @@ FileSource::FileSource(int cameraId)
           mCameraId(cameraId),
           mExitPending(false),
           mFps(30.0),
-          mSequence(-1),
-          mOutputPort(INVALID_PORT) {
+          mSequence(-1) {
     LOG1("%s: FileSource is created for debugging.", __func__);
 
     const char* injectedFile = PlatformData::getInjectedFile();
@@ -76,6 +75,7 @@ FileSource::FileSource(int cameraId)
     }
 
     CLEAR(mStreamConfig);
+    mOutputPorts.clear();
 
     mProduceThread = new ProduceThread(this);
 }
@@ -92,12 +92,19 @@ void FileSource::deinit() {}
 
 int FileSource::configure(const map<uuid, stream_t>& outputFrames,
                           const vector<ConfigMode>& configModes) {
-    CheckAndLogError(outputFrames.size() != 1, BAD_VALUE, "Support one port of input only.");
-
-    mOutputPort = outputFrames.begin()->first;
-    mStreamConfig = outputFrames.begin()->second;
-    LOG1("<id%d>%s, w:%d, h:%d, f:%s", mCameraId, __func__, mStreamConfig.width,
-         mStreamConfig.height, CameraUtils::format2string(mStreamConfig.format).c_str());
+    // multi-output should have same size and format
+    for (auto& output : outputFrames) {
+        if (mStreamConfig.size != 0 && (mStreamConfig.size != output.second.size ||
+                                        mStreamConfig.format != output.second.format)) {
+            LOGE("Different size of output frames are not supported.");
+            return BAD_VALUE;
+        }
+        mOutputPorts.insert(output.first);
+        mStreamConfig = output.second;
+        LOG1("<id%d>%s, port:%d w:%d, h:%d, f:%s", mCameraId, __func__, output.first,
+             mStreamConfig.width, mStreamConfig.height,
+             CameraUtils::format2string(mStreamConfig.format).c_str());
+    }
     return OK;
 }
 
@@ -148,7 +155,7 @@ int FileSource::start() {
     allocateSourceBuffer();
     mSequence = -1;
     mExitPending = false;
-    mProduceThread->run("FileSource", PRIORITY_URGENT_AUDIO);
+    mProduceThread->start();
 
     return OK;
 }
@@ -159,11 +166,11 @@ int FileSource::stop() {
     {
         AutoMutex l(mLock);
         mExitPending = true;
-        mProduceThread->requestExit();
-        mBufferSignal.signal();
+        mProduceThread->exit();
+        mBufferSignal.notify_one();
     }
 
-    mProduceThread->requestExitAndWait();
+    mProduceThread->wait();
     mFrameFileBuffers.clear();
 
     while (mBufferQueue.size() > 0) {
@@ -181,7 +188,7 @@ int FileSource::qbuf(uuid port, const shared_ptr<CameraBuffer>& camBuffer) {
     bool needSignal = mBufferQueue.empty();
     mBufferQueue.push(camBuffer);
     if (needSignal) {
-        mBufferSignal.signal();
+        mBufferSignal.notify_one();
     }
 
     return OK;
@@ -202,13 +209,14 @@ bool FileSource::produce() {
 
     {
         // Find a buffer which needs to be filled.
-        ConditionLock lock(mLock);
+        std::unique_lock<std::mutex> lock(mLock);
         while (mBufferQueue.empty()) {
             if (mExitPending) {
                 return false;
             }
-            int ret = mBufferSignal.waitRelative(lock, kWaitDuration);
-            if (mExitPending || ret == TIMED_OUT) {
+            std::cv_status ret = mBufferSignal.wait_for(
+                lock, std::chrono::nanoseconds(kWaitDuration));
+            if (mExitPending || ret == std::cv_status::timeout) {
                 return false;
             }
         }
@@ -311,7 +319,8 @@ void FileSource::notifyFrame(const shared_ptr<CameraBuffer>& buffer) {
     notifyListeners(frameData);
 
     for (auto& consumer : mBufferConsumerList) {
-        consumer->onFrameAvailable(mOutputPort, buffer);
+        for (auto & port : mOutputPorts)
+            consumer->onFrameAvailable(port, buffer);
     }
 }
 

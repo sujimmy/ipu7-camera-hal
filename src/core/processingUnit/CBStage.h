@@ -104,8 +104,10 @@ class CBStage : public IPipeStage, public IPSysDeviceCallback {
     bool isInPlaceTerminal(uint8_t resourceId, uint8_t terminalId);
     int registerPayloadBuffer(aic::IaAicBuffer** iaAicBuf, PacTerminalBufMap& termBufMap);
 
+    void unregisterExtDmaBuf(int64_t sequence);
     int addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* terminalBuffers,
-                          const std::map<uuid, std::shared_ptr<CameraBuffer>>& buffers);
+                          const std::map<uuid, std::shared_ptr<CameraBuffer>>& buffers,
+                          int64_t sequence = -1);
     int addTask(std::unordered_map<uint8_t, TerminalBuffer>* terminalBuffers,
                 const PacTerminalBufMap& bufferMap, int64_t sequence);
     void dumpTerminalData(const PacTerminalBufMap& bufferMap, int64_t sequence);
@@ -170,6 +172,9 @@ class CBStage : public IPipeStage, public IPSysDeviceCallback {
 
     // first: user ptr, second: TerminalBuffer
     std::unordered_map<void*, TerminalBuffer> mUserToTerminalBuffer;
+
+    // first: sequence, second:: TerminalBuffer
+    std::unordered_map<int64_t, TerminalBuffer> mSeqToTerminalBufferMaps;
 };
 
 }  // namespace icamera

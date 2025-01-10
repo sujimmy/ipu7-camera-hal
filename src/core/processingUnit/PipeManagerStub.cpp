@@ -30,6 +30,7 @@ namespace icamera {
 PipeManagerStub::PipeManagerStub(int cameraId, PipeManagerCallback* callback)
         : mCameraId(cameraId),
           mTuningMode(TUNING_MODE_MAX),
+          mExitPending(false),
           mPipeManagerCallback(callback),
           mIntermBuffer(nullptr) {
     LOG1("<id%d>@%s", mCameraId, __func__);
@@ -83,15 +84,17 @@ int PipeManagerStub::configure(const std::map<uuid, stream_t>& inputInfo,
 
 int PipeManagerStub::start() {
     LOG1("<id%d>@%s", mCameraId, __func__);
-    std::string threadName = "PipeManagerStub";
-    run(threadName);
+
+    mExitPending = false;
+    Thread::start();
     return OK;
 }
 
 int PipeManagerStub::stop() {
-    Thread::requestExit();
+    mExitPending = true;
+    Thread::exit();
     mTaskReadyCondition.notify_one();
-    Thread::requestExitAndWait();
+    Thread::wait();
     LOG1("<id%d>@%s size %d", mCameraId, __func__, mOngoingTasks.size());
     return OK;
 }
@@ -296,6 +299,8 @@ int PipeManagerStub::processTask(const PipeTaskData& task) {
 }
 
 bool PipeManagerStub::threadLoop() {
+    if (mExitPending) return false;
+
     PipeTaskData task = {};
     LOG2("<id%d>@%s", mCameraId, __func__);
     {

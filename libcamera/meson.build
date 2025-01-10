@@ -24,7 +24,9 @@ libcamera_sources += files([
     'AWBStateMachine.cpp',
     'PrivacyControl.cpp',
     'HwPrivacyControl.cpp',
+# LIBCAMERA_NONE_UPSTREAM_S
     'MakerNoteBuilder.cpp',
+# LIBCAMERA_NONE_UPSTREAM_E
 ])
 
 subdir('src')
@@ -61,6 +63,7 @@ libcamera_args = [
 if get_option('android_platform').contains('cros')
     libcamera_args += [
         '-DCAL_BUILD',
+        '-DLIBCAMERA_BUILD',
         '-DFACE_DETECTION',
     ]
 endif
@@ -73,7 +76,6 @@ libcamera_args += [
     '-Wno-unused-parameter',
 ]
 
-broxton_ia_pal = cc.find_library('broxton_ia_pal', required : true)
 ia_aiqb_parser = cc.find_library('ia_aiqb_parser', required : true)
 ia_cca = cc.find_library('ia_cca', required : true)
 ia_cmc_parser = cc.find_library('ia_cmc_parser', required : true)
@@ -89,7 +91,6 @@ perfetto = cc.find_library('perfetto_sdk', required : true)
 
 # internal libraries
 libcamera_deps += [
-    broxton_ia_pal,
     ia_aiqb_parser,
     ia_cca,
     ia_cmc_parser,
@@ -105,35 +106,14 @@ libcamera_deps += [
 ]
 
 if get_option('android_platform').contains('cros')
-    # For FACE_DETECTION
-    pvl_face_detection = cc.find_library('pvl_face_detection', required : true)
-    pvl_eye_detection = cc.find_library('pvl_eye_detection', required : true)
-    pvl_mouth_detection = cc.find_library('pvl_mouth_detection', required : true)
-    facessd_cros = cc.find_library(
-        'facessd_cros', required : true,
-        dirs: '/build/nissa/build/share/cros_camera')
     jpeg = cc.find_library('jpeg', required : true)
 
-    # chrome packages
-    libchrome = dependency('libchrome', required : true)
-    libcros_camera = dependency('libcros_camera', required : true)
-    libcros_camera_android_deps = dependency('libcros_camera_android_deps', required : true)
-    libcros_config = dependency('libcros_config', required : true)
-    libmojo = dependency('libmojo', required : true)
+    # chrome packages (feature support)
     libsync = dependency('libsync', required : true)
     libyuv = dependency('libyuv', required : true)
 
     libcamera_deps += [
-        pvl_face_detection,
-        pvl_eye_detection,
-        pvl_mouth_detection,
-        facessd_cros,
         jpeg,
-        libchrome,
-        libcros_camera,
-        libcros_camera_android_deps,
-        libcros_config,
-        libmojo,
         libsync,
         libyuv,
     ]

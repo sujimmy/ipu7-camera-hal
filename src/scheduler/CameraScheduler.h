@@ -62,14 +62,20 @@ class CameraScheduler {
 
  private:
     // Aligned with trigger signal sent by CameraScheduler
-    class Executor : public icamera::Thread {
+    class Executor : public Thread {
      public:
         explicit Executor(const char* name);
         virtual ~Executor();
 
         virtual void start();
         virtual void stop();
-        virtual bool threadLoop();
+        void run() {
+            bool ret = true;
+            while(ret) {
+                ret = threadLoop();
+            }
+        }
+        bool threadLoop();
 
         void addNode(ISchedulerNode*);
         void removeNode(ISchedulerNode* node);
@@ -89,7 +95,7 @@ class CameraScheduler {
         std::mutex mNodeLock;
         std::vector<ISchedulerNode*> mNodes;
         std::vector<std::shared_ptr<Executor>> mListeners;
-        Condition mTriggerSignal;
+        std::condition_variable mTriggerSignal;
         bool mActive;
 
     protected:

@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2019-2024 Intel Corporation
+#  Copyright (C) 2024 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -13,10 +13,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-#
 
-set(MEMORY_SRCS
-    ${MEMORY_DIR}/chrome/Camera3Buffer.cpp
-    ${MEMORY_DIR}/chrome/BufferAllocator.cpp
-    CACHE INTERNAL "Memory sources"
-    )
+# Get include and lib paths for LIBDRM from pkgconfig
+
+find_package(PkgConfig)
+pkg_check_modules(LIBDRM libdrm)
+if(NOT LIBDRM_FOUND)
+    message(SEND_ERROR "LIBDRM not found")
+endif()

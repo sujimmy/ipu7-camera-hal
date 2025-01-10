@@ -16,12 +16,12 @@
 
 #include "PrivacyControl.h"
 
-#include <cros-camera/camera_buffer_manager.h>
 #include <libcamera/base/log.h>
 #include <sys/mman.h>
 
 #include <algorithm>
 #include <string>
+#include <unistd.h>
 
 namespace libcamera {
 LOG_DEFINE_CATEGORY(IPU7Privacy)

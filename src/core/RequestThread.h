@@ -33,8 +33,8 @@ public:
     RequestThread(int cameraId, AiqUnitBase *a3AControl);
     ~RequestThread();
 
-    bool threadLoop();
-    void requestExit();
+    void requestStart();
+    void requestStop();
 
     void handleEvent(EventData eventData);
 
@@ -65,6 +65,14 @@ public:
     int configure(const stream_config_t *streamList);
 
 private:
+    void run() {
+        bool ret = true;
+        while (ret) {
+            ret = threadLoop();
+        }
+    }
+    bool threadLoop();
+
     int mCameraId;
     AiqUnitBase *m3AControl;
     bool mPerframeControlSupport;
@@ -96,22 +104,28 @@ private:
 
     //Guard for all the pending requests
     Mutex mPendingReqLock;
-    Condition mRequestSignal;
+    std::condition_variable mRequestSignal;
     std::deque <CameraRequest> mPendingRequests;
     int mRequestsInProcessing;
 
     // Guard for the first request.
     Mutex mFirstRequestLock;
-    Condition mFirstRequestSignal;
+    std::condition_variable mFirstRequestSignal;
     bool mFirstRequest;
 
     struct FrameQueue {
         Mutex mFrameMutex;
-        Condition mFrameAvailableSignal;
+        std::condition_variable mFrameAvailableSignal;
         CameraBufQ mFrameQueue;
     };
     FrameQueue mOutputFrames[MAX_STREAM_NUMBER];
-    std::atomic<bool> mActive;
+
+    enum State {
+        START,
+        PROCESSING,
+        EXIT
+    };
+    std::atomic<State> mState;
 
     enum RequestTriggerEvent {
         NONE_EVENT  = 0,

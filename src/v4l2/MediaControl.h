@@ -32,12 +32,7 @@
 #include <string>
 #include <vector>
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
 #include <v4l2_device.h>
-#endif
-
 #include "CameraTypes.h"
 #include "NodeInfo.h"
 #include "iutils/Thread.h"
@@ -164,7 +159,7 @@ struct McVideoNode {
 struct MediaCtlConf {
     std::vector<McCtl> ctls;
     std::vector<McLink> links;
-    std::vector<McRoute> routes;
+    std::map<std::string, std::vector<McRoute>> routings;
     std::vector<McFormat> formats;
     std::vector<McOutput> outputs;
     std::vector<McVideoNode> videoNodes;
@@ -211,23 +206,11 @@ class MediaControl {
     static void releaseInstance();
 
     /**
-     * \brief Enum entities and link, and reset all links
-     *
-     * \return 0 if succeed, other value indicates failed
-     */
-    int initEntities();
-
-    /**
-     * \brief Free all entities and links memory
-     */
-    void clearEntities();
-
-    /**
      * \brief Get the entity by name
      *
      * \return entity id if succeed or -1 if error
      */
-    int getEntityIdByName(const char* name);
+    int getEntityIdByName(const std::string &name);
 
     /**
      * \brief Get VCM I2C bus address
@@ -292,6 +275,9 @@ class MediaControl {
     int openDevice();
     void closeDevice(int fd);
 
+    int initEntities();
+    void clearEntities();
+
     // enum MediaControl info.
     int enumInfo();
     int enumLinks(int fd);
@@ -300,7 +286,7 @@ class MediaControl {
     // get entity info.
     int getDevnameFromSysfs(MediaEntity* entity);
     MediaEntity* getEntityById(uint32_t id);
-    MediaEntity* getEntityByName(const char* name);
+    MediaEntity* getEntityByName(const std::string &name);
     bool checkHasSource(const MediaEntity* sink, const std::string& source);
 
     // set up entity link.

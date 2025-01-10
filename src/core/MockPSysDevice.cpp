@@ -31,19 +31,21 @@
 namespace icamera {
 
 MockPSysDevice::MockPSysDevice(int cameraId) : PSysDevice(cameraId) {
-    mPollThread = new SubPollThread(this);
+    mPollThread = new PollThread<MockPSysDevice>(this);
     mFileSource = new icamera::FileSourceFromDir(PNP_INJECTION_NAME);
 }
 
 MockPSysDevice::~MockPSysDevice() {
-    mPollThread->requestExitAndWait();
-    mPollThread->join();
+    mPollThread->exit();
+    mExitPending = true;
+    mPollThread->wait();
+
     delete mPollThread;
     delete mFileSource;
 }
 
 int MockPSysDevice::init() {
-    mPollThread->run("MockPSysDevice", PRIORITY_NORMAL);
+    mPollThread->start();
     return OK;
 }
 
@@ -71,8 +73,10 @@ int MockPSysDevice::addTask(const PSysTask& task) {
     return OK;
 }
 
-void MockPSysDevice::handleResult() {
+int MockPSysDevice::poll() {
     std::lock_guard<std::mutex> l(mDataLock);
+    if (mExitPending) return -1;
+
     if (!mTasksMap.empty()) {
         auto it = mTasksMap.begin();
         auto sec = it->second.begin();
@@ -85,6 +89,8 @@ void MockPSysDevice::handleResult() {
             mTasksMap.erase(it);
         }
     }
+
+    return 0;
 }
 
 }  // namespace icamera

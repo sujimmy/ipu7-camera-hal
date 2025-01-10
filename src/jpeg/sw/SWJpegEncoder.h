@@ -28,10 +28,9 @@
 
 #pragma once
 
-#include <linux/videodev2.h>
 #include <stdio.h>
-
 #include <vector>
+#include <linux/videodev2.h>
 
 #include "IJpegEncoder.h"
 #include "iutils/Errors.h"
@@ -114,7 +113,13 @@ class SWJpegEncoder : public IJpegEncoder {
         int mDataSize;    /*!< the jpeg data size in one thread */
         CodecConfig mCfg; /*!< the cfg in one thread */
      private:
-        virtual bool threadLoop();
+        void run() {
+            bool ret = true;
+            while (ret) {
+                ret = threadLoop();
+            }
+        }
+        bool threadLoop();
         int swEncode(void);
     };
 

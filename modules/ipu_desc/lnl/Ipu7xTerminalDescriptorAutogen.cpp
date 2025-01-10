@@ -1,6 +1,6 @@
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -435,7 +435,7 @@ TerminalDescriptor SW_DOLTerminalDesc[] =
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_IN,
-        6265, // dol_lite_1_0
+        3700, // dol_lite_1_0
     },
     {
         SW_DOL_TERMINAL_CONNECT_DOL_SHORT,
@@ -444,7 +444,7 @@ TerminalDescriptor SW_DOLTerminalDesc[] =
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_IN,
-        6265, // dol_lite_1_0
+        3700, // dol_lite_1_0
     },
     {
         SW_DOL_TERMINAL_CONNECT_OUTPUT,
@@ -453,7 +453,7 @@ TerminalDescriptor SW_DOLTerminalDesc[] =
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_OUT,
-        6265, // dol_lite_1_0
+        3700, // dol_lite_1_0
     },
 };
 
@@ -466,16 +466,25 @@ TerminalDescriptor SW_GDCTerminalDesc[] =
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_IN,
-        2565, // gdc7_1
+        5637, // gdc7_1
     },
     {
-        SW_GDC_TERMINAL_CONNECT_OUTPUT,
+        SW_GDC_TERMINAL_CONNECT_OUTPUT_1,
         TERMINAL_TYPE_CONNECT,
-        "TERMINAL_CONNECT_OUTPUT",
+        "TERMINAL_CONNECT_OUTPUT_1",
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_OUT,
-        2565, // gdc7_1
+        0, // 
+    },
+    {
+        SW_GDC_TERMINAL_CONNECT_OUTPUT_2,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT_2",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        0, // 
     },
 };
 
@@ -491,13 +500,97 @@ TerminalDescriptor SW_GTMTerminalDesc[] =
         40423, // tm_app
     },
     {
-        SW_GTM_TERMINAL_CONNECT_OUTPUT,
+        SW_GTM_TERMINAL_CONNECT_OUTPUT_1,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT_1",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        0, // 
+    },
+    {
+        SW_GTM_TERMINAL_CONNECT_OUTPUT_2,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT_2",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        0, // 
+    },
+};
+
+TerminalDescriptor SW_NNTMTerminalDesc[] =
+{
+    {
+        SW_NNTM_TERMINAL_CONNECT_INPUT,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_INPUT",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_IN,
+        46539, // nntm_1_0
+    },
+    {
+        SW_NNTM_TERMINAL_CONNECT_OUTPUT_1,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT_1",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        0, // 
+    },
+    {
+        SW_NNTM_TERMINAL_CONNECT_OUTPUT_2,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT_2",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        0, // 
+    },
+};
+
+TerminalDescriptor SW_SCALERTerminalDesc[] =
+{
+    {
+        SW_SCALER_TERMINAL_CONNECT_INPUT,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_INPUT",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_IN,
+        19706, // sw_scaler
+    },
+    {
+        SW_SCALER_TERMINAL_CONNECT_OUTPUT,
         TERMINAL_TYPE_CONNECT,
         "TERMINAL_CONNECT_OUTPUT",
         PAC_BUFFER_TYPE_NONE,
         TERMINAL_BUFFER_TYPE_DATA,
         TERMINAL_DIR_OUT,
-        40423, // tm_app
+        19706, // sw_scaler
+    },
+};
+
+TerminalDescriptor SW_VAITerminalDesc[] =
+{
+    {
+        SW_VAI_TERMINAL_CONNECT_INPUT,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_INPUT",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_IN,
+        19706, // sw_scaler
+    },
+    {
+        SW_VAI_TERMINAL_CONNECT_OUTPUT,
+        TERMINAL_TYPE_CONNECT,
+        "TERMINAL_CONNECT_OUTPUT",
+        PAC_BUFFER_TYPE_NONE,
+        TERMINAL_BUFFER_TYPE_DATA,
+        TERMINAL_DIR_OUT,
+        19706, // sw_scaler
     },
 };
 
@@ -507,3 +600,6 @@ int CountOfBBPSTerminalDesc = sizeof(BBPSTerminalDesc) / sizeof(BBPSTerminalDesc
 int CountOfSW_DOLTerminalDesc = sizeof(SW_DOLTerminalDesc) / sizeof(SW_DOLTerminalDesc[0]);
 int CountOfSW_GDCTerminalDesc = sizeof(SW_GDCTerminalDesc) / sizeof(SW_GDCTerminalDesc[0]);
 int CountOfSW_GTMTerminalDesc = sizeof(SW_GTMTerminalDesc) / sizeof(SW_GTMTerminalDesc[0]);
+int CountOfSW_NNTMTerminalDesc = sizeof(SW_NNTMTerminalDesc) / sizeof(SW_NNTMTerminalDesc[0]);
+int CountOfSW_SCALERTerminalDesc = sizeof(SW_SCALERTerminalDesc) / sizeof(SW_SCALERTerminalDesc[0]);
+int CountOfSW_VAITerminalDesc = sizeof(SW_VAITerminalDesc) / sizeof(SW_VAITerminalDesc[0]);

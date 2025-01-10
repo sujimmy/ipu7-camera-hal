@@ -304,7 +304,7 @@ int SWJpegEncoder::doJpegEncodingMultiThread(void) {
 
     /* wait all threads to finish */
     for (unsigned int i = 0; i < mSwJpegEncoder.size(); i++) {
-        LOG2("@%s, the %d sw jpeg encoder thread before join!", __func__, i);
+        LOG2("@%s, the %d sw jpeg encoder thread before exit!", __func__, i);
         encThread = mSwJpegEncoder[i];
         encThread->waitThreadFinish();
         if (encThread->getJpegDataSize() == -1) status = UNKNOWN_ERROR;
@@ -405,7 +405,7 @@ SWJpegEncoder::CodecWorkerThread::~CodecWorkerThread() {
  */
 status_t SWJpegEncoder::CodecWorkerThread::runThread(const char* name) {
     LOG2("@%s, line:%d", __func__, __LINE__);
-    return this->run(name);
+    return this->start();
 }
 
 /**
@@ -414,8 +414,7 @@ status_t SWJpegEncoder::CodecWorkerThread::runThread(const char* name) {
  */
 void SWJpegEncoder::CodecWorkerThread::waitThreadFinish(void) {
     LOG2("@%s, line:%d", __func__, __LINE__);
-    this->join();
-    this->requestExitAndWait();
+    this->wait();
 }
 
 /**

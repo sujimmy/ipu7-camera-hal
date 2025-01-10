@@ -45,7 +45,7 @@ int BufferQueue::queueInputBuffer(uuid port, const std::shared_ptr<CameraBuffer>
     bool needSignal = input.empty();
     input.push(camBuffer);
     if (needSignal) {
-        mFrameAvailableSignal.signal();
+        mFrameAvailableSignal.notify_one();
     }
 
     return OK;
@@ -107,11 +107,7 @@ int BufferQueue::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBuffer)
                      "Not supported port:%x", port);
 
     CameraBufQ& output = mOutputQueue[port];
-    bool needSignal = output.empty();
     output.push(camBuffer);
-    if (needSignal) {
-        mOutputAvailableSignal.signal();
-    }
 
     return OK;
 }
@@ -144,7 +140,7 @@ void BufferQueue::getFrameInfo(std::map<uuid, stream_t>& inputInfo,
     outputInfo = mOutputFrameInfo;
 }
 
-int BufferQueue::waitFreeBuffersInQueue(ConditionLock& lock,
+int BufferQueue::waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
                                         std::map<uuid, std::shared_ptr<CameraBuffer> >& buffer,
                                         std::map<uuid, CameraBufQ>& bufferQueue,
                                         int64_t timeout) {
@@ -156,9 +152,10 @@ int BufferQueue::waitFreeBuffersInQueue(ConditionLock& lock,
         CameraBufQ& cameraBufQ = queue.second;
         if (cameraBufQ.empty()) {
             LOG2("%s: wait port %x", __func__, port);
-            ret = mFrameAvailableSignal.waitRelative(lock, timeout);
+            std::cv_status status = mFrameAvailableSignal.wait_for(
+                lock, std::chrono::nanoseconds(timeout));
 
-            if (ret == TIMED_OUT) return ret;
+            if (status == std::cv_status::timeout) return TIMED_OUT;
         }
         if (cameraBufQ.empty()) return NOT_ENOUGH_DATA;
         // Wake up from the buffer available
@@ -168,7 +165,7 @@ int BufferQueue::waitFreeBuffersInQueue(ConditionLock& lock,
     return ret;
 }
 
-int BufferQueue::waitFreeBuffersInQueue(ConditionLock& lock,
+int BufferQueue::waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
                                         std::map<uuid, std::shared_ptr<CameraBuffer> >& cInBuffer,
                                         std::map<uuid, std::shared_ptr<CameraBuffer> >& cOutBuffer,
                                         int64_t timeout) {

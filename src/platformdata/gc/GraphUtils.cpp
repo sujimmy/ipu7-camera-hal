@@ -62,6 +62,9 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
     if (resourceId == NODE_RESOURCE_ID_LBFF) {
         // LB input
         if (terminalId == LBFF_TERMINAL_CONNECT_MAIN_DATA_INPUT ||
+#ifdef IPU_SYSVER_ipu75
+            terminalId == LBFF_TERMINAL_CONNECT_DOL_LONG ||
+#endif
             terminalId == LBFF_TERMINAL_CONNECT_LSC_INPUT)
             return (bpp == 10) ? GET_FOURCC_FMT('G', 'R', '1', '0')
                                 : GET_FOURCC_FMT('G', 'R', '0', '8');
@@ -74,6 +77,10 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
     if (resourceId == NODE_RESOURCE_ID_BBPS) {
         // BB input
         if (terminalId == BBPS_TERMINAL_CONNECT_TNR_BC_YUV4N_IFD ||
+#ifdef IPU_SYSVER_ipu75
+            terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BC_YUV4NM1_IFD ||
+            terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BLEND_YUVNM1_IFD ||
+#endif
             terminalId == BBPS_TERMINAL_CONNECT_SLIM_SPATIAL_YUVN_IFD)
             return (bpp == 8) ? GET_FOURCC_FMT('V', '4', '2', '0') : 0;
         // BB output

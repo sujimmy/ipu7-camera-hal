@@ -824,6 +824,7 @@ void ParameterConverter::dataContext2Controls(int cameraId, const DataContext* c
 }
 
 void ParameterConverter::dumpControls(const ControlList& controls) {
+    if (LogCategory::defaultCategory().severity() > LogSeverity::LogDebug) return;
     const ControlIdMap* idM = controls.idMap();
     const ControlInfoMap* infoM = controls.infoMap();
 

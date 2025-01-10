@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-typedef enum _TerminalType
-{
+typedef enum _TerminalType {
     TERMINAL_TYPE_LOAD,
     TERMINAL_TYPE_CONNECT,
     TERMINAL_TYPE_N
 } TerminalType;
 
-typedef enum _PacBufferType
-{
+typedef enum _PacBufferType {
     PAC_BUFFER_TYPE_PARAM_IN,
     PAC_BUFFER_TYPE_PARAM_OUT,
     PAC_BUFFER_TYPE_PROGRAM,
@@ -38,34 +35,30 @@ typedef enum _PacBufferType
     PAC_BUFFER_TYPE_NONE,
 } PacBufferType;
 
-typedef enum _TerminalBufferType
-{
+typedef enum _TerminalBufferType {
     TERMINAL_BUFFER_TYPE_DATA,
     TERMINAL_BUFFER_TYPE_METADATA,
     TERMINAL_BUFFER_TYPE_N
 } TerminalBufferType;
 
-typedef enum _TerminalDirection
-{
+typedef enum _TerminalDirection {
     TERMINAL_DIR_IN,
     TERMINAL_DIR_OUT,
     TERMINAL_DIR_IN_OUT,
     TERMINAL_DIR_N
 } TerminalDirection;
 
-typedef struct _TerminalDescriptor
-{
-    int                 TerminalId;
-    TerminalType        TerminalType;
-    const char         *TerminalName;
-    PacBufferType       PacBufferType;
-    TerminalBufferType  TerminalBufferType;
-    TerminalDirection   TerminalDirection;
-    int                 TerminalLinkedKernel;
+typedef struct _TerminalDescriptor {
+    int TerminalId;
+    TerminalType TerminalType;
+    const char* TerminalName;
+    PacBufferType PacBufferType;
+    TerminalBufferType TerminalBufferType;
+    TerminalDirection TerminalDirection;
+    int TerminalLinkedKernel;
 } TerminalDescriptor;
 
-enum SW_ISYSTerminalID
-{
+enum SW_ISYSTerminalID {
     SW_ISYS_TERMINAL_CONNECT_INPUT,
     SW_ISYS_TERMINAL_CONNECT_OUTPUT,
     SW_ISYS_TERMINAL_CONNECT_INPUT_PDAF,
@@ -74,8 +67,7 @@ enum SW_ISYSTerminalID
     SW_ISYS_TERMINAL_CONNECT_OUTPUT_DOL_LONG,
 };
 
-enum LBFFTerminalID
-{
+enum LBFFTerminalID {
     LBFF_TERMINAL_LOAD_ALGO_CACHED,
     LBFF_TERMINAL_LOAD_ALGO_FRAG_SEQ,
     LBFF_TERMINAL_LOAD_SYSTEM,
@@ -103,8 +95,7 @@ enum LBFFTerminalID
     LBFF_TERMINAL_CONNECT_GMV_FEATURE_OUTPUT,
 };
 
-enum BBPSTerminalID
-{
+enum BBPSTerminalID {
     BBPS_TERMINAL_LOAD_ALGO_CACHED,
     BBPS_TERMINAL_LOAD_ALGO_FRAG_SEQ,
     BBPS_TERMINAL_LOAD_SYSTEM,
@@ -123,17 +114,21 @@ enum BBPSTerminalID
     BBPS_TERMINAL_CONNECT_OFS_DP_YUVN_ODR,
 };
 
-enum SW_GDCTerminalID
-{
+enum SW_GDCTerminalID {
     SW_GDC_TERMINAL_CONNECT_INPUT,
     SW_GDC_TERMINAL_CONNECT_OUTPUT_1,
     SW_GDC_TERMINAL_CONNECT_OUTPUT_2,
 };
 
-enum SW_SCALERTerminalID
-{
+enum SW_SCALERTerminalID {
     SW_SCALER_TERMINAL_CONNECT_INPUT,
     SW_SCALER_TERMINAL_CONNECT_OUTPUT,
+};
+
+enum SW_NNTMTerminalID {
+    SW_NNTM_TERMINAL_CONNECT_INPUT,
+    SW_NNTM_TERMINAL_CONNECT_OUTPUT_1,
+    SW_NNTM_TERMINAL_CONNECT_OUTPUT_2,
 };
 
 extern TerminalDescriptor SW_ISYSTerminalDesc[];
@@ -141,9 +136,11 @@ extern TerminalDescriptor LBFFTerminalDesc[];
 extern TerminalDescriptor BBPSTerminalDesc[];
 extern TerminalDescriptor SW_GDCTerminalDesc[];
 extern TerminalDescriptor SW_SCALERTerminalDesc[];
+extern TerminalDescriptor SW_NNTMTerminalDesc[];
 
 extern int CountOfSW_ISYSTerminalDesc;
 extern int CountOfLBFFTerminalDesc;
 extern int CountOfBBPSTerminalDesc;
 extern int CountOfSW_GDCTerminalDesc;
 extern int CountOfSW_SCALERTerminalDesc;
+extern int CountOfSW_NNTMTerminalDesc;

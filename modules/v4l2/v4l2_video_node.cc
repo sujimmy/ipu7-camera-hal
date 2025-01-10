@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2021 Intel Corporation
+ * Copyright (C) 2013-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ using namespace icamera;
 #include <sys/mman.h>
 #include <v4l2_device.h>
 
-namespace cros {
+namespace icamera {
 
 #define V4L2_TYPE_IS_META(type) \
     ((type) == V4L2_BUF_TYPE_META_OUTPUT || (type) == V4L2_BUF_TYPE_META_CAPTURE)
@@ -594,7 +594,7 @@ int V4L2VideoNode::MapMemory(unsigned int index, int prot, int flags, std::vecto
     for (uint32_t i = 0; i < num_planes; i++) {
         void* res = ::mmap(nullptr, buffer.Length(i), prot, flags, fd_, buffer.Offset(i));
         if (res == MAP_FAILED) {
-            LOGE("%s: MMAP error. %d", __func__, strerror(errno));
+            LOGE("%s: MMAP error %s", __func__, strerror(errno));
             return -EINVAL;
         }
         mapped->push_back(res);
@@ -610,7 +610,7 @@ int V4L2VideoNode::GrabFrame(V4L2Buffer* buf) {
         return -EINVAL;
     }
     if (!buf) {
-        LOGE("%s: Device node %s buf is nullptr: %s", __func__, name_.c_str());
+        LOGE("%s: Device node %s buf is nullptr", __func__, name_.c_str());
         return -EINVAL;
     }
 
@@ -641,7 +641,7 @@ int V4L2VideoNode::ExportFrame(unsigned int index, std::vector<int>* fds) {
         return -EINVAL;
     }
     if (!fds) {
-        LOGE("%s: Device node %s fds is nullptr: %s", __func__, name_.c_str());
+        LOGE("%s: Device node %s fds is nullptr", __func__, name_.c_str());
         return -EINVAL;
     }
 
@@ -749,10 +749,11 @@ void V4L2VideoNode::PrintBufferInfo(const std::string& func, const V4L2Buffer& b
 
     switch (memory_type_) {
         case V4L2_MEMORY_USERPTR:
-            LOG1("%s: idx: %ud, addr: %p", func.c_str(), buf.Index(), buf.Userptr(0));
+            LOG1("%s: idx: %ud, addr: 0x%lx", func.c_str(), buf.Index(),
+                 static_cast<unsigned long>(buf.Userptr(0)));
             break;
         case V4L2_MEMORY_MMAP:
-            LOG1("%s: idx: %ud, offset: %p", func.c_str(), buf.Index(), buf.Offset(0));
+            LOG1("%s: idx: %ud, offset: 0x%x", func.c_str(), buf.Index(), buf.Offset(0));
             break;
         case V4L2_MEMORY_DMABUF:
             LOG1("%s: idx: %ud, fd: %d", func.c_str(), buf.Index(), buf.Fd(0));
@@ -805,9 +806,9 @@ int V4L2VideoNode::QueryBuffer(int index, enum v4l2_memory memory_type, V4L2Buff
     LOG1("Device: name: %s, index %ud, type: %ud, bytesused: %ud, flags: 0x%x", name_.c_str(),
          buf->Index(), buf->Type(), buf->BytesUsed(0), buf->Flags());
     if (memory_type == V4L2_MEMORY_MMAP) {
-        LOG1("memory MMAP: offset 0x%p", buf->Offset(0));
+        LOG1("memory MMAP: offset 0x%x", buf->Offset(0));
     } else if (memory_type == V4L2_MEMORY_USERPTR) {
-        LOG1("memory USRPTR: %p", buf->Userptr(0));
+        LOG1("memory USRPTR: 0x%lx", static_cast<unsigned long>(buf->Userptr(0)));
     }
     LOG1("length: %ud", buf->Length(0));
     return 0;
@@ -817,7 +818,7 @@ int V4L2VideoNode::GetFormat(V4L2Format* format) {
     LOG1("@%s", __func__);
 
     if (!format) {
-        LOGE("%s: Device node %s format is nullptr: %s", __func__, name_.c_str());
+        LOGE("%s: Device node %s format is nullptr", __func__, name_.c_str());
         return -EINVAL;
     }
 
@@ -841,4 +842,4 @@ int V4L2VideoNode::GetFormat(V4L2Format* format) {
     return 0;
 }
 
-}  // namespace cros
+}  // namespace icamera

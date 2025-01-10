@@ -16,11 +16,7 @@
 
 #pragma once
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
 #include <v4l2_device.h>
-#endif
 
 #include <atomic>
 #include <vector>
@@ -83,19 +79,7 @@ class CsiMetaDevice : public EventSource {
  private:
     static const int CSI_META_BUFFER_NUM = 10;
 
-    class PollThread : public Thread {
-        CsiMetaDevice* mCsiMetaDevice;
-
-     public:
-        explicit PollThread(CsiMetaDevice* csiMetaDevice) : mCsiMetaDevice(csiMetaDevice) {}
-        virtual ~PollThread() {}
-        virtual bool threadLoop() {
-            int ret = mCsiMetaDevice->poll();
-            return ret == OK;
-        }
-    };
-
-    PollThread* mPollThread;
+    PollThread<CsiMetaDevice>* mPollThread;
     int mCameraId;
     V4L2VideoNode* mCsiMetaDevice;
     std::vector<V4L2VideoNode*> mConfiguredDevices;

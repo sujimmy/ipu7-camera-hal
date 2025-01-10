@@ -78,7 +78,6 @@ int GPUPostStage::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBuffer
     if (!fetchRequestBuffer(sequence, inBuffer)) return INVALID_OPERATION;
     mBufferProducer->qbuf(mInputPort, inBuffer);
 
-    mOutputAvailableSignal.signal();
     mPendingOutBuffers.clear();
     return OK;
 }

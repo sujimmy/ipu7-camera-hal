@@ -123,13 +123,13 @@ struct ipu_psys_term_buffers {
 } __attribute__((packed));
 struct ipu_psys_task_request {
   uint8_t graph_id;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
   uint8_t node_ctx_id;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
   uint8_t frame_id;
   uint32_t payload_reuse_bm[2];
   uint8_t term_buf_count;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
   struct ipu_psys_term_buffers *task_buffers;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 } __attribute__((packed));
 #define IPU_BUFFER_FLAG_INPUT (1 << 0)
 #define IPU_BUFFER_FLAG_OUTPUT (1 << 1)

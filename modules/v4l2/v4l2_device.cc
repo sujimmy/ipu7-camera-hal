@@ -25,8 +25,8 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <v4l2_device.h>
 
+#include <v4l2_device.h>
 #include "iutils/CameraDump.h"
 #include "iutils/CameraLog.h"
 #include "iutils/Errors.h"
@@ -34,7 +34,7 @@
 using namespace icamera::Log;
 using namespace icamera;
 
-namespace cros {
+namespace icamera {
 V4L2Device::V4L2Device(const std::string& name) : name_(name), fd_(-1) {}
 
 V4L2Device::~V4L2Device() {
@@ -477,4 +477,4 @@ int V4L2DevicePoller::Poll(int timeout_ms, int events, std::vector<V4L2Device*>*
     }
     return ret;
 }
-}  // namespace cros
+}  // namespace icamera

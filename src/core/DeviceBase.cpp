@@ -388,5 +388,4 @@ bool MainDevice::needQueueBack(shared_ptr<CameraBuffer> buffer) {
     // FRAME_SYNC_E
     return needSkipFrame;
 }
-
 }  // namespace icamera

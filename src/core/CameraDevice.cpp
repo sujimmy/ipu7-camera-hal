@@ -135,7 +135,7 @@ int CameraDevice::init() {
     ret = mLensCtrl->init();
     CheckAndLogError((ret != OK), ret, "%s: Init Lens falied", __func__);
 
-    mRequestThread->run("RequestThread", PRIORITY_NORMAL);
+    mRequestThread->requestStart();
 
     mState = DEVICE_INIT;
     return ret;
@@ -160,8 +160,7 @@ void CameraDevice::deinit() {
     }
 
     // stop request thread
-    mRequestThread->requestExit();
-    mRequestThread->join();
+    mRequestThread->requestStop();
 
     deleteStreams();
 

@@ -1,7 +1,7 @@
 
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -97,36 +97,38 @@ typedef struct DataRange
 
 }DataRange;
 
-static int distinctGraphsCount = 26;
+static int distinctGraphsCount = 28;
 
 static GraphHashCode hashCodeLookup[] = {
        {0, 0x159079D0},
-       {100000, 0x202BD3F3},
-       {100001, 0x272684BB},
-       {100002, 0x7A70EDD7},
-       {100003, 0x8485B769},
-       {100006, 0x1D7AB5BB},
-       {100007, 0x19F391E9},
-       {100008, 0x63FE6AEB},
-       {100015, 0x5F2E403D},
+       {100000, 0xF2A7DC7},
+       {100001, 0x70FC6FD5},
+       {100002, 0xC75B8A33},
+       {100003, 0x70FC6FD5},
+       {100005, 0x4F7194F1},
+       {100006, 0x37CCA603},
+       {100007, 0x10619C2D},
+       {100008, 0xB9D6F4D3},
+       {100015, 0x51B0DD09},
        {100016, 0xD089033F},
-       {100025, 0x202BD3F3},
+       {100025, 0xF2A7DC7},
        {100026, 0xF9C17401},
-       {100027, 0x85BC577},
-       {100028, 0xCFC943D1},
-       {100029, 0xFC8AB283},
-       {100030, 0x13AD0CBD},
-       {100031, 0xBD500169},
-       {100032, 0x6AD53E25},
-       {100033, 0x849E4F7F},
-       {100034, 0x140E28BB},
+       {100027, 0x37B53BB},
+       {100028, 0x292ECEFD},
+       {100029, 0x408F572F},
+       {100030, 0x2FD0B081},
+       {100031, 0xF6FB646D},
+       {100032, 0xB3676611},
+       {100033, 0x133043B3},
+       {100034, 0x468867F7},
        {100035, 0x5B0632C3},
        {100036, 0x5B0632C3},
-       {100037, 0xC1C32BAD},
-       {100038, 0x561314F3},
-       {100039, 0xDAC2BFEB},
-       {100040, 0xE4E143AB},
-       {100041, 0xD16DA32D}
+       {100037, 0x9E74FC99},
+       {100038, 0x54056597},
+       {100039, 0xB88808E3},
+       {100040, 0xAF0D2357},
+       {100041, 0x42F99A89},
+       {100042, 0xCD48138B}
  };
 
 static FrameFormatDesc formatsDB[] = {

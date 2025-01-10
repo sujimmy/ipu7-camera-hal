@@ -39,13 +39,6 @@ set(CORE_SRCS
     ${CORE_DIR}/PSysDevice.cpp
     CACHE INTERNAL "core sources"
     )
-if (CAL_BUILD)
-    set(CORE_SRCS
-        ${CORE_SRCS}
-        ${CORE_DIR}/SwPostProcessUnit.cpp
-        CACHE INTERNAL "core sources"
-        )
-endif() #CAL_BUILD
 # IPU7_SOURCE_FILE_E
 
 # FRAME_SYNC_S
@@ -72,13 +65,11 @@ endif() #CAL_BUILD
         )
 # FILE_SOURCE_E
 
-if (NOT CAL_BUILD)
-    set(CORE_SRCS
-        ${CORE_SRCS}
-        ${CORE_DIR}/SwImageProcessor.cpp
-        CACHE INTERNAL "core sources"
-        )
-endif()
+set(CORE_SRCS
+    ${CORE_SRCS}
+    ${CORE_DIR}/SwImageProcessor.cpp
+    CACHE INTERNAL "core sources"
+    )
     set(CORE_SRCS
         ${CORE_SRCS}
         CACHE INTERNAL "core sources"

@@ -16,15 +16,10 @@
 
 #pragma once
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
-#include <v4l2_device.h>
-#endif
-
 #include <map>
 #include <string>
 
+#include <v4l2_device.h>
 #include "iutils/Thread.h"
 #include "iutils/Utils.h"
 

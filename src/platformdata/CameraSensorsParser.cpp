@@ -23,6 +23,10 @@
 #include <string>
 #include <vector>
 
+// CRL_MODULE_S
+#include <linux/crlmodule.h>
+
+// CRL_MODULE_E
 #include "iutils/CameraLog.h"
 namespace icamera {
 
@@ -59,9 +63,87 @@ void CameraSensorsParser::parseMediaCtlConfigSection(const Json::Value& node) {
         if (cfg.isMember("formats")) parseMediaCtlConfigFormatsObject(cfg["formats"], &mc);
         if (cfg.isMember("selection")) parseMediaCtlSelectionObject(cfg["selection"], &mc);
         if (cfg.isMember("link")) parseMediaCtlLinkObject(cfg["link"], &mc);
+        if (cfg.isMember("route")) parseMediaCtlRouteObject(cfg["route"], &mc);
+        if (cfg.isMember("control")) parseMediaCtlControlObject(cfg["control"], &mc);
         if (cfg.isMember("videonode")) parseMediaCtlVideoNodeObject(cfg["videonode"], &mc);
 
         mCurCam->mMediaCtlConfs.push_back(mc);
+    }
+}
+
+void CameraSensorsParser::parseMediaCtlRouteObject(const Json::Value& node, MediaCtlConf* conf) {
+    for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
+        auto ele = node[i];
+        McRoute route;
+
+        if (ele.isMember("name")) {
+            route.entityName = resolveI2CBusString(ele["name"].asString());
+            if (mMediaCtl) route.entity = mMediaCtl->getEntityIdByName(route.entityName);
+        }
+        if (ele.isMember("srcPad")) route.srcPad = ele["srcPad"].asInt();
+        if (ele.isMember("srcStream")) route.srcStream = ele["srcStream"].asInt();
+        if (ele.isMember("sinkPad")) route.sinkPad = ele["sinkPad"].asInt();
+        if (ele.isMember("sinkStream")) route.sinkStream = ele["sinkStream"].asInt();
+        if (ele.isMember("flag")) route.flag = ele["flag"].asInt();
+
+        auto it = conf->routings.find(route.entityName);
+        if (it != conf->routings.end()) {
+            it->second.push_back(route);
+        } else {
+            std::vector<McRoute> routes;
+            routes.push_back(route);
+            conf->routings.insert(std::pair<std::string, std::vector<McRoute>>
+                                  (route.entityName, routes));
+        }
+    }
+}
+
+std::map<std::string, int> ctlCmdMapTable = {
+    {"V4L2_CID_LINK_FREQ", V4L2_CID_LINK_FREQ},
+    {"V4L2_CID_VBLANK", V4L2_CID_VBLANK},
+    {"V4L2_CID_HBLANK", V4L2_CID_HBLANK},
+    {"V4L2_CID_EXPOSURE", V4L2_CID_EXPOSURE},
+    {"V4L2_CID_ANALOGUE_GAIN", V4L2_CID_ANALOGUE_GAIN},
+    {"V4L2_CID_HFLIP", V4L2_CID_HFLIP},
+    {"V4L2_CID_VFLIP", V4L2_CID_VFLIP},
+    {"V4L2_CID_TEST_PATTERN", V4L2_CID_TEST_PATTERN},
+    {"V4L2_CID_MIPI_LANES", V4L2_CID_MIPI_LANES},
+// HDR_FEATURE_S
+    {"V4L2_CID_WDR_MODE", V4L2_CID_WDR_MODE},
+// HDR_FEATURE_E
+// CRL_MODULE_S
+    {"V4L2_CID_LINE_LENGTH_PIXELS", V4L2_CID_LINE_LENGTH_PIXELS},
+    {"V4L2_CID_FRAME_LENGTH_LINES", V4L2_CID_FRAME_LENGTH_LINES},
+    {"CRL_CID_SENSOR_MODE", CRL_CID_SENSOR_MODE},
+    {"CRL_CID_EXPOSURE_MODE", CRL_CID_EXPOSURE_MODE},
+    {"CRL_CID_EXPOSURE_HDR_RATIO", CRL_CID_EXPOSURE_HDR_RATIO},
+// CRL_MODULE_E
+};
+void CameraSensorsParser::parseMediaCtlControlObject(const Json::Value& node, MediaCtlConf* conf) {
+    for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
+        auto ele = node[i];
+        McCtl ctl;
+
+        if (ele.isMember("name")) {
+            ctl.entityName = resolveI2CBusString(ele["name"].asString());
+            if (mMediaCtl)
+                ctl.entity = mMediaCtl->getEntityIdByName(ctl.entityName);
+        }
+        if (ele.isMember("ctrlId")) {
+            auto target = ele["ctrlId"].asString();
+            if (ctlCmdMapTable.find(target) != ctlCmdMapTable.end())
+                ctl.ctlCmd = ctlCmdMapTable[target];
+            else
+                LOGW("%s, Unknown control id %s", __func__, target.c_str());
+        }
+        if (ele.isMember("value")) {
+            ctl.ctlValue = ele["value"].asInt();
+        }
+        if (ele.isMember("ctrlName")) {
+            ctl.ctlName = ele["ctrlName"].asString();
+        }
+
+        conf->ctls.push_back(ctl);
     }
 }
 
@@ -73,13 +155,13 @@ void CameraSensorsParser::parseMediaCtlLinkObject(const Json::Value& node, Media
         if (ele.isMember("srcName")) {
             link.srcEntityName = resolveI2CBusString(ele["srcName"].asString());
             if (mMediaCtl)
-                link.srcEntity = mMediaCtl->getEntityIdByName(link.srcEntityName.c_str());
+                link.srcEntity = mMediaCtl->getEntityIdByName(link.srcEntityName);
         }
         if (ele.isMember("srcPad")) link.srcPad = ele["srcPad"].asInt();
         if (ele.isMember("sinkName")) {
             link.sinkEntityName = resolveI2CBusString(ele["sinkName"].asString());
             if (mMediaCtl)
-                link.sinkEntity = mMediaCtl->getEntityIdByName(link.sinkEntityName.c_str());
+                link.sinkEntity = mMediaCtl->getEntityIdByName(link.sinkEntityName);
         }
         if (ele.isMember("sinkPad")) link.sinkPad = ele["sinkPad"].asInt();
         if (ele.isMember("enable")) link.enable = ele["enable"].asBool();
@@ -108,7 +190,7 @@ void CameraSensorsParser::parseMediaCtlConfigFormatsObject(const Json::Value& no
 
         if (ele.isMember("name")) {
             fmt.entityName = resolveI2CBusString(ele["name"].asString());
-            if (mMediaCtl) fmt.entity = mMediaCtl->getEntityIdByName(fmt.entityName.c_str());
+            if (mMediaCtl) fmt.entity = mMediaCtl->getEntityIdByName(fmt.entityName);
         }
         if (ele.isMember("pad")) fmt.pad = ele["pad"].asUInt();
         if (ele.isMember("stream")) fmt.stream = ele["stream"].asInt();
@@ -177,7 +259,7 @@ void CameraSensorsParser::parseMediaCtlSelectionObject(const Json::Value& node, 
         if (ele.isMember("name")) {
             auto name = ele["name"].asString();
             sel.entityName = resolveI2CBusString(name);
-            if (mMediaCtl) sel.entity = mMediaCtl->getEntityIdByName(sel.entityName.c_str());
+            if (mMediaCtl) sel.entity = mMediaCtl->getEntityIdByName(sel.entityName);
         }
         if (ele.isMember("pad")) sel.pad = ele["pad"].asInt();
         if (ele.isMember("target")) {
@@ -599,6 +681,8 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
     if (node.isMember("useCrlModule")) mCurCam->mUseCrlModule = node["useCrlModule"].asBool();
     if (node.isMember("pslOutputMapForRotation")) parseOutputMap(node["pslOutputMapForRotation"]);
 
+    if (node.isMember("unregisterExtDmaBuf"))
+        mCurCam->mUnregisterExtDmaBuf = node["unregisterExtDmaBuf"].asBool();
     if (node.isMember("maxRequestsInflight"))
         mCurCam->mMaxRequestsInflight = node["maxRequestsInflight"].asInt();
     if (node.isMember("faceEngineRunningInterval"))

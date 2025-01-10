@@ -22,7 +22,7 @@
 #include <log/log.h>
 #endif
 
-#ifdef CAL_BUILD
+#ifdef HAVE_CHROME_OS
 #include "utils/PerfettoTrace.h"
 #else
 #include "utils/ScopedAtrace.h"

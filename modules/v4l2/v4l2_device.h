@@ -18,27 +18,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAMERA_INCLUDE_CROS_CAMERA_V4L2_DEVICE_H_
-#define CAMERA_INCLUDE_CROS_CAMERA_V4L2_DEVICE_H_
+#ifndef CAMERA_INCLUDE_CAMERA_V4L2_DEVICE_H_
+#define CAMERA_INCLUDE_CAMERA_V4L2_DEVICE_H_
 
 #include <errno.h>
-#include <linux/v4l2-subdev.h>
-#include <linux/videodev2.h>
 #include <poll.h>
 
 #include <atomic>
 #include <string>
 #include <vector>
 
-#define CROS_CAMERA_EXPORT __attribute__((visibility("default")))
+#include <linux/v4l2-subdev.h>
+#include <linux/videodev2.h>
 
-namespace cros {
+namespace icamera {
 
 /*
  * Wrapper for v4l2_buffer to provide compatible
  * interfaces for multi-plane buffers.
  */
-class CROS_CAMERA_EXPORT V4L2Buffer {
+class V4L2Buffer {
  public:
     V4L2Buffer();
     explicit V4L2Buffer(const V4L2Buffer& buf);
@@ -87,7 +86,7 @@ class CROS_CAMERA_EXPORT V4L2Buffer {
  * Wrapper for v4l2_format to provide compatible
  * interfaces for multi-plane buffers.
  */
-class CROS_CAMERA_EXPORT V4L2Format {
+class V4L2Format {
  public:
     V4L2Format();
     explicit V4L2Format(const struct v4l2_format& fmt);
@@ -135,7 +134,7 @@ class CROS_CAMERA_EXPORT V4L2Format {
  * - Name
  * - File descriptor
  */
-class CROS_CAMERA_EXPORT V4L2Device {
+class V4L2Device {
  public:
     friend class V4L2DevicePoller;
 
@@ -257,7 +256,7 @@ class CROS_CAMERA_EXPORT V4L2Device {
     int fd_; /*!< file descriptor obtained when device is open */
 };
 
-class CROS_CAMERA_EXPORT V4L2DevicePoller {
+class V4L2DevicePoller {
  public:
     // |flush_fd|: file descriptor of the pipe device that will be used to return
     // from Poll() in case of flush request, i.e., to abort poll before timeout
@@ -297,7 +296,7 @@ class CROS_CAMERA_EXPORT V4L2DevicePoller {
  * with the device.
  * This class introduces new methods specific to control video device nodes.
  */
-class CROS_CAMERA_EXPORT V4L2VideoNode final : public V4L2Device {
+class V4L2VideoNode final : public V4L2Device {
  public:
     explicit V4L2VideoNode(const std::string& name);
 
@@ -478,7 +477,7 @@ class CROS_CAMERA_EXPORT V4L2VideoNode final : public V4L2Device {
  * Sub-devices are control points to the new V4L2 media controller
  * architecture.
  */
-class CROS_CAMERA_EXPORT V4L2Subdevice final : public V4L2Device {
+class V4L2Subdevice final : public V4L2Device {
  public:
     explicit V4L2Subdevice(const std::string& name);
 
@@ -550,5 +549,5 @@ class CROS_CAMERA_EXPORT V4L2Subdevice final : public V4L2Device {
     SubdevState state_;
 };
 
-}  // namespace cros
-#endif  // CAMERA_INCLUDE_CROS_CAMERA_V4L2_DEVICE_H_
+}  // namespace icamera
+#endif //CAMERA_INCLUDE_CAMERA_V4L2_DEVICE_H_

@@ -23,6 +23,7 @@
 
 #include "CameraContext.h"
 #include "iutils/CameraLog.h"
+#include "GraphUtils.h"
 
 namespace icamera {
 
@@ -150,13 +151,16 @@ int PipeManager::bindExternalPorts(
 
     // each output from user request should only bind to 1 pipeLine's output port
     std::map<uuid, stream_t> outputFrameInfo = mOutputFrameInfo;
-    // ProcessingUnit's input can bind to multi pipeLines input port
-    std::map<uuid, stream_t> inputFrameInfo = mInputFrameInfo;
     for (auto& pipeLine : mPipeLines) {
         int32_t streamId = pipeLine.first;
 
+        // ProcessingUnit's input can bind to multi pipeLines input port
+        std::map<uuid, stream_t> inputFrameInfo = mInputFrameInfo;
         LOG2("%s, start to bind the input port of pipeLine %d", __func__, streamId);
-        // Bind the input ports
+        /*
+        ** Loop to bind multiple input ports to multiple frames one-to-one, remove the port and
+        ** frame from map when bind succeed.
+        */
         pipeLine.second->getInput()->getFrameInfo(inputInfo, outputInfo);
         for (auto& portInfo : inputInfo) {
             // Check if input port of pipeline is external input
@@ -170,9 +174,11 @@ int PipeManager::bindExternalPorts(
             if (!isInEdge) continue;
 
             // Link to external input
-            auto frameInfo = mInputFrameInfo.begin();
-            while (frameInfo != mInputFrameInfo.end()) {
-                if (isSameStreamConfig(portInfo.second, frameInfo->second, false)) {
+            bool bind = false;
+            auto frameInfo = inputFrameInfo.begin();
+            while (frameInfo != inputFrameInfo.end()) {
+                bool match = isSameStreamConfig(portInfo.second, frameInfo->second, false);
+                if (match) {
                     PortMapping portMap;
                     portMap.mPipeStage = pipeLine.second->getInput();
                     portMap.mExternalPort = frameInfo->first;
@@ -181,13 +187,15 @@ int PipeManager::bindExternalPorts(
                     mInputMaps.push_back(portMap);
                     LOG2("%s, external sourcePort %x, sinkPort %x", __func__, frameInfo->first,
                          portInfo.first);
-                    // Keep external input port because it can be shared among pipelines
+                    inputFrameInfo.erase(frameInfo);
+                    bind = true;
                     break;
+                } else {
+                    frameInfo++;
                 }
-                frameInfo++;
             }
-            CheckAndLogError(frameInfo == mInputFrameInfo.end(), UNKNOWN_ERROR,
-                             "@%s, failed to bind input port %x", __func__, portInfo.first);
+            CheckAndLogError(!bind, UNKNOWN_ERROR, "@%s, failed to bind input port %x", __func__,
+                             portInfo.first);
         }
         // Then bind the output ports.
         LOG2("%s, start to bind the output port of pipeLine %d", __func__, streamId);

@@ -23,9 +23,7 @@
 
 #include "ProcessingUnit.h"
 
-#ifndef CAL_BUILD
 #include "SwImageProcessor.h"
-#endif
 
 namespace icamera {
 
@@ -36,11 +34,7 @@ IProcessingUnit* IProcessingUnitFactory::createIProcessingUnit(int cameraId,
         return new ProcessingUnit(cameraId, scheduler);
     }
 
-#ifndef CAL_BUILD
     LOG1("%s, Using software to do color conversion.", __func__);
     return new SwImageProcessor(cameraId);
-#else
-    return nullptr;
-#endif
 }
 }  // namespace icamera

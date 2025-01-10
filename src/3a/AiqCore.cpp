@@ -78,6 +78,9 @@ AiqCore::AiqCore(int cameraId)
 
     mAiqParams = std::unique_ptr<cca::cca_aiq_params>(new cca::cca_aiq_params);
     mAiqResults = std::unique_ptr<cca::cca_aiq_results>(new cca::cca_aiq_results);
+
+    memset(mAiqParams.get(), 0, sizeof(cca::cca_aiq_params));
+    memset(mAiqResults.get(), 0, sizeof(cca::cca_aiq_results));
 }
 
 AiqCore::~AiqCore() {}

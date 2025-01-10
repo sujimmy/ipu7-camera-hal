@@ -221,7 +221,6 @@ int SensorHwCtrl::setDualExposuresDCGAndVS(const vector<int>& coarseExposures,
 
     return status;
 }
-
 // CRL_MODULE_E
 
 int SensorHwCtrl::setAnalogGains(const vector<int>& analogGains) {

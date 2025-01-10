@@ -63,8 +63,6 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
     status_t prepareTask(CameraBufferPortMap* srcBuffers, CameraBufferPortMap* dstBuffers);
     void dispatchTask(CameraBufferPortMap& inBuf, CameraBufferPortMap& outBuf,
                       bool fakeTask = false, bool callbackRgbs = false);
-
-    void handleEvent(EventData eventData);
     int setParameters(const DataContext* dataContext);
 
     int64_t getSettingSequence(const CameraBufferPortMap& outBuf);
@@ -118,7 +116,7 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
     std::queue<EventDataMeta> mMetaQueue;
     // Guard for the metadata queue
     Mutex mMetaQueueLock;
-    Condition mMetaAvailableSignal;
+    std::condition_variable mMetaAvailableSignal;
 
     uuid mRawPort;
 

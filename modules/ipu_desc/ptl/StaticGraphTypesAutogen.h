@@ -27,7 +27,7 @@ typedef aic::IaAicFragmentDesc StaticGraphFragmentDesc;
 #ifdef STATIC_GRAPH_USE_IA_LEGACY_TYPES
 #include "ia_isp_bxt_types.h"
 #if (IA_RESOLUTION_STATIC_GRAPH_PACK != 4)
-    #error "Static graph resulution structs packing alignment is defferent than defined in ia_types.h"
+#error "Static graph resulution structs packing alignment is defferent than defined in ia_types.h"
 #endif
 typedef ia_binary_data StaticGraphKernelSystemApi;
 typedef ia_rectangle StaticGraphKernelResCrop;
@@ -37,7 +37,11 @@ typedef ia_isp_bxt_run_kernels StaticGraphRunKernel;
 #endif
 
 #ifdef STATIC_GRAPH_LOG
-#define SG_PRINTF(fmt, ...) do { printf(fmt, ##__VA_ARGS__); printf("\n"); } while ((void)0, 0)
+#define SG_PRINTF(fmt, ...)         \
+    do {                            \
+        printf(fmt, ##__VA_ARGS__); \
+        printf("\n");               \
+    } while ((void)0, 0)
 #define STATIC_GRAPH_LOG(...) SG_PRINTF(__VA_ARGS__)
 #else
 #define STATIC_GRAPH_LOG(...) ((void)0)
@@ -49,16 +53,12 @@ enum class NodeResourceId : uint8_t {
     SwIsys = 2,
     SwGdc = 3,
     SwScaler = 4,
+    SwNntm = 5,
 };
 
-enum class StaticGraphStatus : uint8_t
-{
-    SG_OK = 0,
-    SG_ERROR = 1
-};
+enum class StaticGraphStatus : uint8_t { SG_OK = 0, SG_ERROR = 1 };
 
-enum class VirtualSink : uint8_t
-{
+enum class VirtualSink : uint8_t {
     PreviewSink,
     VideoSink,
     PostProcessingVideoSink,
@@ -71,8 +71,7 @@ enum class VirtualSink : uint8_t
     PreviewIrSink,
 };
 
-enum class HwSink : uint8_t
-{
+enum class HwSink : uint8_t {
     Disconnected,
     AeOutSink,
     AfStdOutSink,
@@ -186,7 +185,7 @@ struct VirtualSinkMapping {
 
 // ia_binary_data
 struct StaticGraphKernelSystemApi {
-    void *data;
+    void* data;
     uint32_t size;
 };
 
@@ -195,8 +194,8 @@ struct StaticGraphRunKernel {
     uint32_t stream_id;
     uint32_t kernel_uuid;
     int32_t enable;
-    StaticGraphKernelRes *resolution_info;
-    StaticGraphKernelRes *resolution_history;
+    StaticGraphKernelRes* resolution_info;
+    StaticGraphKernelRes* resolution_history;
     uint32_t metadata[4];
     StaticGraphCompKernelBpp bpp_info;
     uint32_t output_count;
@@ -220,10 +219,9 @@ struct StaticGraphPacRunKernel {
 };
 
 // ImagingKernelGroup
-struct StaticGraphNodeKernels
-{
+struct StaticGraphNodeKernels {
     uint32_t kernelCount;
-    StaticGraphPacRunKernel *kernelList;
+    StaticGraphPacRunKernel* kernelList;
     uint32_t operationMode;
     uint32_t streamId;
 };
@@ -277,6 +275,7 @@ enum class GraphElementType : uint8_t {
     BbpsWithTnr,
     SwGdc,
     SwScaler,
+    SwNntm,
     LbffRgbIr,
     LbffIrNoGmvIrStream,
     BbpsIrWithTnr,

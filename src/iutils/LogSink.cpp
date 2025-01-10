@@ -21,8 +21,8 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#ifdef CAL_BUILD
-#include <base/logging.h>
+#ifdef LIBCAMERA_BUILD
+#include <libcamera/base/log.h>
 #endif
 
 #include <sys/time.h>
@@ -36,7 +36,19 @@ extern const char* cameraDebugLogToString(int level);
 #define CAMERA_DEBUG_LOG_ERR (1 << 5)
 #define CAMERA_DEBUG_LOG_WARNING (1 << 3)
 
-#ifdef CAL_BUILD
+#ifdef LIBCAMERA_BUILD
+void LibcameraLogSink::sendOffLog(LogItem logItem) {
+    char prefix[32];
+    ::snprintf(prefix, sizeof(prefix), " [%s]: ",
+            icamera::cameraDebugLogToString(logItem.level));
+    libcamera::LogCategory* cat = libcamera::LogCategory::create(logItem.logTags);
+    libcamera::LogSeverity sev = (logItem.level == CAMERA_DEBUG_LOG_ERR)     ? libcamera::LogError
+                               : (logItem.level == CAMERA_DEBUG_LOG_WARNING) ? libcamera::LogWarning
+                                                                             : libcamera::LogDebug;
+    libcamera::_log(cat, sev).stream() << prefix << logItem.logEntry;
+}
+#else
+#ifdef HAVE_CHROME_OS
 void GLogSink::sendOffLog(LogItem logItem) {
     char prefix[32];
     ::snprintf(prefix, sizeof(prefix), "CamHAL[%s]: ",
@@ -57,6 +69,7 @@ void GLogSink::sendOffLog(LogItem logItem) {
             break;
     }
 }
+#endif
 #endif
 
 void StdconLogSink::sendOffLog(LogItem logItem) {

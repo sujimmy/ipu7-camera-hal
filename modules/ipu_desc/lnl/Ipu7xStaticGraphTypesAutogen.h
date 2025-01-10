@@ -1,7 +1,7 @@
 
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -63,6 +63,8 @@ enum class NodeResourceId : uint8_t {
     SwDol = 3,
     SwGdc = 4,
     SwGtm = 5,
+    SwNntm = 6,
+    SwVai = 8,
 };
 
 enum class StaticGraphStatus : uint8_t
@@ -97,7 +99,7 @@ enum class HwSink : uint8_t
     ImageDpSink,
     ImagePppSink,
     GmvMatchOutSink,
-    ProcessedVideoSink,
+    ProcessedMainSink,
     AwbSveOutSink,
     IrAeOutSink,
     IrAfStdOutSink,
@@ -136,8 +138,14 @@ struct StaticGraphKernelRes {
     int32_t output_height = 0;
     StaticGraphKernelResCrop output_crop;
 };
-#endif
 
+// ia_pal_system_api_io_buffer_1_4_t;
+// We add only the fields that are used by tests
+struct StaticGraphKernelSystemApiIoBuffer1_4 {
+    uint32_t x_output_offset_per_stripe[4];
+};
+
+#endif
 struct StaticGraphKernelBppConfiguration {
     uint8_t input_bpp = 0;
     uint8_t output_bpp = 0;
@@ -194,6 +202,10 @@ struct VirtualSinkMapping {
     uint8_t rawDolLong = 0;
     uint8_t videoIr = 0;
     uint8_t previewIr = 0;
+};
+
+struct SystemApiRecordHeader {
+    uint16_t systemApiUuid = 0;
 };
 
 #pragma pack(pop)
@@ -274,7 +286,7 @@ enum class GraphElementType : uint8_t {
     ImageDp,
     ImagePpp,
     GmvMatchOut,
-    ProcessedVideo,
+    ProcessedMain,
     AwbSveOut,
     IrAeOut,
     IrAfStdOut,
@@ -289,9 +301,10 @@ enum class GraphElementType : uint8_t {
     Isys,
     LbffBayer,
     BbpsNoTnr,
-    BbpsWithTnr,
     LbffBayerWithGmv,
+    BbpsWithTnr,
     SwGdc,
+    SwNntm,
     LbffRgbIr,
     LbffIrNoGmvIrStream,
     BbpsIrWithTnr,
@@ -305,6 +318,11 @@ enum class GraphElementType : uint8_t {
     SwDol,
     LbffDol,
     SwGtm,
+    LbffBayerPdaf2WithGmv,
+    LbffBayerPdaf3WithGmv,
+    LbffRgbIrWithGmv,
+    LbffIrWithGmvIrStream,
+    SwVai,
 };
 
 enum class LinkType : uint8_t {

@@ -31,7 +31,7 @@ int Condition::waitRelative(ConditionLock& lock, int64_t reltime) {
 Thread::Thread() : mState(NOT_STARTED), mThread(nullptr), mPriority(PRIORITY_DEFAULT) {}
 
 Thread::~Thread() {
-    requestExitAndWait();
+    wait();
 
     delete mThread;
 }
@@ -60,7 +60,7 @@ int Thread::run(std::string name, int priority) {
     return OK;
 }
 
-void Thread::requestExit() {
+void Thread::exit() {
     LOG1("%s, thread name:%s", __func__, mName.empty() ? "NO_NAME" : mName.c_str());
 
     AutoMutex lock(mLock);
@@ -70,20 +70,20 @@ void Thread::requestExit() {
     }
 }
 
-int Thread::requestExitAndWait() {
+void Thread::wait() {
     LOG1("%s, thread name:%s", __func__, mName.empty() ? "NO_NAME" : mName.c_str());
 
     ConditionLock lock(mLock);
 
     // No need exit if it's not started.
     if (mState == NOT_STARTED) {
-        return NO_INIT;
+        return;
     }
 
     // The function cannot be called by same thread.
     if (std::this_thread::get_id() == mId) {
-        LOGE("The thread itself cannot call its own requestExitAndWait function.");
-        return WOULD_BLOCK;
+        LOGE("The thread itself cannot call its own wait function.");
+        return;
     }
 
     while (mState != EXITED) {
@@ -91,7 +91,7 @@ int Thread::requestExitAndWait() {
         mExitedCondition.wait(lock);
     }
 
-    return OK;
+    return;
 }
 
 int Thread::join() {
