@@ -16,16 +16,11 @@
 
 #pragma once
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
-#include <v4l2_device.h>
-#endif
-
 #include <atomic>
 #include <list>
 #include <set>
 
+#include <v4l2_device.h>
 #include "BufferQueue.h"
 #include "CameraBuffer.h"
 #include "iutils/Thread.h"
@@ -172,5 +167,4 @@ class MainDevice : public DeviceBase {
     int onDequeueBuffer(std::shared_ptr<CameraBuffer> buffer);
     bool needQueueBack(std::shared_ptr<CameraBuffer> buffer);
 };
-
 }  // namespace icamera

@@ -16,16 +16,12 @@
 
 #pragma once
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
-#include <v4l2_device.h>
-#endif
 #include <libcamera/base/mutex.h>
 #include <libcamera/base/thread.h>
 
 #include <vector>
 
+#include <v4l2_device.h>
 #include "CameraEvent.h"
 #include "iutils/Utils.h"
 

@@ -1,6 +1,6 @@
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -49,6 +49,29 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSi
         case HwSink::ImageMpSink:    return 7175; // ofs_mp_bodr_regs_1_1
         case HwSink::ImageDpSink:    return 30277; // ofs_dp_bodr_regs_1_1
         case HwSink::ImagePppSink:    return 31882; // ofs_pp_bodr_regs_1_1
+        case HwSink::ProcessedMainSink:
+            switch(graphId)
+            {
+                case 100001:    // Bayer_NoPdaf_WithDvs_WithGdc_WithTnr
+                case 100003:    // Bayer_NoPdaf_WithDvs_WithTnr
+                case 100004:    // Bayer_NoPdaf_WithGdc_WithTnr
+                case 100037:    // Bayer_WithPdaf2_WithDvs_WithTnr
+                case 100038:    // Bayer_WithPdaf3_WithDvs_WithTnr
+                case 100039:    // RgbIr_NoPdaf_WithDvs_WithTnr
+                    return 5637; // gdc7_1
+                case 100005:    // Bayer_NoPdaf_WithNntm_WithTnr
+                case 100040:    // Bayer_WithPdaf3_WithNntm_WithTnr
+                    return 46539; // nntm_1_0
+                case 100031:    // Dol2Inputs_NoGmv_NoTnr
+                    if (links[16]->isActive) return 40423; // tm_app
+                    if (links[19]->isActive) return 46539; // nntm_1_0
+                    break;
+                case 100032:    // Dol2Inputs_NoDvs_WithTnr
+                    if (links[21]->isActive) return 40423; // tm_app
+                    if (links[24]->isActive) return 46539; // nntm_1_0
+                    break;
+            }
+            break;
         case HwSink::AeOutSink:    return 55073; // aestatistics_2_1
     }
 
@@ -70,8 +93,13 @@ StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHisto
     kernelUuids.push_back(33179);  // slim_tnr_sp_bc_bifd_rs4nm1_regs_1_1
     kernelUuids.push_back(6326);  // tnr_sp_bc_bifd_yuv4n_regs_1_1
     kernelUuids.push_back(27830);  // slim_tnr_fp_blend_bifd_yuvnm1_regs_1_1
-    kernelUuids.push_back(2565);  // gdc7_1
+    kernelUuids.push_back(5637);  // gdc7_1
+    kernelUuids.push_back(46539);  // nntm_1_0
     kernelUuids.push_back(40423);  // tm_app
     return StaticGraphStatus::SG_OK;
 }
 
+uint32_t GraphResolutionConfiguratorHelper::getRunKernelIoBufferSystemApiUuid()
+{
+    return 50058;
+}

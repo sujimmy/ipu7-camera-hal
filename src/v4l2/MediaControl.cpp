@@ -108,7 +108,7 @@ MediaControl* MediaControl::getMediaControlInstance() {
     return mediaControlInstance;
 }
 
-/*static*/ MediaControl* MediaControl::getInstance() {
+MediaControl* MediaControl::getInstance() {
     AutoMutex lock(sLock);
     if (!sInstance) {
         sInstance = getMediaControlInstance();
@@ -128,10 +128,14 @@ void MediaControl::releaseInstance() {
 
 MediaControl::MediaControl(const char* devName) : mDevName(devName) {
     LOG1("@%s device: %s", __func__, devName);
+
+    int ret = initEntities();
+    CheckAndLogError(ret, VOID_VALUE, "Failed to init entities");
 }
 
 MediaControl::~MediaControl() {
     LOG1("@%s", __func__);
+    clearEntities();
 }
 
 int MediaControl::initEntities() {
@@ -161,11 +165,9 @@ void MediaControl::clearEntities() {
     }
 }
 
-MediaEntity* MediaControl::getEntityByName(const char* name) {
-    CheckAndLogError(!name, nullptr, "Invalid Entity name");
-
+MediaEntity* MediaControl::getEntityByName(const std::string &name) {
     for (auto& entity : mEntities) {
-        if (strcmp(name, entity.info.name) == 0) {
+        if (strcmp(name.c_str(), entity.info.name) == 0) {
             return &entity;
         }
     }
@@ -173,7 +175,7 @@ MediaEntity* MediaControl::getEntityByName(const char* name) {
     return nullptr;
 }
 
-int MediaControl::getEntityIdByName(const char* name) {
+int MediaControl::getEntityIdByName(const std::string &name) {
     MediaEntity* entity = getEntityByName(name);
     if (!entity) {
         return -1;
@@ -799,20 +801,7 @@ int MediaControl::mediaCtlSetup(int cameraId, MediaCtlConf* mc, int width, int h
 
     int ret = OK;
     // VIRTUAL_CHANNEL_S
-    /* Set routing */
-    for (auto& route : mc->routes) {
-        LOG1("<id%d> route entity:%s, sinkPad:%d, srcPad:%d, sinkStream:%d, srcStream:%d, flag:%d",
-             cameraId, route.entityName.c_str(), route.sinkPad, route.srcPad,
-             route.sinkStream, route.srcStream, route.flag);
-
-        string subDeviceNodeName;
-        CameraUtils::getSubDeviceName(route.entityName.c_str(), subDeviceNodeName);
-        V4L2Subdevice* subDev = V4l2DeviceFactory::getSubDev(cameraId, subDeviceNodeName);
-        v4l2_subdev_route r = {route.sinkPad, route.sinkStream, route.srcPad, route.srcStream,
-                               route.flag};
-        ret = subDev->SetRouting(&r, 1);
-        CheckAndLogError(ret != 0, ret, "setRouting fail, ret:%d", ret);
-    }
+    /* TODO: Set routing */
     // VIRTUAL_CHANNEL_E
 
     /* Set format & selection in format Configuration */
@@ -854,16 +843,7 @@ void MediaControl::mediaCtlClear(int cameraId, MediaCtlConf* mc) {
     LOG1("<id%d> %s", cameraId, __func__);
 
     // VIRTUAL_CHANNEL_S
-    /* Clear routing */
-    for (auto& route : mc->routes) {
-        string subDeviceNodeName;
-        CameraUtils::getSubDeviceName(route.entityName.c_str(), subDeviceNodeName);
-        V4L2Subdevice* subDev = V4l2DeviceFactory::getSubDev(cameraId, subDeviceNodeName);
-        v4l2_subdev_route r = {route.sinkPad, route.sinkStream, route.srcPad, route.srcStream,
-                               route.flag & ~V4L2_SUBDEV_ROUTE_FL_ACTIVE};
-        int ret = subDev->SetRouting(&r, 1);
-        CheckAndLogError(ret != 0, VOID_VALUE, "Clear routing fail, ret:%d", ret);
-    }
+    /* TODO: Clear routing */
     // VIRTUAL_CHANNEL_E
 }
 

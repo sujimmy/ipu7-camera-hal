@@ -32,11 +32,18 @@ class LogOutputSink {
     static void setLogTime(char* timeBuf);
 };
 
-#ifdef CAL_BUILD
+#ifdef LIBCAMERA_BUILD
+class LibcameraLogSink : public LogOutputSink {
+ public:
+    void sendOffLog(LogItem logItem) override;
+};
+#else
+#ifdef HAVE_CHROME_OS
 class GLogSink : public LogOutputSink {
  public:
     void sendOffLog(LogItem logItem) override;
 };
+#endif
 #endif
 
 #ifdef CAMERA_TRACE

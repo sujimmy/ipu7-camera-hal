@@ -34,7 +34,7 @@ RequestThread::RequestThread(int cameraId, AiqUnitBase *a3AControl) :
     mGet3AStatWithFakeRequest(false),
     mRequestsInProcessing(0),
     mFirstRequest(true),
-    mActive(false),
+    mState(EXIT),
     mRequestTriggerEvent(NONE_EVENT),
     mLastCcaId(-1),
     mLastEffectSeq(-1),
@@ -55,25 +55,34 @@ RequestThread::RequestThread(int cameraId, AiqUnitBase *a3AControl) :
 RequestThread::~RequestThread() {
 }
 
-void RequestThread::requestExit() {
+void RequestThread::requestStart() {
+    mState = START;
+    Thread::start();
+}
+
+void RequestThread::requestStop() {
+    mState = EXIT;
     clearRequests();
 
-    Thread::requestExit();
-    AutoMutex l(mPendingReqLock);
-    mRequestSignal.signal();
+    Thread::exit();
+    {
+        AutoMutex l(mPendingReqLock);
+        mRequestSignal.notify_one();
+    }
+
+    Thread::wait();
 }
 
 void RequestThread::clearRequests() {
     LOG1("%s", __func__);
 
-    mActive = false;
     for (int streamId = 0; streamId < MAX_STREAM_NUMBER; streamId++) {
         FrameQueue& frameQueue = mOutputFrames[streamId];
         AutoMutex lock(frameQueue.mFrameMutex);
         while (!frameQueue.mFrameQueue.empty()) {
             frameQueue.mFrameQueue.pop();
         }
-        frameQueue.mFrameAvailableSignal.broadcast();
+        frameQueue.mFrameAvailableSignal.notify_all();
     }
 
     AutoMutex l(mPendingReqLock);
@@ -170,28 +179,28 @@ int RequestThread::processRequest(int bufferNum, camera_buffer_t **ubuffer) {
 
     mPendingRequests.push_back(request);
 
-    if (!mActive) {
-        mActive = true;
+    if (mState != PROCESSING) {
+        mState = PROCESSING;
     }
 
     mRequestTriggerEvent |= NEW_REQUEST;
-    mRequestSignal.signal();
+    mRequestSignal.notify_one();
     return OK;
 }
 
 int RequestThread::waitFrame(int streamId, camera_buffer_t **ubuffer) {
     FrameQueue& frameQueue = mOutputFrames[streamId];
-    ConditionLock lock(frameQueue.mFrameMutex);
+    std::unique_lock<std::mutex> lock(frameQueue.mFrameMutex);
 
-    if (!mActive) return NO_INIT;
+    if (mState == EXIT) return NO_INIT;
     while (frameQueue.mFrameQueue.empty()) {
-        int ret = frameQueue.mFrameAvailableSignal.waitRelative(
+        std::cv_status ret = frameQueue.mFrameAvailableSignal.wait_for(
                       lock,
-                      kWaitFrameDuration * SLOWLY_MULTIPLIER);
-        if (!mActive) return NO_INIT;
+                      std::chrono::nanoseconds(kWaitFrameDuration * SLOWLY_MULTIPLIER));
+        if (mState == EXIT) return NO_INIT;
 
-        CheckWarning(ret == TIMED_OUT, ret, "<id%d>@%s, time out happens, wait recovery",
-                     mCameraId, __func__);
+        CheckWarning(ret == std::cv_status::timeout, TIMED_OUT,
+                     "<id%d>@%s, time out happens, wait recovery", mCameraId, __func__);
     }
 
     shared_ptr<CameraBuffer> camBuffer = frameQueue.mFrameQueue.front();
@@ -205,21 +214,23 @@ int RequestThread::waitFrame(int streamId, camera_buffer_t **ubuffer) {
 
 int RequestThread::wait1stRequestDone() {
     int ret = OK;
-    ConditionLock lock(mFirstRequestLock);
+    std::unique_lock<std::mutex> lock(mFirstRequestLock);
     if (mFirstRequest) {
         LOG2("%s, waiting the first request done", __func__);
-        ret = mFirstRequestSignal.waitRelative(
+        std::cv_status status = mFirstRequestSignal.wait_for(
                   lock,
-                  kWaitFirstRequestDoneDuration * SLOWLY_MULTIPLIER);
-        if (ret == TIMED_OUT)
+                  std::chrono::nanoseconds(kWaitFirstRequestDoneDuration * SLOWLY_MULTIPLIER));
+        if (status == std::cv_status::timeout) {
             LOGE("@%s: Wait 1st request timed out", __func__);
+            ret = TIMED_OUT;
+        }
     }
 
     return ret;
 }
 
 void RequestThread::handleEvent(EventData eventData) {
-    if (!mActive) return;
+    if (mState == EXIT) return;
 
     /* Notes:
       * There should be only one of EVENT_ISYS_FRAME
@@ -238,7 +249,7 @@ void RequestThread::handleEvent(EventData eventData) {
                 // Just in case too many requests are pending in mPendingRequests.
                 if (!mPendingRequests.empty()) {
                     mRequestTriggerEvent |= NEW_FRAME;
-                    mRequestSignal.signal();
+                    mRequestSignal.notify_one();
                 }
             }
             break;
@@ -250,7 +261,7 @@ void RequestThread::handleEvent(EventData eventData) {
                     mBlockRequest = false;
                 }
                 mRequestTriggerEvent |= NEW_STATS;
-                mRequestSignal.signal();
+                mRequestSignal.notify_one();
             }
             break;
         case EVENT_ISYS_SOF:
@@ -258,7 +269,7 @@ void RequestThread::handleEvent(EventData eventData) {
                 AutoMutex l(mPendingReqLock);
                 mLastSofSeq = eventData.data.sync.sequence;
                 mRequestTriggerEvent |= NEW_SOF;
-                mRequestSignal.signal();
+                mRequestSignal.notify_one();
             }
             break;
         case EVENT_FRAME_AVAILABLE:
@@ -271,7 +282,7 @@ void RequestThread::handleEvent(EventData eventData) {
                     bool needSignal = frameQueue.mFrameQueue.empty();
                     frameQueue.mFrameQueue.push(eventData.buffer);
                     if (needSignal) {
-                        frameQueue.mFrameAvailableSignal.signal();
+                        frameQueue.mFrameAvailableSignal.notify_one();
                     }
                 } else {
                     LOG2("%s: fake request return %u", __func__, eventData.buffer->getSequence());
@@ -290,7 +301,7 @@ void RequestThread::handleEvent(EventData eventData) {
                     mFakeReqBuf.sequence = -1;
                     mPendingRequests.push_back(fakeRequest);
                     mRequestTriggerEvent |= NEW_REQUEST;
-                    mRequestSignal.signal();
+                    mRequestSignal.notify_one();
                 }
             }
             break;
@@ -307,7 +318,7 @@ void RequestThread::handleEvent(EventData eventData) {
  * Return false if no pending requests or it is not ready for reconfiguration.
  */
 bool RequestThread::fetchNextRequest(CameraRequest& request) {
-    ConditionLock lock(mPendingReqLock);
+    std::unique_lock<std::mutex> lock(mPendingReqLock);
     if (mPendingRequests.empty()) {
         return false;
     }
@@ -320,13 +331,16 @@ bool RequestThread::fetchNextRequest(CameraRequest& request) {
 }
 
 bool RequestThread::threadLoop() {
+    if (mState == EXIT) return false;
+
     int64_t applyingSeq = -1;
     {
-         ConditionLock lock(mPendingReqLock);
+         std::unique_lock<std::mutex> lock(mPendingReqLock);
 
          if (blockRequest()) {
-            int ret = mRequestSignal.waitRelative(lock, kWaitDuration * SLOWLY_MULTIPLIER);
-            CheckWarning(ret == TIMED_OUT, true,
+            std::cv_status ret = mRequestSignal.wait_for(lock,
+                std::chrono::nanoseconds(kWaitDuration * SLOWLY_MULTIPLIER));
+            CheckWarning(ret == std::cv_status::timeout, true,
                          "wait event time out, %d requests processing, %zu requests in HAL",
                          mRequestsInProcessing, mPendingRequests.size());
 
@@ -368,9 +382,7 @@ bool RequestThread::threadLoop() {
         }
     }
 
-    if (!mActive) {
-        return false;
-    }
+    if (mState == EXIT) return false;
 
     CameraRequest request;
     if (fetchNextRequest(request)) {
@@ -394,7 +406,7 @@ void RequestThread::handleRequest(CameraRequest& request, int64_t applyingSeq) {
         int64_t ccaId = -1;
         {
             AutoMutex l(mPendingReqLock);
-            if (mActive) {
+            if (mState != EXIT) {
                 ccaId = ++mLastCcaId;
             }
         }
@@ -406,9 +418,7 @@ void RequestThread::handleRequest(CameraRequest& request, int64_t applyingSeq) {
 
         {
             AutoMutex l(mPendingReqLock);
-            if (!mActive) {
-                return;
-            }
+            if (mState == EXIT) return;
 
             // Check the final prediction value from 3A
             if (effectSeq <= mLastEffectSeq) {
@@ -443,7 +453,7 @@ void RequestThread::handleRequest(CameraRequest& request, int64_t applyingSeq) {
         if (mFirstRequest) {
             LOG1("%s: first request done", __func__);
             mFirstRequest = false;
-            mFirstRequestSignal.signal();
+            mFirstRequestSignal.notify_one();
         }
     }
 }

@@ -80,6 +80,11 @@ void GraphConfig::releaseGraphNodes() {
     mGraphConfigBinaries.clear();
 }
 
+uint32_t GraphConfig::createQueryKeyAttribute(int cameraId) {
+    uint32_t attributes = 0;
+    return attributes;
+}
+
 /*
  * Query graph setting according to activeStreams
  */
@@ -88,8 +93,8 @@ status_t GraphConfig::queryGraphSettings(const vector<HalStream*>& outStreams) {
     for (auto& graph : mStaticGraphs) graph.second.clear();
     mStaticGraphs.clear();
 
-    GraphConfigurationKey queryVideoKey;
-    GraphConfigurationKey queryStillKey;
+    GraphConfigurationKey queryVideoKey = {};
+    GraphConfigurationKey queryStillKey = {};
     // TODO: depends config mode/sensor type/......?
     queryVideoKey.fps = 30;
     queryStillKey.fps = 30;
@@ -102,6 +107,7 @@ status_t GraphConfig::queryGraphSettings(const vector<HalStream*>& outStreams) {
                 queryVideoKey.preview.width = stream->width();
                 queryVideoKey.preview.height = stream->height();
                 queryVideoKey.preview.bpp = 8;  // TODO: depends on format
+                queryVideoKey.attributes = createQueryKeyAttribute(mCameraId);
                 streams[VirtualSink::PreviewSink] = stream;
                 LOG2("%s: video stream %d, vSink %d", __func__, stream->streamId(),
                      VirtualSink::PreviewSink);
@@ -119,6 +125,7 @@ status_t GraphConfig::queryGraphSettings(const vector<HalStream*>& outStreams) {
                 queryStillKey.stills.width = stream->width();
                 queryStillKey.stills.height = stream->height();
                 queryStillKey.stills.bpp = 8;  // TODO: depends on format
+                queryStillKey.attributes = createQueryKeyAttribute(mCameraId);
                 streams[VirtualSink::StillsSink] = stream;
                 LOG2("%s: still stream %d, vSink %d", __func__, stream->streamId(),
                      VirtualSink::StillsSink);

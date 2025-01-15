@@ -75,7 +75,15 @@ class FileSource : public StreamSource {
      public:
         explicit ProduceThread(FileSource* fileSource) : mFileSrc(fileSource) {}
 
-        virtual bool threadLoop() { return mFileSrc->produce(); }
+        virtual void run() {
+            bool ret = true;
+            while (ret) {
+                ret = threadLoop();
+            }
+        }
+
+     private:
+        bool threadLoop() { return mFileSrc->produce(); }
     };
 
     ProduceThread* mProduceThread;
@@ -95,12 +103,12 @@ class FileSource : public StreamSource {
     } mInjectionWay;
 
     stream_t mStreamConfig;
-    uuid mOutputPort;
+    std::set<uuid> mOutputPorts;
 
     std::vector<BufferConsumer*> mBufferConsumerList;
     std::map<std::string, std::shared_ptr<CameraBuffer>> mFrameFileBuffers;
     CameraBufQ mBufferQueue;
-    Condition mBufferSignal;
+    std::condition_variable mBufferSignal;
     // Guard for FileSource Public API
     Mutex mLock;
 };

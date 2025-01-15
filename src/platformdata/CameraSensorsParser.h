@@ -84,6 +84,8 @@ class CameraSensorsParser : public JsonParserBase {
     void parseMediaCtlConfigSection(const Json::Value& node);
     void parseMediaCtlSelectionObject(const Json::Value& node, MediaCtlConf* mc);
     void parseMediaCtlConfigFormatsObject(const Json::Value& node, MediaCtlConf* conf);
+    void parseMediaCtlRouteObject(const Json::Value& node, MediaCtlConf* conf);
+    void parseMediaCtlControlObject(const Json::Value& node, MediaCtlConf* conf);
     void parseMediaCtlLinkObject(const Json::Value& node, MediaCtlConf* conf);
     void parseMediaCtlVideoNodeObject(const Json::Value& node, MediaCtlConf* conf);
     void parseOutputMap(const Json::Value& node);

@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 #include <vector>
+
+#include "GraphResolutionConfigurator.h"
 #include "StaticGraphAutogen.h"
 #include "StaticGraphTypesAutogen.h"
-#include "GraphResolutionConfigurator.h"
 
-class GraphResolutionConfiguratorHelper
-{
-public:
+class GraphResolutionConfiguratorHelper {
+ public:
     GraphResolutionConfiguratorHelper();
 
     static uint32_t getRunKernelUuid(GraphResolutionConfiguratorKernelRole role);
     static uint32_t getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId, GraphLink** links);
-    static StaticGraphStatus getRunKernelUuidForResHistoryUpdate(std::vector<uint32_t>& kernelUuids);
+    static StaticGraphStatus getRunKernelUuidForResHistoryUpdate(
+        std::vector<uint32_t>& kernelUuids);
 };

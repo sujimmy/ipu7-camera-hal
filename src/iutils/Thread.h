@@ -101,7 +101,7 @@ class Thread {
      * Ask this object's thread to exit. This function is asynchronous, so when it
      * returns the thread might still be running.
      */
-    virtual void requestExit();
+    virtual void exit();
 
     /**
      * Wait until this object's thread exits. Returns immediately if not yet running.
@@ -114,11 +114,9 @@ class Thread {
     /**
      * Ask this object's thread to exit. This function is synchronous, so when it
      * returns the thread must exit already.
-     * It has same effect with calling requestExit and join combined.
-     *
-     * Do not call from this object's thread, will return WOULD_BLOCK in that case.
+     * It has same effect with calling exit and join combined.
      */
-    int requestExitAndWait();
+    void wait();
 
     /**
      * Indicates whether this thread is running or not.
@@ -135,6 +133,16 @@ class Thread {
      */
     bool isExited() const;
 
+    /**
+     * Overrided by derived class
+     */
+    virtual void run() {}
+
+    void start() {
+        std::string name = "CameraHAL_" + std::to_string(reinterpret_cast<uintptr_t>(this));
+        run(name, PRIORITY_NORMAL);
+    }
+
  private:
     /**
      * threadLoop is the function which is called by the thread.
@@ -142,13 +150,13 @@ class Thread {
      *
      * There are two ways of using the thread object:
      * 1. loop: threadLoop will be called again as long as it returns true,
-     *          and requestExit() wasn't called.
+     *          and exit() wasn't called.
      * 2. once: If threadLoop() returns false, the thread will exit upon return.
      *
      * There are three ways of exiting the thread.
      * 1. threadLoop return false.
-     * 2. requestExit is called.
-     * 3. requestExitAndWait is called.
+     * 2. exit is called.
+     * 3. wait is called.
      */
     virtual bool threadLoop() { return false; }
 
@@ -189,6 +197,25 @@ class Thread {
 
     // To make sure API like join be able to wait until thread exits.
     Condition mExitedCondition;
+};
+
+template<typename T>
+class PollThread : public Thread {
+    T* mPoller;
+ public:
+    explicit PollThread(T* poller) : mPoller(poller) {}
+
+    void run() {
+        bool ret = true;
+        while (ret) {
+            ret = threadLoop();
+        }
+    }
+
+    bool threadLoop() {
+        int ret = mPoller->poll();
+        return ret == 0;
+    }
 };
 
 }  // namespace icamera

@@ -132,11 +132,11 @@ class BufferQueue : public BufferConsumer, public BufferProducer, public EventLi
      * should be called in a threadLoop, Only fetch buffer from the buffer queue, need pop buffer from
      * the queue after the buffer is used, and need to be protected by mBufferQueueLock.
      */
-    int waitFreeBuffersInQueue(ConditionLock& lock,
+    int waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
                                std::map<uuid, std::shared_ptr<CameraBuffer> >& cInBuffer,
                                std::map<uuid, std::shared_ptr<CameraBuffer> >& cOutBuffer,
                                int64_t timeout = 0);
-    int waitFreeBuffersInQueue(ConditionLock& lock,
+    int waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
                                std::map<uuid, std::shared_ptr<CameraBuffer> >& buffer,
                                std::map<uuid, CameraBufQ>& bufferQueue, int64_t timeout);
     /**
@@ -174,8 +174,7 @@ class BufferQueue : public BufferConsumer, public BufferProducer, public EventLi
 
     // Guard for BufferQueue public API
     Mutex mBufferQueueLock;
-    Condition mFrameAvailableSignal;
-    Condition mOutputAvailableSignal;
+    std::condition_variable mFrameAvailableSignal;
 
  private:
     int queueInputBuffer(uuid port, const std::shared_ptr<CameraBuffer>& camBuffer);

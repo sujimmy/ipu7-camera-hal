@@ -34,7 +34,7 @@ SwImageProcessor::SwImageProcessor(int cameraId) : mCameraId(cameraId) {
 }
 
 SwImageProcessor::~SwImageProcessor() {
-    mProcessThread->join();
+    mProcessThread->wait();
     delete mProcessThread;
 }
 
@@ -50,7 +50,7 @@ int SwImageProcessor::start() {
     int ret = allocProducerBuffers(mCameraId, MAX_BUFFER_COUNT);
     CheckAndLogError(ret != OK, ret, "@%s: Allocate Buffer failed", __func__);
     mThreadRunning = true;
-    mProcessThread->run("SwImageProcessor", PRIORITY_NORMAL);
+    mProcessThread->start();
 
     return 0;
 }
@@ -59,9 +59,15 @@ void SwImageProcessor::stop() {
     PERF_CAMERA_ATRACE();
     LOG1("<id%d>@%s", mCameraId, __func__);
 
-    mProcessThread->requestExit();
+    mThreadRunning = false;
+    mProcessThread->exit();
 
-    mProcessThread->requestExitAndWait();
+    {
+        AutoMutex l(mBufferQueueLock);
+        mFrameAvailableSignal.notify_one();
+    }
+
+    mProcessThread->wait();
 
     // Thread is not running. It is safe to clear the Queue
     clearBufferQueues();
@@ -77,7 +83,7 @@ int SwImageProcessor::processNewFrame() {
     LOG1("<id%d>@%s", mCameraId, __func__);
 
     {
-        ConditionLock lock(mBufferQueueLock);
+        std::unique_lock<std::mutex> lock(mBufferQueueLock);
         if (!mThreadRunning) return -1;  // Already stopped
 
         ret = waitFreeBuffersInQueue(lock, srcBuffers, dstBuffers);

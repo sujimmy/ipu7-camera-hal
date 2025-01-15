@@ -33,6 +33,7 @@ const char* DRIVER_NAME = "/dev/ipu7-psys0";
 
 PSysDevice::PSysDevice(int cameraId)
         : mPollThread(nullptr),
+          mExitPending(false),
           mCameraId(cameraId),
           mFd(-1),
           mGraphId(INVALID_GRAPH_ID) {
@@ -45,15 +46,16 @@ PSysDevice::PSysDevice(int cameraId)
         mTaskBuffers[i] = new ipu_psys_term_buffers[MAX_GRAPH_TERMINALS];
     }
 
-    mPollThread = new PollThread(this);
+    mPollThread = new PollThread<PSysDevice>(this);
 }
 
 PSysDevice::~PSysDevice() {
     LOG1("Destroy PSysDevice");
 
     // Unregister PSYS buffer
-    for (auto& it : mPtrToTermBufMap) {
-        unregisterBuffer(&it.second);
+    while (!mPtrToTermBufMap.empty()) {
+        auto it = mPtrToTermBufMap.begin();
+        unregisterBuffer(&it->second);
     }
 
     if (mFd >= 0) {
@@ -63,8 +65,10 @@ PSysDevice::~PSysDevice() {
         }
     }
 
-    mPollThread->requestExitAndWait();
-    mPollThread->join();
+    mPollThread->exit();
+    mExitPending = true;
+    mPollThread->wait();
+
     delete mPollThread;
 
     delete[] mGraphNode;
@@ -77,7 +81,7 @@ int PSysDevice::init() {
     mFd = open(DRIVER_NAME, 0, O_RDWR | O_NONBLOCK);
     CheckAndLogError(mFd < 0, INVALID_OPERATION, "Failed to open psys device %s", strerror(errno));
 
-    mPollThread->run("PSysDevice", PRIORITY_URGENT_AUDIO);
+    mPollThread->start();
 
     return OK;
 }
@@ -217,6 +221,19 @@ void PSysDevice::updatePsysBufMap(TerminalBuffer* buf) {
     }
 }
 
+void PSysDevice::erasePsysBufMap(TerminalBuffer* buf) {
+    std::lock_guard<std::mutex> l(mDataLock);
+    if (buf->flags & IPU_BUFFER_FLAG_USERPTR) {
+        if (mPtrToTermBufMap.find(buf->userPtr) != mPtrToTermBufMap.end()) {
+            mPtrToTermBufMap.erase(buf->userPtr);
+        }
+    } else if (buf->flags & IPU_BUFFER_FLAG_DMA_HANDLE) {
+        if (mFdToTermBufMap.find(static_cast<int>(buf->handle)) != mFdToTermBufMap.end()) {
+            mFdToTermBufMap.erase(static_cast<int>(buf->handle));
+        }
+    }
+}
+
 bool PSysDevice::getPsysBufMap(TerminalBuffer* buf) {
     std::lock_guard<std::mutex> l(mDataLock);
     if (buf->flags & IPU_BUFFER_FLAG_USERPTR) {
@@ -282,13 +299,19 @@ int PSysDevice::registerBuffer(TerminalBuffer* buf) {
     return OK;
 }
 
-int PSysDevice::unregisterBuffer(TerminalBuffer* buf) {
-    CheckAndLogError(mFd < 0, INVALID_OPERATION, "psys device wasn't opened");
-    CheckAndLogError(!buf, INVALID_OPERATION, "buf is nullptr");
+void PSysDevice::unregisterBuffer(TerminalBuffer* buf) {
+    if (mFd < 0) {
+        LOGE("psys device wasn't opened");
+        return;
+    }
+    if (!buf) {
+        LOGE("buf is nullptr");
+        return;
+    }
 
-    if (buf->flags & IPU_BUFFER_FLAG_DMA_HANDLE) {
+    if ((buf->flags & IPU_BUFFER_FLAG_DMA_HANDLE) && !buf->isExtDmaBuf) {
         LOGW("cannot unmap buffer fd %d", buf->psysBuf.base.fd);
-        return OK;
+        return;
     }
 
     int ret = ioctl(mFd, static_cast<int>(IPU_IOC_UNMAPBUF),
@@ -299,16 +322,16 @@ int PSysDevice::unregisterBuffer(TerminalBuffer* buf) {
 
     if (buf->flags & IPU_BUFFER_FLAG_USERPTR) {
         ret = close(buf->psysBuf.base.fd);
-        CheckAndLogError(ret < 0, INVALID_OPERATION, "Failed to close fd %d, error %s",
-                         buf->psysBuf.base.fd, strerror(errno));
+        if (ret < 0) {
+            LOGE("Failed to close fd %d, error %s", buf->psysBuf.base.fd, strerror(errno));
+        }
     }
 
-    return OK;
+    // erase PSYS buf
+    erasePsysBufMap(buf);
 }
 
 void PSysDevice::registerPSysDeviceCallback(uint8_t contextId, IPSysDeviceCallback* callback) {
-    std::lock_guard<std::mutex> l(mDataLock);
-
     mPSysDeviceCallbackMap[contextId] = callback;
 }
 
@@ -320,46 +343,51 @@ int PSysDevice::poll(short events, int timeout)
 }
 
 void PSysDevice::handleEvent(const ipu_psys_event& event) {
-    std::lock_guard<std::mutex> l(mDataLock);
+    int64_t sequence = -1;
+    uint8_t idx = event.frame_id % MAX_TASK_NUM;;
+
+    {
+        std::lock_guard<std::mutex> l(mDataLock);
+        if (mFrameIdToSeqMap[event.node_ctx_id][idx] < 0) {
+            LOGW("frame id %u isn't found", event.frame_id);
+            return;
+        }
+
+        sequence = mFrameIdToSeqMap[event.node_ctx_id][idx];
+    }
+
     if (mPSysDeviceCallbackMap.find(event.node_ctx_id) == mPSysDeviceCallbackMap.end()) {
         LOGW("context id %u isn't found", event.node_ctx_id);
         return;
     }
+    mPSysDeviceCallbackMap[event.node_ctx_id]->bufferDone(sequence);
 
-    uint8_t idx = event.frame_id % MAX_TASK_NUM;
-    if (mFrameIdToSeqMap[event.node_ctx_id][idx] < 0) {
-        LOGW("frame id %u isn't found", event.frame_id);
-        return;
+    {
+        std::lock_guard<std::mutex> l(mDataLock);
+        mFrameIdToSeqMap[event.node_ctx_id][idx] = -1;
     }
 
-    int64_t sequence = mFrameIdToSeqMap[event.node_ctx_id][idx];
-    mPSysDeviceCallbackMap[event.node_ctx_id]->bufferDone(sequence);
-    mFrameIdToSeqMap[event.node_ctx_id][idx] = -1;
     LOG2("context id %u, frame id %u is done", event.node_ctx_id, event.frame_id);
 }
 
-PSysDevice::PollThread::PollThread(PSysDevice* psysDevice)
-        : mPSysDevice(psysDevice) {
-}
+int PSysDevice::poll() {
+    int ret = poll(POLLIN | POLLHUP | POLLERR, kEventTimeout * SLOWLY_MULTIPLIER);
 
-bool PSysDevice::PollThread::threadLoop() {
-    int ret = mPSysDevice->poll(POLLIN | POLLHUP | POLLERR, kEventTimeout * SLOWLY_MULTIPLIER);
-
-    if (isExiting()) return false;
+    if (mExitPending) return NO_INIT;
 
     if (ret == POLLIN) {
         ipu_psys_event event;
         CLEAR(event);
 
-        ret = mPSysDevice->wait(event);
+        ret = wait(event);
         if (ret == OK) {
-            mPSysDevice->handleEvent(event);
+            handleEvent(event);
         }
     } else {
         LOG2("%s, device poll timeout", __func__);
     }
 
-    return true;
+    return OK;
 }
 
 }  // namespace icamera

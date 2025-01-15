@@ -346,7 +346,6 @@ int get_frame_size(int camera_id, int format, int width, int height, int field, 
     return frameSize;
 }
 
-#ifdef LINUX_BUILD
 // Create the HAL instance from here
 __attribute__((constructor)) void initCameraHAL() {
     Log::setDebugLevel();
@@ -360,7 +359,6 @@ __attribute__((destructor)) void deinitCameraHAL() {
         gCameraHal = nullptr;
     }
 }
-#endif
 
 }  // namespace icamera
 }  // extern "C"

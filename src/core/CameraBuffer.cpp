@@ -35,8 +35,7 @@ CameraBuffer::CameraBuffer(int memory, uint32_t size, int index)
         : mAllocatedMemory(false),
           mU(nullptr),
           mSettingSequence(-1),
-          mMmapAddrs(nullptr),
-          mDmaFd(-1) {
+          mMmapAddrs(nullptr) {
     LOG2("%s: construct buffer with memory:%d, size:%d, index:%d",  __func__, memory, size, index);
 
     mU = new camera_buffer_t;
@@ -196,10 +195,6 @@ int CameraBuffer::allocateMemory(V4L2VideoNode* vDevice) {
             ret = allocateMmap(vDevice);
             break;
         case V4L2_MEMORY_DMABUF:
-            ret = allocateDmaBuffer(mU);
-            // dma allocate buffer size page aligned, update real buffer size.
-            setBufferSize(mU->s.size);
-            break;
         default:
             LOGE("memory type %d is incorrect for allocateMemory.", mV.Memory());
             break;
@@ -221,8 +216,6 @@ void CameraBuffer::freeMemory() {
             freeMmap();
             break;
         case V4L2_MEMORY_DMABUF:
-            freeDmaBuffer();
-            break;
         default:
             LOGE("Free camera buffer failed, due to memory %d type is not implemented yet.",
                  mV.Memory());

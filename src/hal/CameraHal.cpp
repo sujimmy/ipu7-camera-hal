@@ -235,7 +235,7 @@ int CameraHal::deviceConfigStreams(int cameraId, stream_config_t* streamList) {
         mConfigTimes[groupId]++;
         LOG1("<id%d> @%s, mConfigTimes:%d, before signal", cameraId, __func__,
              mConfigTimes[groupId]);
-        mVirtualChannelSignal[groupId].signal();
+        mVirtualChannelSignal[groupId].notify_one();
     }
     // VIRTUAL_CHANNEL_E
 
@@ -244,7 +244,7 @@ int CameraHal::deviceConfigStreams(int cameraId, stream_config_t* streamList) {
 
 int CameraHal::deviceStart(int cameraId) {
     LOG1("<id%d> @%s", cameraId, __func__);
-    ConditionLock lock(mLock);
+    std::unique_lock<std::mutex> lock(mLock);
 
     CameraDevice* device = mCameraDevices[cameraId];
     checkCameraDevice(device, BAD_VALUE);
@@ -260,7 +260,11 @@ int CameraHal::deviceStart(int cameraId) {
     if (mTotalVirtualChannelCamNum[groupId] > 0) {
         int timeoutCnt = 10;
         while (mConfigTimes[groupId] < mTotalVirtualChannelCamNum[groupId]) {
-            mVirtualChannelSignal[groupId].waitRelative(lock, mWaitDuration * SLOWLY_MULTIPLIER);
+            std::cv_status status = mVirtualChannelSignal[groupId].wait_for(
+                lock, std::chrono::nanoseconds(mWaitDuration * SLOWLY_MULTIPLIER));
+            if (status == std::cv_status::timeout) {
+                LOG1("wait returned timeout");
+            }
             LOG1("<id%d> @%s, mConfigTimes:%d, timeoutCnt:%d", cameraId, __func__,
                  mConfigTimes[groupId], timeoutCnt);
             --timeoutCnt;
@@ -307,6 +311,9 @@ int CameraHal::streamQbuf(int cameraId, camera_buffer_t** ubuffer, int bufferNum
 
     dataContext->mAiqParams.frameUsage = mConfigInfo[cameraId].frameUsage;
     dataContext->mAiqParams.resolution = mConfigInfo[cameraId].resolution;
+    if (settings != nullptr) {
+        mParameters[cameraId].merge(*settings);
+    }
 
     ParameterConvert::setParameters(mParameters[cameraId], dataContext);
     cameraContext->updateDataContextMapByFn(mFrameNumber[cameraId], dataContext);
@@ -324,7 +331,17 @@ int CameraHal::streamDqbuf(int cameraId, int streamId, camera_buffer_t** ubuffer
     CameraDevice* device = mCameraDevices[cameraId];
     checkCameraDevice(device, BAD_VALUE);
 
-    return device->dqbuf(streamId, ubuffer);
+    int ret = device->dqbuf(streamId, ubuffer);
+    CheckAndLogError(ret != OK, ret, "dqbuf failed: %d", ret);
+
+    if (settings != nullptr) {
+        settings->merge(mParameters[cameraId]);
+        auto cameraContext = CameraContext::getInstance(cameraId);
+        ret = ParameterConvert::getParameters(cameraContext, *settings);
+        CheckAndLogError(ret != OK, ret, "getParameters failed: %d", ret);
+    }
+
+    return OK;
 }
 
 int CameraHal::getParameters(int cameraId, Parameters& param, int64_t sequence) {

@@ -22,12 +22,6 @@
 #include "IpuPacAdaptor.h"
 #include "GraphUtils.h"
 #include "iutils/CameraLog.h"
-#ifdef CAL_BUILD
-#include "PostProcessStage.h"
-// GPU_STAGE_S
-#include "GPUPostStage.h"
-// GPU_STAGE_E
-#endif
 #include "StageDescriptor.h"
 namespace icamera {
 
@@ -219,30 +213,18 @@ status_t PipeLine::createPipeStages() {
         PipeStageUnit unit;
         unit.stageId = stageId;
         unit.stageUuid = STAGE_UID(mStreamId, stageId);
-#ifdef CAL_BUILD
-        if (mGraphConfig->getPGType(stageId) == STAGE_SW_POST) {
-            unit.ipuStage = nullptr;
-            unit.pipeStage = new PostProcessStage(mCameraId, stageId, stageName);
-// GPU_STAGE_S
-        } else if (mGraphConfig->getPGType(stageId) == STAGE_GPU_TNR) {
-            unit.ipuStage = nullptr;
-            unit.pipeStage = new GPUPostStage(mCameraId, stageId, stageName);
-// GPU_STAGE_E
-        } else {
-#endif
-            unit.contextId = GraphUtils::getContextId(stageId);
-            CheckAndLogError(outerNodes.find(unit.contextId) == outerNodes.end(), UNKNOWN_ERROR,
-                             "No outer node for psUnit contextId %d", unit.contextId);
-            unit.psysContextId = mGraphConfig->getPSysContextId(mStreamId, unit.contextId);
-            unit.node = outerNodes[unit.contextId];
-            uint8_t resourceId = GraphUtils::getResourceId(stageId);
-            unit.ipuStage = new CBStage(mCameraId, mStreamId, stageId, unit.contextId,
-                                        unit.psysContextId, resourceId, stageName, mPSysDevice,
-                                        mPacAdaptor);
-            unit.pipeStage = unit.ipuStage;
-#ifdef CAL_BUILD
-        }
-#endif
+
+        unit.contextId = GraphUtils::getContextId(stageId);
+        CheckAndLogError(outerNodes.find(unit.contextId) == outerNodes.end(), UNKNOWN_ERROR,
+                            "No outer node for psUnit contextId %d", unit.contextId);
+        unit.psysContextId = mGraphConfig->getPSysContextId(mStreamId, unit.contextId);
+        unit.node = outerNodes[unit.contextId];
+        uint8_t resourceId = GraphUtils::getResourceId(stageId);
+        unit.ipuStage = new CBStage(mCameraId, mStreamId, stageId, unit.contextId,
+                                    unit.psysContextId, resourceId, stageName, mPSysDevice,
+                                    mPacAdaptor);
+        unit.pipeStage = unit.ipuStage;
+
         mPSUnit.push_back(unit);
         LOG1("%s, pipe stage name:%s, stage:%d, uuid:%x, context id %u", __func__,
              stageName.c_str(), stageId, unit.stageUuid, unit.contextId);

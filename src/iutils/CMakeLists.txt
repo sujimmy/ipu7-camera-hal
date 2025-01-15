@@ -29,10 +29,8 @@ set(IUTILS_SRCS
     CACHE INTERNAL "iutils sources"
     )
 
-if (NOT CAL_BUILD)
-    set(IUTILS_SRCS
-        ${IUTILS_SRCS}
-        ${IUTILS_DIR}/SwImageConverter.cpp
-        CACHE INTERNAL "iutils sources"
-        )
-endif()
+set(IUTILS_SRCS
+    ${IUTILS_SRCS}
+    ${IUTILS_DIR}/SwImageConverter.cpp
+    CACHE INTERNAL "iutils sources"
+    )

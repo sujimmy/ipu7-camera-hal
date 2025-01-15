@@ -16,19 +16,12 @@
 
 #pragma once
 
-#include <linux/videodev2.h>
-
 #include <memory>
 #include <queue>
 #include <vector>
 
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
+#include <linux/videodev2.h>
 #include <v4l2_device.h>
-#endif
-
-#include "modules/memory/BufferAllocator.h"
 #include "ParamDataType.h"
 #include "iutils/Utils.h"
 
@@ -36,13 +29,12 @@ namespace icamera {
 
 typedef struct v4l2_buffer v4l2_buffer_t;
 
-class CameraBuffer : public BufferAllocator {
+class CameraBuffer {
  public:
     /* Construct an internal CameraBuffer, use memory to indicate the memory type.
      * memory: V4L2_MEMORY_USERPTR heap buffer
      *         V4L2_MEMORY_MMAP    mmap buffer
-     *         V4L2_MEMORY_DMABUF  gbm  buffer
-     * For gbm buffer, the size is calculated internal
+     *         V4L2_MEMORY_DMABUF  camera APP buffer
      */
     static std::shared_ptr<CameraBuffer> create(int memory, unsigned int size, int index,
                                                 int srcFmt, int srcWidth, int srcHeight);
@@ -122,6 +114,8 @@ class CameraBuffer : public BufferAllocator {
 
     V4L2Buffer& getV4L2Buffer() { return mV; }
 
+    bool isExtDmaBuf() { return (mBufferflag & BUFFER_FLAG_DMA_EXPORT); }
+
     bool isNeedFlush() {
         return (mBufferflag & (BUFFER_FLAG_SW_READ | BUFFER_FLAG_SW_WRITE) ? true : false);
     }
@@ -165,7 +159,6 @@ class CameraBuffer : public BufferAllocator {
     int64_t mSettingSequence;
 
     void* mMmapAddrs;
-    int mDmaFd;
 };
 
 typedef std::vector<std::shared_ptr<CameraBuffer> > CameraBufVector;

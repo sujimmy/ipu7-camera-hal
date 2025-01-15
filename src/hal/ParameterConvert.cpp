@@ -104,6 +104,8 @@ void ParameterConvert::setAiqSettings(const Parameters& param, DataContext* data
 
     // Update AF related parameters
     param.getAfMode(dataContext->mAiqParams.afMode);
+    param.getAfTrigger(dataContext->mAiqParams.afTrigger);
+    param.getFocusDistance(dataContext->mAiqParams.focusDistance);
 
     param.getWeightGridMode(dataContext->mAiqParams.weightGridMode);
     param.getSceneMode(dataContext->mAiqParams.sceneMode);
@@ -132,7 +134,7 @@ void ParameterConvert::setAiqSettings(const Parameters& param, DataContext* data
 }
 
 int ParameterConvert::getParameters(CameraContext* cameraContext, Parameters& param) {
-     CheckAndLogError(!cameraContext, UNKNOWN_ERROR, "cameraContext is nullptr");
+    CheckAndLogError(!cameraContext, UNKNOWN_ERROR, "cameraContext is nullptr");
 
     auto resultStorage = cameraContext->getAiqResultStorage();
     auto aiqResult = resultStorage->getAiqResult();
@@ -142,6 +144,9 @@ int ParameterConvert::getParameters(CameraContext* cameraContext, Parameters& pa
     param.setSensitivityIso(aiqResult->mAeResults.exposures[0].exposure[0].iso);
     float fps = 1000000.0 / aiqResult->mFrameDuration;
     param.setFrameRate(fps);
+    LOG2("@%s, ae result: iso %d, exposure time %u, fps %f", __func__,
+         aiqResult->mAeResults.exposures[0].exposure[0].iso,
+         aiqResult->mAeResults.exposures[0].exposure[0].exposure_time_us, fps);
 
     // Update AWB related parameters
     const cca::cca_awb_results& result = aiqResult->mAwbResults;
@@ -188,6 +193,15 @@ int ParameterConvert::getParameters(CameraContext* cameraContext, Parameters& pa
     colorGains.color_gains_rggb[2] = aiqResult->mPaResults.color_gains.gb;
     colorGains.color_gains_rggb[3] = aiqResult->mPaResults.color_gains.b;
     param.setColorGains(colorGains);
+
+    // Update AF result
+    const cca::cca_af_results& afResult = aiqResult->mAfResults;
+
+    LOG2("af status: %u, focus distance: %u mm", afResult.status, afResult.current_focus_distance);
+    if (afResult.status <= ia_aiq_af_status_fail) {
+        param.setAfState(static_cast<camera_af_state_t>(afResult.status));
+    }
+    param.setFocusDistance(static_cast<float>(afResult.current_focus_distance));
 
     // Update scene mode
     param.setSceneMode(aiqResult->mSceneMode);

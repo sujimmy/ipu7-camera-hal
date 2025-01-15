@@ -168,6 +168,7 @@ class GraphConfig {
     const StaticGraphRunKernel* findKernalForFrameTerminal(const OuterNode* node,
                                                            int32_t terminalId);
 
+    uint32_t createQueryKeyAttribute(int cameraId);
     status_t queryGraphSettings(const std::vector<HalStream*>& outStreams);
 
     status_t createPipeGraphConfigData(const std::vector<HalStream*>& outStreams,

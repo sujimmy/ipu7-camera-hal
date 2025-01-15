@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2021 Intel Corporation
+ * Copyright (C) 2013-2024 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 
 #define LOG_TAG V4l2_subdevice_cc
 
+#include <v4l2_device.h>
+
 #include "iutils/CameraDump.h"
 #include "iutils/CameraLog.h"
 #include "iutils/Errors.h"
@@ -29,9 +31,8 @@ using namespace icamera::Log;
 using namespace icamera;
 
 #include <sys/ioctl.h>
-#include <v4l2_device.h>
 
-namespace cros {
+namespace icamera {
 
 V4L2Subdevice::V4L2Subdevice(const std::string& name)
         : V4L2Device(name),
@@ -46,11 +47,19 @@ V4L2Subdevice::~V4L2Subdevice() {
 }
 
 int V4L2Subdevice::Open(int flags) {
+    struct v4l2_subdev_client_capability clientcap = {};
+
     LOG1("@%s", __func__);
 
     int status = V4L2Device::Open(flags);
     if (status == 0) state_ = SubdevState::OPEN;
-    return status;
+
+    clientcap.capabilities = V4L2_SUBDEV_CLIENT_CAP_STREAMS;
+    status = ioctl(fd_, VIDIOC_SUBDEV_S_CLIENT_CAP, &clientcap);
+    if (status < 0)
+        LOG1("Failed to set client capabilities %s", strerror(errno));
+
+    return 0;
 }
 
 int V4L2Subdevice::Close() {
@@ -102,7 +111,7 @@ int V4L2Subdevice::GetPadFormat(int pad_index, int* width, int* height, int* cod
     LOG1("@%s", __func__);
 
     if (!width || !height || !code) {
-        LOGE("%s: Device node %s some of parameters is nullptr: %s", __func__, name_.c_str());
+        LOGE("%s: Device node %s some of parameters is nullptr", __func__, name_.c_str());
         return -EINVAL;
     }
     struct v4l2_subdev_format format = {};
@@ -138,11 +147,15 @@ int V4L2Subdevice::SetRouting(v4l2_subdev_route* routes, uint32_t numRoutes) {
     LOG1("@%s", __func__);
 
     if (!routes) {
-        LOGE("%s: Device node %s routes is nullptr: %s", __func__, name_.c_str());
+        LOGE("%s: Device node %s routes is nullptr", __func__, name_.c_str());
         return -EINVAL;
     }
 
-    v4l2_subdev_routing r = {routes, numRoutes};
+    v4l2_subdev_routing r = {};
+    r.which = V4L2_SUBDEV_FORMAT_ACTIVE;
+    r.len_routes = numRoutes;
+    r.num_routes = numRoutes;
+    r.routes = reinterpret_cast<uint64_t>(routes);
 
     int ret = ::ioctl(fd_, VIDIOC_SUBDEV_S_ROUTING, &r);
     if (ret < 0) {
@@ -158,11 +171,15 @@ int V4L2Subdevice::GetRouting(v4l2_subdev_route* routes, uint32_t* numRoutes) {
     LOG1("@%s", __func__);
 
     if (!routes || !numRoutes) {
-        LOGE("%s: Device node %s routes or numRoutes is nullptr: %s", __func__, name_.c_str());
+        LOGE("%s: Device node %s routes or numRoutes is nullptr", __func__, name_.c_str());
         return -EINVAL;
     }
 
-    v4l2_subdev_routing r = {routes, *numRoutes};
+    v4l2_subdev_routing r = {};
+    r.which = V4L2_SUBDEV_FORMAT_ACTIVE;
+    r.len_routes = *numRoutes;
+    r.num_routes = *numRoutes;
+    r.routes = reinterpret_cast<uint64_t>(routes);
 
     int ret = ::ioctl(fd_, VIDIOC_SUBDEV_G_ROUTING, &r);
     if (ret < 0) {
@@ -176,4 +193,4 @@ int V4L2Subdevice::GetRouting(v4l2_subdev_route* routes, uint32_t* numRoutes) {
     return ret;
 }
 
-}  // namespace cros
+}  // namespace icamera

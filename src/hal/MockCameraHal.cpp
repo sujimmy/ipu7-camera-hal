@@ -179,7 +179,7 @@ int MockCameraHal::deviceStart(int cameraId) {
 }
 
 int MockCameraHal::deviceStop(int cameraId) {
-    Thread::requestExitAndWait();
+    Thread::wait();
     while (!mCaptureRequest[cameraId].empty()) generateFrames(cameraId);
     LOG1("<id%d>@%s", cameraId, __func__);
     return OK;

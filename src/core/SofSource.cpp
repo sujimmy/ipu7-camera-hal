@@ -48,7 +48,7 @@ int SofSource::init() {
         return OK;
     }
 
-    mPollThread = new PollThread(this);
+    mPollThread = new PollThread<SofSource>(this);
 
     return OK;
 }
@@ -59,7 +59,7 @@ int SofSource::deinit() {
     }
 
     int status = deinitDev();
-    mPollThread->join();
+    mPollThread->wait();
     delete mPollThread;
     return status;
 }
@@ -76,11 +76,6 @@ int SofSource::initDev() {
 
     mIsysReceiverSubDev = V4l2DeviceFactory::getSubDev(mCameraId, subDeviceNodeName);
 
-#ifdef CAL_BUILD
-    int status = mIsysReceiverSubDev->SubscribeEvent(V4L2_EVENT_FRAME_SYNC);
-    CheckAndLogError(status != OK, status, "Failed to subscribe sync event 0");
-    LOG1("%s: Using SOF event id 0 for sync", __func__);
-#else
     int id = 0;
     // VIRTUAL_CHANNEL_S
     /* The value of virtual channel sequence is 1, 2, 3, ... if virtual channel supported.
@@ -93,7 +88,6 @@ int SofSource::initDev() {
     int status = mIsysReceiverSubDev->SubscribeEvent(V4L2_EVENT_FRAME_SYNC, id);
     CheckAndLogError(status != OK, status, "Failed to subscribe sync event %d", id);
     LOG1("%s: Using SOF event id %d for sync", __func__, id);
-#endif
 
     return OK;
 }
@@ -101,15 +95,6 @@ int SofSource::initDev() {
 int SofSource::deinitDev() {
     if (mIsysReceiverSubDev == nullptr) return OK;
 
-    int status = 0;
-#ifdef CAL_BUILD
-    status = mIsysReceiverSubDev->UnsubscribeEvent(V4L2_EVENT_FRAME_SYNC);
-    if (status == OK) {
-        LOG1("%s: Unsubscribe SOF event id 0 done", __func__);
-    } else {
-        LOGE("Failed to unsubscribe SOF event 0, status: %d", status);
-    }
-#else
     int id = 0;
     // VIRTUAL_CHANNEL_S
     /* The value of virtual channel sequence is 1, 2, 3, ... if virtual channel supported.
@@ -119,13 +104,12 @@ int SofSource::deinitDev() {
         id = sequence - 1;
     }
     // VIRTUAL_CHANNEL_E
-    status = mIsysReceiverSubDev->UnsubscribeEvent(V4L2_EVENT_FRAME_SYNC, id);
+    int status = mIsysReceiverSubDev->UnsubscribeEvent(V4L2_EVENT_FRAME_SYNC, id);
     if (status == OK) {
         LOG1("%s: Unsubscribe SOF event id %d done", __func__, id);
     } else {
         LOGE("Failed to unsubscribe SOF event %d", id);
     }
-#endif
 
     return status;
 }
@@ -144,9 +128,10 @@ int SofSource::start() {
         return OK;
     }
 
-    int status = mPollThread->run("SofSource", PRIORITY_URGENT_AUDIO);
     mExitPending = false;
-    return status;
+    mPollThread->start();
+
+    return OK;
 }
 
 int SofSource::stop() {
@@ -155,9 +140,11 @@ int SofSource::stop() {
         return OK;
     }
 
+    mPollThread->exit();
     mExitPending = true;
-    int status = mPollThread->requestExitAndWait();
-    return status;
+    mPollThread->wait();
+
+    return OK;
 }
 
 int SofSource::poll() {
@@ -183,13 +170,12 @@ int SofSource::poll() {
         }
     }
 
+    if (mExitPending) {
+        return -1;
+    }
+
     // handle the poll error
     if (ret < 0) {
-        if (mExitPending) {
-            // Exiting, no error
-            return 0;
-        }
-
         LOGE("Poll error");
         return ret;
     } else if (ret == 0) {

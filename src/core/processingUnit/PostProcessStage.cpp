@@ -84,7 +84,6 @@ int PostProcessStage::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBu
     if (!fetchRequestBuffer(sequence, inBuffer)) return INVALID_OPERATION;
     mBufferProducer->qbuf(mInputPort, inBuffer);
 
-    mOutputAvailableSignal.signal();
     mPendingOutBuffers.clear();
     return OK;
 }

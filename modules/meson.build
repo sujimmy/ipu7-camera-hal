@@ -21,20 +21,14 @@ libcamera_sources += files([
     'ipu_desc/ptl/StaticGraphReaderAutogen.cpp',
     'ipu_desc/ptl/GraphResolutionConfigurator.cpp',
     'ipu_desc/ptl/GraphResolutionConfiguratorAutogen.cpp',
+    'v4l2/v4l2_device.cc',
+    'v4l2/v4l2_subdevice.cc',
+    'v4l2/v4l2_video_node.cc',
 ])
 # for master branch build
 includes += include_directories(
     '.',
     'ipu_desc',
     'ipu_desc/ptl',
+    'v4l2',
 )
-
-if get_option('android_platform').contains('cros')
-    libcamera_sources += files([
-        'memory/libcamera/BufferAllocator.cpp',
-    ])
-
-    includes += include_directories(
-        'memory',
-    )
-endif

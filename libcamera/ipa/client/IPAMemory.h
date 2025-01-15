@@ -18,6 +18,7 @@
 
 #include <libcamera/base/mutex.h>
 #include <libcamera/base/signal.h>
+#include <libcamera/base/shared_fd.h>
 
 namespace libcamera {
 
@@ -33,8 +34,8 @@ class IPAMemory {
     void freeBuffer(const std::string& name, const std::shared_ptr<FrameBuffer>& buffer,
                     void* addr);
  private:
-    int allocateShmMem(const std::string& name, unsigned int size, int* fd, void** addr);
-    void releaseShmMem(const std::string& name, unsigned int size, int fd, void* addr);
+    SharedFD allocateShmMem(const std::string& name, unsigned int size, void** addr);
+    void releaseShmMem(const std::string& name, unsigned int size, void* addr);
 
     unsigned int mIpaBufferId;
 };

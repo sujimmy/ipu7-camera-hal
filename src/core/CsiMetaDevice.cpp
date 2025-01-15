@@ -40,7 +40,7 @@ CsiMetaDevice::CsiMetaDevice(int cameraId)
           mBuffersInCsiMetaDevice(0),
           mState(CSI_META_DEVICE_UNINIT),
           mExitPending(false) {
-    mPollThread = new PollThread(this);
+    mPollThread = new PollThread<CsiMetaDevice>(this);
     CLEAR(mEmbeddedMetaData);
 }
 
@@ -65,7 +65,7 @@ void CsiMetaDevice::deinitLocked() {
 
     mCsiMetaCameraBuffers.clear();
     deinitDev();
-    mPollThread->join();
+    mPollThread->wait();
     mState = CSI_META_DEVICE_UNINIT;
 }
 
@@ -198,7 +198,7 @@ int CsiMetaDevice::start() {
     CheckAndLogError(ret < 0, ret, "failed to stream on csi meta device, ret = %d", ret);
 
     mExitPending = false;
-    mPollThread->run("CsiMetaDevice", PRIORITY_URGENT_AUDIO);
+    mPollThread->start();
     mState = CSI_META_DEVICE_START;
 
     return OK;
@@ -214,13 +214,13 @@ int CsiMetaDevice::stop() {
     CheckWarning(mState != CSI_META_DEVICE_START, OK, "%s: device not started", __func__);
 
     mExitPending = true;
-    mPollThread->requestExit();
+    mPollThread->exit();
 
     int ret = mCsiMetaDevice->Stop(false);
 
     CheckAndLogError(ret < 0, ret, "failed to stream off csi meta device, ret = %d", ret);
 
-    mPollThread->requestExitAndWait();
+    mPollThread->wait();
 
     mState = CSI_META_DEVICE_STOP;
     return OK;

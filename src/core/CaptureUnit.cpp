@@ -42,7 +42,7 @@ CaptureUnit::CaptureUnit(int cameraId, int memType)
     PERF_CAMERA_ATRACE();
     LOG1("<id%d>%s", mCameraId, __func__);
 
-    mPollThread = new PollThread(this);
+    mPollThread = new PollThread<CaptureUnit>(this);
     mFlushFd[0] = -1;
     mFlushFd[1] = -1;
 
@@ -91,7 +91,8 @@ void CaptureUnit::deinit() {
     }
 
     destroyDevices();
-    mPollThread->join();
+
+    mPollThread->wait();
     mState = CAPTURE_UNINIT;
 }
 
@@ -188,9 +189,11 @@ int CaptureUnit::start() {
         int readSize = read(mFlushFd[0], reinterpret_cast<void*>(&readBuf), sizeof(char));
         LOG1("%s, readSize %d", __func__, readSize);
     }
-    mPollThread->run("CaptureUnit", PRIORITY_URGENT_AUDIO);
-    mState = CAPTURE_START;
+
     mExitPending = false;
+    mPollThread->start();
+
+    mState = CAPTURE_START;
     LOG2("@%s: automation checkpoint: flag: poll_started", __func__);
 
     return OK;
@@ -217,9 +220,9 @@ int CaptureUnit::stop() {
         LOG1("%s, write size %d", __func__, size);
     }
 
-    mPollThread->requestExit();
+    mPollThread->exit();
     streamOff();
-    mPollThread->requestExitAndWait();
+    mPollThread->wait();
 
     AutoMutex l(mLock);
     mState = CAPTURE_STOP;

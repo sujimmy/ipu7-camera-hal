@@ -1,6 +1,6 @@
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -146,14 +146,23 @@ enum SW_SCALERTerminalID
     SW_SCALER_TERMINAL_CONNECT_OUTPUT,
 };
 
+enum SW_NNTMTerminalID
+{
+    SW_NNTM_TERMINAL_CONNECT_INPUT,
+    SW_NNTM_TERMINAL_CONNECT_OUTPUT_1,
+    SW_NNTM_TERMINAL_CONNECT_OUTPUT_2,
+};
+
 extern TerminalDescriptor SW_ISYSTerminalDesc[];
 extern TerminalDescriptor LBFFTerminalDesc[];
 extern TerminalDescriptor BBPSTerminalDesc[];
 extern TerminalDescriptor SW_GDCTerminalDesc[];
 extern TerminalDescriptor SW_SCALERTerminalDesc[];
+extern TerminalDescriptor SW_NNTMTerminalDesc[];
 
 extern int CountOfSW_ISYSTerminalDesc;
 extern int CountOfLBFFTerminalDesc;
 extern int CountOfBBPSTerminalDesc;
 extern int CountOfSW_GDCTerminalDesc;
 extern int CountOfSW_SCALERTerminalDesc;
+extern int CountOfSW_NNTMTerminalDesc;

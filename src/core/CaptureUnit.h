@@ -145,19 +145,7 @@ class CaptureUnit : public StreamSource, public DeviceCallback {
     int queueAllBuffers();
 
  private:
-    /**
-     * \brief The pool frame buffer thread
-     */
-    class PollThread : public Thread {
-        CaptureUnit* mCaptureU;
-
-     public:
-        explicit PollThread(CaptureUnit* hw) : mCaptureU(hw) {}
-
-        virtual bool threadLoop() { return (mCaptureU->poll() == 0); }
-    };
-
-    PollThread* mPollThread;
+    PollThread<CaptureUnit>* mPollThread;
     int mFlushFd[2];  // Flush file descriptor
 
     // Guard for mCaptureUnit public API except dqbuf and qbuf

@@ -17,10 +17,6 @@
 
 #include "PostProcessorBase.h"
 
-#ifdef CAL_BUILD
-#include <hardware/camera3.h>
-#endif
-
 #include <vector>
 
 #include "iutils/CameraLog.h"

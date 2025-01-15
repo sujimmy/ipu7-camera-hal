@@ -17,18 +17,12 @@
 #pragma once
 
 #include <limits.h>
-
-#ifdef CAL_BUILD
-#include <cros-camera/v4l2_device.h>
-#else
-#include <v4l2_device.h>
-#endif
-
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include <v4l2_device.h>
 #include "AiqInitData.h"
 #include "CameraTypes.h"
 #include "FaceType.h"
@@ -64,7 +58,7 @@ namespace icamera {
 
 #define CSI_PORT_NAME "CSI2"
 
-#ifdef CAL_BUILD
+#ifdef HAVE_CHROME_OS
 #define MAX_CAMERA_NUMBER 2
 #define CAMERA_CACHE_DIR "/var/cache/camera/"
 #define CAMERA_DEFAULT_CFG_PATH "/etc/camera/"
@@ -78,12 +72,10 @@ namespace icamera {
 #define CAMERA_GRAPH_SETTINGS_DIR ""
 #endif
 
-#ifdef LINUX_BUILD
 #define MAX_CAMERA_NUMBER 100
 // Temporarily using current path to save aiqd file for none CAL platforms.
 #define CAMERA_CACHE_DIR "./"
 #define CAMERA_GRAPH_SETTINGS_DIR "gcss/"
-#endif
 
 #ifndef CAMERA_DEFAULT_CFG_PATH
 #error CAMERA_DEFAULT_CFG_PATH not defined
@@ -251,6 +243,7 @@ class PlatformData {
                       mDVSType(MORPH_TABLE),
                       mPSACompression(false),
                       mOFSCompression(false),
+                      mUnregisterExtDmaBuf(false),
                       mFaceAeEnabled(true),
                       mFaceEngineVendor(FACE_ENGINE_INTEL_PVL),
                       mFaceEngineRunningInterval(FACE_ENGINE_DEFAULT_RUNNING_INTERVAL),
@@ -349,6 +342,7 @@ class PlatformData {
             int mDVSType;
             bool mPSACompression;
             bool mOFSCompression;
+            bool mUnregisterExtDmaBuf;
             bool mFaceAeEnabled;
             int mFaceEngineVendor;
             int mFaceEngineRunningInterval;
@@ -744,6 +738,14 @@ class PlatformData {
      * \return if it is needed
      */
     static bool isPsysContinueStats(int cameraId);
+
+    /**
+     * Check if unregister external DMA buffer
+     *
+     * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
+     * \return true if unregister external DMA buffer.
+     */
+    static bool unregisterExtDmaBuf(int cameraId);
 
     /**
      * Get preferred buffer queue size
@@ -1547,5 +1549,6 @@ class PlatformData {
      * \return true if use IPU psys processor.
      */
     static bool isUsePSysProcessor(int cameraId);
+
 };
 } /* namespace icamera */

@@ -55,7 +55,7 @@ ProcessingUnit::ProcessingUnit(int cameraId, std::shared_ptr<CameraScheduler> sc
 }
 
 ProcessingUnit::~ProcessingUnit() {
-    mProcessThread->join();
+    mProcessThread->wait();
     delete mProcessThread;
 }
 
@@ -136,7 +136,7 @@ int ProcessingUnit::start() {
     }
 
     mThreadRunning = true;
-    mProcessThread->run("ProcessingUnit", PRIORITY_NORMAL);
+    mProcessThread->start();
 
     ret = mPipeManager->start();
     CheckAndLogError(ret != OK, ret, "Failed to start pipemanager");
@@ -155,14 +155,20 @@ void ProcessingUnit::stop() {
     PERF_CAMERA_ATRACE();
     mPipeManager->stop();
 
-    mProcessThread->requestExit();
+    mThreadRunning = false;
+    mProcessThread->exit();
+
+    {
+        AutoMutex l(mBufferQueueLock);
+        mFrameAvailableSignal.notify_one();
+    }
 
     {
         AutoMutex lMeta(mMetaQueueLock);
-        mMetaAvailableSignal.signal();
+        mMetaAvailableSignal.notify_one();
     }
 
-    mProcessThread->requestExitAndWait();
+    mProcessThread->wait();
 
     // Thread is not running. It is safe to clear the Queue
     clearBufferQueues();
@@ -323,19 +329,6 @@ bool ProcessingUnit::needHoldOnInputFrame(int64_t settingSequence, int64_t input
     return true;
 }
 
-void ProcessingUnit::handleEvent(EventData eventData) {
-    // Process registered events
-    switch (eventData.type) {
-        // CSI_META_S
-        case EVENT_META:
-            break;
-        // CSI_META_E
-        default:
-            LOGW("Unexpected event: %d", eventData.type);
-            break;
-    }
-}
-
 // ProcessingUnit ThreadLoop
 int ProcessingUnit::processNewFrame() {
     LOG3("<id%d>@%s", mCameraId, __func__);
@@ -354,7 +347,7 @@ int ProcessingUnit::processNewFrame() {
     int64_t inputSequence = -1;
     bool taskReady = true;
     {
-        ConditionLock lock(mBufferQueueLock);
+        std::unique_lock<std::mutex> lock(mBufferQueueLock);
         if (!mThreadRunning) return -1;  // Already stopped
         // set timeout only when there are already pending tasks in the Queue
         int64_t timeout = mSequencesInflight.size() > 0 ? kQueueTimeout : 0;
@@ -855,7 +848,7 @@ void ProcessingUnit::dispatchTask(CameraBufferPortMap& inBuf, CameraBufferPortMa
                     currentSequence);
     PERF_CAMERA_ATRACE_PARAM1("Task Sequence", currentSequence);
     {
-        ConditionLock lock(mBufferQueueLock);
+        std::unique_lock<std::mutex> lock(mBufferQueueLock);
         mSequencesInflight.insert(currentSequence);
     }  // End of lock mBufferQueueLock
     LOG2("<id%d:seq:%ld>@%s, fake task %d, pending task: %zu", mCameraId, currentSequence, __func__,
@@ -1035,5 +1028,4 @@ void ProcessingUnit::outputRawImage(shared_ptr<CameraBuffer>& srcBuf,
         it->onFrameAvailable(mRawPort, dstBuf);
     }
 }
-
 }  // namespace icamera

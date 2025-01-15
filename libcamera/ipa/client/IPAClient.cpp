@@ -174,7 +174,7 @@ void IPAClient::validate() {
 void IPAClient::run() {
     LOG(IPAIPU, Debug) << "Load IPA Proxy in IPAClient";
 
-#ifdef CAL_BUILD
+#ifdef HAVE_CHROME_OS
     mIpa = IPAManager::createIPA<ipa::ipu7::IPAProxyIPU7>(
         mPipelineHandler, IPU7_IPA_VERSION, IPU7_IPA_VERSION, true, IPCPipeUnixSocket::kCpuPath);
 #else
@@ -219,6 +219,7 @@ void IPAClient::freeShmMem(const std::string& name, void* addr, uint32_t handle)
         mSyncMessage->invokeMethod(&SyncMessage::unmapBuffers, ConnectionTypeBlocking, ids);
 
         mIPAMemory.freeBuffer(name, buffer, addr);
+        mFrameBufferMap.erase(addr);
 
         return;
     }

@@ -25,7 +25,7 @@
 
 namespace icamera {
 
-class PipeManagerStub : public IPipeManager, public icamera::Thread {
+class PipeManagerStub : public IPipeManager, public Thread {
  public:
     PipeManagerStub(int cameraId, PipeManagerCallback* callback);
     virtual ~PipeManagerStub();
@@ -53,6 +53,7 @@ class PipeManagerStub : public IPipeManager, public icamera::Thread {
     Mutex mTaskLock;
     std::vector<TaskInfo> mOngoingTasks;
     std::condition_variable mTaskReadyCondition;
+    bool mExitPending;
     IpuPacAdaptor* mPacAdaptor;
     std::shared_ptr<GraphConfig> mGraphConfig;
     Mutex mOngoingPalMapLock;
@@ -67,7 +68,13 @@ class PipeManagerStub : public IPipeManager, public icamera::Thread {
 
  private:
     // use a thread to simulate pipeLine process frames
-    virtual bool threadLoop();
+    void run() {
+        bool ret = true;
+        while (ret) {
+            ret = threadLoop();
+        }
+    }
+    bool threadLoop();
     int processTask(const PipeTaskData& task);
     int queueBuffers();
 };

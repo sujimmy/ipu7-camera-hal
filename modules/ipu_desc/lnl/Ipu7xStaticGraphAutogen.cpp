@@ -1,6 +1,6 @@
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -332,7 +332,7 @@ void LbffBayerOuterNode::Init(LbffBayerOuterNodeConfiguration** selectedGraphCon
     uint64_t kernelsRcbBitmap = 0x13FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x7EE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12] }
 
-    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
+    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -372,6 +372,33 @@ void BbpsNoTnrOuterNode::Init(BbpsNoTnrOuterNodeConfiguration** selectedGraphCon
     setInnerNode(None);
 }
 
+void LbffBayerWithGmvOuterNode::Init(LbffBayerWithGmvOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
+{
+    OuterNode::Init(0, NodeTypes::Cb, 35, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
+
+    uint16_t kernelsUuids[35] = {52164 /*ifd_pipe_1_1*/, 11700 /*bxt_blc*/, 10326 /*linearization2_0*/, 6070 /*ifd_lsc_1_1*/, 2144 /*lsc_1_2*/, 33714 /*gd_dpc_2_2*/, 5144 /*wb_1_1*/, 21777 /*bnlm_3_3*/, 48695 /*bxt_demosaic*/, 13708 /*vcsc_2_0_b*/, 54721 /*gltm_2_0*/, 58858 /*xnr_5_2*/, 36035 /*vcr_3_1*/, 36029 /*glim_2_0*/, 13026 /*acm_1_1*/, 57496 /*gammatm_v3*/, 31704 /*bxt_csc*/, 15021 /*rgbs_grid_1_1*/, 62344 /*ccm_3a_2_0*/, 26958 /*fr_grid_1_0*/, 20739 /*b2i_ds_1_0_1*/, 25569 /*upscaler_1_0*/, 36213 /*lbff_crop_espa_1_1*/, 33723 /*tnr_scale_lb*/, 40915 /*odr_output_ps_1_1*/, 55391 /*odr_output_me_1_1*/, 20731 /*odr_awb_std_1_1*/, 54176 /*odr_awb_sat_1_1*/, 55073 /*aestatistics_2_1*/, 50677 /*odr_ae_1_1*/, 6500 /*odr_af_std_1_1*/, 41864 /*ifd_gmv_1_1*/, 61146 /*gmv_statistics_1_0*/, 13820 /*odr_gmv_match_1_1*/, 8985 /*odr_gmv_feature_1_1*/};
+    uint64_t kernelsRcbBitmap = 0x113FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28], gmv_statistics_1_0[32] }
+    uint64_t kernelsResolutionHistoryGroupBitmap = 0x7FEE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12], {ifd_gmv_1_1}[13], {gmv_statistics_1_0}[14], {odr_gmv_match_1_1}[15], {odr_gmv_feature_1_1}[16] }
+
+    uint8_t systemApisSizes[35] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
+
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        nodeKernels.kernelList = kernelListOptions[i];
+
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+    }
+
+    // Metadata update
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
+    }
+
+    // set default inner Node
+    setInnerNode(None);
+}
+
 void BbpsWithTnrOuterNode::Init(BbpsWithTnrOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
 {
     OuterNode::Init(1, NodeTypes::Cb, 20, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
@@ -393,38 +420,11 @@ void BbpsWithTnrOuterNode::Init(BbpsWithTnrOuterNodeConfiguration** selectedGrap
     setInnerNode(None);
 }
 
-void LbffBayerWithGmvOuterNode::Init(LbffBayerWithGmvOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
-{
-    OuterNode::Init(0, NodeTypes::Cb, 35, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
-
-    uint16_t kernelsUuids[35] = {52164 /*ifd_pipe_1_1*/, 11700 /*bxt_blc*/, 10326 /*linearization2_0*/, 6070 /*ifd_lsc_1_1*/, 2144 /*lsc_1_2*/, 33714 /*gd_dpc_2_2*/, 5144 /*wb_1_1*/, 21777 /*bnlm_3_3*/, 48695 /*bxt_demosaic*/, 13708 /*vcsc_2_0_b*/, 54721 /*gltm_2_0*/, 58858 /*xnr_5_2*/, 36035 /*vcr_3_1*/, 36029 /*glim_2_0*/, 13026 /*acm_1_1*/, 57496 /*gammatm_v3*/, 31704 /*bxt_csc*/, 15021 /*rgbs_grid_1_1*/, 62344 /*ccm_3a_2_0*/, 26958 /*fr_grid_1_0*/, 20739 /*b2i_ds_1_0_1*/, 25569 /*upscaler_1_0*/, 36213 /*lbff_crop_espa_1_1*/, 33723 /*tnr_scale_lb*/, 40915 /*odr_output_ps_1_1*/, 55391 /*odr_output_me_1_1*/, 20731 /*odr_awb_std_1_1*/, 54176 /*odr_awb_sat_1_1*/, 55073 /*aestatistics_2_1*/, 50677 /*odr_ae_1_1*/, 6500 /*odr_af_std_1_1*/, 41864 /*ifd_gmv_1_1*/, 61146 /*gmv_statistics_1_0*/, 13820 /*odr_gmv_match_1_1*/, 8985 /*odr_gmv_feature_1_1*/};
-    uint64_t kernelsRcbBitmap = 0x113FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28], gmv_statistics_1_0[32] }
-    uint64_t kernelsResolutionHistoryGroupBitmap = 0x7FEE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12], {ifd_gmv_1_1}[13], {gmv_statistics_1_0}[14], {odr_gmv_match_1_1}[15], {odr_gmv_feature_1_1}[16] }
-
-    uint8_t systemApisSizes[35] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
-
-    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
-    {
-        nodeKernels.kernelList = kernelListOptions[i];
-
-        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
-    }
-
-    // Metadata update
-    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
-    {
-        kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
-    }
-
-    // set default inner Node
-    setInnerNode(None);
-}
-
 void SwGdcOuterNode::Init(SwGdcOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
 {
     OuterNode::Init(4, NodeTypes::Sw, 1, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
 
-    uint16_t kernelsUuids[1] = {2565 /*gdc7_1*/};
+    uint16_t kernelsUuids[1] = {5637 /*gdc7_1*/};
     uint64_t kernelsRcbBitmap = 0x1; // { gdc7_1[0] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x0; // {{gdc7_1}[0] }
 
@@ -441,6 +441,27 @@ void SwGdcOuterNode::Init(SwGdcOuterNodeConfiguration** selectedGraphConfigurati
     setInnerNode(None);
 }
 
+void SwNntmOuterNode::Init(SwNntmOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
+{
+    OuterNode::Init(6, NodeTypes::Sw, 1, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
+
+    uint16_t kernelsUuids[1] = {46539 /*nntm_1_0*/};
+    uint64_t kernelsRcbBitmap = 0x0; // {  }
+    uint64_t kernelsResolutionHistoryGroupBitmap = 0x0; // {{nntm_1_0}[0] }
+
+    uint8_t systemApisSizes[1] = {5 /*nntm_1_0*/};
+
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        nodeKernels.kernelList = kernelListOptions[i];
+
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, nullptr, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+    }
+
+    // set default inner Node
+    setInnerNode(None);
+}
+
 void LbffRgbIrOuterNode::Init(LbffRgbIrOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
 {
     OuterNode::Init(0, NodeTypes::Cb, 34, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
@@ -449,7 +470,7 @@ void LbffRgbIrOuterNode::Init(LbffRgbIrOuterNodeConfiguration** selectedGraphCon
     uint64_t kernelsRcbBitmap = 0xFF800071; // { ifd_pipe_1_1[0], rgbs_grid_1_1[4], rgb_ir_2_0[5], odr_ir_1_1[6], ccm_3a_2_0[23], fr_grid_1_0[24], b2i_ds_1_0_1[25], upscaler_1_0[26], lbff_crop_espa_1_1[27], tnr_scale_lb[28], odr_output_ps_1_1[29], odr_output_me_1_1[30], aestatistics_2_1[31] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x3DC000FC2; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0, gd_dpc_2_2, rgbs_grid_1_1, rgb_ir_2_0}[1], {odr_ir_1_1}[2], {odr_awb_std_1_1}[3], {odr_awb_sve_1_1}[4], {odr_awb_sat_1_1}[5], {ifd_lsc_1_1}[6], {lsc_1_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[7], {upscaler_1_0}[8], {lbff_crop_espa_1_1}[9], {tnr_scale_lb, odr_output_ps_1_1}[10], {odr_output_me_1_1}[11], {aestatistics_2_1}[12], {odr_ae_1_1}[13], {odr_af_std_1_1}[14] }
 
-    uint8_t systemApisSizes[34] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 0 /*gd_dpc_2_2*/, 7 /*rgbs_grid_1_1*/, 0 /*rgb_ir_2_0*/, 156 /*odr_ir_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sve_1_1*/, 156 /*odr_awb_sat_1_1*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
+    uint8_t systemApisSizes[34] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 0 /*gd_dpc_2_2*/, 24 /*rgbs_grid_1_1*/, 0 /*rgb_ir_2_0*/, 156 /*odr_ir_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sve_1_1*/, 156 /*odr_awb_sat_1_1*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -476,7 +497,7 @@ void LbffIrNoGmvIrStreamOuterNode::Init(LbffIrNoGmvIrStreamOuterNodeConfiguratio
     uint64_t kernelsRcbBitmap = 0x13FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x7EE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12] }
 
-    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
+    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -524,7 +545,7 @@ void LbffBayerBurstOutNo3AOuterNode::Init(LbffBayerBurstOutNo3AOuterNodeConfigur
     uint64_t kernelsRcbBitmap = 0x137F0001; // { ifd_pipe_1_1[0], odr_burst_isp_1_1[16], b2i_ds_1_0_1[17], upscaler_1_0[18], lbff_crop_espa_1_1[19], tnr_scale_lb[20], odr_output_ps_1_1[21], odr_output_me_1_1[22], pext_1_0[24], pafstatistics_1_2[25], gmv_statistics_1_0[28] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x7EDC0002; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0, lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, odr_burst_isp_1_1, b2i_ds_1_0_1}[1], {upscaler_1_0}[2], {lbff_crop_espa_1_1}[3], {tnr_scale_lb, odr_output_ps_1_1}[4], {odr_output_me_1_1}[5], {ifd_pdaf_1_1, pext_1_0}[6], {pafstatistics_1_2}[7], {odr_pdaf_1_1}[8], {ifd_gmv_1_1}[9], {gmv_statistics_1_0}[10], {odr_gmv_match_1_1}[11], {odr_gmv_feature_1_1}[12] }
 
-    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 156 /*odr_burst_isp_1_1*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*ifd_pdaf_1_1*/, 24 /*pext_1_0*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
+    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 156 /*odr_burst_isp_1_1*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*ifd_pdaf_1_1*/, 24 /*pext_1_0*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -572,7 +593,7 @@ void LbffIrNoGmvOuterNode::Init(LbffIrNoGmvOuterNodeConfiguration** selectedGrap
     uint64_t kernelsRcbBitmap = 0x13FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x7EE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12] }
 
-    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
+    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -614,7 +635,7 @@ void LbffBayerPdaf2OuterNode::Init(LbffBayerPdaf2OuterNodeConfiguration** select
     uint64_t kernelsRcbBitmap = 0x313FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28], pext_1_0[32], pafstatistics_1_2[33] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x6FEE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12], {ifd_pdaf_1_1, pext_1_0}[13], {pafstatistics_1_2}[14], {odr_pdaf_1_1}[15] }
 
-    uint8_t systemApisSizes[35] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_pdaf_1_1*/, 24 /*pext_1_0*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/};
+    uint8_t systemApisSizes[35] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_pdaf_1_1*/, 24 /*pext_1_0*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -641,7 +662,7 @@ void LbffBayerPdaf3OuterNode::Init(LbffBayerPdaf3OuterNodeConfiguration** select
     uint64_t kernelsRcbBitmap = 0x127FE0001; // { ifd_pipe_1_1[0], pext_1_0[17], rgbs_grid_1_1[18], ccm_3a_2_0[19], fr_grid_1_0[20], b2i_ds_1_0_1[21], upscaler_1_0[22], lbff_crop_espa_1_1[23], tnr_scale_lb[24], odr_output_ps_1_1[25], odr_output_me_1_1[26], aestatistics_2_1[29], pafstatistics_1_2[32] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x3FDC0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, pext_1_0, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12], {pafstatistics_1_2}[13], {odr_pdaf_1_1}[14] }
 
-    uint8_t systemApisSizes[34] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*pext_1_0*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/};
+    uint8_t systemApisSizes[34] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*pext_1_0*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -685,7 +706,7 @@ void SwDolOuterNode::Init(SwDolOuterNodeConfiguration** selectedGraphConfigurati
 {
     OuterNode::Init(3, NodeTypes::Sw, 1, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
 
-    uint16_t kernelsUuids[1] = {6265 /*dol_lite_1_0*/};
+    uint16_t kernelsUuids[1] = {3700 /*dol_lite_1_0*/};
     uint64_t kernelsRcbBitmap = 0x0; // {  }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x0; // {{dol_lite_1_0}[0] }
 
@@ -710,7 +731,7 @@ void LbffDolOuterNode::Init(LbffDolOuterNodeConfiguration** selectedGraphConfigu
     uint64_t kernelsRcbBitmap = 0x13FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28] }
     uint64_t kernelsResolutionHistoryGroupBitmap = 0x7EE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12] }
 
-    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 0 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 5 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 0 /*gammatm_v3*/, 0 /*bxt_csc*/, 7 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 0 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 5 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
+    uint8_t systemApisSizes[31] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/};
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -744,6 +765,135 @@ void SwGtmOuterNode::Init(SwGtmOuterNodeConfiguration** selectedGraphConfigurati
         nodeKernels.kernelList = kernelListOptions[i];
 
         InitRunKernels(kernelsUuids, kernelsRcbBitmap, nullptr, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
+    }
+
+    // set default inner Node
+    setInnerNode(None);
+}
+
+void LbffBayerPdaf2WithGmvOuterNode::Init(LbffBayerPdaf2WithGmvOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
+{
+    OuterNode::Init(0, NodeTypes::Cb, 39, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
+
+    uint16_t kernelsUuids[39] = {52164 /*ifd_pipe_1_1*/, 11700 /*bxt_blc*/, 10326 /*linearization2_0*/, 6070 /*ifd_lsc_1_1*/, 2144 /*lsc_1_2*/, 33714 /*gd_dpc_2_2*/, 5144 /*wb_1_1*/, 21777 /*bnlm_3_3*/, 48695 /*bxt_demosaic*/, 13708 /*vcsc_2_0_b*/, 54721 /*gltm_2_0*/, 58858 /*xnr_5_2*/, 36035 /*vcr_3_1*/, 36029 /*glim_2_0*/, 13026 /*acm_1_1*/, 57496 /*gammatm_v3*/, 31704 /*bxt_csc*/, 15021 /*rgbs_grid_1_1*/, 62344 /*ccm_3a_2_0*/, 26958 /*fr_grid_1_0*/, 20739 /*b2i_ds_1_0_1*/, 25569 /*upscaler_1_0*/, 36213 /*lbff_crop_espa_1_1*/, 33723 /*tnr_scale_lb*/, 40915 /*odr_output_ps_1_1*/, 55391 /*odr_output_me_1_1*/, 20731 /*odr_awb_std_1_1*/, 54176 /*odr_awb_sat_1_1*/, 55073 /*aestatistics_2_1*/, 50677 /*odr_ae_1_1*/, 6500 /*odr_af_std_1_1*/, 3971 /*ifd_pdaf_1_1*/, 43213 /*pext_1_0*/, 44308 /*pafstatistics_1_2*/, 31724 /*odr_pdaf_1_1*/, 41864 /*ifd_gmv_1_1*/, 61146 /*gmv_statistics_1_0*/, 13820 /*odr_gmv_match_1_1*/, 8985 /*odr_gmv_feature_1_1*/};
+    uint64_t kernelsRcbBitmap = 0x1313FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28], pext_1_0[32], pafstatistics_1_2[33], gmv_statistics_1_0[36] }
+    uint64_t kernelsResolutionHistoryGroupBitmap = 0x7EFEE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12], {ifd_pdaf_1_1, pext_1_0}[13], {pafstatistics_1_2}[14], {odr_pdaf_1_1}[15], {ifd_gmv_1_1}[16], {gmv_statistics_1_0}[17], {odr_gmv_match_1_1}[18], {odr_gmv_feature_1_1}[19] }
+
+    uint8_t systemApisSizes[39] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_pdaf_1_1*/, 24 /*pext_1_0*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
+
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        nodeKernels.kernelList = kernelListOptions[i];
+
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+    }
+
+    // Metadata update
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
+    }
+
+    // set default inner Node
+    setInnerNode(None);
+}
+
+void LbffBayerPdaf3WithGmvOuterNode::Init(LbffBayerPdaf3WithGmvOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
+{
+    OuterNode::Init(0, NodeTypes::Cb, 38, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
+
+    uint16_t kernelsUuids[38] = {52164 /*ifd_pipe_1_1*/, 11700 /*bxt_blc*/, 10326 /*linearization2_0*/, 6070 /*ifd_lsc_1_1*/, 2144 /*lsc_1_2*/, 33714 /*gd_dpc_2_2*/, 5144 /*wb_1_1*/, 21777 /*bnlm_3_3*/, 48695 /*bxt_demosaic*/, 13708 /*vcsc_2_0_b*/, 54721 /*gltm_2_0*/, 58858 /*xnr_5_2*/, 36035 /*vcr_3_1*/, 36029 /*glim_2_0*/, 13026 /*acm_1_1*/, 57496 /*gammatm_v3*/, 31704 /*bxt_csc*/, 43213 /*pext_1_0*/, 15021 /*rgbs_grid_1_1*/, 62344 /*ccm_3a_2_0*/, 26958 /*fr_grid_1_0*/, 20739 /*b2i_ds_1_0_1*/, 25569 /*upscaler_1_0*/, 36213 /*lbff_crop_espa_1_1*/, 33723 /*tnr_scale_lb*/, 40915 /*odr_output_ps_1_1*/, 55391 /*odr_output_me_1_1*/, 20731 /*odr_awb_std_1_1*/, 54176 /*odr_awb_sat_1_1*/, 55073 /*aestatistics_2_1*/, 50677 /*odr_ae_1_1*/, 6500 /*odr_af_std_1_1*/, 44308 /*pafstatistics_1_2*/, 31724 /*odr_pdaf_1_1*/, 41864 /*ifd_gmv_1_1*/, 61146 /*gmv_statistics_1_0*/, 13820 /*odr_gmv_match_1_1*/, 8985 /*odr_gmv_feature_1_1*/};
+    uint64_t kernelsRcbBitmap = 0x927FE0001; // { ifd_pipe_1_1[0], pext_1_0[17], rgbs_grid_1_1[18], ccm_3a_2_0[19], fr_grid_1_0[20], b2i_ds_1_0_1[21], upscaler_1_0[22], lbff_crop_espa_1_1[23], tnr_scale_lb[24], odr_output_ps_1_1[25], odr_output_me_1_1[26], aestatistics_2_1[29], pafstatistics_1_2[32], gmv_statistics_1_0[35] }
+    uint64_t kernelsResolutionHistoryGroupBitmap = 0x3FFDC0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, pext_1_0, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12], {pafstatistics_1_2}[13], {odr_pdaf_1_1}[14], {ifd_gmv_1_1}[15], {gmv_statistics_1_0}[16], {odr_gmv_match_1_1}[17], {odr_gmv_feature_1_1}[18] }
+
+    uint8_t systemApisSizes[38] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*pext_1_0*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 8 /*pafstatistics_1_2*/, 156 /*odr_pdaf_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
+
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        nodeKernels.kernelList = kernelListOptions[i];
+
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+    }
+
+    // Metadata update
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
+    }
+
+    // set default inner Node
+    setInnerNode(None);
+}
+
+void LbffRgbIrWithGmvOuterNode::Init(LbffRgbIrWithGmvOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
+{
+    OuterNode::Init(0, NodeTypes::Cb, 38, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
+
+    uint16_t kernelsUuids[38] = {52164 /*ifd_pipe_1_1*/, 11700 /*bxt_blc*/, 10326 /*linearization2_0*/, 33714 /*gd_dpc_2_2*/, 15021 /*rgbs_grid_1_1*/, 14488 /*rgb_ir_2_0*/, 3371 /*odr_ir_1_1*/, 20731 /*odr_awb_std_1_1*/, 2452 /*odr_awb_sve_1_1*/, 54176 /*odr_awb_sat_1_1*/, 6070 /*ifd_lsc_1_1*/, 2144 /*lsc_1_2*/, 5144 /*wb_1_1*/, 21777 /*bnlm_3_3*/, 48695 /*bxt_demosaic*/, 13708 /*vcsc_2_0_b*/, 54721 /*gltm_2_0*/, 58858 /*xnr_5_2*/, 36035 /*vcr_3_1*/, 36029 /*glim_2_0*/, 13026 /*acm_1_1*/, 57496 /*gammatm_v3*/, 31704 /*bxt_csc*/, 62344 /*ccm_3a_2_0*/, 26958 /*fr_grid_1_0*/, 20739 /*b2i_ds_1_0_1*/, 25569 /*upscaler_1_0*/, 36213 /*lbff_crop_espa_1_1*/, 33723 /*tnr_scale_lb*/, 40915 /*odr_output_ps_1_1*/, 55391 /*odr_output_me_1_1*/, 55073 /*aestatistics_2_1*/, 50677 /*odr_ae_1_1*/, 6500 /*odr_af_std_1_1*/, 41864 /*ifd_gmv_1_1*/, 61146 /*gmv_statistics_1_0*/, 13820 /*odr_gmv_match_1_1*/, 8985 /*odr_gmv_feature_1_1*/};
+    uint64_t kernelsRcbBitmap = 0x8FF800071; // { ifd_pipe_1_1[0], rgbs_grid_1_1[4], rgb_ir_2_0[5], odr_ir_1_1[6], ccm_3a_2_0[23], fr_grid_1_0[24], b2i_ds_1_0_1[25], upscaler_1_0[26], lbff_crop_espa_1_1[27], tnr_scale_lb[28], odr_output_ps_1_1[29], odr_output_me_1_1[30], aestatistics_2_1[31], gmv_statistics_1_0[35] }
+    uint64_t kernelsResolutionHistoryGroupBitmap = 0x3FDC000FC2; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0, gd_dpc_2_2, rgbs_grid_1_1, rgb_ir_2_0}[1], {odr_ir_1_1}[2], {odr_awb_std_1_1}[3], {odr_awb_sve_1_1}[4], {odr_awb_sat_1_1}[5], {ifd_lsc_1_1}[6], {lsc_1_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[7], {upscaler_1_0}[8], {lbff_crop_espa_1_1}[9], {tnr_scale_lb, odr_output_ps_1_1}[10], {odr_output_me_1_1}[11], {aestatistics_2_1}[12], {odr_ae_1_1}[13], {odr_af_std_1_1}[14], {ifd_gmv_1_1}[15], {gmv_statistics_1_0}[16], {odr_gmv_match_1_1}[17], {odr_gmv_feature_1_1}[18] }
+
+    uint8_t systemApisSizes[38] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 0 /*gd_dpc_2_2*/, 24 /*rgbs_grid_1_1*/, 0 /*rgb_ir_2_0*/, 156 /*odr_ir_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sve_1_1*/, 156 /*odr_awb_sat_1_1*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
+
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        nodeKernels.kernelList = kernelListOptions[i];
+
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+    }
+
+    // Metadata update
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        kernelListOptions[i][13].run_kernel.metadata[0] = 1; // bnlm_3_3
+    }
+
+    // set default inner Node
+    setInnerNode(None);
+}
+
+void LbffIrWithGmvIrStreamOuterNode::Init(LbffIrWithGmvIrStreamOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
+{
+    OuterNode::Init(0, NodeTypes::Cb, 35, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
+
+    uint16_t kernelsUuids[35] = {52164 /*ifd_pipe_1_1*/, 11700 /*bxt_blc*/, 10326 /*linearization2_0*/, 6070 /*ifd_lsc_1_1*/, 2144 /*lsc_1_2*/, 33714 /*gd_dpc_2_2*/, 5144 /*wb_1_1*/, 21777 /*bnlm_3_3*/, 48695 /*bxt_demosaic*/, 13708 /*vcsc_2_0_b*/, 54721 /*gltm_2_0*/, 58858 /*xnr_5_2*/, 36035 /*vcr_3_1*/, 36029 /*glim_2_0*/, 13026 /*acm_1_1*/, 57496 /*gammatm_v3*/, 31704 /*bxt_csc*/, 15021 /*rgbs_grid_1_1*/, 62344 /*ccm_3a_2_0*/, 26958 /*fr_grid_1_0*/, 20739 /*b2i_ds_1_0_1*/, 25569 /*upscaler_1_0*/, 36213 /*lbff_crop_espa_1_1*/, 33723 /*tnr_scale_lb*/, 40915 /*odr_output_ps_1_1*/, 55391 /*odr_output_me_1_1*/, 20731 /*odr_awb_std_1_1*/, 54176 /*odr_awb_sat_1_1*/, 55073 /*aestatistics_2_1*/, 50677 /*odr_ae_1_1*/, 6500 /*odr_af_std_1_1*/, 41864 /*ifd_gmv_1_1*/, 61146 /*gmv_statistics_1_0*/, 13820 /*odr_gmv_match_1_1*/, 8985 /*odr_gmv_feature_1_1*/};
+    uint64_t kernelsRcbBitmap = 0x113FE0001; // { ifd_pipe_1_1[0], rgbs_grid_1_1[17], ccm_3a_2_0[18], fr_grid_1_0[19], b2i_ds_1_0_1[20], upscaler_1_0[21], lbff_crop_espa_1_1[22], tnr_scale_lb[23], odr_output_ps_1_1[24], odr_output_me_1_1[25], aestatistics_2_1[28], gmv_statistics_1_0[32] }
+    uint64_t kernelsResolutionHistoryGroupBitmap = 0x7FEE0001A; // {{ifd_pipe_1_1}[0], {bxt_blc, linearization2_0}[1], {ifd_lsc_1_1}[2], {lsc_1_2, gd_dpc_2_2, wb_1_1, bnlm_3_3, bxt_demosaic, vcsc_2_0_b, gltm_2_0, xnr_5_2, vcr_3_1, glim_2_0, acm_1_1, gammatm_v3, bxt_csc, rgbs_grid_1_1, ccm_3a_2_0, fr_grid_1_0, b2i_ds_1_0_1}[3], {upscaler_1_0}[4], {lbff_crop_espa_1_1}[5], {tnr_scale_lb, odr_output_ps_1_1}[6], {odr_output_me_1_1}[7], {odr_awb_std_1_1}[8], {odr_awb_sat_1_1}[9], {aestatistics_2_1}[10], {odr_ae_1_1}[11], {odr_af_std_1_1}[12], {ifd_gmv_1_1}[13], {gmv_statistics_1_0}[14], {odr_gmv_match_1_1}[15], {odr_gmv_feature_1_1}[16] }
+
+    uint8_t systemApisSizes[35] = {156 /*ifd_pipe_1_1*/, 5 /*bxt_blc*/, 5 /*linearization2_0*/, 156 /*ifd_lsc_1_1*/, 40 /*lsc_1_2*/, 0 /*gd_dpc_2_2*/, 0 /*wb_1_1*/, 5 /*bnlm_3_3*/, 0 /*bxt_demosaic*/, 0 /*vcsc_2_0_b*/, 0 /*gltm_2_0*/, 0 /*xnr_5_2*/, 0 /*vcr_3_1*/, 0 /*glim_2_0*/, 0 /*acm_1_1*/, 5 /*gammatm_v3*/, 0 /*bxt_csc*/, 24 /*rgbs_grid_1_1*/, 5 /*ccm_3a_2_0*/, 20 /*fr_grid_1_0*/, 0 /*b2i_ds_1_0_1*/, 0 /*upscaler_1_0*/, 156 /*lbff_crop_espa_1_1*/, 0 /*tnr_scale_lb*/, 156 /*odr_output_ps_1_1*/, 156 /*odr_output_me_1_1*/, 156 /*odr_awb_std_1_1*/, 156 /*odr_awb_sat_1_1*/, 24 /*aestatistics_2_1*/, 156 /*odr_ae_1_1*/, 156 /*odr_af_std_1_1*/, 156 /*ifd_gmv_1_1*/, 0 /*gmv_statistics_1_0*/, 156 /*odr_gmv_match_1_1*/, 156 /*odr_gmv_feature_1_1*/};
+
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        nodeKernels.kernelList = kernelListOptions[i];
+
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, selectedGraphConfiguration[i]->systemApiConfiguration);
+    }
+
+    // Metadata update
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        kernelListOptions[i][7].run_kernel.metadata[0] = 1; // bnlm_3_3
+    }
+
+    // set default inner Node
+    setInnerNode(None);
+}
+
+void SwVaiOuterNode::Init(SwVaiOuterNodeConfiguration** selectedGraphConfiguration, uint32_t nodeKernelConfigurationsOptionsCount)
+{
+    OuterNode::Init(8, NodeTypes::Sw, 1, nodeKernelConfigurationsOptionsCount, selectedGraphConfiguration[0]->tuningMode, selectedGraphConfiguration[0]->streamId, 0);
+
+    uint16_t kernelsUuids[1] = {19706 /*sw_scaler*/};
+    uint64_t kernelsRcbBitmap = 0x1; // { sw_scaler[0] }
+    uint64_t kernelsResolutionHistoryGroupBitmap = 0x0; // {{sw_scaler}[0] }
+
+    uint8_t systemApisSizes[1] = {0 /*sw_scaler*/};
+
+    for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        nodeKernels.kernelList = kernelListOptions[i];
+
+        InitRunKernels(kernelsUuids, kernelsRcbBitmap, selectedGraphConfiguration[i]->resolutionInfos, kernelsResolutionHistoryGroupBitmap,  selectedGraphConfiguration[i]->resolutionHistories, selectedGraphConfiguration[i]->bppInfos, systemApisSizes, nullptr);
     }
 
     // set default inner Node
@@ -1127,160 +1277,6 @@ void BbpsNoTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
         bitmaps.teb[0] = 0x1C20F;
         // REB - 0x0000000000000000000000000000000D
         bitmaps.reb[0] = 0xD;
-    }
-
-    SetDisabledKernels(disabledRunKernelsBitmap);
-}
-
-void BbpsWithTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
-{
-    // Kernel default enablement
-    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
-    {
-        for (uint8_t i = 0; i < 20; ++i)
-        {
-            kernelListOptions[j][i].run_kernel.enable = 1;
-        }
-    }
-
-    const InnerNodeOptionsFlags nodeRelevantInnerOptions = nodeInnerOptions & (noMp | noDp | noPpp);
-    bitmaps = HwBitmaps(); // reset HW bitmaps
-    uint64_t disabledRunKernelsBitmap = 0x0;
-    if (nodeRelevantInnerOptions == (noMp))
-    {
-        // HW bitmaps
-        // RBM - 0x0000000000000000000000000000006F
-        bitmaps.rbm[0] = 0x6F;
-        // DEB - 0x000000000000000000000000000F7FFF
-        bitmaps.deb[0] = 0xF7FFF;
-        // TEB - 0x000000000001BFEF
-        bitmaps.teb[0] = 0x1BFEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
-
-        // Kernels disablement
-        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x4000;
-    }
-    else if (nodeRelevantInnerOptions == (noDp))
-    {
-        // HW bitmaps
-        // RBM - 0x0000000000000000000000000000005F
-        bitmaps.rbm[0] = 0x5F;
-        // DEB - 0x000000000000000000000000000CFFFF
-        bitmaps.deb[0] = 0xCFFFF;
-        // TEB - 0x0000000000017FEF
-        bitmaps.teb[0] = 0x17FEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
-
-        // Kernels disablement
-        // 15 outputscaler_2_0_a- inner node disablement
-        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x28000;
-    }
-    else if (nodeRelevantInnerOptions == (noMp | noDp))
-    {
-        // HW bitmaps
-        // RBM - 0x0000000000000000000000000000004F
-        bitmaps.rbm[0] = 0x4F;
-        // DEB - 0x000000000000000000000000000C7FFF
-        bitmaps.deb[0] = 0xC7FFF;
-        // TEB - 0x0000000000013FEF
-        bitmaps.teb[0] = 0x13FEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
-
-        // Kernels disablement
-        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
-        // 15 outputscaler_2_0_a- inner node disablement
-        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x2C000;
-    }
-    else if (nodeRelevantInnerOptions == (noPpp))
-    {
-        // HW bitmaps
-        // RBM - 0x0000000000000000000000000000003F
-        bitmaps.rbm[0] = 0x3F;
-        // DEB - 0x0000000000000000000000000003FFFF
-        bitmaps.deb[0] = 0x3FFFF;
-        // TEB - 0x000000000000FFEF
-        bitmaps.teb[0] = 0xFFEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
-
-        // Kernels disablement
-        // 16 outputscaler_2_0_b- inner node disablement
-        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x50000;
-    }
-    else if (nodeRelevantInnerOptions == (noMp | noPpp))
-    {
-        // HW bitmaps
-        // RBM - 0x0000000000000000000000000000002F
-        bitmaps.rbm[0] = 0x2F;
-        // DEB - 0x00000000000000000000000000037FFF
-        bitmaps.deb[0] = 0x37FFF;
-        // TEB - 0x000000000000BFEF
-        bitmaps.teb[0] = 0xBFEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
-
-        // Kernels disablement
-        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
-        // 16 outputscaler_2_0_b- inner node disablement
-        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x54000;
-    }
-    else if (nodeRelevantInnerOptions == (noDp | noPpp))
-    {
-        // HW bitmaps
-        // RBM - 0x0000000000000000000000000000001F
-        bitmaps.rbm[0] = 0x1F;
-        // DEB - 0x0000000000000000000000000000FFFF
-        bitmaps.deb[0] = 0xFFFF;
-        // TEB - 0x0000000000007FEF
-        bitmaps.teb[0] = 0x7FEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
-
-        // Kernels disablement
-        // 15 outputscaler_2_0_a- inner node disablement
-        // 16 outputscaler_2_0_b- inner node disablement
-        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
-        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x78000;
-    }
-    else if (nodeRelevantInnerOptions == (noMp | noDp | noPpp))
-    {
-        // HW bitmaps
-        // RBM - 0x0000000000000000000000000000000F
-        bitmaps.rbm[0] = 0xF;
-        // DEB - 0x00000000000000000000000000007FFF
-        bitmaps.deb[0] = 0x7FFF;
-        // TEB - 0x0000000000003FEF
-        bitmaps.teb[0] = 0x3FEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
-
-        // Kernels disablement
-        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
-        // 15 outputscaler_2_0_a- inner node disablement
-        // 16 outputscaler_2_0_b- inner node disablement
-        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
-        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x7C000;
-    }
-    else // default inner node
-    {
-        // RBM - 0x0000000000000000000000000000007F
-        bitmaps.rbm[0] = 0x7F;
-        // DEB - 0x000000000000000000000000000FFFFF
-        bitmaps.deb[0] = 0xFFFFF;
-        // TEB - 0x000000000001FFEF
-        bitmaps.teb[0] = 0x1FFEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
     }
 
     SetDisabledKernels(disabledRunKernelsBitmap);
@@ -1718,7 +1714,179 @@ void LbffBayerWithGmvOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOpti
     SetDisabledKernels(disabledRunKernelsBitmap);
 }
 
+void BbpsWithTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
+{
+    // Kernel default enablement
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    {
+        for (uint8_t i = 0; i < 20; ++i)
+        {
+            kernelListOptions[j][i].run_kernel.enable = 1;
+        }
+    }
+
+    const InnerNodeOptionsFlags nodeRelevantInnerOptions = nodeInnerOptions & (noMp | noDp | noPpp);
+    bitmaps = HwBitmaps(); // reset HW bitmaps
+    uint64_t disabledRunKernelsBitmap = 0x0;
+    if (nodeRelevantInnerOptions == (noMp))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000000000006F
+        bitmaps.rbm[0] = 0x6F;
+        // DEB - 0x000000000000000000000000000F7FFF
+        bitmaps.deb[0] = 0xF7FFF;
+        // TEB - 0x000000000001BFEF
+        bitmaps.teb[0] = 0x1BFEF;
+        // REB - 0x0000000000000000000000000000000F
+        bitmaps.reb[0] = 0xF;
+
+        // Kernels disablement
+        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x4000;
+    }
+    else if (nodeRelevantInnerOptions == (noDp))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000000000005F
+        bitmaps.rbm[0] = 0x5F;
+        // DEB - 0x000000000000000000000000000CFFFF
+        bitmaps.deb[0] = 0xCFFFF;
+        // TEB - 0x0000000000017FEF
+        bitmaps.teb[0] = 0x17FEF;
+        // REB - 0x0000000000000000000000000000000F
+        bitmaps.reb[0] = 0xF;
+
+        // Kernels disablement
+        // 15 outputscaler_2_0_a- inner node disablement
+        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x28000;
+    }
+    else if (nodeRelevantInnerOptions == (noMp | noDp))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000000000004F
+        bitmaps.rbm[0] = 0x4F;
+        // DEB - 0x000000000000000000000000000C7FFF
+        bitmaps.deb[0] = 0xC7FFF;
+        // TEB - 0x0000000000013FEF
+        bitmaps.teb[0] = 0x13FEF;
+        // REB - 0x0000000000000000000000000000000F
+        bitmaps.reb[0] = 0xF;
+
+        // Kernels disablement
+        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
+        // 15 outputscaler_2_0_a- inner node disablement
+        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x2C000;
+    }
+    else if (nodeRelevantInnerOptions == (noPpp))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000000000003F
+        bitmaps.rbm[0] = 0x3F;
+        // DEB - 0x0000000000000000000000000003FFFF
+        bitmaps.deb[0] = 0x3FFFF;
+        // TEB - 0x000000000000FFEF
+        bitmaps.teb[0] = 0xFFEF;
+        // REB - 0x0000000000000000000000000000000F
+        bitmaps.reb[0] = 0xF;
+
+        // Kernels disablement
+        // 16 outputscaler_2_0_b- inner node disablement
+        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x50000;
+    }
+    else if (nodeRelevantInnerOptions == (noMp | noPpp))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000000000002F
+        bitmaps.rbm[0] = 0x2F;
+        // DEB - 0x00000000000000000000000000037FFF
+        bitmaps.deb[0] = 0x37FFF;
+        // TEB - 0x000000000000BFEF
+        bitmaps.teb[0] = 0xBFEF;
+        // REB - 0x0000000000000000000000000000000F
+        bitmaps.reb[0] = 0xF;
+
+        // Kernels disablement
+        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
+        // 16 outputscaler_2_0_b- inner node disablement
+        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x54000;
+    }
+    else if (nodeRelevantInnerOptions == (noDp | noPpp))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000000000001F
+        bitmaps.rbm[0] = 0x1F;
+        // DEB - 0x0000000000000000000000000000FFFF
+        bitmaps.deb[0] = 0xFFFF;
+        // TEB - 0x0000000000007FEF
+        bitmaps.teb[0] = 0x7FEF;
+        // REB - 0x0000000000000000000000000000000F
+        bitmaps.reb[0] = 0xF;
+
+        // Kernels disablement
+        // 15 outputscaler_2_0_a- inner node disablement
+        // 16 outputscaler_2_0_b- inner node disablement
+        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
+        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x78000;
+    }
+    else if (nodeRelevantInnerOptions == (noMp | noDp | noPpp))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000000000000000
+        // DEB - 0x00000000000000000000000000000000
+        // TEB - 0x0000000000000000
+        // REB - 0x00000000000000000000000000000000
+
+        // Kernels disablement
+        // 0 slim_tnr_sp_bc_bifd_yuv4nm1_regs_1_1- inner node disablement
+        // 1 slim_tnr_sp_bc_bifd_rs4nm1_regs_1_1- inner node disablement
+        // 2 tnr_sp_bc_bifd_yuv4n_regs_1_1- inner node disablement
+        // 3 tnr7_ims_1_1- inner node disablement
+        // 4 tnr7_bc_1_1- inner node disablement
+        // 5 tnr_sp_bc_bodr_rs4n_regs_1_1- inner node disablement
+        // 6 slim_tnr_spatial_bifd_yuvn_regs_1_1- inner node disablement
+        // 7 tnr7_spatial_1_0- inner node disablement
+        // 8 slim_tnr_fp_blend_bifd_yuvnm1_regs_1_1- inner node disablement
+        // 9 tnr_fp_blend_bifd_rs4n_regs_1_1- inner node disablement
+        // 10 tnr7_blend_1_0- inner node disablement
+        // 11 tnr_fp_bodr_yuvn_regs_1_1- inner node disablement
+        // 12 cas_1_0- inner node disablement
+        // 13 tnr_scale_fp- inner node disablement
+        // 14 ofs_mp_bodr_regs_1_1- inner node disablement
+        // 15 outputscaler_2_0_a- inner node disablement
+        // 16 outputscaler_2_0_b- inner node disablement
+        // 17 ofs_dp_bodr_regs_1_1- inner node disablement
+        // 18 ofs_pp_bodr_regs_1_1- inner node disablement
+        // 19 tnr_scale_fp_bodr_yuv4n_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0xFFFFF;
+    }
+    else // default inner node
+    {
+        // RBM - 0x0000000000000000000000000000007F
+        bitmaps.rbm[0] = 0x7F;
+        // DEB - 0x000000000000000000000000000FFFFF
+        bitmaps.deb[0] = 0xFFFFF;
+        // TEB - 0x000000000001FFEF
+        bitmaps.teb[0] = 0x1FFEF;
+        // REB - 0x0000000000000000000000000000000F
+        bitmaps.reb[0] = 0xF;
+    }
+
+    SetDisabledKernels(disabledRunKernelsBitmap);
+}
+
 void SwGdcOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
+{
+
+    // No inner nodes
+    (void)nodeInnerOptions;
+}
+
+void SwNntmOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
 {
 
     // No inner nodes
@@ -2181,6 +2349,9 @@ void LbffIrNoGmvIrStreamOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerO
         }
 
         // Pass-through kernels
+        kernelListOptions[j][1].run_kernel.enable = 0; // bxt_blc
+        kernelListOptions[j][2].run_kernel.enable = 0; // linearization2_0
+        kernelListOptions[j][5].run_kernel.enable = 0; // gd_dpc_2_2
         kernelListOptions[j][6].run_kernel.enable = 0; // wb_1_1
         kernelListOptions[j][8].run_kernel.enable = 0; // bxt_demosaic
         kernelListOptions[j][14].run_kernel.enable = 0; // acm_1_1
@@ -2517,22 +2688,33 @@ void BbpsIrWithTnrOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions
     else if (nodeRelevantInnerOptions == (noMp | noDp | noPpp))
     {
         // HW bitmaps
-        // RBM - 0x0000000000000000000000000000000F
-        bitmaps.rbm[0] = 0xF;
-        // DEB - 0x00000000000000000000000000007FFF
-        bitmaps.deb[0] = 0x7FFF;
-        // TEB - 0x0000000000003FEF
-        bitmaps.teb[0] = 0x3FEF;
-        // REB - 0x0000000000000000000000000000000F
-        bitmaps.reb[0] = 0xF;
+        // RBM - 0x00000000000000000000000000000000
+        // DEB - 0x00000000000000000000000000000000
+        // TEB - 0x0000000000000000
+        // REB - 0x00000000000000000000000000000000
 
         // Kernels disablement
+        // 0 slim_tnr_sp_bc_bifd_yuv4nm1_regs_1_1- inner node disablement
+        // 1 slim_tnr_sp_bc_bifd_rs4nm1_regs_1_1- inner node disablement
+        // 2 tnr_sp_bc_bifd_yuv4n_regs_1_1- inner node disablement
+        // 3 tnr7_ims_1_1- inner node disablement
+        // 4 tnr7_bc_1_1- inner node disablement
+        // 5 tnr_sp_bc_bodr_rs4n_regs_1_1- inner node disablement
+        // 6 slim_tnr_spatial_bifd_yuvn_regs_1_1- inner node disablement
+        // 7 tnr7_spatial_1_0- inner node disablement
+        // 8 slim_tnr_fp_blend_bifd_yuvnm1_regs_1_1- inner node disablement
+        // 9 tnr_fp_blend_bifd_rs4n_regs_1_1- inner node disablement
+        // 10 tnr7_blend_1_0- inner node disablement
+        // 11 tnr_fp_bodr_yuvn_regs_1_1- inner node disablement
+        // 12 cas_1_0- inner node disablement
+        // 13 tnr_scale_fp- inner node disablement
         // 14 ofs_mp_bodr_regs_1_1- inner node disablement
         // 15 outputscaler_2_0_a- inner node disablement
         // 16 outputscaler_2_0_b- inner node disablement
         // 17 ofs_dp_bodr_regs_1_1- inner node disablement
         // 18 ofs_pp_bodr_regs_1_1- inner node disablement
-        disabledRunKernelsBitmap = 0x7C000;
+        // 19 tnr_scale_fp_bodr_yuv4n_regs_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0xFFFFF;
     }
     else // default inner node
     {
@@ -4895,6 +5077,3153 @@ void SwGtmOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
     (void)nodeInnerOptions;
 }
 
+void LbffBayerPdaf2WithGmvOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
+{
+    // Kernel default enablement
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    {
+        for (uint8_t i = 0; i < 39; ++i)
+        {
+            kernelListOptions[j][i].run_kernel.enable = 1;
+        }
+    }
+
+    const InnerNodeOptionsFlags nodeRelevantInnerOptions = nodeInnerOptions & (no3A | noLbOutputPs | noLbOutputMe | noGmv | noPdaf);
+    bitmaps = HwBitmaps(); // reset HW bitmaps
+    uint64_t disabledRunKernelsBitmap = 0x0;
+    if (nodeRelevantInnerOptions == (no3A))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000BEA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xBEA;
+        // DEB - 0x000000000000000000001FFFFE8801FF
+        bitmaps.deb[0] = 0xFE8801FF;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE43F
+        bitmaps.teb[0] = 0xCE43F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7C0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000B6A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xB6A;
+        // DEB - 0x000000000000000000001F7FFE8B7FFF
+        bitmaps.deb[0] = 0xFE8B7FFF;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA7FF
+        bitmaps.teb[0] = 0xCA7FF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x1000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000B6A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xB6A;
+        // DEB - 0x000000000000000000001F7FFE8801FF
+        bitmaps.deb[0] = 0xFE8801FF;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA43F
+        bitmaps.teb[0] = 0xCA43F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7D0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000AEA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xAEA;
+        // DEB - 0x000000000000000000001EBFFE8B7FFF
+        bitmaps.deb[0] = 0xFE8B7FFF;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC7FF
+        bitmaps.teb[0] = 0xCC7FF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x2800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000AEA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xAEA;
+        // DEB - 0x000000000000000000001EBFFE8801FF
+        bitmaps.deb[0] = 0xFE8801FF;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC43F
+        bitmaps.teb[0] = 0xCC43F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7E8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000A6A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xA6A;
+        // DEB - 0x000000000000000000001E3FFE8B7FFF
+        bitmaps.deb[0] = 0xFE8B7FFF;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C87FF
+        bitmaps.teb[0] = 0xC87FF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000A6A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xA6A;
+        // DEB - 0x000000000000000000001E3FFE8801FF
+        bitmaps.deb[0] = 0xFE8801FF;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C843F
+        bitmaps.teb[0] = 0xC843F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7F8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000009EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x9EA;
+        // DEB - 0x0000000000000000000001FFFE8B7FFF
+        bitmaps.deb[0] = 0xFE8B7FFF;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x00000000000067FF
+        bitmaps.teb[0] = 0x67FF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7800000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000009EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x9EA;
+        // DEB - 0x0000000000000000000001FFFE8801FF
+        bitmaps.deb[0] = 0xFE8801FF;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x000000000000643F
+        bitmaps.teb[0] = 0x643F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x787C0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000096A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x96A;
+        // DEB - 0x00000000000000000000017FFE8B7FFF
+        bitmaps.deb[0] = 0xFE8B7FFF;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x00000000000027FF
+        bitmaps.teb[0] = 0x27FF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7801000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000096A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x96A;
+        // DEB - 0x00000000000000000000017FFE8801FF
+        bitmaps.deb[0] = 0xFE8801FF;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x000000000000243F
+        bitmaps.teb[0] = 0x243F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x787D0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000008EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x8EA;
+        // DEB - 0x0000000000000000000000BFFE8B7FFF
+        bitmaps.deb[0] = 0xFE8B7FFF;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x00000000000047FF
+        bitmaps.teb[0] = 0x47FF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7802800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000008EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x8EA;
+        // DEB - 0x0000000000000000000000BFFE8801FF
+        bitmaps.deb[0] = 0xFE8801FF;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x000000000000443F
+        bitmaps.teb[0] = 0x443F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x787E8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000008001E404403
+        bitmaps.rbm[0] = 0x1E404403;
+        bitmaps.rbm[1] = 0x800;
+        // DEB - 0x000000000000000000000000000B7FFF
+        bitmaps.deb[0] = 0xB7FFF;
+        // TEB - 0x00000000000007FF
+        bitmaps.teb[0] = 0x7FF;
+        // REB - 0x0000000000000000000000000407F0FB
+        bitmaps.reb[0] = 0x407F0FB;
+
+        // Kernels disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 20 b2i_ds_1_0_1- inner node disablement
+        // 21 upscaler_1_0- inner node disablement
+        // 22 lbff_crop_espa_1_1- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7803F1FFC0;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000080000000000
+        bitmaps.rbm[1] = 0x800;
+        // DEB - 0x000000000000000000000000000801C0
+        bitmaps.deb[0] = 0x801C0;
+        // TEB - 0x0000000000000427
+        bitmaps.teb[0] = 0x427;
+        // REB - 0x00000000000000000000000004040000
+        bitmaps.reb[0] = 0x4040000;
+
+        // Kernels disablement
+        // 0 ifd_pipe_1_1- inner node disablement
+        // 1 bxt_blc- inner node disablement
+        // 2 linearization2_0- inner node disablement
+        // 3 ifd_lsc_1_1- inner node disablement
+        // 4 lsc_1_2- inner node disablement
+        // 5 gd_dpc_2_2- inner node disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 20 b2i_ds_1_0_1- inner node disablement
+        // 21 upscaler_1_0- inner node disablement
+        // 22 lbff_crop_espa_1_1- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x787FFFFFFF;
+    }
+    else if (nodeRelevantInnerOptions == (noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000003EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x3EA;
+        // DEB - 0x000000000000000000001FFFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE3DF
+        bitmaps.teb[0] = 0xCE3DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x780000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000003EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x3EA;
+        // DEB - 0x000000000000000000001FFFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE01F
+        bitmaps.teb[0] = 0xCE01F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FC0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x36A;
+        // DEB - 0x000000000000000000001F7FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA3DF
+        bitmaps.teb[0] = 0xCA3DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x781000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x36A;
+        // DEB - 0x000000000000000000001F7FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA01F
+        bitmaps.teb[0] = 0xCA01F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FD0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x2EA;
+        // DEB - 0x000000000000000000001EBFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC3DF
+        bitmaps.teb[0] = 0xCC3DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x782800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x2EA;
+        // DEB - 0x000000000000000000001EBFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC01F
+        bitmaps.teb[0] = 0xCC01F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FE8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x26A;
+        // DEB - 0x000000000000000000001E3FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C83DF
+        bitmaps.teb[0] = 0xC83DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x783800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x26A;
+        // DEB - 0x000000000000000000001E3FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C801F
+        bitmaps.teb[0] = 0xC801F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FF8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x1EA;
+        // DEB - 0x0000000000000000000001FFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x00000000000063DF
+        bitmaps.teb[0] = 0x63DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7F80000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x1EA;
+        // DEB - 0x0000000000000000000001FFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x000000000000601F
+        bitmaps.teb[0] = 0x601F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FFC0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x16A;
+        // DEB - 0x00000000000000000000017FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x00000000000023DF
+        bitmaps.teb[0] = 0x23DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7F81000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x16A;
+        // DEB - 0x00000000000000000000017FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x000000000000201F
+        bitmaps.teb[0] = 0x201F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FFD0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xEA;
+        // DEB - 0x0000000000000000000000BFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x00000000000043DF
+        bitmaps.teb[0] = 0x43DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7F82800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xEA;
+        // DEB - 0x0000000000000000000000BFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x000000000000401F
+        bitmaps.teb[0] = 0x401F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FFE8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000001E404403
+        bitmaps.rbm[0] = 0x1E404403;
+        // DEB - 0x00000000000000000000000000037E3F
+        bitmaps.deb[0] = 0x37E3F;
+        // TEB - 0x00000000000003DF
+        bitmaps.teb[0] = 0x3DF;
+        // REB - 0x0000000000000000000000000003F0FB
+        bitmaps.reb[0] = 0x3F0FB;
+
+        // Kernels disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 20 b2i_ds_1_0_1- inner node disablement
+        // 21 upscaler_1_0- inner node disablement
+        // 22 lbff_crop_espa_1_1- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7F83F1FFC0;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000000000000000
+        // DEB - 0x00000000000000000000000000000000
+        // TEB - 0x0000000000000000
+        // REB - 0x00000000000000000000000000000000
+
+        // Kernels disablement
+        // 0 ifd_pipe_1_1- inner node disablement
+        // 1 bxt_blc- inner node disablement
+        // 2 linearization2_0- inner node disablement
+        // 3 ifd_lsc_1_1- inner node disablement
+        // 4 lsc_1_2- inner node disablement
+        // 5 gd_dpc_2_2- inner node disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 20 b2i_ds_1_0_1- inner node disablement
+        // 21 upscaler_1_0- inner node disablement
+        // 22 lbff_crop_espa_1_1- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_pdaf_1_1- inner node disablement
+        // 32 pext_1_0- inner node disablement
+        // 33 pafstatistics_1_2- inner node disablement
+        // 34 odr_pdaf_1_1- inner node disablement
+        // 35 ifd_gmv_1_1- inner node disablement
+        // 36 gmv_statistics_1_0- inner node disablement
+        // 37 odr_gmv_match_1_1- inner node disablement
+        // 38 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FFFFFFFFF;
+    }
+    else // default inner node
+    {
+        // RBM - 0x000000000000000000000BEA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xBEA;
+        // DEB - 0x000000000000000000001FFFFE8B7FFF
+        bitmaps.deb[0] = 0xFE8B7FFF;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE7FF
+        bitmaps.teb[0] = 0xCE7FF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+    }
+
+    SetDisabledKernels(disabledRunKernelsBitmap);
+}
+
+void LbffBayerPdaf3WithGmvOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
+{
+    // Kernel default enablement
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    {
+        for (uint8_t i = 0; i < 38; ++i)
+        {
+            kernelListOptions[j][i].run_kernel.enable = 1;
+        }
+    }
+
+    const InnerNodeOptionsFlags nodeRelevantInnerOptions = nodeInnerOptions & (no3A | noLbOutputPs | noLbOutputMe | noGmv | noPdaf);
+    bitmaps = HwBitmaps(); // reset HW bitmaps
+    uint64_t disabledRunKernelsBitmap = 0x0;
+    if (nodeRelevantInnerOptions == (no3A))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000BEB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xBEB;
+        // DEB - 0x000000000000000000001FFFFE8801BF
+        bitmaps.deb[0] = 0xFE8801BF;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE41F
+        bitmaps.teb[0] = 0xCE41F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0xF81C0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000B6B1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xB6B;
+        // DEB - 0x000000000000000000001F7FFE8B7FBF
+        bitmaps.deb[0] = 0xFE8B7FBF;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA7DF
+        bitmaps.teb[0] = 0xCA7DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x2000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000B6B01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xB6B;
+        // DEB - 0x000000000000000000001F7FFE8801BF
+        bitmaps.deb[0] = 0xFE8801BF;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA41F
+        bitmaps.teb[0] = 0xCA41F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0xFA1C0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000AEB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xAEB;
+        // DEB - 0x000000000000000000001EBFFE8B7FBF
+        bitmaps.deb[0] = 0xFE8B7FBF;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC7DF
+        bitmaps.teb[0] = 0xCC7DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x5000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000AEB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xAEB;
+        // DEB - 0x000000000000000000001EBFFE8801BF
+        bitmaps.deb[0] = 0xFE8801BF;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC41F
+        bitmaps.teb[0] = 0xCC41F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0xFD1C0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000A6B1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xA6B;
+        // DEB - 0x000000000000000000001E3FFE8B7FBF
+        bitmaps.deb[0] = 0xFE8B7FBF;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C87DF
+        bitmaps.teb[0] = 0xC87DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x000000000000000000000A6B01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xA6B;
+        // DEB - 0x000000000000000000001E3FFE8801BF
+        bitmaps.deb[0] = 0xFE8801BF;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C841F
+        bitmaps.teb[0] = 0xC841F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0xFF1C0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000009EB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x9EB;
+        // DEB - 0x0000000000000000000001FFFE8B7FBF
+        bitmaps.deb[0] = 0xFE8B7FBF;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x00000000000067DF
+        bitmaps.teb[0] = 0x67DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C00000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000009EB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x9EB;
+        // DEB - 0x0000000000000000000001FFFE8801BF
+        bitmaps.deb[0] = 0xFE8801BF;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x000000000000641F
+        bitmaps.teb[0] = 0x641F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3CF81C0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000096B1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x96B;
+        // DEB - 0x00000000000000000000017FFE8B7FBF
+        bitmaps.deb[0] = 0xFE8B7FBF;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x00000000000027DF
+        bitmaps.teb[0] = 0x27DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C02000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000096B01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x96B;
+        // DEB - 0x00000000000000000000017FFE8801BF
+        bitmaps.deb[0] = 0xFE8801BF;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x000000000000241F
+        bitmaps.teb[0] = 0x241F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3CFA1C0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000008EB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x8EB;
+        // DEB - 0x0000000000000000000000BFFE8B7FBF
+        bitmaps.deb[0] = 0xFE8B7FBF;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x00000000000047DF
+        bitmaps.teb[0] = 0x47DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C05000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000008EB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x8EB;
+        // DEB - 0x0000000000000000000000BFFE8801BF
+        bitmaps.deb[0] = 0xFE8801BF;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x000000000000441F
+        bitmaps.teb[0] = 0x441F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3CFD1C0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000008011E404403
+        bitmaps.rbm[0] = 0x1E404403;
+        bitmaps.rbm[1] = 0x801;
+        // DEB - 0x000000000000000000000000000B7FBF
+        bitmaps.deb[0] = 0xB7FBF;
+        // TEB - 0x00000000000007DF
+        bitmaps.teb[0] = 0x7DF;
+        // REB - 0x0000000000000000000000000407F0FB
+        bitmaps.reb[0] = 0x407F0FB;
+
+        // Kernels disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 21 b2i_ds_1_0_1- inner node disablement
+        // 22 upscaler_1_0- inner node disablement
+        // 23 lbff_crop_espa_1_1- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C07E1FFC0;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000080100404403
+        bitmaps.rbm[0] = 0x404403;
+        bitmaps.rbm[1] = 0x801;
+        // DEB - 0x000000000000000000000000000801BF
+        bitmaps.deb[0] = 0x801BF;
+        // TEB - 0x000000000000041F
+        bitmaps.teb[0] = 0x41F;
+        // REB - 0x000000000000000000000000040430FB
+        bitmaps.reb[0] = 0x40430FB;
+
+        // Kernels disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 21 b2i_ds_1_0_1- inner node disablement
+        // 22 upscaler_1_0- inner node disablement
+        // 23 lbff_crop_espa_1_1- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3CFFFDFFC0;
+    }
+    else if (nodeRelevantInnerOptions == (noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000003EB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x3EB;
+        // DEB - 0x000000000000000000001FFFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE3DF
+        bitmaps.teb[0] = 0xCE3DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x300020000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000003EB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x3EB;
+        // DEB - 0x000000000000000000001FFFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE01F
+        bitmaps.teb[0] = 0xCE01F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F81E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036B1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x36B;
+        // DEB - 0x000000000000000000001F7FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA3DF
+        bitmaps.teb[0] = 0xCA3DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x302020000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036B01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x36B;
+        // DEB - 0x000000000000000000001F7FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA01F
+        bitmaps.teb[0] = 0xCA01F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FA1E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x2EB;
+        // DEB - 0x000000000000000000001EBFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC3DF
+        bitmaps.teb[0] = 0xCC3DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x305020000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x2EB;
+        // DEB - 0x000000000000000000001EBFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC01F
+        bitmaps.teb[0] = 0xCC01F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FD1E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026B1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x26B;
+        // DEB - 0x000000000000000000001E3FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C83DF
+        bitmaps.teb[0] = 0xC83DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x307020000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026B01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x26B;
+        // DEB - 0x000000000000000000001E3FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C801F
+        bitmaps.teb[0] = 0xC801F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FF1E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x1EB;
+        // DEB - 0x0000000000000000000001FFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x00000000000063DF
+        bitmaps.teb[0] = 0x63DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F00020000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x1EB;
+        // DEB - 0x0000000000000000000001FFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x000000000000601F
+        bitmaps.teb[0] = 0x601F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FF81E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016B1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x16B;
+        // DEB - 0x00000000000000000000017FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x00000000000023DF
+        bitmaps.teb[0] = 0x23DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F02020000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016B01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x16B;
+        // DEB - 0x00000000000000000000017FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x000000000000201F
+        bitmaps.teb[0] = 0x201F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FFA1E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xEB;
+        // DEB - 0x0000000000000000000000BFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x00000000000043DF
+        bitmaps.teb[0] = 0x43DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F05020000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EB01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xEB;
+        // DEB - 0x0000000000000000000000BFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x000000000000401F
+        bitmaps.teb[0] = 0x401F;
+        // REB - 0x00000000000000000000000005DC30FB
+        bitmaps.reb[0] = 0x5DC30FB;
+
+        // Kernels disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FFD1E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000011E404403
+        bitmaps.rbm[0] = 0x1E404403;
+        bitmaps.rbm[1] = 0x1;
+        // DEB - 0x00000000000000000000000000037E3F
+        bitmaps.deb[0] = 0x37E3F;
+        // TEB - 0x00000000000003DF
+        bitmaps.teb[0] = 0x3DF;
+        // REB - 0x0000000000000000000000000407F0FB
+        bitmaps.reb[0] = 0x407F0FB;
+
+        // Kernels disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 17 pext_1_0- inner node disablement
+        // 21 b2i_ds_1_0_1- inner node disablement
+        // 22 upscaler_1_0- inner node disablement
+        // 23 lbff_crop_espa_1_1- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F07E3FFC0;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noLbOutputMe | noPdaf))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000000000000000
+        // DEB - 0x00000000000000000000000000000000
+        // TEB - 0x0000000000000000
+        // REB - 0x00000000000000000000000000000000
+
+        // Kernels disablement
+        // 0 ifd_pipe_1_1- inner node disablement
+        // 1 bxt_blc- inner node disablement
+        // 2 linearization2_0- inner node disablement
+        // 3 ifd_lsc_1_1- inner node disablement
+        // 4 lsc_1_2- inner node disablement
+        // 5 gd_dpc_2_2- inner node disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 17 pext_1_0- inner node disablement
+        // 18 rgbs_grid_1_1- inner node disablement
+        // 19 ccm_3a_2_0- inner node disablement
+        // 20 fr_grid_1_0- inner node disablement
+        // 21 b2i_ds_1_0_1- inner node disablement
+        // 22 upscaler_1_0- inner node disablement
+        // 23 lbff_crop_espa_1_1- inner node disablement
+        // 24 tnr_scale_lb- inner node disablement
+        // 25 odr_output_ps_1_1- inner node disablement
+        // 26 odr_output_me_1_1- inner node disablement
+        // 27 odr_awb_std_1_1- inner node disablement
+        // 28 odr_awb_sat_1_1- inner node disablement
+        // 29 aestatistics_2_1- inner node disablement
+        // 30 odr_ae_1_1- inner node disablement
+        // 31 odr_af_std_1_1- inner node disablement
+        // 32 pafstatistics_1_2- inner node disablement
+        // 33 odr_pdaf_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FFFFFFFFF;
+    }
+    else // default inner node
+    {
+        // RBM - 0x000000000000000000000BEB1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xBEB;
+        // DEB - 0x000000000000000000001FFFFE8B7FBF
+        bitmaps.deb[0] = 0xFE8B7FBF;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE7DF
+        bitmaps.teb[0] = 0xCE7DF;
+        // REB - 0x00000000000000000000000005DFF0FB
+        bitmaps.reb[0] = 0x5DFF0FB;
+    }
+
+    SetDisabledKernels(disabledRunKernelsBitmap);
+}
+
+void LbffRgbIrWithGmvOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
+{
+    // Kernel default enablement
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    {
+        for (uint8_t i = 0; i < 38; ++i)
+        {
+            kernelListOptions[j][i].run_kernel.enable = 1;
+        }
+    }
+
+    const InnerNodeOptionsFlags nodeRelevantInnerOptions = nodeInnerOptions & (no3A | noIr | noLbOutputPs | noLbOutputMe | noGmv);
+    bitmaps = HwBitmaps(); // reset HW bitmaps
+    uint64_t disabledRunKernelsBitmap = 0x0;
+    if (nodeRelevantInnerOptions == (no3A))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000007EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x7EA;
+        // DEB - 0x000000000000000000001FFFFEF0003F
+        bitmaps.deb[0] = 0xFEF0003F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE81F
+        bitmaps.teb[0] = 0xCE81F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x381800390;
+    }
+    else if (nodeRelevantInnerOptions == (noIr))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000003EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x3EA;
+        // DEB - 0x000000000000000000001FFFFEB3FE3F
+        bitmaps.deb[0] = 0xFEB3FE3F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000DE3DF
+        bitmaps.teb[0] = 0xDE3DF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x40;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noIr))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000003EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x3EA;
+        // DEB - 0x000000000000000000001FFFFEB0003F
+        bitmaps.deb[0] = 0xFEB0003F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE01F
+        bitmaps.teb[0] = 0xCE01F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3818003D0;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000076A3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x76A;
+        // DEB - 0x000000000000000000001F7FFEF3FE3F
+        bitmaps.deb[0] = 0xFEF3FE3F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000DABDF
+        bitmaps.teb[0] = 0xDABDF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x20000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000076A01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x76A;
+        // DEB - 0x000000000000000000001F7FFEF0003F
+        bitmaps.deb[0] = 0xFEF0003F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA81F
+        bitmaps.teb[0] = 0xCA81F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3A1800390;
+    }
+    else if (nodeRelevantInnerOptions == (noIr | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036A3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x36A;
+        // DEB - 0x000000000000000000001F7FFEB3FE3F
+        bitmaps.deb[0] = 0xFEB3FE3F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000DA3DF
+        bitmaps.teb[0] = 0xDA3DF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x20000040;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noIr | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036A01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x36A;
+        // DEB - 0x000000000000000000001F7FFEB0003F
+        bitmaps.deb[0] = 0xFEB0003F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA01F
+        bitmaps.teb[0] = 0xCA01F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3A18003D0;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000006EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x6EA;
+        // DEB - 0x000000000000000000001EBFFEF3FE3F
+        bitmaps.deb[0] = 0xFEF3FE3F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000DCBDF
+        bitmaps.teb[0] = 0xDCBDF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x50000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000006EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x6EA;
+        // DEB - 0x000000000000000000001EBFFEF0003F
+        bitmaps.deb[0] = 0xFEF0003F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC81F
+        bitmaps.teb[0] = 0xCC81F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3D1800390;
+    }
+    else if (nodeRelevantInnerOptions == (noIr | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x2EA;
+        // DEB - 0x000000000000000000001EBFFEB3FE3F
+        bitmaps.deb[0] = 0xFEB3FE3F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000DC3DF
+        bitmaps.teb[0] = 0xDC3DF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x50000040;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noIr | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x2EA;
+        // DEB - 0x000000000000000000001EBFFEB0003F
+        bitmaps.deb[0] = 0xFEB0003F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC01F
+        bitmaps.teb[0] = 0xCC01F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3D18003D0;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000066A3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x66A;
+        // DEB - 0x000000000000000000001E3FFEF3FE3F
+        bitmaps.deb[0] = 0xFEF3FE3F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000D8BDF
+        bitmaps.teb[0] = 0xD8BDF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x70000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000066A01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x66A;
+        // DEB - 0x000000000000000000001E3FFEF0003F
+        bitmaps.deb[0] = 0xFEF0003F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C881F
+        bitmaps.teb[0] = 0xC881F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F1800390;
+    }
+    else if (nodeRelevantInnerOptions == (noIr | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026A3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x26A;
+        // DEB - 0x000000000000000000001E3FFEB3FE3F
+        bitmaps.deb[0] = 0xFEB3FE3F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000D83DF
+        bitmaps.teb[0] = 0xD83DF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x70000040;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noIr | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026A01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x26A;
+        // DEB - 0x000000000000000000001E3FFEB0003F
+        bitmaps.deb[0] = 0xFEB0003F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C801F
+        bitmaps.teb[0] = 0xC801F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F18003D0;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000005EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x5EA;
+        // DEB - 0x0000000000000000000001FFFEF3FE3F
+        bitmaps.deb[0] = 0xFEF3FE3F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x0000000000016BDF
+        bitmaps.teb[0] = 0x16BDF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C00000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000005EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x5EA;
+        // DEB - 0x0000000000000000000001FFFEF0003F
+        bitmaps.deb[0] = 0xFEF0003F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x000000000000681F
+        bitmaps.teb[0] = 0x681F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F81800390;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noIr))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x1EA;
+        // DEB - 0x0000000000000000000001FFFEB3FE3F
+        bitmaps.deb[0] = 0xFEB3FE3F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x00000000000163DF
+        bitmaps.teb[0] = 0x163DF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C00000040;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noIr))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x1EA;
+        // DEB - 0x0000000000000000000001FFFEB0003F
+        bitmaps.deb[0] = 0xFEB0003F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x000000000000601F
+        bitmaps.teb[0] = 0x601F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3F818003D0;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000056A3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x56A;
+        // DEB - 0x00000000000000000000017FFEF3FE3F
+        bitmaps.deb[0] = 0xFEF3FE3F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x0000000000012BDF
+        bitmaps.teb[0] = 0x12BDF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C20000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000056A01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x56A;
+        // DEB - 0x00000000000000000000017FFEF0003F
+        bitmaps.deb[0] = 0xFEF0003F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x000000000000281F
+        bitmaps.teb[0] = 0x281F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FA1800390;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noIr | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016A3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x16A;
+        // DEB - 0x00000000000000000000017FFEB3FE3F
+        bitmaps.deb[0] = 0xFEB3FE3F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x00000000000123DF
+        bitmaps.teb[0] = 0x123DF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C20000040;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noIr | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016A01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x16A;
+        // DEB - 0x00000000000000000000017FFEB0003F
+        bitmaps.deb[0] = 0xFEB0003F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x000000000000201F
+        bitmaps.teb[0] = 0x201F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FA18003D0;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000004EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x4EA;
+        // DEB - 0x0000000000000000000000BFFEF3FE3F
+        bitmaps.deb[0] = 0xFEF3FE3F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x0000000000014BDF
+        bitmaps.teb[0] = 0x14BDF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C50000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000004EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0x4EA;
+        // DEB - 0x0000000000000000000000BFFEF0003F
+        bitmaps.deb[0] = 0xFEF0003F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x000000000000481F
+        bitmaps.teb[0] = 0x481F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FD1800390;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noIr | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0xEA;
+        // DEB - 0x0000000000000000000000BFFEB3FE3F
+        bitmaps.deb[0] = 0xFEB3FE3F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x00000000000143DF
+        bitmaps.teb[0] = 0x143DF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C50000040;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noIr | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EA01019243
+        bitmaps.rbm[0] = 0x1019243;
+        bitmaps.rbm[1] = 0xEA;
+        // DEB - 0x0000000000000000000000BFFEB0003F
+        bitmaps.deb[0] = 0xFEB0003F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x000000000000401F
+        bitmaps.teb[0] = 0x401F;
+        // REB - 0x00000000000000000000000003D83FFB
+        bitmaps.reb[0] = 0x3D83FFB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FD18003D0;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000004003A01924F
+        bitmaps.rbm[0] = 0x3A01924F;
+        bitmaps.rbm[1] = 0x400;
+        // DEB - 0x0000000000000000000000000073FE3F
+        bitmaps.deb[0] = 0x73FE3F;
+        // TEB - 0x0000000000010BDF
+        bitmaps.teb[0] = 0x10BDF;
+        // REB - 0x0000000000000000000000000203FFFF
+        bitmaps.reb[0] = 0x203FFFF;
+
+        // Kernels disablement
+        // 12 wb_1_1- inner node disablement
+        // 13 bnlm_3_3- inner node disablement
+        // 14 bxt_demosaic- inner node disablement
+        // 15 vcsc_2_0_b- inner node disablement
+        // 16 gltm_2_0- inner node disablement
+        // 17 xnr_5_2- inner node disablement
+        // 18 vcr_3_1- inner node disablement
+        // 19 glim_2_0- inner node disablement
+        // 20 acm_1_1- inner node disablement
+        // 21 gammatm_v3- inner node disablement
+        // 22 bxt_csc- inner node disablement
+        // 25 b2i_ds_1_0_1- inner node disablement
+        // 26 upscaler_1_0- inner node disablement
+        // 27 lbff_crop_espa_1_1- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C7E7FF000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000040000899043
+        bitmaps.rbm[0] = 0x899043;
+        bitmaps.rbm[1] = 0x400;
+        // DEB - 0x00000000000000000000000000700027
+        bitmaps.deb[0] = 0x700027;
+        // TEB - 0x000000000000080F
+        bitmaps.teb[0] = 0x80F;
+        // REB - 0x00000000000000000000000002003FCB
+        bitmaps.reb[0] = 0x2003FCB;
+
+        // Kernels disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 10 ifd_lsc_1_1- inner node disablement
+        // 11 lsc_1_2- inner node disablement
+        // 12 wb_1_1- inner node disablement
+        // 13 bnlm_3_3- inner node disablement
+        // 14 bxt_demosaic- inner node disablement
+        // 15 vcsc_2_0_b- inner node disablement
+        // 16 gltm_2_0- inner node disablement
+        // 17 xnr_5_2- inner node disablement
+        // 18 vcr_3_1- inner node disablement
+        // 19 glim_2_0- inner node disablement
+        // 20 acm_1_1- inner node disablement
+        // 21 gammatm_v3- inner node disablement
+        // 22 bxt_csc- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 25 b2i_ds_1_0_1- inner node disablement
+        // 26 upscaler_1_0- inner node disablement
+        // 27 lbff_crop_espa_1_1- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FFFFFFF90;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noIr | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000003A01924F
+        bitmaps.rbm[0] = 0x3A01924F;
+        // DEB - 0x0000000000000000000000000033FE3F
+        bitmaps.deb[0] = 0x33FE3F;
+        // TEB - 0x00000000000103DF
+        bitmaps.teb[0] = 0x103DF;
+        // REB - 0x0000000000000000000000000203FFFF
+        bitmaps.reb[0] = 0x203FFFF;
+
+        // Kernels disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 12 wb_1_1- inner node disablement
+        // 13 bnlm_3_3- inner node disablement
+        // 14 bxt_demosaic- inner node disablement
+        // 15 vcsc_2_0_b- inner node disablement
+        // 16 gltm_2_0- inner node disablement
+        // 17 xnr_5_2- inner node disablement
+        // 18 vcr_3_1- inner node disablement
+        // 19 glim_2_0- inner node disablement
+        // 20 acm_1_1- inner node disablement
+        // 21 gammatm_v3- inner node disablement
+        // 22 bxt_csc- inner node disablement
+        // 25 b2i_ds_1_0_1- inner node disablement
+        // 26 upscaler_1_0- inner node disablement
+        // 27 lbff_crop_espa_1_1- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3C7E7FF040;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noIr | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000000000000000
+        // DEB - 0x00000000000000000000000000000000
+        // TEB - 0x0000000000000000
+        // REB - 0x00000000000000000000000000000000
+
+        // Kernels disablement
+        // 0 ifd_pipe_1_1- inner node disablement
+        // 1 bxt_blc- inner node disablement
+        // 2 linearization2_0- inner node disablement
+        // 3 gd_dpc_2_2- inner node disablement
+        // 4 rgbs_grid_1_1- inner node disablement
+        // 5 rgb_ir_2_0- inner node disablement
+        // 6 odr_ir_1_1- inner node disablement
+        // 7 odr_awb_std_1_1- inner node disablement
+        // 8 odr_awb_sve_1_1- inner node disablement
+        // 9 odr_awb_sat_1_1- inner node disablement
+        // 10 ifd_lsc_1_1- inner node disablement
+        // 11 lsc_1_2- inner node disablement
+        // 12 wb_1_1- inner node disablement
+        // 13 bnlm_3_3- inner node disablement
+        // 14 bxt_demosaic- inner node disablement
+        // 15 vcsc_2_0_b- inner node disablement
+        // 16 gltm_2_0- inner node disablement
+        // 17 xnr_5_2- inner node disablement
+        // 18 vcr_3_1- inner node disablement
+        // 19 glim_2_0- inner node disablement
+        // 20 acm_1_1- inner node disablement
+        // 21 gammatm_v3- inner node disablement
+        // 22 bxt_csc- inner node disablement
+        // 23 ccm_3a_2_0- inner node disablement
+        // 24 fr_grid_1_0- inner node disablement
+        // 25 b2i_ds_1_0_1- inner node disablement
+        // 26 upscaler_1_0- inner node disablement
+        // 27 lbff_crop_espa_1_1- inner node disablement
+        // 28 tnr_scale_lb- inner node disablement
+        // 29 odr_output_ps_1_1- inner node disablement
+        // 30 odr_output_me_1_1- inner node disablement
+        // 31 aestatistics_2_1- inner node disablement
+        // 32 odr_ae_1_1- inner node disablement
+        // 33 odr_af_std_1_1- inner node disablement
+        // 34 ifd_gmv_1_1- inner node disablement
+        // 35 gmv_statistics_1_0- inner node disablement
+        // 36 odr_gmv_match_1_1- inner node disablement
+        // 37 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3FFFFFFFFF;
+    }
+    else // default inner node
+    {
+        // RBM - 0x0000000000000000000007EA3B01924F
+        bitmaps.rbm[0] = 0x3B01924F;
+        bitmaps.rbm[1] = 0x7EA;
+        // DEB - 0x000000000000000000001FFFFEF3FE3F
+        bitmaps.deb[0] = 0xFEF3FE3F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000DEBDF
+        bitmaps.teb[0] = 0xDEBDF;
+        // REB - 0x00000000000000000000000003DBFFFF
+        bitmaps.reb[0] = 0x3DBFFFF;
+    }
+
+    SetDisabledKernels(disabledRunKernelsBitmap);
+}
+
+void LbffIrWithGmvIrStreamOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
+{
+    // Kernel default enablement
+    for (uint32_t j = 0; j < kernelConfigurationsOptionsCount; ++j)
+    {
+        for (uint8_t i = 0; i < 35; ++i)
+        {
+            kernelListOptions[j][i].run_kernel.enable = 1;
+        }
+
+        // Pass-through kernels
+        kernelListOptions[j][6].run_kernel.enable = 0; // wb_1_1
+        kernelListOptions[j][8].run_kernel.enable = 0; // bxt_demosaic
+        kernelListOptions[j][14].run_kernel.enable = 0; // acm_1_1
+    }
+
+    const InnerNodeOptionsFlags nodeRelevantInnerOptions = nodeInnerOptions & (no3A | noLbOutputPs | noLbOutputMe | noGmv);
+    bitmaps = HwBitmaps(); // reset HW bitmaps
+    uint64_t disabledRunKernelsBitmap = 0x0;
+    if (nodeRelevantInnerOptions == (no3A))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000003EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x3EA;
+        // DEB - 0x000000000000000000001FFFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE01F
+        bitmaps.teb[0] = 0xCE01F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7C0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x36A;
+        // DEB - 0x000000000000000000001F7FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA3DF
+        bitmaps.teb[0] = 0xCA3DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x1000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000036A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x36A;
+        // DEB - 0x000000000000000000001F7FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1F7F;
+        // TEB - 0x00000000000CA01F
+        bitmaps.teb[0] = 0xCA01F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7D0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x2EA;
+        // DEB - 0x000000000000000000001EBFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC3DF
+        bitmaps.teb[0] = 0xCC3DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x2800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000002EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x2EA;
+        // DEB - 0x000000000000000000001EBFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1EBF;
+        // TEB - 0x00000000000CC01F
+        bitmaps.teb[0] = 0xCC01F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7E8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x26A;
+        // DEB - 0x000000000000000000001E3FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C83DF
+        bitmaps.teb[0] = 0xC83DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x3800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000026A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x26A;
+        // DEB - 0x000000000000000000001E3FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1E3F;
+        // TEB - 0x00000000000C801F
+        bitmaps.teb[0] = 0xC801F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7F8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x1EA;
+        // DEB - 0x0000000000000000000001FFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x00000000000063DF
+        bitmaps.teb[0] = 0x63DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x780000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000001EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x1EA;
+        // DEB - 0x0000000000000000000001FFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x1FF;
+        // TEB - 0x000000000000601F
+        bitmaps.teb[0] = 0x601F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FC0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016A1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x16A;
+        // DEB - 0x00000000000000000000017FFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x00000000000023DF
+        bitmaps.teb[0] = 0x23DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x781000000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000016A01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0x16A;
+        // DEB - 0x00000000000000000000017FFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0x17F;
+        // TEB - 0x000000000000201F
+        bitmaps.teb[0] = 0x201F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FD0E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0xEA;
+        // DEB - 0x0000000000000000000000BFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x00000000000043DF
+        bitmaps.teb[0] = 0x43DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+
+        // Kernels disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x782800000;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000EA01404403
+        bitmaps.rbm[0] = 0x1404403;
+        bitmaps.rbm[1] = 0xEA;
+        // DEB - 0x0000000000000000000000BFFE80003F
+        bitmaps.deb[0] = 0xFE80003F;
+        bitmaps.deb[1] = 0xBF;
+        // TEB - 0x000000000000401F
+        bitmaps.teb[0] = 0x401F;
+        // REB - 0x00000000000000000000000001D830FB
+        bitmaps.reb[0] = 0x1D830FB;
+
+        // Kernels disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FE8E0000;
+    }
+    else if (nodeRelevantInnerOptions == (noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x0000000000000000000000001E404403
+        bitmaps.rbm[0] = 0x1E404403;
+        // DEB - 0x00000000000000000000000000037E3F
+        bitmaps.deb[0] = 0x37E3F;
+        // TEB - 0x00000000000003DF
+        bitmaps.teb[0] = 0x3DF;
+        // REB - 0x0000000000000000000000000003F0FB
+        bitmaps.reb[0] = 0x3F0FB;
+
+        // Kernels disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 20 b2i_ds_1_0_1- inner node disablement
+        // 21 upscaler_1_0- inner node disablement
+        // 22 lbff_crop_espa_1_1- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x783F1FFC0;
+    }
+    else if (nodeRelevantInnerOptions == (no3A | noGmv | noLbOutputPs | noLbOutputMe))
+    {
+        // HW bitmaps
+        // RBM - 0x00000000000000000000000000000000
+        // DEB - 0x00000000000000000000000000000000
+        // TEB - 0x0000000000000000
+        // REB - 0x00000000000000000000000000000000
+
+        // Kernels disablement
+        // 0 ifd_pipe_1_1- inner node disablement
+        // 1 bxt_blc- inner node disablement
+        // 2 linearization2_0- inner node disablement
+        // 3 ifd_lsc_1_1- inner node disablement
+        // 4 lsc_1_2- inner node disablement
+        // 5 gd_dpc_2_2- inner node disablement
+        // 6 wb_1_1- inner node disablement
+        // 7 bnlm_3_3- inner node disablement
+        // 8 bxt_demosaic- inner node disablement
+        // 9 vcsc_2_0_b- inner node disablement
+        // 10 gltm_2_0- inner node disablement
+        // 11 xnr_5_2- inner node disablement
+        // 12 vcr_3_1- inner node disablement
+        // 13 glim_2_0- inner node disablement
+        // 14 acm_1_1- inner node disablement
+        // 15 gammatm_v3- inner node disablement
+        // 16 bxt_csc- inner node disablement
+        // 17 rgbs_grid_1_1- inner node disablement
+        // 18 ccm_3a_2_0- inner node disablement
+        // 19 fr_grid_1_0- inner node disablement
+        // 20 b2i_ds_1_0_1- inner node disablement
+        // 21 upscaler_1_0- inner node disablement
+        // 22 lbff_crop_espa_1_1- inner node disablement
+        // 23 tnr_scale_lb- inner node disablement
+        // 24 odr_output_ps_1_1- inner node disablement
+        // 25 odr_output_me_1_1- inner node disablement
+        // 26 odr_awb_std_1_1- inner node disablement
+        // 27 odr_awb_sat_1_1- inner node disablement
+        // 28 aestatistics_2_1- inner node disablement
+        // 29 odr_ae_1_1- inner node disablement
+        // 30 odr_af_std_1_1- inner node disablement
+        // 31 ifd_gmv_1_1- inner node disablement
+        // 32 gmv_statistics_1_0- inner node disablement
+        // 33 odr_gmv_match_1_1- inner node disablement
+        // 34 odr_gmv_feature_1_1- inner node disablement
+        disabledRunKernelsBitmap = 0x7FFFFFFFF;
+    }
+    else // default inner node
+    {
+        // RBM - 0x0000000000000000000003EA1F404403
+        bitmaps.rbm[0] = 0x1F404403;
+        bitmaps.rbm[1] = 0x3EA;
+        // DEB - 0x000000000000000000001FFFFE837E3F
+        bitmaps.deb[0] = 0xFE837E3F;
+        bitmaps.deb[1] = 0x1FFF;
+        // TEB - 0x00000000000CE3DF
+        bitmaps.teb[0] = 0xCE3DF;
+        // REB - 0x00000000000000000000000001DBF0FB
+        bitmaps.reb[0] = 0x1DBF0FB;
+    }
+
+    SetDisabledKernels(disabledRunKernelsBitmap);
+}
+
+void SwVaiOuterNode::setInnerNode(InnerNodeOptionsFlags nodeInnerOptions)
+{
+
+    // No inner nodes
+    (void)nodeInnerOptions;
+}
+
 /*
  * Graph 100000
  */
@@ -4989,7 +8318,6 @@ StaticGraph100000::StaticGraph100000(GraphConfiguration100000** selectedGraphCon
     link->destNode = &_bbpsNoTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[8];
     link->src = GraphElementType::BbpsNoTnr;
@@ -5090,6 +8418,8 @@ StaticGraphStatus imageSubGraphTopology100000::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayer initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerInnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffBayerInnerOptions |= (noLbOutputMe);
@@ -5156,6 +8486,388 @@ StaticGraphStatus imageSubGraphTopology100000::configInnerNodes(SubGraphInnerNod
             subGraphLinks[i]->isActive = false;
         }
      }
+
+    return StaticGraphStatus::SG_OK;
+}
+
+/*
+ * Graph 100001
+ */
+StaticGraph100001::StaticGraph100001(GraphConfiguration100001** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100001, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100001[kernelConfigurationsOptionsCount];
+    IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffBayerWithGmvOuterNodeConfiguration** lbffBayerWithGmvOuterNodeConfigurationOptions = new LbffBayerWithGmvOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwGdcOuterNodeConfiguration** swGdcOuterNodeConfigurationOptions = new SwGdcOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
+        lbffBayerWithGmvOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffBayerWithGmvOuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swGdcOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swGdcOuterNodeConfiguration;
+    }
+
+    _isysOuterNode.Init(isysOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffBayerWithGmvOuterNode.Init(lbffBayerWithGmvOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swGdcOuterNode.Init(swGdcOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysOuterNodeConfigurationOptions;
+    delete[] lbffBayerWithGmvOuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swGdcOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::Isys;
+    link->destNode = &_isysOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffBayerWithGmv;
+    link->destNode = &_lbffBayerWithGmvOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::Isys;
+    link->srcNode = &_isysOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffBayerWithGmv;
+    link->destNode = &_lbffBayerWithGmvOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 19;
+    link->dest = GraphElementType::LbffBayerWithGmv;
+    link->destNode = &_lbffBayerWithGmvOuterNode;
+    link->destTerminalId = 15;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 18;
+    link->dest = GraphElementType::GmvMatchOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::LbffBayerWithGmv;
+    link->srcNode = &_lbffBayerWithGmvOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::ImagePpp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[19];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[20];
+    link->src = GraphElementType::SwGdc;
+    link->srcNode = &_swGdcOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 21; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+        // Assign link to sub-graph
+        _imageSubGraph.links[i] = &_graphLinks[i];
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysOuterNode = &_isysOuterNode;
+    _imageSubGraph.lbffBayerWithGmvOuterNode = &_lbffBayerWithGmvOuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swGdcOuterNode = &_swGdcOuterNode;
+
+    // choose the selected sub graph
+    _selectedGraphTopology = &_imageSubGraph;
+
+    // logical node IDs
+    _imageSubGraph.isysOuterNode->contextId = 0;
+    _imageSubGraph.lbffBayerWithGmvOuterNode->contextId = 1;
+    _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swGdcOuterNode->contextId = 3;
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100001::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffBayerWithGmvOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swGdcOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100001::~StaticGraph100001()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100001::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffBayerWithGmv initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffBayerWithGmvInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerWithGmvInnerOptions |= (noBurstCapture | noIr | noPdaf);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[15]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffBayerWithGmvInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffBayerWithGmvInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffBayerWithGmvOuterNode->setInnerNode(lbffBayerWithGmvInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[3]->isActive = !(lbffBayerWithGmvInnerOptions & no3A); // lbff_Bayer_WithGmv:terminal_connect_ae_output -> ae_out
+    subGraphLinks[4]->isActive = !(lbffBayerWithGmvInnerOptions & no3A); // lbff_Bayer_WithGmv:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[5]->isActive = !(lbffBayerWithGmvInnerOptions & no3A); // lbff_Bayer_WithGmv:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[6]->isActive = !(lbffBayerWithGmvInnerOptions & no3A); // lbff_Bayer_WithGmv:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[7]->isActive = !(lbffBayerWithGmvInnerOptions & noGmv); // lbff_Bayer_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[8]->isActive = !(lbffBayerWithGmvInnerOptions & noGmv); // lbff_Bayer_WithGmv:terminal_connect_gmv_match_output -> gmv_match_out
+    subGraphLinks[15]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[18]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[19]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[9]->isActive = !(lbffBayerWithGmvInnerOptions & noLbOutputPs); // lbff_Bayer_WithGmv:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[10]->isActive = !(lbffBayerWithGmvInnerOptions & noLbOutputMe); // lbff_Bayer_WithGmv:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 21; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[7]->isActive = (lbffBayerWithGmvInnerOptions & (noGmv|noBurstCapture|noIr|noPdaf)) != (noGmv|noBurstCapture|noIr|noPdaf); // lbff_Bayer_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
 
     return StaticGraphStatus::SG_OK;
 }
@@ -5254,7 +8966,6 @@ StaticGraph100002::StaticGraph100002(GraphConfiguration100002** selectedGraphCon
     link->destNode = &_bbpsWithTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[8];
     link->src = GraphElementType::LbffBayer;
@@ -5274,7 +8985,6 @@ StaticGraph100002::StaticGraph100002(GraphConfiguration100002** selectedGraphCon
     link->destTerminalId = 10;
     link->type = LinkType::Node2Self;
     link->frameDelay = 1U;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[1];
 
     link = &_graphLinks[10];
     link->src = GraphElementType::BbpsWithTnr;
@@ -5404,6 +9114,8 @@ StaticGraphStatus imageSubGraphTopology100002::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayer initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
     // active public options according to sink mapping
 
     /*
@@ -5470,6 +9182,14 @@ StaticGraphStatus imageSubGraphTopology100002::configInnerNodes(SubGraphInnerNod
             subGraphLinks[i]->isActive = false;
         }
      }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[9]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
 
     return StaticGraphStatus::SG_OK;
 }
@@ -5589,7 +9309,6 @@ StaticGraph100003::StaticGraph100003(GraphConfiguration100003** selectedGraphCon
     link->destNode = &_bbpsWithTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[10];
     link->src = GraphElementType::LbffBayerWithGmv;
@@ -5609,7 +9328,6 @@ StaticGraph100003::StaticGraph100003(GraphConfiguration100003** selectedGraphCon
     link->destTerminalId = 10;
     link->type = LinkType::Node2Self;
     link->frameDelay = 1U;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[1];
 
     link = &_graphLinks[12];
     link->src = GraphElementType::BbpsWithTnr;
@@ -5680,13 +9398,22 @@ StaticGraph100003::StaticGraph100003(GraphConfiguration100003** selectedGraphCon
     link->type = LinkType::Node2Node;
 
     link = &_graphLinks[20];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[21];
     link->src = GraphElementType::SwGdc;
     link->srcNode = &_swGdcOuterNode;
     link->srcTerminalId = 1;
-    link->dest = GraphElementType::ProcessedVideo;
+    link->dest = GraphElementType::ProcessedMain;
     link->type = LinkType::Node2Sink;
 
-    for (uint8_t i = 0; i < 21; ++i)
+    for (uint8_t i = 0; i < 22; ++i)
     {
         // apply link configuration. select configuration with maximal size
         uint32_t selectedLinkConfig = 0;
@@ -5709,6 +9436,7 @@ StaticGraph100003::StaticGraph100003(GraphConfiguration100003** selectedGraphCon
     _imageSubGraph.isysOuterNode = &_isysOuterNode;
     _imageSubGraph.lbffBayerWithGmvOuterNode = &_lbffBayerWithGmvOuterNode;
     _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swGdcOuterNode = &_swGdcOuterNode;
 
     // choose the selected sub graph
     _selectedGraphTopology = &_imageSubGraph;
@@ -5717,6 +9445,7 @@ StaticGraph100003::StaticGraph100003(GraphConfiguration100003** selectedGraphCon
     _imageSubGraph.isysOuterNode->contextId = 0;
     _imageSubGraph.lbffBayerWithGmvOuterNode->contextId = 1;
     _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swGdcOuterNode->contextId = 3;
     // Apply a default inner nodes configuration for the selected sub graph
     SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
     if(_selectedGraphTopology != nullptr)
@@ -5769,6 +9498,8 @@ StaticGraphStatus imageSubGraphTopology100003::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayerWithGmv initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerWithGmvInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerWithGmvInnerOptions |= (noBurstCapture | noIr | noPdaf);
     // active public options according to sink mapping
 
     /*
@@ -5778,18 +9509,21 @@ StaticGraphStatus imageSubGraphTopology100003::configInnerNodes(SubGraphInnerNod
     // active public options according to sink mapping
     if (
         subGraphLinks[15]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
         true)
     {
         bbpsWithTnrInnerOptions |= noMp;
     }
     if (
         subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
         true)
     {
         bbpsWithTnrInnerOptions |= noDp;
     }
     if (
         subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[20]->linkConfiguration->bufferSize == 0 &&
         true)
     {
         bbpsWithTnrInnerOptions |= noPpp;
@@ -5817,8 +9551,11 @@ StaticGraphStatus imageSubGraphTopology100003::configInnerNodes(SubGraphInnerNod
     subGraphLinks[7]->isActive = !(lbffBayerWithGmvInnerOptions & noGmv); // lbff_Bayer_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_WithGmv:terminal_connect_gmv_input
     subGraphLinks[8]->isActive = !(lbffBayerWithGmvInnerOptions & noGmv); // lbff_Bayer_WithGmv:terminal_connect_gmv_match_output -> gmv_match_out
     subGraphLinks[15]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[18]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gdc:terminal_connect_input
     subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[19]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gdc:terminal_connect_input
     subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+    subGraphLinks[20]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> sw_gdc:terminal_connect_input
 
     /*
      * Link enablement by private inner options
@@ -5830,13 +9567,746 @@ StaticGraphStatus imageSubGraphTopology100003::configInnerNodes(SubGraphInnerNod
      * Disable links with zero buffer size
      * (used for post processing when not all links are being used)
      */
-     for (uint32_t i = 0; i < 18; i++)
+     for (uint32_t i = 0; i < 22; i++)
      {
         if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
         {
             subGraphLinks[i]->isActive = false;
         }
      }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[7]->isActive = (lbffBayerWithGmvInnerOptions & (noGmv|noBurstCapture|noIr|noPdaf)) != (noGmv|noBurstCapture|noIr|noPdaf); // lbff_Bayer_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+/*
+ * Graph 100004
+ */
+StaticGraph100004::StaticGraph100004(GraphConfiguration100004** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100004, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100004[kernelConfigurationsOptionsCount];
+    IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffBayerOuterNodeConfiguration** lbffBayerOuterNodeConfigurationOptions = new LbffBayerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwGdcOuterNodeConfiguration** swGdcOuterNodeConfigurationOptions = new SwGdcOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
+        lbffBayerOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffBayerOuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swGdcOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swGdcOuterNodeConfiguration;
+    }
+
+    _isysOuterNode.Init(isysOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffBayerOuterNode.Init(lbffBayerOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swGdcOuterNode.Init(swGdcOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysOuterNodeConfigurationOptions;
+    delete[] lbffBayerOuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swGdcOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::Isys;
+    link->destNode = &_isysOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffBayer;
+    link->destNode = &_lbffBayerOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::Isys;
+    link->srcNode = &_isysOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffBayer;
+    link->destNode = &_lbffBayerOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::ImagePpp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::SwGdc;
+    link->srcNode = &_swGdcOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 19; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+        // Assign link to sub-graph
+        _imageSubGraph.links[i] = &_graphLinks[i];
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysOuterNode = &_isysOuterNode;
+    _imageSubGraph.lbffBayerOuterNode = &_lbffBayerOuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swGdcOuterNode = &_swGdcOuterNode;
+
+    // choose the selected sub graph
+    _selectedGraphTopology = &_imageSubGraph;
+
+    // logical node IDs
+    _imageSubGraph.isysOuterNode->contextId = 0;
+    _imageSubGraph.lbffBayerOuterNode->contextId = 1;
+    _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swGdcOuterNode->contextId = 3;
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100004::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffBayerOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swGdcOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100004::~StaticGraph100004()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100004::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffBayer initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffBayerInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[13]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[14]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[15]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffBayerInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffBayerInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffBayerOuterNode->setInnerNode(lbffBayerInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[3]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_ae_output -> ae_out
+    subGraphLinks[4]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[5]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[6]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[13]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[14]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[15]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[7]->isActive = !(lbffBayerInnerOptions & noLbOutputPs); // lbff_Bayer:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[8]->isActive = !(lbffBayerInnerOptions & noLbOutputMe); // lbff_Bayer:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 19; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[9]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+/*
+ * Graph 100005
+ */
+StaticGraph100005::StaticGraph100005(GraphConfiguration100005** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100005, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100005[kernelConfigurationsOptionsCount];
+    IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffBayerOuterNodeConfiguration** lbffBayerOuterNodeConfigurationOptions = new LbffBayerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions = new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
+        lbffBayerOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffBayerOuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swNntmOuterNodeConfiguration;
+    }
+
+    _isysOuterNode.Init(isysOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffBayerOuterNode.Init(lbffBayerOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysOuterNodeConfigurationOptions;
+    delete[] lbffBayerOuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::Isys;
+    link->destNode = &_isysOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffBayer;
+    link->destNode = &_lbffBayerOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::Isys;
+    link->srcNode = &_isysOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffBayer;
+    link->destNode = &_lbffBayerOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::ImagePpp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 19; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+        // Assign link to sub-graph
+        _imageSubGraph.links[i] = &_graphLinks[i];
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysOuterNode = &_isysOuterNode;
+    _imageSubGraph.lbffBayerOuterNode = &_lbffBayerOuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
+
+    // choose the selected sub graph
+    _selectedGraphTopology = &_imageSubGraph;
+
+    // logical node IDs
+    _imageSubGraph.isysOuterNode->contextId = 0;
+    _imageSubGraph.lbffBayerOuterNode->contextId = 1;
+    _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swNntmOuterNode->contextId = 3;
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100005::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffBayerOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100005::~StaticGraph100005()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100005::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffBayer initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffBayerInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[13]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[14]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[15]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffBayerInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffBayerInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffBayerOuterNode->setInnerNode(lbffBayerInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[3]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_ae_output -> ae_out
+    subGraphLinks[4]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[5]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[6]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[13]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
+    subGraphLinks[14]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
+    subGraphLinks[15]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[7]->isActive = !(lbffBayerInnerOptions & noLbOutputPs); // lbff_Bayer:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[8]->isActive = !(lbffBayerInnerOptions & noLbOutputMe); // lbff_Bayer:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 19; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[9]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
 
     return StaticGraphStatus::SG_OK;
 }
@@ -5985,7 +10455,6 @@ StaticGraph100006::StaticGraph100006(GraphConfiguration100006** selectedGraphCon
     link->destNode = &_bbpsWithTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
     _imageSubGraph.links[8] = link;
     _image_irSubGraph.links[8] = link;
 
@@ -6009,7 +10478,6 @@ StaticGraph100006::StaticGraph100006(GraphConfiguration100006** selectedGraphCon
     link->destTerminalId = 10;
     link->type = LinkType::Node2Self;
     link->frameDelay = 1U;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[1];
     _imageSubGraph.links[10] = link;
     _image_irSubGraph.links[10] = link;
 
@@ -6130,7 +10598,6 @@ StaticGraph100006::StaticGraph100006(GraphConfiguration100006** selectedGraphCon
     link->destNode = &_bbpsIrWithTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[2];
     _irSubGraph.links[14] = link;
     _image_irSubGraph.links[23] = link;
 
@@ -6154,7 +10621,6 @@ StaticGraph100006::StaticGraph100006(GraphConfiguration100006** selectedGraphCon
     link->destTerminalId = 10;
     link->type = LinkType::Node2Self;
     link->frameDelay = 1U;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[3];
     _irSubGraph.links[16] = link;
     _image_irSubGraph.links[25] = link;
 
@@ -6367,6 +10833,8 @@ StaticGraphStatus imageSubGraphTopology100006::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffRgbIr initial inner node configuration
      */
     InnerNodeOptionsFlags lbffRgbIrInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffRgbIrInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffRgbIrInnerOptions |= (noIr);
@@ -6437,6 +10905,14 @@ StaticGraphStatus imageSubGraphTopology100006::configInnerNodes(SubGraphInnerNod
         }
      }
 
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
     return StaticGraphStatus::SG_OK;
 }
 
@@ -6452,6 +10928,8 @@ StaticGraphStatus irSubGraphTopology100006::configInnerNodes(SubGraphInnerNodeCo
      * Setting Node lbffRgbIr initial inner node configuration
      */
     InnerNodeOptionsFlags lbffRgbIrInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffRgbIrInnerOptions |= (noGmv | noBurstCapture | noLbOutputPs | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffRgbIrInnerOptions |= (noLbOutputPs | noLbOutputMe);
@@ -6460,6 +10938,8 @@ StaticGraphStatus irSubGraphTopology100006::configInnerNodes(SubGraphInnerNodeCo
      * Setting Node lbffIrNoGmvIrStream initial inner node configuration
      */
     InnerNodeOptionsFlags lbffIrNoGmvIrStreamInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffIrNoGmvIrStreamInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
     // active public options according to sink mapping
 
     /*
@@ -6523,6 +11003,14 @@ StaticGraphStatus irSubGraphTopology100006::configInnerNodes(SubGraphInnerNodeCo
         }
      }
 
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[16]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[17]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[18]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[19]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
     return StaticGraphStatus::SG_OK;
 }
 
@@ -6571,6 +11059,8 @@ StaticGraphStatus image_irSubGraphTopology100006::configInnerNodes(SubGraphInner
      * Setting Node lbffIrNoGmvIrStream initial inner node configuration
      */
     InnerNodeOptionsFlags lbffIrNoGmvIrStreamInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffIrNoGmvIrStreamInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
     // active public options according to sink mapping
 
     /*
@@ -6641,6 +11131,18 @@ StaticGraphStatus image_irSubGraphTopology100006::configInnerNodes(SubGraphInner
             subGraphLinks[i]->isActive = false;
         }
      }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+    subGraphLinks[25]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[26]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[27]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[28]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
 
     return StaticGraphStatus::SG_OK;
 }
@@ -6771,7 +11273,7 @@ StaticGraphStatus imageSubGraphTopology100007::configInnerNodes(SubGraphInnerNod
      */
     InnerNodeOptionsFlags lbffBayerBurstOutNo3AInnerOptions = imagePublicInnerNodeConfiguration;
     // always active public inner options
-    lbffBayerBurstOutNo3AInnerOptions |= (noGmv);
+    lbffBayerBurstOutNo3AInnerOptions |= (no3A | noGmv | noIr | noLbOutputPs | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffBayerBurstOutNo3AInnerOptions |= (noLbOutputPs | noLbOutputMe | noPdaf);
@@ -6952,7 +11454,6 @@ StaticGraph100008::StaticGraph100008(GraphConfiguration100008** selectedGraphCon
     link->destNode = &_bbpsNoTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
     _imageSubGraph.links[8] = link;
     _image_irSubGraph.links[8] = link;
 
@@ -7038,7 +11539,6 @@ StaticGraph100008::StaticGraph100008(GraphConfiguration100008** selectedGraphCon
     link->destNode = &_bbpsIrNoTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[1];
     _irSubGraph.links[14] = link;
     _image_irSubGraph.links[18] = link;
 
@@ -7216,6 +11716,8 @@ StaticGraphStatus imageSubGraphTopology100008::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffRgbIr initial inner node configuration
      */
     InnerNodeOptionsFlags lbffRgbIrInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffRgbIrInnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffRgbIrInnerOptions |= (noIr | noLbOutputMe);
@@ -7299,6 +11801,8 @@ StaticGraphStatus irSubGraphTopology100008::configInnerNodes(SubGraphInnerNodeCo
      * Setting Node lbffRgbIr initial inner node configuration
      */
     InnerNodeOptionsFlags lbffRgbIrInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffRgbIrInnerOptions |= (noGmv | noBurstCapture | noLbOutputPs | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffRgbIrInnerOptions |= (noLbOutputPs | noLbOutputMe);
@@ -7307,6 +11811,8 @@ StaticGraphStatus irSubGraphTopology100008::configInnerNodes(SubGraphInnerNodeCo
      * Setting Node lbffIrNoGmvIrStream initial inner node configuration
      */
     InnerNodeOptionsFlags lbffIrNoGmvIrStreamInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffIrNoGmvIrStreamInnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffIrNoGmvIrStreamInnerOptions |= (noLbOutputMe);
@@ -7420,6 +11926,8 @@ StaticGraphStatus image_irSubGraphTopology100008::configInnerNodes(SubGraphInner
      * Setting Node lbffIrNoGmvIrStream initial inner node configuration
      */
     InnerNodeOptionsFlags lbffIrNoGmvIrStreamInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffIrNoGmvIrStreamInnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffIrNoGmvIrStreamInnerOptions |= (noLbOutputMe);
@@ -7659,6 +12167,8 @@ StaticGraphStatus imageSubGraphTopology100015::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayer initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
     // active public options according to sink mapping
     // active private inner options according to links
     if (
@@ -7968,7 +12478,6 @@ StaticGraph100025::StaticGraph100025(GraphConfiguration100025** selectedGraphCon
     link->destNode = &_bbpsNoTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[8];
     link->src = GraphElementType::BbpsNoTnr;
@@ -8069,6 +12578,8 @@ StaticGraphStatus imageSubGraphTopology100025::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffIrNoGmv initial inner node configuration
      */
     InnerNodeOptionsFlags lbffIrNoGmvInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffIrNoGmvInnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffIrNoGmvInnerOptions |= (noLbOutputMe);
@@ -8342,7 +12853,6 @@ StaticGraph100027::StaticGraph100027(GraphConfiguration100027** selectedGraphCon
     link->destNode = &_bbpsNoTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[11];
     link->src = GraphElementType::BbpsNoTnr;
@@ -8443,6 +12953,8 @@ StaticGraphStatus imageSubGraphTopology100027::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayerPdaf2 initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerPdaf2InnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerPdaf2InnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe);
     // active public options according to sink mapping
     // always active private inner options
     lbffBayerPdaf2InnerOptions |= (noLbOutputMe);
@@ -8615,7 +13127,6 @@ StaticGraph100028::StaticGraph100028(GraphConfiguration100028** selectedGraphCon
     link->destNode = &_bbpsNoTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[9];
     link->src = GraphElementType::BbpsNoTnr;
@@ -8716,6 +13227,8 @@ StaticGraphStatus imageSubGraphTopology100028::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayerPdaf3 initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerPdaf3InnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerPdaf3InnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe);
     // active public options according to sink mapping
     // always active private inner options
     lbffBayerPdaf3InnerOptions |= (noLbOutputMe);
@@ -8904,7 +13417,6 @@ StaticGraph100029::StaticGraph100029(GraphConfiguration100029** selectedGraphCon
     link->destNode = &_bbpsWithTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[11];
     link->src = GraphElementType::LbffBayerPdaf2;
@@ -8924,7 +13436,6 @@ StaticGraph100029::StaticGraph100029(GraphConfiguration100029** selectedGraphCon
     link->destTerminalId = 10;
     link->type = LinkType::Node2Self;
     link->frameDelay = 1U;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[1];
 
     link = &_graphLinks[13];
     link->src = GraphElementType::BbpsWithTnr;
@@ -9054,6 +13565,8 @@ StaticGraphStatus imageSubGraphTopology100029::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayerPdaf2 initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerPdaf2InnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerPdaf2InnerOptions |= (noGmv | noBurstCapture | noIr);
     // active public options according to sink mapping
 
     /*
@@ -9121,6 +13634,14 @@ StaticGraphStatus imageSubGraphTopology100029::configInnerNodes(SubGraphInnerNod
             subGraphLinks[i]->isActive = false;
         }
      }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[15]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
 
     return StaticGraphStatus::SG_OK;
 }
@@ -9226,7 +13747,6 @@ StaticGraph100030::StaticGraph100030(GraphConfiguration100030** selectedGraphCon
     link->destNode = &_bbpsWithTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[9];
     link->src = GraphElementType::LbffBayerPdaf3;
@@ -9246,7 +13766,6 @@ StaticGraph100030::StaticGraph100030(GraphConfiguration100030** selectedGraphCon
     link->destTerminalId = 10;
     link->type = LinkType::Node2Self;
     link->frameDelay = 1U;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[1];
 
     link = &_graphLinks[11];
     link->src = GraphElementType::BbpsWithTnr;
@@ -9376,6 +13895,8 @@ StaticGraphStatus imageSubGraphTopology100030::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffBayerPdaf3 initial inner node configuration
      */
     InnerNodeOptionsFlags lbffBayerPdaf3InnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerPdaf3InnerOptions |= (noGmv | noBurstCapture | noIr);
     // active public options according to sink mapping
 
     /*
@@ -9444,6 +13965,14 @@ StaticGraphStatus imageSubGraphTopology100030::configInnerNodes(SubGraphInnerNod
         }
      }
 
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
     return StaticGraphStatus::SG_OK;
 }
 
@@ -9462,6 +13991,7 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     LbffDolOuterNodeConfiguration** lbffDolOuterNodeConfigurationOptions = new LbffDolOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions = new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     SwGtmOuterNodeConfiguration** swGtmOuterNodeConfigurationOptions = new SwGtmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions = new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
     for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -9471,6 +14001,7 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
         lbffDolOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffDolOuterNodeConfiguration;
         bbpsNoTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsNoTnrOuterNodeConfiguration;
         swGtmOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swGtmOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swNntmOuterNodeConfiguration;
     }
 
     _isysDolOuterNode.Init(isysDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
@@ -9478,12 +14009,14 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     _lbffDolOuterNode.Init(lbffDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
     _bbpsNoTnrOuterNode.Init(bbpsNoTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
     _swGtmOuterNode.Init(swGtmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
 
     delete[] isysDolOuterNodeConfigurationOptions;
     delete[] swDolOuterNodeConfigurationOptions;
     delete[] lbffDolOuterNodeConfigurationOptions;
     delete[] bbpsNoTnrOuterNodeConfigurationOptions;
     delete[] swGtmOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
 
     // Use default configuration
     updateConfiguration(0);
@@ -9574,7 +14107,6 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     link->destNode = &_bbpsNoTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[11];
     link->src = GraphElementType::BbpsNoTnr;
@@ -9619,10 +14151,35 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     link->src = GraphElementType::SwGtm;
     link->srcNode = &_swGtmOuterNode;
     link->srcTerminalId = 1;
-    link->dest = GraphElementType::ProcessedVideo;
+    link->dest = GraphElementType::ProcessedMain;
     link->type = LinkType::Node2Sink;
 
-    for (uint8_t i = 0; i < 17; ++i)
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsNoTnr;
+    link->srcNode = &_bbpsNoTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::BbpsNoTnr;
+    link->srcNode = &_bbpsNoTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[19];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 20; ++i)
     {
         // apply link configuration. select configuration with maximal size
         uint32_t selectedLinkConfig = 0;
@@ -9646,6 +14203,8 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     _imageSubGraph.swDolOuterNode = &_swDolOuterNode;
     _imageSubGraph.lbffDolOuterNode = &_lbffDolOuterNode;
     _imageSubGraph.bbpsNoTnrOuterNode = &_bbpsNoTnrOuterNode;
+    _imageSubGraph.swGtmOuterNode = &_swGtmOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
 
     // choose the selected sub graph
     _selectedGraphTopology = &_imageSubGraph;
@@ -9655,6 +14214,8 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     _imageSubGraph.swDolOuterNode->contextId = 1;
     _imageSubGraph.lbffDolOuterNode->contextId = 2;
     _imageSubGraph.bbpsNoTnrOuterNode->contextId = 3;
+    _imageSubGraph.swGtmOuterNode->contextId = 4;
+    _imageSubGraph.swNntmOuterNode->contextId = 5;
     // Apply a default inner nodes configuration for the selected sub graph
     SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
     if(_selectedGraphTopology != nullptr)
@@ -9691,6 +14252,11 @@ StaticGraphStatus StaticGraph100031::updateConfiguration(uint32_t selectedIndex)
     {
         return res;
     }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
     return StaticGraphStatus::SG_OK;
 }
 
@@ -9712,6 +14278,8 @@ StaticGraphStatus imageSubGraphTopology100031::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffDol initial inner node configuration
      */
     InnerNodeOptionsFlags lbffDolInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffDolInnerOptions |= (noGmv | noBurstCapture | noIr | noLbOutputMe | noPdaf);
     // active public options according to sink mapping
     // always active private inner options
     lbffDolInnerOptions |= (noLbOutputMe);
@@ -9723,12 +14291,16 @@ StaticGraphStatus imageSubGraphTopology100031::configInnerNodes(SubGraphInnerNod
     // active public options according to sink mapping
     if (
         subGraphLinks[11]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[14]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
         true)
     {
         bbpsNoTnrInnerOptions |= noMp;
     }
     if (
         subGraphLinks[12]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[15]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
         true)
     {
         bbpsNoTnrInnerOptions |= noDp;
@@ -9759,7 +14331,11 @@ StaticGraphStatus imageSubGraphTopology100031::configInnerNodes(SubGraphInnerNod
     subGraphLinks[8]->isActive = !(lbffDolInnerOptions & no3A); // lbff_Dol:terminal_connect_awb_std_output -> awb_std_out
     subGraphLinks[9]->isActive = !(lbffDolInnerOptions & no3A); // lbff_Dol:terminal_connect_awb_sat_output -> awb_sat_out
     subGraphLinks[11]->isActive = !(bbpsNoTnrInnerOptions & noMp); // bbps_NoTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[14]->isActive = !(bbpsNoTnrInnerOptions & noMp); // bbps_NoTnr:bbps_ofs_mp_yuvn_odr -> sw_gtm:terminal_connect_input
+    subGraphLinks[17]->isActive = !(bbpsNoTnrInnerOptions & noMp); // bbps_NoTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[12]->isActive = !(bbpsNoTnrInnerOptions & noDp); // bbps_NoTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[15]->isActive = !(bbpsNoTnrInnerOptions & noDp); // bbps_NoTnr:bbps_ofs_dp_yuvn_odr -> sw_gtm:terminal_connect_input
+    subGraphLinks[18]->isActive = !(bbpsNoTnrInnerOptions & noDp); // bbps_NoTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[13]->isActive = !(bbpsNoTnrInnerOptions & noPpp); // bbps_NoTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
 
     /*
@@ -9771,7 +14347,7 @@ StaticGraphStatus imageSubGraphTopology100031::configInnerNodes(SubGraphInnerNod
      * Disable links with zero buffer size
      * (used for post processing when not all links are being used)
      */
-     for (uint32_t i = 0; i < 14; i++)
+     for (uint32_t i = 0; i < 20; i++)
      {
         if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
         {
@@ -9797,6 +14373,7 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     LbffDolOuterNodeConfiguration** lbffDolOuterNodeConfigurationOptions = new LbffDolOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     SwGtmOuterNodeConfiguration** swGtmOuterNodeConfigurationOptions = new SwGtmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions = new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
     for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
     {
@@ -9806,6 +14383,7 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
         lbffDolOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffDolOuterNodeConfiguration;
         bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
         swGtmOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swGtmOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swNntmOuterNodeConfiguration;
     }
 
     _isysDolOuterNode.Init(isysDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
@@ -9813,12 +14391,14 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     _lbffDolOuterNode.Init(lbffDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
     _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
     _swGtmOuterNode.Init(swGtmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
 
     delete[] isysDolOuterNodeConfigurationOptions;
     delete[] swDolOuterNodeConfigurationOptions;
     delete[] lbffDolOuterNodeConfigurationOptions;
     delete[] bbpsWithTnrOuterNodeConfigurationOptions;
     delete[] swGtmOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
 
     // Use default configuration
     updateConfiguration(0);
@@ -9909,7 +14489,6 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     link->destNode = &_bbpsWithTnrOuterNode;
     link->destTerminalId = 9;
     link->type = LinkType::Node2Node;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[0];
 
     link = &_graphLinks[11];
     link->src = GraphElementType::LbffDol;
@@ -9929,7 +14508,6 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     link->destTerminalId = 10;
     link->type = LinkType::Node2Self;
     link->frameDelay = 1U;
-    link->linkCompressionConfiguration = &_graphConfigurations[0].linkCompressionConfigurations[1];
 
     link = &_graphLinks[13];
     link->src = GraphElementType::BbpsWithTnr;
@@ -10003,10 +14581,35 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     link->src = GraphElementType::SwGtm;
     link->srcNode = &_swGtmOuterNode;
     link->srcTerminalId = 1;
-    link->dest = GraphElementType::ProcessedVideo;
+    link->dest = GraphElementType::ProcessedMain;
     link->type = LinkType::Node2Sink;
 
-    for (uint8_t i = 0; i < 22; ++i)
+    link = &_graphLinks[22];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[23];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[24];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 25; ++i)
     {
         // apply link configuration. select configuration with maximal size
         uint32_t selectedLinkConfig = 0;
@@ -10030,6 +14633,8 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     _imageSubGraph.swDolOuterNode = &_swDolOuterNode;
     _imageSubGraph.lbffDolOuterNode = &_lbffDolOuterNode;
     _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swGtmOuterNode = &_swGtmOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
 
     // choose the selected sub graph
     _selectedGraphTopology = &_imageSubGraph;
@@ -10039,6 +14644,8 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     _imageSubGraph.swDolOuterNode->contextId = 1;
     _imageSubGraph.lbffDolOuterNode->contextId = 2;
     _imageSubGraph.bbpsWithTnrOuterNode->contextId = 3;
+    _imageSubGraph.swGtmOuterNode->contextId = 4;
+    _imageSubGraph.swNntmOuterNode->contextId = 5;
     // Apply a default inner nodes configuration for the selected sub graph
     SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
     if(_selectedGraphTopology != nullptr)
@@ -10075,6 +14682,11 @@ StaticGraphStatus StaticGraph100032::updateConfiguration(uint32_t selectedIndex)
     {
         return res;
     }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
     return StaticGraphStatus::SG_OK;
 }
 
@@ -10096,6 +14708,8 @@ StaticGraphStatus imageSubGraphTopology100032::configInnerNodes(SubGraphInnerNod
      * Setting Node lbffDol initial inner node configuration
      */
     InnerNodeOptionsFlags lbffDolInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffDolInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
     // active public options according to sink mapping
 
     /*
@@ -10105,12 +14719,16 @@ StaticGraphStatus imageSubGraphTopology100032::configInnerNodes(SubGraphInnerNod
     // active public options according to sink mapping
     if (
         subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[22]->linkConfiguration->bufferSize == 0 &&
         true)
     {
         bbpsWithTnrInnerOptions |= noMp;
     }
     if (
         subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[20]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[23]->linkConfiguration->bufferSize == 0 &&
         true)
     {
         bbpsWithTnrInnerOptions |= noDp;
@@ -10142,7 +14760,11 @@ StaticGraphStatus imageSubGraphTopology100032::configInnerNodes(SubGraphInnerNod
     subGraphLinks[8]->isActive = !(lbffDolInnerOptions & no3A); // lbff_Dol:terminal_connect_awb_std_output -> awb_std_out
     subGraphLinks[9]->isActive = !(lbffDolInnerOptions & no3A); // lbff_Dol:terminal_connect_awb_sat_output -> awb_sat_out
     subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[19]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gtm:terminal_connect_input
+    subGraphLinks[22]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[20]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gtm:terminal_connect_input
+    subGraphLinks[23]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[18]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
 
     /*
@@ -10155,13 +14777,21 @@ StaticGraphStatus imageSubGraphTopology100032::configInnerNodes(SubGraphInnerNod
      * Disable links with zero buffer size
      * (used for post processing when not all links are being used)
      */
-     for (uint32_t i = 0; i < 19; i++)
+     for (uint32_t i = 0; i < 25; i++)
      {
         if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
         {
             subGraphLinks[i]->isActive = false;
         }
      }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[15]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
 
     return StaticGraphStatus::SG_OK;
 }
@@ -10366,3 +14996,2456 @@ StaticGraph100036::~StaticGraph100036()
     delete[] _graphConfigurations;
     delete _zoomKeyResolutions.zoomKeyResolutionOptions;
 }
+/*
+ * Graph 100037
+ */
+StaticGraph100037::StaticGraph100037(GraphConfiguration100037** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100037, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100037[kernelConfigurationsOptionsCount];
+    IsysPdaf2OuterNodeConfiguration** isysPdaf2OuterNodeConfigurationOptions = new IsysPdaf2OuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffBayerPdaf2WithGmvOuterNodeConfiguration** lbffBayerPdaf2WithGmvOuterNodeConfigurationOptions = new LbffBayerPdaf2WithGmvOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwGdcOuterNodeConfiguration** swGdcOuterNodeConfigurationOptions = new SwGdcOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysPdaf2OuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysPdaf2OuterNodeConfiguration;
+        lbffBayerPdaf2WithGmvOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffBayerPdaf2WithGmvOuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swGdcOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swGdcOuterNodeConfiguration;
+    }
+
+    _isysPdaf2OuterNode.Init(isysPdaf2OuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffBayerPdaf2WithGmvOuterNode.Init(lbffBayerPdaf2WithGmvOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swGdcOuterNode.Init(swGdcOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysPdaf2OuterNodeConfigurationOptions;
+    delete[] lbffBayerPdaf2WithGmvOuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swGdcOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::IsysPdaf2;
+    link->destNode = &_isysPdaf2OuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->destNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::PdafBuffer;
+    link->dest = GraphElementType::IsysPdaf2;
+    link->destNode = &_isysPdaf2OuterNode;
+    link->destTerminalId = 2;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::IsysPdaf2;
+    link->srcNode = &_isysPdaf2OuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->destNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::IsysPdaf2;
+    link->srcNode = &_isysPdaf2OuterNode;
+    link->srcTerminalId = 3;
+    link->dest = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->destNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 10;
+    link->dest = GraphElementType::PdafOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 19;
+    link->dest = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->destNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->destTerminalId = 15;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 18;
+    link->dest = GraphElementType::GmvMatchOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::LbffBayerPdaf2WithGmv;
+    link->srcNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[19];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[20];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::ImagePpp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[21];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[22];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[23];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[24];
+    link->src = GraphElementType::SwGdc;
+    link->srcNode = &_swGdcOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 25; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+        // Assign link to sub-graph
+        _imageSubGraph.links[i] = &_graphLinks[i];
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysPdaf2OuterNode = &_isysPdaf2OuterNode;
+    _imageSubGraph.lbffBayerPdaf2WithGmvOuterNode = &_lbffBayerPdaf2WithGmvOuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swGdcOuterNode = &_swGdcOuterNode;
+
+    // choose the selected sub graph
+    _selectedGraphTopology = &_imageSubGraph;
+
+    // logical node IDs
+    _imageSubGraph.isysPdaf2OuterNode->contextId = 0;
+    _imageSubGraph.lbffBayerPdaf2WithGmvOuterNode->contextId = 1;
+    _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swGdcOuterNode->contextId = 3;
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100037::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysPdaf2OuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffBayerPdaf2WithGmvOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swGdcOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100037::~StaticGraph100037()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100037::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffBayerPdaf2WithGmv initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffBayerPdaf2WithGmvInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerPdaf2WithGmvInnerOptions |= (noBurstCapture | noIr);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[21]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[22]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[20]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[23]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffBayerPdaf2WithGmvInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffBayerPdaf2WithGmvInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffBayerPdaf2WithGmvOuterNode->setInnerNode(lbffBayerPdaf2WithGmvInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[5]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_ae_output -> ae_out
+    subGraphLinks[6]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[7]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[8]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[10]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & noGmv); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_Pdaf2_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[11]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & noGmv); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_gmv_match_output -> gmv_match_out
+    subGraphLinks[18]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[21]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[19]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[22]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[20]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+    subGraphLinks[23]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> sw_gdc:terminal_connect_input
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[12]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & noLbOutputPs); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[13]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & noLbOutputMe); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+    subGraphLinks[9]->isActive = !(lbffBayerPdaf2WithGmvInnerOptions & noPdaf); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_pdaf_output -> pdaf_out
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 25; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[10]->isActive = (lbffBayerPdaf2WithGmvInnerOptions & (noGmv|noBurstCapture|noIr)) != (noGmv|noBurstCapture|noIr); // lbff_Bayer_Pdaf2_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_Pdaf2_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[15]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[16]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[17]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+/*
+ * Graph 100038
+ */
+StaticGraph100038::StaticGraph100038(GraphConfiguration100038** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100038, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100038[kernelConfigurationsOptionsCount];
+    IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffBayerPdaf3WithGmvOuterNodeConfiguration** lbffBayerPdaf3WithGmvOuterNodeConfigurationOptions = new LbffBayerPdaf3WithGmvOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwGdcOuterNodeConfiguration** swGdcOuterNodeConfigurationOptions = new SwGdcOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
+        lbffBayerPdaf3WithGmvOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffBayerPdaf3WithGmvOuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swGdcOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swGdcOuterNodeConfiguration;
+    }
+
+    _isysOuterNode.Init(isysOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffBayerPdaf3WithGmvOuterNode.Init(lbffBayerPdaf3WithGmvOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swGdcOuterNode.Init(swGdcOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysOuterNodeConfigurationOptions;
+    delete[] lbffBayerPdaf3WithGmvOuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swGdcOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::Isys;
+    link->destNode = &_isysOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->destNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::Isys;
+    link->srcNode = &_isysOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->destNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 10;
+    link->dest = GraphElementType::PdafOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 19;
+    link->dest = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->destNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->destTerminalId = 15;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 18;
+    link->dest = GraphElementType::GmvMatchOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::LbffBayerPdaf3WithGmv;
+    link->srcNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::ImagePpp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[19];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[20];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[21];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[22];
+    link->src = GraphElementType::SwGdc;
+    link->srcNode = &_swGdcOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 23; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+        // Assign link to sub-graph
+        _imageSubGraph.links[i] = &_graphLinks[i];
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysOuterNode = &_isysOuterNode;
+    _imageSubGraph.lbffBayerPdaf3WithGmvOuterNode = &_lbffBayerPdaf3WithGmvOuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swGdcOuterNode = &_swGdcOuterNode;
+
+    // choose the selected sub graph
+    _selectedGraphTopology = &_imageSubGraph;
+
+    // logical node IDs
+    _imageSubGraph.isysOuterNode->contextId = 0;
+    _imageSubGraph.lbffBayerPdaf3WithGmvOuterNode->contextId = 1;
+    _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swGdcOuterNode->contextId = 3;
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100038::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffBayerPdaf3WithGmvOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swGdcOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100038::~StaticGraph100038()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100038::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffBayerPdaf3WithGmv initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffBayerPdaf3WithGmvInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerPdaf3WithGmvInnerOptions |= (noBurstCapture | noIr);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[20]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[21]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffBayerPdaf3WithGmvInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffBayerPdaf3WithGmvInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffBayerPdaf3WithGmvOuterNode->setInnerNode(lbffBayerPdaf3WithGmvInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[3]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_ae_output -> ae_out
+    subGraphLinks[4]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[5]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[6]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & no3A); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[8]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & noGmv); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_Pdaf3_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[9]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & noGmv); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_gmv_match_output -> gmv_match_out
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[19]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[20]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[18]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+    subGraphLinks[21]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> sw_gdc:terminal_connect_input
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[10]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & noLbOutputPs); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[11]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & noLbOutputMe); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+    subGraphLinks[7]->isActive = !(lbffBayerPdaf3WithGmvInnerOptions & noPdaf); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_pdaf_output -> pdaf_out
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 23; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[8]->isActive = (lbffBayerPdaf3WithGmvInnerOptions & (noGmv|noBurstCapture|noIr)) != (noGmv|noBurstCapture|noIr); // lbff_Bayer_Pdaf3_WithGmv:terminal_connect_gmv_feature_output -> lbff_Bayer_Pdaf3_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[15]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+/*
+ * Graph 100039
+ */
+StaticGraph100039::StaticGraph100039(GraphConfiguration100039** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100039, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+    ,_irSubGraph(_sinkMappingConfiguration)
+    ,_image_irSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100039[kernelConfigurationsOptionsCount];
+    IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffRgbIrWithGmvOuterNodeConfiguration** lbffRgbIrWithGmvOuterNodeConfigurationOptions = new LbffRgbIrWithGmvOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffIrWithGmvIrStreamOuterNodeConfiguration** lbffIrWithGmvIrStreamOuterNodeConfigurationOptions = new LbffIrWithGmvIrStreamOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsIrWithTnrOuterNodeConfiguration** bbpsIrWithTnrOuterNodeConfigurationOptions = new BbpsIrWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwGdcOuterNodeConfiguration** swGdcOuterNodeConfigurationOptions = new SwGdcOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
+        lbffRgbIrWithGmvOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffRgbIrWithGmvOuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        lbffIrWithGmvIrStreamOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffIrWithGmvIrStreamOuterNodeConfiguration;
+        bbpsIrWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsIrWithTnrOuterNodeConfiguration;
+        swGdcOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swGdcOuterNodeConfiguration;
+    }
+
+    _isysOuterNode.Init(isysOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffRgbIrWithGmvOuterNode.Init(lbffRgbIrWithGmvOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffIrWithGmvIrStreamOuterNode.Init(lbffIrWithGmvIrStreamOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsIrWithTnrOuterNode.Init(bbpsIrWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swGdcOuterNode.Init(swGdcOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysOuterNodeConfigurationOptions;
+    delete[] lbffRgbIrWithGmvOuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] lbffIrWithGmvIrStreamOuterNodeConfigurationOptions;
+    delete[] bbpsIrWithTnrOuterNodeConfigurationOptions;
+    delete[] swGdcOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::Isys;
+    link->destNode = &_isysOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+    _imageSubGraph.links[0] = link;
+    _irSubGraph.links[0] = link;
+    _image_irSubGraph.links[0] = link;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffRgbIrWithGmv;
+    link->destNode = &_lbffRgbIrWithGmvOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+    _imageSubGraph.links[1] = link;
+    _irSubGraph.links[1] = link;
+    _image_irSubGraph.links[1] = link;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::LscBufferIr;
+    link->dest = GraphElementType::LbffIrWithGmvIrStream;
+    link->destNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+    _irSubGraph.links[2] = link;
+    _image_irSubGraph.links[23] = link;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::Isys;
+    link->srcNode = &_isysOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffRgbIrWithGmv;
+    link->destNode = &_lbffRgbIrWithGmvOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+    _imageSubGraph.links[2] = link;
+    _irSubGraph.links[3] = link;
+    _image_irSubGraph.links[2] = link;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[3] = link;
+    _irSubGraph.links[4] = link;
+    _image_irSubGraph.links[3] = link;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[4] = link;
+    _irSubGraph.links[5] = link;
+    _image_irSubGraph.links[4] = link;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[5] = link;
+    _irSubGraph.links[6] = link;
+    _image_irSubGraph.links[5] = link;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[6] = link;
+    _irSubGraph.links[7] = link;
+    _image_irSubGraph.links[6] = link;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::AwbSveOut;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[7] = link;
+    _irSubGraph.links[8] = link;
+    _image_irSubGraph.links[7] = link;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 19;
+    link->dest = GraphElementType::LbffRgbIrWithGmv;
+    link->destNode = &_lbffRgbIrWithGmvOuterNode;
+    link->destTerminalId = 15;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+    _imageSubGraph.links[8] = link;
+    _irSubGraph.links[9] = link;
+    _image_irSubGraph.links[8] = link;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 18;
+    link->dest = GraphElementType::GmvMatchOut;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[9] = link;
+    _irSubGraph.links[10] = link;
+    _image_irSubGraph.links[9] = link;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+    _imageSubGraph.links[10] = link;
+    _image_irSubGraph.links[10] = link;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+    _imageSubGraph.links[11] = link;
+    _image_irSubGraph.links[11] = link;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+    _imageSubGraph.links[12] = link;
+    _image_irSubGraph.links[12] = link;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+    _imageSubGraph.links[13] = link;
+    _image_irSubGraph.links[13] = link;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+    _imageSubGraph.links[14] = link;
+    _image_irSubGraph.links[14] = link;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+    _imageSubGraph.links[15] = link;
+    _image_irSubGraph.links[15] = link;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[16] = link;
+    _image_irSubGraph.links[16] = link;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[17] = link;
+    _image_irSubGraph.links[17] = link;
+
+    link = &_graphLinks[19];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::ImagePpp;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[18] = link;
+    _image_irSubGraph.links[18] = link;
+
+    link = &_graphLinks[20];
+    link->src = GraphElementType::LbffRgbIrWithGmv;
+    link->srcNode = &_lbffRgbIrWithGmvOuterNode;
+    link->srcTerminalId = 11;
+    link->dest = GraphElementType::LbffIrWithGmvIrStream;
+    link->destNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+    _irSubGraph.links[11] = link;
+    _image_irSubGraph.links[24] = link;
+
+    link = &_graphLinks[21];
+    link->src = GraphElementType::LbffIrWithGmvIrStream;
+    link->srcNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::IrAeOut;
+    link->type = LinkType::Node2Sink;
+    _irSubGraph.links[12] = link;
+    _image_irSubGraph.links[25] = link;
+
+    link = &_graphLinks[22];
+    link->src = GraphElementType::LbffIrWithGmvIrStream;
+    link->srcNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::IrAfStdOut;
+    link->type = LinkType::Node2Sink;
+    _irSubGraph.links[13] = link;
+    _image_irSubGraph.links[26] = link;
+
+    link = &_graphLinks[23];
+    link->src = GraphElementType::LbffIrWithGmvIrStream;
+    link->srcNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::IrAwbStdOut;
+    link->type = LinkType::Node2Sink;
+    _irSubGraph.links[14] = link;
+    _image_irSubGraph.links[27] = link;
+
+    link = &_graphLinks[24];
+    link->src = GraphElementType::LbffIrWithGmvIrStream;
+    link->srcNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::IrAwbSatOut;
+    link->type = LinkType::Node2Sink;
+    _irSubGraph.links[15] = link;
+    _image_irSubGraph.links[28] = link;
+
+    link = &_graphLinks[25];
+    link->src = GraphElementType::LbffIrWithGmvIrStream;
+    link->srcNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsIrWithTnr;
+    link->destNode = &_bbpsIrWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+    _irSubGraph.links[16] = link;
+    _image_irSubGraph.links[29] = link;
+
+    link = &_graphLinks[26];
+    link->src = GraphElementType::LbffIrWithGmvIrStream;
+    link->srcNode = &_lbffIrWithGmvIrStreamOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsIrWithTnr;
+    link->destNode = &_bbpsIrWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+    _irSubGraph.links[17] = link;
+    _image_irSubGraph.links[30] = link;
+
+    link = &_graphLinks[27];
+    link->src = GraphElementType::BbpsIrWithTnr;
+    link->srcNode = &_bbpsIrWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsIrWithTnr;
+    link->destNode = &_bbpsIrWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+    _irSubGraph.links[18] = link;
+    _image_irSubGraph.links[31] = link;
+
+    link = &_graphLinks[28];
+    link->src = GraphElementType::BbpsIrWithTnr;
+    link->srcNode = &_bbpsIrWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsIrWithTnr;
+    link->destNode = &_bbpsIrWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+    _irSubGraph.links[19] = link;
+    _image_irSubGraph.links[32] = link;
+
+    link = &_graphLinks[29];
+    link->src = GraphElementType::BbpsIrWithTnr;
+    link->srcNode = &_bbpsIrWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsIrWithTnr;
+    link->destNode = &_bbpsIrWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+    _irSubGraph.links[20] = link;
+    _image_irSubGraph.links[33] = link;
+
+    link = &_graphLinks[30];
+    link->src = GraphElementType::BbpsIrWithTnr;
+    link->srcNode = &_bbpsIrWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsIrWithTnr;
+    link->destNode = &_bbpsIrWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+    _irSubGraph.links[21] = link;
+    _image_irSubGraph.links[34] = link;
+
+    link = &_graphLinks[31];
+    link->src = GraphElementType::BbpsIrWithTnr;
+    link->srcNode = &_bbpsIrWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::IrMp;
+    link->type = LinkType::Node2Sink;
+    _irSubGraph.links[22] = link;
+    _image_irSubGraph.links[35] = link;
+
+    link = &_graphLinks[32];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+    _imageSubGraph.links[19] = link;
+    _image_irSubGraph.links[19] = link;
+
+    link = &_graphLinks[33];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+    _imageSubGraph.links[20] = link;
+    _image_irSubGraph.links[20] = link;
+
+    link = &_graphLinks[34];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::SwGdc;
+    link->destNode = &_swGdcOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+    _imageSubGraph.links[21] = link;
+    _image_irSubGraph.links[21] = link;
+
+    link = &_graphLinks[35];
+    link->src = GraphElementType::SwGdc;
+    link->srcNode = &_swGdcOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+    _imageSubGraph.links[22] = link;
+    _image_irSubGraph.links[22] = link;
+
+    for (uint8_t i = 0; i < 36; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysOuterNode = &_isysOuterNode;
+    _imageSubGraph.lbffRgbIrWithGmvOuterNode = &_lbffRgbIrWithGmvOuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swGdcOuterNode = &_swGdcOuterNode;
+    _irSubGraph.isysOuterNode = &_isysOuterNode;
+    _irSubGraph.lbffRgbIrWithGmvOuterNode = &_lbffRgbIrWithGmvOuterNode;
+    _irSubGraph.lbffIrWithGmvIrStreamOuterNode = &_lbffIrWithGmvIrStreamOuterNode;
+    _irSubGraph.bbpsIrWithTnrOuterNode = &_bbpsIrWithTnrOuterNode;
+    _image_irSubGraph.isysOuterNode = &_isysOuterNode;
+    _image_irSubGraph.lbffRgbIrWithGmvOuterNode = &_lbffRgbIrWithGmvOuterNode;
+    _image_irSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _image_irSubGraph.swGdcOuterNode = &_swGdcOuterNode;
+    _image_irSubGraph.lbffIrWithGmvIrStreamOuterNode = &_lbffIrWithGmvIrStreamOuterNode;
+    _image_irSubGraph.bbpsIrWithTnrOuterNode = &_bbpsIrWithTnrOuterNode;
+
+    // choose the selected sub graph
+    if (
+        // image sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.preview != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.video != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.postProcessingVideo != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.stills != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.thumbnail != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.postProcessingStills != static_cast<int>(HwSink::Disconnected)) &&
+        // raw sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.raw == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.rawPdaf == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.rawDolLong == static_cast<int>(HwSink::Disconnected)) &&
+        // ir sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.videoIr == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.previewIr == static_cast<int>(HwSink::Disconnected)))
+    {
+        _selectedGraphTopology = &_imageSubGraph;
+
+        // logical node IDs
+        _imageSubGraph.isysOuterNode->contextId = 0;
+        _imageSubGraph.lbffRgbIrWithGmvOuterNode->contextId = 1;
+        _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+        _imageSubGraph.swGdcOuterNode->contextId = 3;
+    }
+    else if (
+        // image sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.preview == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.video == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.postProcessingVideo == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.stills == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.thumbnail == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.postProcessingStills == static_cast<int>(HwSink::Disconnected)) &&
+        // raw sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.raw == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.rawPdaf == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.rawDolLong == static_cast<int>(HwSink::Disconnected)) &&
+        // ir sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.videoIr != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.previewIr != static_cast<int>(HwSink::Disconnected)))
+    {
+        _selectedGraphTopology = &_irSubGraph;
+
+        // logical node IDs
+        _irSubGraph.isysOuterNode->contextId = 0;
+        _irSubGraph.lbffRgbIrWithGmvOuterNode->contextId = 1;
+        _irSubGraph.lbffIrWithGmvIrStreamOuterNode->contextId = 2;
+        _irSubGraph.bbpsIrWithTnrOuterNode->contextId = 3;
+    }
+    else if (
+        // image sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.preview != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.video != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.postProcessingVideo != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.stills != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.thumbnail != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.postProcessingStills != static_cast<int>(HwSink::Disconnected)) &&
+        // raw sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.raw == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.rawPdaf == static_cast<int>(HwSink::Disconnected) &&
+        _graphConfigurations[0].sinkMappingConfiguration.rawDolLong == static_cast<int>(HwSink::Disconnected)) &&
+        // ir sink group
+        (_graphConfigurations[0].sinkMappingConfiguration.videoIr != static_cast<int>(HwSink::Disconnected) ||
+        _graphConfigurations[0].sinkMappingConfiguration.previewIr != static_cast<int>(HwSink::Disconnected)))
+    {
+        _selectedGraphTopology = &_image_irSubGraph;
+
+        // logical node IDs
+        _image_irSubGraph.isysOuterNode->contextId = 0;
+        _image_irSubGraph.lbffRgbIrWithGmvOuterNode->contextId = 1;
+        _image_irSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+        _image_irSubGraph.swGdcOuterNode->contextId = 3;
+        _image_irSubGraph.lbffIrWithGmvIrStreamOuterNode->contextId = 4;
+        _image_irSubGraph.bbpsIrWithTnrOuterNode->contextId = 5;
+    }
+    else
+    {
+        STATIC_GRAPH_LOG("Didn't found a matching sub graph for the selected virtual sinks.");
+    }
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100039::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffRgbIrWithGmvOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffIrWithGmvIrStreamOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsIrWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swGdcOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100039::~StaticGraph100039()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100039::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffRgbIrWithGmv initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffRgbIrWithGmvInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffRgbIrWithGmvInnerOptions |= (noBurstCapture | noIr | noPdaf);
+    // active public options according to sink mapping
+    // always active private inner options
+    lbffRgbIrWithGmvInnerOptions |= (noIr);
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[20]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[21]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffRgbIrWithGmvInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffRgbIrWithGmvInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffRgbIrWithGmvOuterNode->setInnerNode(lbffRgbIrWithGmvInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[3]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_ae_output -> ae_out
+    subGraphLinks[4]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[5]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[6]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[7]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_sve_output -> awb_sve_out
+    subGraphLinks[8]->isActive = !(lbffRgbIrWithGmvInnerOptions & noGmv); // lbff_RgbIr_WithGmv:terminal_connect_gmv_feature_output -> lbff_RgbIr_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[9]->isActive = !(lbffRgbIrWithGmvInnerOptions & noGmv); // lbff_RgbIr_WithGmv:terminal_connect_gmv_match_output -> gmv_match_out
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[19]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[20]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[18]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+    subGraphLinks[21]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> sw_gdc:terminal_connect_input
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[10]->isActive = !(lbffRgbIrWithGmvInnerOptions & noLbOutputPs); // lbff_RgbIr_WithGmv:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[11]->isActive = !(lbffRgbIrWithGmvInnerOptions & noLbOutputMe); // lbff_RgbIr_WithGmv:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 23; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[8]->isActive = (lbffRgbIrWithGmvInnerOptions & (noGmv|noBurstCapture|noPdaf)) != (noGmv|noBurstCapture|noPdaf); // lbff_RgbIr_WithGmv:terminal_connect_gmv_feature_output -> lbff_RgbIr_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[15]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraphStatus irSubGraphTopology100039::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags irPublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.irInnerOptions);
+
+    /*
+     * Setting Node lbffRgbIrWithGmv initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffRgbIrWithGmvInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffRgbIrWithGmvInnerOptions |= (noBurstCapture | noLbOutputPs | noLbOutputMe | noPdaf);
+    // active public options according to sink mapping
+    // always active private inner options
+    lbffRgbIrWithGmvInnerOptions |= (noLbOutputPs | noLbOutputMe);
+
+    /*
+     * Setting Node lbffIrWithGmvIrStream initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffIrWithGmvIrStreamInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffIrWithGmvIrStreamInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsIrWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsIrWithTnrInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    bbpsIrWithTnrInnerOptions |= (noDp | noPpp);
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[22]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsIrWithTnrInnerOptions |= noMp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffRgbIrWithGmvInnerOptions |= noIr & (-((irPublicInnerNodeConfiguration & (no3A | noMp)) == (no3A | noMp)));
+    lbffIrWithGmvIrStreamInnerOptions |= noLbOutputPs & (-((irPublicInnerNodeConfiguration & (noMp)) == (noMp)));
+    lbffIrWithGmvIrStreamInnerOptions |= noLbOutputMe & (-((irPublicInnerNodeConfiguration & (noMp)) == (noMp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffRgbIrWithGmvOuterNode->setInnerNode(lbffRgbIrWithGmvInnerOptions);
+    lbffIrWithGmvIrStreamOuterNode->setInnerNode(lbffIrWithGmvIrStreamInnerOptions);
+    bbpsIrWithTnrOuterNode->setInnerNode(bbpsIrWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[4]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_ae_output -> ae_out
+    subGraphLinks[5]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[6]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[7]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[8]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_sve_output -> awb_sve_out
+    subGraphLinks[9]->isActive = !(lbffRgbIrWithGmvInnerOptions & noGmv); // lbff_RgbIr_WithGmv:terminal_connect_gmv_feature_output -> lbff_RgbIr_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[10]->isActive = !(lbffRgbIrWithGmvInnerOptions & noGmv); // lbff_RgbIr_WithGmv:terminal_connect_gmv_match_output -> gmv_match_out
+    subGraphLinks[12]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_ae_output -> ir_ae_out
+    subGraphLinks[13]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_af_std_output -> ir_af_std_out
+    subGraphLinks[14]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_awb_std_output -> ir_awb_std_out
+    subGraphLinks[15]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_awb_sat_output -> ir_awb_sat_out
+    subGraphLinks[22]->isActive = !(bbpsIrWithTnrInnerOptions & noMp); // bbps_Ir_WithTnr:bbps_ofs_mp_yuvn_odr -> ir_mp
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[11]->isActive = !(lbffRgbIrWithGmvInnerOptions & noIr); // lbff_RgbIr_WithGmv:terminal_connect_ir_output -> lbff_Ir_WithGmv_IrStream:terminal_connect_main_data_input
+    subGraphLinks[16]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & noLbOutputPs); // lbff_Ir_WithGmv_IrStream:terminal_connect_ps_output -> bbps_Ir_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[17]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & noLbOutputMe); // lbff_Ir_WithGmv_IrStream:terminal_connect_me_output -> bbps_Ir_WithTnr:bbps_tnr_bc_yuv4n_ifd
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 23; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[9]->isActive = (lbffRgbIrWithGmvInnerOptions & (noGmv|noBurstCapture|noPdaf)) != (noGmv|noBurstCapture|noPdaf); // lbff_RgbIr_WithGmv:terminal_connect_gmv_feature_output -> lbff_RgbIr_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[18]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[19]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[20]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[21]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraphStatus image_irSubGraphTopology100039::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+    InnerNodeOptionsFlags irPublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.irInnerOptions);
+
+    /*
+     * Setting Node lbffRgbIrWithGmv initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffRgbIrWithGmvInnerOptions = None;
+    // combine inner options for the node common sub graphs
+    lbffRgbIrWithGmvInnerOptions |= imagePublicInnerNodeConfiguration;
+    lbffRgbIrWithGmvInnerOptions |= irPublicInnerNodeConfiguration;
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[20]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[21]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Setting Node lbffIrWithGmvIrStream initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffIrWithGmvIrStreamInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffIrWithGmvIrStreamInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsIrWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsIrWithTnrInnerOptions = irPublicInnerNodeConfiguration;
+    // always active public inner options
+    bbpsIrWithTnrInnerOptions |= (noDp | noPpp);
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[35]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsIrWithTnrInnerOptions |= noMp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffRgbIrWithGmvInnerOptions |= noIr & (-((irPublicInnerNodeConfiguration & (no3A | noMp)) == (no3A | noMp)));
+    lbffRgbIrWithGmvInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffRgbIrWithGmvInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffIrWithGmvIrStreamInnerOptions |= noLbOutputPs & (-((irPublicInnerNodeConfiguration & (noMp)) == (noMp)));
+    lbffIrWithGmvIrStreamInnerOptions |= noLbOutputMe & (-((irPublicInnerNodeConfiguration & (noMp)) == (noMp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffRgbIrWithGmvOuterNode->setInnerNode(lbffRgbIrWithGmvInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+    lbffIrWithGmvIrStreamOuterNode->setInnerNode(lbffIrWithGmvIrStreamInnerOptions);
+    bbpsIrWithTnrOuterNode->setInnerNode(bbpsIrWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[3]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_ae_output -> ae_out
+    subGraphLinks[4]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[5]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[6]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[7]->isActive = !(lbffRgbIrWithGmvInnerOptions & no3A); // lbff_RgbIr_WithGmv:terminal_connect_awb_sve_output -> awb_sve_out
+    subGraphLinks[8]->isActive = !(lbffRgbIrWithGmvInnerOptions & noGmv); // lbff_RgbIr_WithGmv:terminal_connect_gmv_feature_output -> lbff_RgbIr_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[9]->isActive = !(lbffRgbIrWithGmvInnerOptions & noGmv); // lbff_RgbIr_WithGmv:terminal_connect_gmv_match_output -> gmv_match_out
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[19]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[20]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[18]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+    subGraphLinks[21]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> sw_gdc:terminal_connect_input
+    subGraphLinks[25]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_ae_output -> ir_ae_out
+    subGraphLinks[26]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_af_std_output -> ir_af_std_out
+    subGraphLinks[27]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_awb_std_output -> ir_awb_std_out
+    subGraphLinks[28]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & no3A); // lbff_Ir_WithGmv_IrStream:terminal_connect_awb_sat_output -> ir_awb_sat_out
+    subGraphLinks[35]->isActive = !(bbpsIrWithTnrInnerOptions & noMp); // bbps_Ir_WithTnr:bbps_ofs_mp_yuvn_odr -> ir_mp
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[24]->isActive = !(lbffRgbIrWithGmvInnerOptions & noIr); // lbff_RgbIr_WithGmv:terminal_connect_ir_output -> lbff_Ir_WithGmv_IrStream:terminal_connect_main_data_input
+    subGraphLinks[10]->isActive = !(lbffRgbIrWithGmvInnerOptions & noLbOutputPs); // lbff_RgbIr_WithGmv:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[11]->isActive = !(lbffRgbIrWithGmvInnerOptions & noLbOutputMe); // lbff_RgbIr_WithGmv:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+    subGraphLinks[29]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & noLbOutputPs); // lbff_Ir_WithGmv_IrStream:terminal_connect_ps_output -> bbps_Ir_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[30]->isActive = !(lbffIrWithGmvIrStreamInnerOptions & noLbOutputMe); // lbff_Ir_WithGmv_IrStream:terminal_connect_me_output -> bbps_Ir_WithTnr:bbps_tnr_bc_yuv4n_ifd
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 36; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[8]->isActive = (lbffRgbIrWithGmvInnerOptions & (noGmv|noBurstCapture|noPdaf)) != (noGmv|noBurstCapture|noPdaf); // lbff_RgbIr_WithGmv:terminal_connect_gmv_feature_output -> lbff_RgbIr_WithGmv:terminal_connect_gmv_input
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[14]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[15]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+    subGraphLinks[31]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[32]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[33]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[34]->isActive = (bbpsIrWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_Ir_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_Ir_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+/*
+ * Graph 100040
+ */
+StaticGraph100040::StaticGraph100040(GraphConfiguration100040** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100040, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100040[kernelConfigurationsOptionsCount];
+    IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffBayerPdaf3OuterNodeConfiguration** lbffBayerPdaf3OuterNodeConfigurationOptions = new LbffBayerPdaf3OuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions = new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
+        lbffBayerPdaf3OuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffBayerPdaf3OuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swNntmOuterNodeConfiguration;
+    }
+
+    _isysOuterNode.Init(isysOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffBayerPdaf3OuterNode.Init(lbffBayerPdaf3OuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysOuterNodeConfigurationOptions;
+    delete[] lbffBayerPdaf3OuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::Isys;
+    link->destNode = &_isysOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffBayerPdaf3;
+    link->destNode = &_lbffBayerPdaf3OuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::Isys;
+    link->srcNode = &_isysOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffBayerPdaf3;
+    link->destNode = &_lbffBayerPdaf3OuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::LbffBayerPdaf3;
+    link->srcNode = &_lbffBayerPdaf3OuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::LbffBayerPdaf3;
+    link->srcNode = &_lbffBayerPdaf3OuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffBayerPdaf3;
+    link->srcNode = &_lbffBayerPdaf3OuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffBayerPdaf3;
+    link->srcNode = &_lbffBayerPdaf3OuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffBayerPdaf3;
+    link->srcNode = &_lbffBayerPdaf3OuterNode;
+    link->srcTerminalId = 10;
+    link->dest = GraphElementType::PdafOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffBayerPdaf3;
+    link->srcNode = &_lbffBayerPdaf3OuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::LbffBayerPdaf3;
+    link->srcNode = &_lbffBayerPdaf3OuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 19; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+        // Assign link to sub-graph
+        _imageSubGraph.links[i] = &_graphLinks[i];
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysOuterNode = &_isysOuterNode;
+    _imageSubGraph.lbffBayerPdaf3OuterNode = &_lbffBayerPdaf3OuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
+
+    // choose the selected sub graph
+    _selectedGraphTopology = &_imageSubGraph;
+
+    // logical node IDs
+    _imageSubGraph.isysOuterNode->contextId = 0;
+    _imageSubGraph.lbffBayerPdaf3OuterNode->contextId = 1;
+    _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swNntmOuterNode->contextId = 3;
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100040::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffBayerPdaf3OuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100040::~StaticGraph100040()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100040::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffBayerPdaf3 initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffBayerPdaf3InnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerPdaf3InnerOptions |= (noGmv | noBurstCapture | noIr);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    bbpsWithTnrInnerOptions |= (noPpp);
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[14]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[15]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffBayerPdaf3InnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp)) == (noMp | noDp)));
+    lbffBayerPdaf3InnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp)) == (noMp | noDp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffBayerPdaf3OuterNode->setInnerNode(lbffBayerPdaf3InnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[3]->isActive = !(lbffBayerPdaf3InnerOptions & no3A); // lbff_Bayer_Pdaf3:terminal_connect_ae_output -> ae_out
+    subGraphLinks[4]->isActive = !(lbffBayerPdaf3InnerOptions & no3A); // lbff_Bayer_Pdaf3:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[5]->isActive = !(lbffBayerPdaf3InnerOptions & no3A); // lbff_Bayer_Pdaf3:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[6]->isActive = !(lbffBayerPdaf3InnerOptions & no3A); // lbff_Bayer_Pdaf3:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[14]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
+    subGraphLinks[15]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[17]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[8]->isActive = !(lbffBayerPdaf3InnerOptions & noLbOutputPs); // lbff_Bayer_Pdaf3:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[9]->isActive = !(lbffBayerPdaf3InnerOptions & noLbOutputMe); // lbff_Bayer_Pdaf3:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+    subGraphLinks[7]->isActive = !(lbffBayerPdaf3InnerOptions & noPdaf); // lbff_Bayer_Pdaf3:terminal_connect_pdaf_output -> pdaf_out
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 19; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+
+/*
+ * Graph 100041
+ */
+StaticGraph100041::StaticGraph100041(GraphConfiguration100041** selectedGraphConfiguration, uint32_t kernelConfigurationsOptionsCount, ZoomKeyResolutions* zoomKeyResolutions, VirtualSinkMapping* sinkMappingConfiguration, SensorMode* selectedSensorMode, int32_t selectedSettingsId) :
+    IStaticGraphConfig(selectedSensorMode, sinkMappingConfiguration, 100041, selectedSettingsId, zoomKeyResolutions),
+
+    _imageSubGraph(_sinkMappingConfiguration)
+{
+    // Construct outer nodes
+    _graphConfigurations = new GraphConfiguration100041[kernelConfigurationsOptionsCount];
+    IsysOuterNodeConfiguration** isysOuterNodeConfigurationOptions = new IsysOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwVaiOuterNodeConfiguration** swVaiOuterNodeConfigurationOptions = new SwVaiOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    LbffBayerOuterNodeConfiguration** lbffBayerOuterNodeConfigurationOptions = new LbffBayerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions = new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+
+    for (uint32_t i=0; i < kernelConfigurationsOptionsCount; ++i)
+    {
+        _graphConfigurations[i] = *selectedGraphConfiguration[i];
+        isysOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].isysOuterNodeConfiguration;
+        swVaiOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].swVaiOuterNodeConfiguration;
+        lbffBayerOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].lbffBayerOuterNodeConfiguration;
+        bbpsWithTnrOuterNodeConfigurationOptions[i] = &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+    }
+
+    _isysOuterNode.Init(isysOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swVaiOuterNode.Init(swVaiOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _lbffBayerOuterNode.Init(lbffBayerOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+
+    delete[] isysOuterNodeConfigurationOptions;
+    delete[] swVaiOuterNodeConfigurationOptions;
+    delete[] lbffBayerOuterNodeConfigurationOptions;
+    delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+
+    // Use default configuration
+    updateConfiguration(0);
+
+    // Declare all the links in the graph
+    GraphLink* link = nullptr;
+    link = &_graphLinks[0];
+    link->src = GraphElementType::Sensor;
+    link->dest = GraphElementType::Isys;
+    link->destNode = &_isysOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[1];
+    link->src = GraphElementType::LscBuffer;
+    link->dest = GraphElementType::LbffBayer;
+    link->destNode = &_lbffBayerOuterNode;
+    link->destTerminalId = 4;
+    link->type = LinkType::Source2Node;
+
+    link = &_graphLinks[2];
+    link->src = GraphElementType::Isys;
+    link->srcNode = &_isysOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::SwVai;
+    link->destNode = &_swVaiOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[3];
+    link->src = GraphElementType::SwVai;
+    link->srcNode = &_swVaiOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::LbffBayer;
+    link->destNode = &_lbffBayerOuterNode;
+    link->destTerminalId = 3;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[4];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 6;
+    link->dest = GraphElementType::AeOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[5];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 7;
+    link->dest = GraphElementType::AfStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[6];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::AwbStdOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[7];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 9;
+    link->dest = GraphElementType::AwbSatOut;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[8];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 9;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[9];
+    link->src = GraphElementType::LbffBayer;
+    link->srcNode = &_lbffBayerOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 7;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[10];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 12;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 10;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[11];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 13;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 5;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[12];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 11;
+    link->type = LinkType::Node2Self;
+
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 8;
+    link->dest = GraphElementType::BbpsWithTnr;
+    link->destNode = &_bbpsWithTnrOuterNode;
+    link->destTerminalId = 6;
+    link->type = LinkType::Node2Self;
+    link->frameDelay = 1U;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::ImageMp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::ImageDp;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 16;
+    link->dest = GraphElementType::ImagePpp;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 17; ++i)
+    {
+        // apply link configuration. select configuration with maximal size
+        uint32_t selectedLinkConfig = 0;
+        uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
+        for (uint32_t j = 1; j < kernelConfigurationsOptionsCount; j++)
+        {
+            if (_graphConfigurations[j].linkConfigurations[i].bufferSize > maxSize)
+            {
+                maxSize = _graphConfigurations[j].linkConfigurations[i].bufferSize;
+                selectedLinkConfig = j;
+            }
+        }
+        _graphLinks[i].linkConfiguration = &_graphConfigurations[selectedLinkConfig].linkConfigurations[i];
+
+        // Assign link to sub-graph
+        _imageSubGraph.links[i] = &_graphLinks[i];
+    }
+
+    // add nodes for sub graph
+    _imageSubGraph.isysOuterNode = &_isysOuterNode;
+    _imageSubGraph.lbffBayerOuterNode = &_lbffBayerOuterNode;
+    _imageSubGraph.swVaiOuterNode = &_swVaiOuterNode;
+    _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+
+    // choose the selected sub graph
+    _selectedGraphTopology = &_imageSubGraph;
+
+    // logical node IDs
+    _imageSubGraph.isysOuterNode->contextId = 0;
+    _imageSubGraph.lbffBayerOuterNode->contextId = 1;
+    _imageSubGraph.swVaiOuterNode->contextId = 2;
+    _imageSubGraph.bbpsWithTnrOuterNode->contextId = 3;
+    // Apply a default inner nodes configuration for the selected sub graph
+    SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
+    if(_selectedGraphTopology != nullptr)
+    {
+        _selectedGraphTopology->configInnerNodes(defaultInnerNodeConfiguration);
+    }
+}
+
+StaticGraphStatus StaticGraph100041::updateConfiguration(uint32_t selectedIndex)
+{
+    StaticGraphStatus  res = StaticGraphStatus::SG_OK;
+    res = _isysOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _swVaiOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _lbffBayerOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK)
+    {
+        return res;
+    }
+    return StaticGraphStatus::SG_OK;
+}
+
+StaticGraph100041::~StaticGraph100041()
+{
+    delete[] _graphConfigurations;
+    delete _zoomKeyResolutions.zoomKeyResolutionOptions;
+}
+
+StaticGraphStatus imageSubGraphTopology100041::configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration)
+{
+
+    /*
+     * Init sub graphs inner nodes configuration base on user request
+     */
+    InnerNodeOptionsFlags imagePublicInnerNodeConfiguration = GetInnerOptions(subGraphInnerNodeConfiguration.imageInnerOptions);
+
+    /*
+     * Setting Node lbffBayer initial inner node configuration
+     */
+    InnerNodeOptionsFlags lbffBayerInnerOptions = imagePublicInnerNodeConfiguration;
+    // always active public inner options
+    lbffBayerInnerOptions |= (noGmv | noBurstCapture | noIr | noPdaf);
+    // active public options according to sink mapping
+
+    /*
+     * Setting Node bbpsWithTnr initial inner node configuration
+     */
+    InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
+    // active public options according to sink mapping
+    if (
+        subGraphLinks[14]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noMp;
+    }
+    if (
+        subGraphLinks[15]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noDp;
+    }
+    if (
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        true)
+    {
+        bbpsWithTnrInnerOptions |= noPpp;
+    }
+
+    /*
+     * Configuring inner nodes according to the selected inner options
+     */
+    lbffBayerInnerOptions |= noLbOutputPs & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+    lbffBayerInnerOptions |= noLbOutputMe & (-((imagePublicInnerNodeConfiguration & (noMp | noDp | noPpp)) == (noMp | noDp | noPpp)));
+
+    /*
+     * Set the selected inner nodes to the outer nodes
+     */
+    lbffBayerOuterNode->setInnerNode(lbffBayerInnerOptions);
+    bbpsWithTnrOuterNode->setInnerNode(bbpsWithTnrInnerOptions);
+
+    /*
+     * Link enablement by public inner options
+     */
+    subGraphLinks[4]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_ae_output -> ae_out
+    subGraphLinks[5]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_af_std_output -> af_std_out
+    subGraphLinks[6]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_awb_std_output -> awb_std_out
+    subGraphLinks[7]->isActive = !(lbffBayerInnerOptions & no3A); // lbff_Bayer:terminal_connect_awb_sat_output -> awb_sat_out
+    subGraphLinks[14]->isActive = !(bbpsWithTnrInnerOptions & noMp); // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[15]->isActive = !(bbpsWithTnrInnerOptions & noDp); // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[16]->isActive = !(bbpsWithTnrInnerOptions & noPpp); // bbps_WithTnr:bbps_ofs_pp_yuvn_odr -> image_ppp
+
+    /*
+     * Link enablement by private inner options
+     */
+    subGraphLinks[8]->isActive = !(lbffBayerInnerOptions & noLbOutputPs); // lbff_Bayer:terminal_connect_ps_output -> bbps_WithTnr:bbps_slim_spatial_yuvn_ifd
+    subGraphLinks[9]->isActive = !(lbffBayerInnerOptions & noLbOutputMe); // lbff_Bayer:terminal_connect_me_output -> bbps_WithTnr:bbps_tnr_bc_yuv4n_ifd
+
+    /*
+     * Disable links with zero buffer size
+     * (used for post processing when not all links are being used)
+     */
+     for (uint32_t i = 0; i < 17; i++)
+     {
+        if (subGraphLinks[i]->linkConfiguration->bufferSize == 0)
+        {
+            subGraphLinks[i]->isActive = false;
+        }
+     }
+
+    /*
+     * Link enablement by inner options combinations
+     */
+    subGraphLinks[10]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_blend_yuvn_odr -> bbps_WithTnr:bbps_slim_tnr_blend_yuvnm1_ifd
+    subGraphLinks[11]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_scale_yuv4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_yuv4nm1_ifd
+    subGraphLinks[12]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_tnr_blend_rs4n_ifd
+    subGraphLinks[13]->isActive = (bbpsWithTnrInnerOptions & (noMp|noDp|noPpp)) != (noMp|noDp|noPpp); // bbps_WithTnr:bbps_tnr_bc_rs4n_odr -> bbps_WithTnr:bbps_slim_tnr_bc_rs4nm1_ifd
+
+    return StaticGraphStatus::SG_OK;
+}
+

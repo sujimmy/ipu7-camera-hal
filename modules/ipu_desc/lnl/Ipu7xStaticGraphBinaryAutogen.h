@@ -1,7 +1,7 @@
 
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -78,7 +78,6 @@ struct GraphConfigurationKey {
     StreamConfig stills;
     StreamConfig postProcessingStills;
     StreamConfig raw;
-    StreamConfig rawDolLong;
     StreamConfig videoIr;
     StreamConfig previewIr;
 };

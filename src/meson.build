@@ -46,9 +46,10 @@ libcamera_sources += files([
     'core/processingUnit/IPipeManagerFactory.cpp',
     'core/processingUnit/PipeLine.cpp',
     'core/processingUnit/CBStage.cpp',
-    'core/processingUnit/PostProcessStage.cpp',
-# PNP_DEBUG_S
+# FILE_SOURCE_S
     'core/FileSource.cpp',
+# FILE_SOURCE_E
+# PNP_DEBUG_S
     'platformdata/PnpDebugControl.cpp',
     'core/processingUnit/PipeManagerStub.cpp',
     'iutils/SwImageConverter.cpp',
@@ -57,7 +58,6 @@ libcamera_sources += files([
     'iutils/CameraDump.cpp',
     'iutils/CameraLog.cpp',
     'iutils/PerfettoTrace.cpp',
-    'iutils/Thread.cpp',
     'iutils/Trace.cpp',
     'iutils/Utils.cpp',
     'platformdata/AiqInitData.cpp',

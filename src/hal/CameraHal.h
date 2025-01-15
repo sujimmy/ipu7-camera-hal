@@ -77,7 +77,7 @@ class CameraHal {
     // VIRTUAL_CHANNEL_S
     int mTotalVirtualChannelCamNum[MAX_VC_GROUP_NUMBER];
     int mConfigTimes[MAX_VC_GROUP_NUMBER];
-    Condition mVirtualChannelSignal[MAX_VC_GROUP_NUMBER];
+    std::condition_variable mVirtualChannelSignal[MAX_VC_GROUP_NUMBER];
     static const nsecs_t mWaitDuration = 500000000;  // 500ms
     // VIRTUAL_CHANNEL_E
 

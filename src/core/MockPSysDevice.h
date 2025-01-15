@@ -27,7 +27,6 @@
 #include "Errors.h"
 #include "FileSource.h"
 #include "PSysDevice.h"
-#include "PnpDebugControl.h"
 #include "iutils/Thread.h"
 #include "modules/ipu_desc/ipu-psys.h"
 
@@ -36,28 +35,7 @@ namespace icamera {
 /**
  * PSYS uAPI Mock
  */
-
-class MockPSysDeviceInterface {
- public:
-    MockPSysDeviceInterface() {}
-    virtual ~MockPSysDeviceInterface() {}
-    virtual void handleResult() = 0;
-};
-
-class SubPollThread : public Thread {
-    MockPSysDeviceInterface* mPSysDevice;
-
- public:
-    SubPollThread(MockPSysDeviceInterface* psysDevice) { mPSysDevice = psysDevice; }
-
-    virtual bool threadLoop() {
-        usleep(10000);
-        mPSysDevice->handleResult();
-        return true;
-    }
-};
-
-class MockPSysDevice : public PSysDevice, public MockPSysDeviceInterface {
+class MockPSysDevice : public PSysDevice {
  public:
     explicit MockPSysDevice(int cameraId);
     virtual ~MockPSysDevice();
@@ -71,26 +49,21 @@ class MockPSysDevice : public PSysDevice, public MockPSysDeviceInterface {
 
     virtual int addTask(const PSysTask& task) override;
 
-    virtual int wait(ipu_psys_event& event) override {
-        usleep(10000);
-        return OK;
-    }
-    virtual int poll(short events, int timeout) override { return OK; }
-
     virtual int registerBuffer(TerminalBuffer* buf) override {
         buf->psysBuf.base.fd = ++mFd;
         return OK;
     }
-    virtual int unregisterBuffer(TerminalBuffer* buf) override { return OK; }
+    virtual void unregisterBuffer(TerminalBuffer* buf) override {}
 
-    virtual void handleResult() override;
+    virtual int poll() override;
 
  private:
     static const int kStartingFrameCount = 100;
     icamera::FileSourceFromDir* mFileSource;
     const char* PNP_INJECTION_NAME = "/run/camera/libcamera/";
 
-    SubPollThread* mPollThread;
+    PollThread<MockPSysDevice>* mPollThread;
+    bool mExitPending = false;
     int mFd = 0;
     std::mutex mDataLock;
     std::unordered_map<uint8_t, IPSysDeviceCallback*> mPSysDeviceCallbackMap;

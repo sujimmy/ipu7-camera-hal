@@ -1,6 +1,6 @@
 /*
 * INTEL CONFIDENTIAL
-* Copyright (c) 2024 Intel Corporation
+* Copyright (c) 2025 Intel Corporation
 * All Rights Reserved.
 *
 * The source code contained or described herein and all documents related to
@@ -139,13 +139,34 @@ enum SW_DOLTerminalID
 enum SW_GDCTerminalID
 {
     SW_GDC_TERMINAL_CONNECT_INPUT,
-    SW_GDC_TERMINAL_CONNECT_OUTPUT,
+    SW_GDC_TERMINAL_CONNECT_OUTPUT_1,
+    SW_GDC_TERMINAL_CONNECT_OUTPUT_2,
 };
 
 enum SW_GTMTerminalID
 {
     SW_GTM_TERMINAL_CONNECT_INPUT,
-    SW_GTM_TERMINAL_CONNECT_OUTPUT,
+    SW_GTM_TERMINAL_CONNECT_OUTPUT_1,
+    SW_GTM_TERMINAL_CONNECT_OUTPUT_2,
+};
+
+enum SW_NNTMTerminalID
+{
+    SW_NNTM_TERMINAL_CONNECT_INPUT,
+    SW_NNTM_TERMINAL_CONNECT_OUTPUT_1,
+    SW_NNTM_TERMINAL_CONNECT_OUTPUT_2,
+};
+
+enum SW_SCALERTerminalID
+{
+    SW_SCALER_TERMINAL_CONNECT_INPUT,
+    SW_SCALER_TERMINAL_CONNECT_OUTPUT,
+};
+
+enum SW_VAITerminalID
+{
+    SW_VAI_TERMINAL_CONNECT_INPUT,
+    SW_VAI_TERMINAL_CONNECT_OUTPUT,
 };
 
 extern TerminalDescriptor SW_ISYSTerminalDesc[];
@@ -154,6 +175,9 @@ extern TerminalDescriptor BBPSTerminalDesc[];
 extern TerminalDescriptor SW_DOLTerminalDesc[];
 extern TerminalDescriptor SW_GDCTerminalDesc[];
 extern TerminalDescriptor SW_GTMTerminalDesc[];
+extern TerminalDescriptor SW_NNTMTerminalDesc[];
+extern TerminalDescriptor SW_SCALERTerminalDesc[];
+extern TerminalDescriptor SW_VAITerminalDesc[];
 
 extern int CountOfSW_ISYSTerminalDesc;
 extern int CountOfLBFFTerminalDesc;
@@ -161,3 +185,6 @@ extern int CountOfBBPSTerminalDesc;
 extern int CountOfSW_DOLTerminalDesc;
 extern int CountOfSW_GDCTerminalDesc;
 extern int CountOfSW_GTMTerminalDesc;
+extern int CountOfSW_NNTMTerminalDesc;
+extern int CountOfSW_SCALERTerminalDesc;
+extern int CountOfSW_VAITerminalDesc;
