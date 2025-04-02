@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Intel Corporation.
+ * Copyright (C) 2024-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 #include <vector>
-
-#include "GraphResolutionConfigurator.h"
 #include "StaticGraphAutogen.h"
 #include "StaticGraphTypesAutogen.h"
+#include "GraphResolutionConfigurator.h"
 
 class GraphResolutionConfiguratorHelper {
  public:
@@ -28,4 +28,5 @@ class GraphResolutionConfiguratorHelper {
     static uint32_t getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId, GraphLink** links);
     static StaticGraphStatus getRunKernelUuidForResHistoryUpdate(
         std::vector<uint32_t>& kernelUuids);
+    static uint32_t getRunKernelIoBufferSystemApiUuid();
 };

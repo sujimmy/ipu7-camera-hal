@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Intel Corporation.
+ * Copyright (C) 2024-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,10 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSi
                 case 100041:       // Dol3Inputs_WithDvs_WithTnr
                     return 5637;   // gdc7_1
                 case 100005:       // Bayer_NoPdaf_WithNntm_WithTnr
+                case 100031:       // Dol2Inputs_NoDvs_NoTnr
+                case 100032:       // Dol2Inputs_NoDvs_WithTnr
+                case 100033:       // Dol3Inputs_NoDvs_NoTnr
+                case 100034:       // Dol3Inputs_NoDvs_WithTnr
                 case 100042:       // Bayer_WithPdaf3_WithNntm_WithTnr
                     return 46539;  // nntm_1_0
             }
@@ -84,4 +88,8 @@ StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHisto
     kernelUuids.push_back(19706);  // sw_scaler
     kernelUuids.push_back(46539);  // nntm_1_0
     return StaticGraphStatus::SG_OK;
+}
+
+uint32_t GraphResolutionConfiguratorHelper::getRunKernelIoBufferSystemApiUuid() {
+    return 47358;
 }

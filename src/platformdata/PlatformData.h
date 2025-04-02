@@ -188,9 +188,8 @@ class PlatformData {
                       sensorDescription("unset"),
                       mLensName(""),
                       // VIRTUAL_CHANNEL_S
-                      mVirtualChannel(false),
-                      mVCNum(0),
-                      mVCSeq(0),
+                      mVCCount(0),
+                      mVCId(0),
                       mVCGroupId(-1),
                       // VIRTUAL_CHANNEL_E
                       mLensHwType(LENS_NONE_HW),
@@ -271,9 +270,8 @@ class PlatformData {
             std::string sensorDescription;
             std::string mLensName;
             // VIRTUAL_CHANNEL_S
-            bool mVirtualChannel;
-            int mVCNum;
-            int mVCSeq;
+            int mVCCount;
+            int mVCId;
             int mVCGroupId;
             // VIRTUAL_CHANNEL_E
             int mLensHwType;
@@ -1284,12 +1282,12 @@ class PlatformData {
 
     // VIRTUAL_CHANNEL_S
     /**
-     * Get virtual channel sequence
+     * Get virtual channel id
      *
      * \param cameraId: [0, MAX_CAMERA_NUMBER - 1]
-     * \return sequence if Virtual channel supported, otherwise return -1.
+     * \return id if Virtual channel supported, otherwise return 0.
      */
-    static int getVirtualChannelSequence(int cameraId);
+    static int getVirtualChannelId(int cameraId);
     // VIRTUAL_CHANNEL_E
 
     /**

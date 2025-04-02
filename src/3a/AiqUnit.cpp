@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,16 +119,16 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
 
         PERF_CAMERA_ATRACE_PARAM1_IMAGING("intelCca->init", 1);
 
+        const auto params = std::unique_ptr<cca::cca_init_params>(new cca::cca_init_params);
         // Initialize cca_cpf data
         ia_binary_data cpfData;
-        cca::cca_init_params params = {};
         ret = PlatformData::getCpf(mCameraId, tuningMode, &cpfData);
         if (ret == OK && cpfData.data) {
             CheckAndLogError(cpfData.size > cca::MAX_CPF_LEN, UNKNOWN_ERROR,
                        "%s, AIQB buffer is too small cpfData:%d > MAX_CPF_LEN:%d",
                        __func__, cpfData.size, cca::MAX_CPF_LEN);
-            MEMCPY_S(params.aiq_cpf.buf, cca::MAX_CPF_LEN, cpfData.data, cpfData.size);
-            params.aiq_cpf.size = cpfData.size;
+            MEMCPY_S(params->aiq_cpf.buf, cca::MAX_CPF_LEN, cpfData.data, cpfData.size);
+            params->aiq_cpf.size = cpfData.size;
         }
 
         // Initialize cca_nvm data
@@ -137,8 +137,8 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
             CheckAndLogError(nvmData->size > cca::MAX_NVM_LEN,  UNKNOWN_ERROR,
                        "%s, NVM buffer is too small: nvmData:%d  MAX_NVM_LEN:%d",
                        __func__, nvmData->size, cca::MAX_NVM_LEN);
-            MEMCPY_S(params.aiq_nvm.buf, cca::MAX_NVM_LEN, nvmData->data, nvmData->size);
-            params.aiq_nvm.size = nvmData->size;
+            MEMCPY_S(params->aiq_nvm.buf, cca::MAX_NVM_LEN, nvmData->data, nvmData->size);
+            params->aiq_nvm.size = nvmData->size;
         }
 
         // Initialize cca_aiqd data
@@ -147,26 +147,26 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
             CheckAndLogError(aiqdData->size > cca::MAX_AIQD_LEN,  UNKNOWN_ERROR,
                        "%s, AIQD buffer is too small aiqdData:%d > MAX_AIQD_LEN:%d",
                        __func__, aiqdData->size, cca::MAX_AIQD_LEN);
-            MEMCPY_S(params.aiq_aiqd.buf, cca::MAX_AIQD_LEN, aiqdData->data, aiqdData->size);
-            params.aiq_aiqd.size = aiqdData->size;
+            MEMCPY_S(params->aiq_aiqd.buf, cca::MAX_AIQD_LEN, aiqdData->data, aiqdData->size);
+            params->aiq_aiqd.size = aiqdData->size;
         }
 
         SensorFrameParams sensorParam = {};
         ret = PlatformData::calculateFrameParams(mCameraId, sensorParam);
         CheckAndLogError(ret != OK, ret, "%s: Failed to calculate frame params", __func__);
-        AiqUtils::convertToAiqFrameParam(sensorParam, params.frameParams);
+        AiqUtils::convertToAiqFrameParam(sensorParam, params->frameParams);
 
-        params.frameUse = ia_aiq_frame_use_video;
-        params.aiqStorageLen = MAX_SETTING_COUNT;
+        params->frameUse = ia_aiq_frame_use_video;
+        params->aiqStorageLen = MAX_SETTING_COUNT;
         // handle AE delay in AiqEngine
-        params.aecFrameDelay = 0;
+        params->aecFrameDelay = 0;
 
         // Initialize functions which need to be started
-        params.bitmap = cca::CCA_MODULE_AE | cca::CCA_MODULE_AWB |
+        params->bitmap = cca::CCA_MODULE_AE | cca::CCA_MODULE_AWB |
                         cca::CCA_MODULE_PA | cca::CCA_MODULE_SA | cca::CCA_MODULE_GBCE |
                         cca::CCA_MODULE_LARD;
         if (PlatformData::getLensHwType(mCameraId) == LENS_VCM_HW) {
-            params.bitmap |= cca::CCA_MODULE_AF;
+            params->bitmap |= cca::CCA_MODULE_AF;
         }
 
 #ifndef PAC_ENABLE
@@ -177,18 +177,18 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
         if (graphConfig != nullptr) {
             std::vector<int32_t> streamIds;
             graphConfig->graphGetStreamIds(streamIds, false);
-            params.aic_stream_ids.count = streamIds.size();
+            params->aic_stream_ids.count = streamIds.size();
             CheckAndLogError(streamIds.size() > cca::MAX_STREAM_NUM, UNKNOWN_ERROR,
                     "%s, Too many streams: %zu in graph", __func__, streamIds.size());
             for (size_t i = 0; i < streamIds.size(); ++i) {
-                params.aic_stream_ids.ids[i] = streamIds[i];
+                params->aic_stream_ids.ids[i] = streamIds[i];
             }
         }
 
         IntelCca *intelCca = IntelCca::getInstance(mCameraId, tuningMode);
         CheckAndLogError(!intelCca, UNKNOWN_ERROR,
                          "Failed to get cca. mode:%d cameraId:%d", tuningMode, mCameraId);
-        ia_err iaErr = intelCca->init(params);
+        ia_err iaErr = intelCca->init(*params);
         if (iaErr == ia_err_none) {
             mTuningModes.push_back(tuningMode);
         } else {
@@ -201,7 +201,7 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
         CheckAndLogError(ret != OK, UNKNOWN_ERROR, "%s, PlatformData::initMakernote fails",
                          __func__);
 
-        dumpCcaInitParam(params);
+        dumpCcaInitParam(*params);
     }
 
     mCcaInitialized = true;
@@ -218,10 +218,12 @@ void AiqUnit::deinitIntelCcaHandle() {
                          __func__, mode, mCameraId);
 
         if (PlatformData::isAiqdEnabled(mCameraId)) {
-            cca::cca_aiqd aiqd = {};
-            ia_err iaErr = intelCca->getAiqd(&aiqd);
+            const auto aiqd = std::unique_ptr<cca::cca_aiqd>(new cca::cca_aiqd);
+            (void)memset(aiqd.get(), 0, sizeof(cca::cca_aiqd));
+
+            ia_err iaErr = intelCca->getAiqd(aiqd.get());
             if (AiqUtils::convertError(iaErr) == OK) {
-                ia_binary_data data = {aiqd.buf, static_cast<unsigned int>(aiqd.size)};
+                ia_binary_data data = {aiqd->buf, static_cast<unsigned int>(aiqd->size)};
                 PlatformData::saveAiqd(mCameraId, mode, data);
             } else {
                 LOGW("@%s, failed to get aiqd data, iaErr %d", __func__, iaErr);

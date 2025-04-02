@@ -76,18 +76,14 @@ int SofSource::initDev() {
 
     mIsysReceiverSubDev = V4l2DeviceFactory::getSubDev(mCameraId, subDeviceNodeName);
 
-    int id = 0;
+    int vcId = 0;
     // VIRTUAL_CHANNEL_S
-    /* The value of virtual channel sequence is 1, 2, 3, ... if virtual channel supported.
-       The value of SOF event id is 0, 1, 2, ... (sequence -1)  when virtual channel supported. */
-    int sequence = PlatformData::getVirtualChannelSequence(mCameraId);
-    if (sequence > 0) {
-        id = sequence - 1;
-    }
+    /* The value of virtual channel id is 0, 1, 2, 3, ... if virtual channel supported */
+    vcId = PlatformData::getVirtualChannelId(mCameraId);
     // VIRTUAL_CHANNEL_E
-    int status = mIsysReceiverSubDev->SubscribeEvent(V4L2_EVENT_FRAME_SYNC, id);
-    CheckAndLogError(status != OK, status, "Failed to subscribe sync event %d", id);
-    LOG1("%s: Using SOF event id %d for sync", __func__, id);
+    int status = mIsysReceiverSubDev->SubscribeEvent(V4L2_EVENT_FRAME_SYNC, vcId);
+    CheckAndLogError(status != OK, status, "Failed to subscribe sync event %d", vcId);
+    LOG1("%s: Using SOF event id %d for sync", __func__, vcId);
 
     return OK;
 }
@@ -95,20 +91,16 @@ int SofSource::initDev() {
 int SofSource::deinitDev() {
     if (mIsysReceiverSubDev == nullptr) return OK;
 
-    int id = 0;
+    int vcId = 0;
     // VIRTUAL_CHANNEL_S
-    /* The value of virtual channel sequence is 1, 2, 3, ... if virtual channel supported.
-       The value of SOF event id is 0, 1, 2, ... (sequence -1)  when virtual channel supported. */
-    int sequence = PlatformData::getVirtualChannelSequence(mCameraId);
-    if (sequence > 0) {
-        id = sequence - 1;
-    }
+    /* The value of virtual channel sequence is 0, 1, 2, 3, ... if virtual channel supported. */
+    vcId = PlatformData::getVirtualChannelId(mCameraId);
     // VIRTUAL_CHANNEL_E
-    int status = mIsysReceiverSubDev->UnsubscribeEvent(V4L2_EVENT_FRAME_SYNC, id);
+    int status = mIsysReceiverSubDev->UnsubscribeEvent(V4L2_EVENT_FRAME_SYNC, vcId);
     if (status == OK) {
-        LOG1("%s: Unsubscribe SOF event id %d done", __func__, id);
+        LOG1("%s: Unsubscribe SOF event id %d done", __func__, vcId);
     } else {
-        LOGE("Failed to unsubscribe SOF event %d", id);
+        LOGE("Failed to unsubscribe SOF event %d", vcId);
     }
 
     return status;

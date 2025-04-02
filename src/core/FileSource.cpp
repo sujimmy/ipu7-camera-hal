@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2022 Intel Corporation.
+ * Copyright (C) 2017-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,8 +90,7 @@ int FileSource::init() {
 
 void FileSource::deinit() {}
 
-int FileSource::configure(const map<uuid, stream_t>& outputFrames,
-                          const vector<ConfigMode>& configModes) {
+int FileSource::configure(const map<uuid, stream_t>& outputFrames) {
     // multi-output should have same size and format
     for (auto& output : outputFrames) {
         if (mStreamConfig.size != 0 && (mStreamConfig.size != output.second.size ||
@@ -173,8 +172,10 @@ int FileSource::stop() {
     mProduceThread->wait();
     mFrameFileBuffers.clear();
 
-    while (mBufferQueue.size() > 0) {
-        mBufferQueue.pop();
+    for (auto &bufQueue : mBufferQueue) {
+        while (bufQueue.second.size() > 0) {
+            bufQueue.second.pop();
+        }
     }
 
     return OK;
@@ -184,9 +185,8 @@ int FileSource::qbuf(uuid port, const shared_ptr<CameraBuffer>& camBuffer) {
     CheckAndLogError(!camBuffer, BAD_VALUE, "Camera buffer is null");
 
     AutoMutex l(mLock);
-
-    bool needSignal = mBufferQueue.empty();
-    mBufferQueue.push(camBuffer);
+    bool needSignal = mBufferQueue[port].empty();
+    mBufferQueue[port].push(camBuffer);
     if (needSignal) {
         mBufferSignal.notify_one();
     }
@@ -205,29 +205,28 @@ bool FileSource::produce() {
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     static const nsecs_t kWaitDuration = 40000000000;  // 40s
-    shared_ptr<CameraBuffer> qBuffer;
-
+    std::map<uuid, shared_ptr<CameraBuffer>> qBuffer;
     {
-        // Find a buffer which needs to be filled.
+        // Wait for all the output ports to be ready.
         std::unique_lock<std::mutex> lock(mLock);
-        while (mBufferQueue.empty()) {
+        for (auto& bufQueue : mBufferQueue) {
             if (mExitPending) {
                 return false;
             }
-            std::cv_status ret = mBufferSignal.wait_for(
-                lock, std::chrono::nanoseconds(kWaitDuration));
+            std::cv_status ret;
+            if (bufQueue.second.empty()) {
+                ret = mBufferSignal.wait_for(lock, std::chrono::nanoseconds(kWaitDuration));
+            }
             if (mExitPending || ret == std::cv_status::timeout) {
                 return false;
             }
+            if (bufQueue.second.empty()) {
+                return true;
+            }
         }
-
-        qBuffer = mBufferQueue.front();
-        mBufferQueue.pop();
     }
 
     notifySofEvent();
-
-    fillFrameBuffer(qBuffer);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     long seconds = end.tv_sec - start.tv_sec;
@@ -247,8 +246,20 @@ bool FileSource::produce() {
     stamp.tv_sec = stampTime.tv_sec;
     stamp.tv_usec = stampTime.tv_nsec / 1000;
 
-    qBuffer->setSequence(mSequence);
-    qBuffer->setTimestamp(stamp);
+    {
+        std::unique_lock<std::mutex> lock(mLock);
+        // buffers are ready on each port
+        for (auto& bufQueue : mBufferQueue) {
+            qBuffer[bufQueue.first] = bufQueue.second.front();
+            bufQueue.second.pop();
+        }
+    }
+
+    for (auto& buf : qBuffer) {
+        buf.second->setSequence(mSequence);
+        buf.second->setTimestamp(stamp);
+        fillFrameBuffer(buf.second);
+    }
 
     notifyFrame(qBuffer);
 
@@ -310,17 +321,21 @@ void FileSource::fillFrameBuffer(shared_ptr<CameraBuffer>& buffer) {
     LOGE("Not find the framefile: %s", fileName.c_str());
 }
 
-void FileSource::notifyFrame(const shared_ptr<CameraBuffer>& buffer) {
+void FileSource::notifyFrame(std::map<uuid, std::shared_ptr<CameraBuffer>> buffers) {
     EventData frameData;
     frameData.type = EVENT_ISYS_FRAME;
     frameData.buffer = nullptr;
     frameData.data.frame.sequence = mSequence;
-    frameData.data.frame.timestamp = buffer->getV4L2Buffer().Get()->timestamp;
+    frameData.data.frame.timestamp = buffers.begin()->second->getV4L2Buffer().Get()->timestamp;
     notifyListeners(frameData);
 
     for (auto& consumer : mBufferConsumerList) {
-        for (auto & port : mOutputPorts)
-            consumer->onFrameAvailable(port, buffer);
+        for (auto & port : mOutputPorts) {
+            if (buffers.find(port) != buffers.end()) {
+                LOG2("Notify frame to consumer for port:%x", port);
+                consumer->onFrameAvailable(port, buffers[port]);
+            }
+        }
     }
 }
 

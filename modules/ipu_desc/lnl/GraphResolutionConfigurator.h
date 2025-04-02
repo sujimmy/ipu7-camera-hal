@@ -110,11 +110,7 @@ public:
     // This function is used for statistics output only
     StaticGraphStatus getStatsRoiFromSensorRoi(const SensorRoi& sensorRoi, const HwSink hwSink, ResolutionRoi& statsRoi);
 
-    StaticGraphStatus undoSensorCropandScale(SensorRoi& sensor_roi);
-
-    StaticGraphStatus sensorCropOrScaleExist(bool& sensor_crop_or_scale_exist);
-
-protected:
+private:
     StaticGraphStatus initRunKernelCoord(GraphResolutionConfiguratorKernelRole role, RunKernelCoords& coord);
     StaticGraphStatus initOutputRunKernelCoord(RunKernelCoords& coord);
     StaticGraphStatus initKernelCoordsForUpdate();
@@ -129,12 +125,9 @@ protected:
         uint32_t outputWidth, uint32_t outputHeight, StaticGraphKernelResCrop* originalScalerCrop);
     StaticGraphStatus adjustDownscalerCrop(StaticGraphKernelRes* scalerResInfo);
     StaticGraphStatus updateRunKernelUpScaler(StaticGraphRunKernel* runKernel, uint32_t inputWidth, uint32_t inputHeight,
-        uint32_t outputWidth, uint32_t outputHeight, uint32_t& upscalerActualInputWidth, uint32_t& upscalerActualInputHeight,
-        uint32_t& upscalerActualOutputWidth, uint32_t& upscalerActualOutputHeight);
+        uint32_t outputWidth, uint32_t outputHeight, uint32_t& upscalerActualInputWidth, uint32_t& upscalerActualInputHeight);
     StaticGraphStatus updateRunKernelPassThrough(StaticGraphRunKernel* runKernel, uint32_t width, uint32_t height);
-    StaticGraphStatus updateRunKernelFinalCropper(StaticGraphRunKernel* runKernel, uint32_t inputWidth, uint32_t inputHeight,
-        uint32_t outputWidth, uint32_t outputHeight);
-        StaticGraphStatus updateCroppingScaler(StaticGraphRunKernel* downscalerRunKernel, StaticGraphRunKernel* upscalerRunKernel);
+    StaticGraphStatus updateCroppingScaler(StaticGraphRunKernel* downscalerRunKernel, StaticGraphRunKernel* upscalerRunKernel);
     StaticGraphStatus updateRunKernelResolutionHistory(StaticGraphRunKernel* runKernel, StaticGraphRunKernel* prevRunKernel, bool updateResolution = true);
 
     IStaticGraphConfig* _staticGraph;
@@ -147,34 +140,6 @@ protected:
     double _heightIn2OutScale = 1;
     double _sensorHorizontalScaling = 1.0;
     double _sensorVerticalScaling = 1.0;
-    size_t _sensorHorizontalCropLeft;
-    size_t _sensorHorizontalCropRight;
-    size_t _sensorVerticalCropTop;
-    size_t _sensorVerticalCropBottom;
-    StaticGraphKernelResCrop _originalCropOfFinalCropper = { 0,0,0,0 };
-    StaticGraphKernelResCrop _originalCropInputToScaler = {0,0,0,0};
-    StaticGraphKernelResCrop _originalCropScalerToOutput = { 0,0,0,0 };
-};
-
-class Ipu8GraphResolutionConfigurator : public GraphResolutionConfigurator
-{
-public:
-    Ipu8GraphResolutionConfigurator(IStaticGraphConfig* staticGraph);
-
-    StaticGraphStatus updateStaticGraphConfig(const RegionOfInterest& roi, bool isCenteredZoom);
-
-private:
-    StaticGraphFragmentDesc* getKernelFragments(RunKernelCoords& coord);
-
-    StaticGraphStatus updateRunKernelOfScalers(SensorRoi& roi);
-
-    StaticGraphStatus updateRunKernelUpScaler(StaticGraphRunKernel* runKernel,
-        SensorRoi& roi, StaticGraphRunKernel* cropperRunKernel, uint32_t outputWidth, uint32_t outputHeight, StaticGraphKernelResCrop* originalDownscalerCrop);
-    StaticGraphStatus updateRunKernelCropper(StaticGraphRunKernel* runKernel, uint32_t inputWidth, uint32_t inputHeight,
-        uint32_t outputWidth, uint32_t outputHeight, StaticGraphKernelResCrop* originalDownscalerCrop);
-    StaticGraphStatus updateKernelFragments(StaticGraphRunKernel* runKernel, StaticGraphFragmentDesc* fragmentsDesc, uint32_t fragments);
-
-    StaticGraphStatus SanityCheck();
-    StaticGraphStatus SanityCheckCrop(StaticGraphKernelResCrop* crop);
+    StaticGraphKernelResCrop _originalOutputCrop = {0,0,0,0};
 };
 

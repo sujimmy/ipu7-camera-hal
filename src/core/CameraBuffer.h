@@ -159,6 +159,21 @@ class CameraBuffer {
     int64_t mSettingSequence;
 
     void* mMmapAddrs;
+
+#ifdef LIBDRM_SUPPORT_MMAP_OFFSET
+    class DeviceRender {
+     public:
+        DeviceRender();
+        explicit DeviceRender(const char* path_file);
+        ~DeviceRender();
+        void* mapDmaBufferAddr(int fd, unsigned int bufferSize);
+
+     private:
+        int m_handle;
+    };
+
+    static DeviceRender mDeviceRender;
+#endif
 };
 
 typedef std::vector<std::shared_ptr<CameraBuffer> > CameraBufVector;

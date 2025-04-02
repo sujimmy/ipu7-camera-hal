@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2021 Intel Corporation.
+ * Copyright (C) 2017-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,7 @@ class FileSource : public StreamSource {
 
     int init();
     void deinit();
-    int configure(const std::map<uuid, stream_t>& outputFrames,
-                  const std::vector<ConfigMode>& configModes);
+    int configure(const std::map<uuid, stream_t>& outputFrames);
     int start();
     int stop();
 
@@ -65,7 +64,7 @@ class FileSource : public StreamSource {
     int allocateSourceBuffer();
     void fillFrameBuffer(std::shared_ptr<CameraBuffer>& buffer);
     void fillFrameBuffer(std::string fileName, std::shared_ptr<CameraBuffer>& buffer);
-    void notifyFrame(const std::shared_ptr<CameraBuffer>& buffer);
+    void notifyFrame(std::map<uuid, std::shared_ptr<CameraBuffer>> buffers);
     void notifySofEvent();
 
  private:
@@ -107,7 +106,7 @@ class FileSource : public StreamSource {
 
     std::vector<BufferConsumer*> mBufferConsumerList;
     std::map<std::string, std::shared_ptr<CameraBuffer>> mFrameFileBuffers;
-    CameraBufQ mBufferQueue;
+    std::map<uuid, CameraBufQ> mBufferQueue;
     std::condition_variable mBufferSignal;
     // Guard for FileSource Public API
     Mutex mLock;

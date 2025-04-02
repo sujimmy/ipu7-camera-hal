@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Intel Corporation
+ * Copyright (C) 2018-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,9 +44,10 @@ uint8_t GraphUtils::getContextId(int32_t stageId) {
 const char* GraphUtils::getStageName(int32_t stageId, int32_t streamId) {
     uint8_t ipuResourceId = getResourceId(stageId);
 
+#ifndef IPU_SYSVER_ipu8
     if (ipuResourceId == NODE_RESOURCE_ID_BBPS)
         return (streamId == STILL_STREAM_ID) ? "bbps1" : "bbps";
-
+#endif
     if (ipuResourceId == NODE_RESOURCE_ID_LBFF)
         return (streamId == STILL_STREAM_ID) ? "lbff1" : "lbff";
 
@@ -69,11 +70,18 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
             return (bpp == 10) ? GET_FOURCC_FMT('G', 'R', '1', '0')
                                 : GET_FOURCC_FMT('G', 'R', '0', '8');
         // LB output
+#ifdef IPU_SYSVER_ipu8
+        if (terminalId == LBFF_TERMINAL_CONNECT_OFS_MP_OUTPUT ||
+            terminalId == LBFF_TERMINAL_CONNECT_OFS_DP_OUTPUT)
+            return (bpp == 10) ? GET_FOURCC_FMT('P', '0', '1', '0')
+                               : GET_FOURCC_FMT('N', 'V', '1', '2');
+#else
         if (terminalId == LBFF_TERMINAL_CONNECT_ME_OUTPUT ||
             terminalId == LBFF_TERMINAL_CONNECT_PS_OUTPUT)
             return (bpp == 8) ? GET_FOURCC_FMT('V', '4', '2', '0') : 0;
+#endif
     }
-
+#ifndef IPU_SYSVER_ipu8
     if (resourceId == NODE_RESOURCE_ID_BBPS) {
         // BB input
         if (terminalId == BBPS_TERMINAL_CONNECT_TNR_BC_YUV4N_IFD ||
@@ -89,7 +97,7 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
             return (bpp == 10) ? GET_FOURCC_FMT('P', '0', '1', '0')
                                 : GET_FOURCC_FMT('N', 'V', '1', '2');
     }
-
+#endif
     LOGW("%s: no fourcc for resourceId %d, term %d", __func__, resourceId, terminalId);
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Intel Corporation.
+ * Copyright (C) 2023-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,12 +54,6 @@ int ICBMThread::processFrame(const camera_buffer_t& inBuffer, const camera_buffe
     request.outII.size = outBuffer.s.size;
     request.outII.stride = outBuffer.s.stride;
 
-#ifdef ENABLE_SANDBOXING
-    request.inII.gfxHandle = inBuffer.dmafd;
-    request.outII.gfxHandle = outBuffer.dmafd;
-
-    auto ret = mIntelICBM->processFrame(request);
-#else
     void* pInBuf = (inBuffer.s.memType == V4L2_MEMORY_DMABUF) ?
                        CameraBuffer::mapDmaBufferAddr(inBuffer.dmafd, inBuffer.s.size) :
                        inBuffer.addr;
@@ -79,7 +73,6 @@ int ICBMThread::processFrame(const camera_buffer_t& inBuffer, const camera_buffe
     if (outBuffer.s.memType == V4L2_MEMORY_DMABUF) {
         CameraBuffer::unmapDmaBufferAddr(pOutBuf, outBuffer.s.size);
     }
-#endif
 
     if (ret != OK) {
         LOGE("%s Run frame fails", __func__);

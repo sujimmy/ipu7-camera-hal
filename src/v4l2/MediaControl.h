@@ -252,6 +252,7 @@ class MediaControl {
     // VIRTUAL_CHANNEL_E
 
     int getLensName(std::string* lensName);
+    bool isMediaSourceEntity(const MediaEntity* entity);
     bool checkAvailableSensor(const std::string& sensorEntityName);
     bool checkAvailableSensor(const std::string& sensorEntityName,
                               const std::string& sinkEntityName);
@@ -302,7 +303,7 @@ class MediaControl {
     int setFormat(int cameraId, const McFormat* format, int targetWidth, int targetHeight,
                   int field);
     int setSelection(int cameraId, const McFormat* format, int targetWidth, int targetHeight);
-
+    int setRouting(int cameraId, MediaCtlConf* mc, bool enableRouting);
     /* Dump functions */
     void dumpInfo(media_device_info& devInfo);
     void dumpEntityDesc(media_entity_desc& desc, media_device_info& devInfo);

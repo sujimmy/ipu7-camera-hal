@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2022 Intel Corporation
+ * Copyright (C) 2016-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -227,7 +227,7 @@ void trimConvertNV12ToNV21(int width, int height, int srcStride, void *src, void
             pDst += width;
         }
     } else {
-        ALOGE("bad stride value");
+        LOGE("bad stride value");
         return;
     }
 
@@ -344,7 +344,7 @@ void convertNV12ToYV12(int width, int height, int srcStride, void *src, void *ds
             dstPtr += yStride;
         }
     } else {
-        ALOGE("bad src stride value");
+        LOGE("bad src stride value");
         return;
     }
 
@@ -387,7 +387,7 @@ void align16ConvertNV12ToYV12(int width, int height, int srcStride, void *src, v
             dstPtr += yStride;
         }
     } else {
-        ALOGE("bad src stride value");
+        LOGE("bad src stride value");
         return;
     }
 
@@ -759,7 +759,7 @@ void convertBuftoYV12(int format, int width, int height, int srcStride,
         convertYUYVToYV12(width, height, srcStride, dstStride, src, dst);
         break;
     default:
-        ALOGE("%s: unsupported format %d", __func__, format);
+        LOGE("%s: unsupported format %d", __func__, format);
         break;
     }
 }
@@ -778,7 +778,7 @@ void convertBuftoNV21(int format, int width, int height, int srcStride,
         convertYUYVToNV21(width, height, srcStride, src, dst);
         break;
     default:
-        ALOGE("%s: unsupported format %d", __func__, format);
+        LOGE("%s: unsupported format %d", __func__, format);
         break;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include <fstream>
@@ -36,6 +37,8 @@
 #include "linux/media-bus-format.h"
 
 using std::string;
+
+#define FPS_FRAME_COUNT 60  // the frame interval to print fps
 
 namespace icamera {
 
@@ -791,6 +794,25 @@ nsecs_t CameraUtils::systemTime() {
     t.tv_sec = t.tv_nsec = 0;
     clock_gettime(CLOCK_MONOTONIC, &t);
     return nsecs_t(t.tv_sec) * 1000000000LL + t.tv_nsec;
+}
+
+void CameraUtils::checkFps(unsigned int frameNumber, timeval *startPoint) {
+    if (Log::isLogTagEnabled(ST_FPS) && (frameNumber % FPS_FRAME_COUNT == 0)) {
+        if (!startPoint) return;
+
+        struct timeval curTime;
+        gettimeofday(&curTime, nullptr);
+        int duration = static_cast<int>(curTime.tv_usec - startPoint->tv_usec +
+                                        ((curTime.tv_sec - startPoint->tv_sec) * 1000000));
+        if (frameNumber == 0) {
+            LOGI("%s: time of launch to preview: %d ms", __func__, duration / 1000);
+        } else {
+            float curFps =
+                static_cast<float>(1000000) / static_cast<float>(duration / FPS_FRAME_COUNT);
+            LOGI("%s: fps %02f", __func__, curFps);
+        }
+        gettimeofday(startPoint, nullptr);
+    }
 }
 
 frame_usage_mode_t CameraUtils::getFrameUsage(const stream_config_t *streamList) {

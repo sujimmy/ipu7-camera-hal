@@ -415,9 +415,9 @@ void PlatformData::getDeviceInfo(int cameraId, device_info_t& info) {
 // VIRTUAL_CHANNEL_S
 int PlatformData::getVCInfo(int cameraId, vc_info_t& vc) {
     vc.total_num = 0;
-    if (getInstance()->mStaticCfg.mCameras[cameraId].mVirtualChannel) {
-        vc.total_num = getInstance()->mStaticCfg.mCameras[cameraId].mVCNum;
-        vc.sequence = getInstance()->mStaticCfg.mCameras[cameraId].mVCSeq;
+    if (getInstance()->mStaticCfg.mCameras[cameraId].mVCCount != 0) {
+        vc.total_num = getInstance()->mStaticCfg.mCameras[cameraId].mVCCount;
+        vc.id = getInstance()->mStaticCfg.mCameras[cameraId].mVCId;
         vc.group = getInstance()->mStaticCfg.mCameras[cameraId].mVCGroupId;
     }
     return OK;
@@ -1235,12 +1235,13 @@ bool PlatformData::isFileSourceEnabled() {
 // FILE_SOURCE_E
 
 // VIRTUAL_CHANNEL_S
-int PlatformData::getVirtualChannelSequence(int cameraId) {
-    if (getInstance()->mStaticCfg.mCameras[cameraId].mVirtualChannel) {
-        return getInstance()->mStaticCfg.mCameras[cameraId].mVCSeq;
+int PlatformData::getVirtualChannelId(int cameraId) {
+    if (getInstance()->mStaticCfg.mCameras[cameraId].mVCCount != 0) {
+        return getInstance()->mStaticCfg.mCameras[cameraId].mVCId;
     }
 
-    return -1;
+    /* the default value of virtual channel is 0  */
+    return 0;
 }
 // VIRTUAL_CHANNEL_E
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -236,8 +236,7 @@ int CaptureUnit::stop() {
     return OK;
 }
 
-int CaptureUnit::configure(const map<uuid, stream_t>& outputFrames,
-                           const vector<ConfigMode>& configModes) {
+int CaptureUnit::configure(const map<uuid, stream_t>& outputFrames) {
     PERF_CAMERA_ATRACE();
 
     CheckAndLogError(outputFrames.empty(), BAD_VALUE, "No frame info configured.");
@@ -254,7 +253,6 @@ int CaptureUnit::configure(const map<uuid, stream_t>& outputFrames,
              CameraUtils::format2string(item.second.format).c_str());
     }
 
-    mConfigModes = configModes;
     mOutputFrameInfo = outputFrames;
 
     /* media ctl setup */

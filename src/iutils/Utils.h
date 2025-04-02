@@ -268,6 +268,8 @@ std::vector<std::string> splitString(const char* srcStr, char delim);
 
 nsecs_t systemTime();
 
+void checkFps(unsigned int frameNumber, timeval *requestTime);
+
 frame_usage_mode_t getFrameUsage(const stream_config_t *streamList);
 }  // namespace CameraUtils
 

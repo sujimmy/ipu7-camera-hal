@@ -14,11 +14,7 @@
 #  limitations under the License.
 #
 
-    if (ENABLE_SANDBOXING)
-        add_subdirectory(sandboxing)
-    else()
-        add_subdirectory(algowrapper)
-    endif() #ENABLE_SANDBOXING
+    add_subdirectory(algowrapper)
 
 if (SUPPORT_LIVE_TUNING)
     add_subdirectory(livetune)

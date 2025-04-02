@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Intel Corporation.
+ * Copyright (C) 2023-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef STATIC_GRAPH_TYPES_H
+#define STATIC_GRAPH_TYPES_H
 
 #ifdef STATIC_GRAPH_USE_IA_AIC_TYPES
 #define STATIC_GRAPH_USE_IA_LEGACY_TYPES
@@ -120,8 +121,14 @@ struct StaticGraphKernelRes {
     int32_t output_height = 0;
     StaticGraphKernelResCrop output_crop;
 };
-#endif
 
+// ia_pal_system_api_io_buffer_1_4_t;
+// We add only the fields that are used by tests
+struct StaticGraphKernelSystemApiIoBuffer1_4 {
+    uint32_t x_output_offset_per_stripe[4];
+};
+
+#endif
 struct StaticGraphKernelBppConfiguration {
     uint8_t input_bpp = 0;
     uint8_t output_bpp = 0;
@@ -177,6 +184,10 @@ struct VirtualSinkMapping {
     uint8_t rawDolLong = 0;
     uint8_t videoIr = 0;
     uint8_t previewIr = 0;
+};
+
+struct SystemApiRecordHeader {
+    uint16_t systemApiUuid = 0;
 };
 
 #pragma pack(pop)
@@ -366,3 +377,5 @@ enum class FormatType : uint8_t {
     YUV420_8_SP_P_T16,
     META_8_T16,
 };
+
+#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2024 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,7 @@
 #include <map>
 #include <memory>
 
-#ifdef ENABLE_SANDBOXING
-#include "modules/sandboxing/client/IntelCcaClient.h"
-#elif IPA_SANDBOXING
+#ifdef IPA_SANDBOXING
 #include "CcaClient.h"
 #else
 #include "modules/algowrapper/IntelCca.h"

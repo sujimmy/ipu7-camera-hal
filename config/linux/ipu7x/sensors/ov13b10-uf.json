@@ -152,24 +152,6 @@
             },
             {
               "format": "V4L2_PIX_FMT_NV12", "size": [640, 360], "field": 0, "mcId": 0
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [3840, 2160], "field": 0, "mcId": 0
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [1920, 1080], "field": 0, "mcId": 1
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [1280, 960], "field": 0, "mcId": 0
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [1280, 720], "field": 0, "mcId": 1
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [640, 480], "field": 0, "mcId": 0
-            },
-            {
-              "format": "V4L2_PIX_FMT_JPEG", "size": [640, 360], "field": 0, "mcId": 0
             }
           ],
           "supportedFeatures": [

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,12 +118,10 @@ class CaptureUnit : public StreamSource, public DeviceCallback {
      * 2. Set format to Capture Device
      *
      * \param outputFrames: The output frames' configuration for ISYS.
-     * \param configModes: ConfigMode types
      *
      * \return OK if succeed, other value indicates failed
      */
-    virtual int configure(const std::map<uuid, stream_t>& outputFrames,
-                          const std::vector<ConfigMode>& configModes);
+    virtual int configure(const std::map<uuid, stream_t>& outputFrames);
 
     // Override EventSource API to delegate the listeners to DeviceBase.
     virtual void registerListener(EventType eventType, EventListener* eventListener);
@@ -154,7 +152,6 @@ class CaptureUnit : public StreamSource, public DeviceCallback {
     int mCameraId;
     int mMaxBuffersInDevice;  // To control the number of buffers enqueued, for per-frame control.
 
-    std::vector<ConfigMode> mConfigModes;
     std::map<uuid, stream_t> mOutputFrameInfo;
     std::vector<DeviceBase*> mDevices;
     uint32_t mMaxBufferNum;
