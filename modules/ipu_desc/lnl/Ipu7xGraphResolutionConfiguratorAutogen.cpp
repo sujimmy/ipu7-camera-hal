@@ -33,7 +33,7 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuid(GraphResolutionConf
     {
         case GraphResolutionConfiguratorKernelRole::UpScaler:    return 25569; // upscaler_1_0
         case GraphResolutionConfiguratorKernelRole::DownScaler:  return 20739; // b2i_ds_1_0_1
-        case GraphResolutionConfiguratorKernelRole::FinalCropper:  return 36213; // lbff_crop_espa_1_1
+        case GraphResolutionConfiguratorKernelRole::EspaCropper:  return 36213; // lbff_crop_espa_1_1
     }
 
     return 0;
@@ -80,11 +80,18 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelUuidOfOutput(HwSink hwSi
 
 StaticGraphStatus GraphResolutionConfiguratorHelper::getRunKernelUuidForResHistoryUpdate(std::vector<uint32_t>& kernelUuids)
 {
+    kernelUuids.clear();
+
     // Must take only one from each resolution history index, since in static graph they all share the same
     // resolution history instance
+    kernelUuids.push_back(40915);  // odr_output_ps_1_1
+    kernelUuids.push_back(55391);  // odr_output_me_1_1
     kernelUuids.push_back(44984);  // slim_tnr_spatial_bifd_yuvn_regs_1_1
     kernelUuids.push_back(30277);  // ofs_dp_bodr_regs_1_1
     kernelUuids.push_back(31882);  // ofs_pp_bodr_regs_1_1
+    kernelUuids.push_back(61146);  // gmv_statistics_1_0
+    kernelUuids.push_back(13820);  // odr_gmv_match_1_1
+    kernelUuids.push_back(8985);  // odr_gmv_feature_1_1
     kernelUuids.push_back(11500);  // slim_tnr_sp_bc_bifd_yuv4nm1_regs_1_1
     kernelUuids.push_back(48987);  // tnr7_ims_1_1
     kernelUuids.push_back(44199);  // tnr_fp_blend_bifd_rs4n_regs_1_1
