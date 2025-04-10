@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,8 @@ IpuPacAdaptor::IpuPacAdaptor(int cameraId) :
         mPacAdaptorState(PAC_ADAPTOR_NOT_INIT),
         mCameraId(cameraId),
         mIntelCca(nullptr),
-        mAiqResultStorage(nullptr) {
+        mAiqResultStorage(nullptr),
+        mLastStatsSequence(-1) {
     LOG1("<id%d>@%s", mCameraId, __func__);
 
     auto cameraContext = CameraContext::getInstance(mCameraId);
@@ -471,6 +472,23 @@ status_t IpuPacAdaptor::getAllBuffers(int streamId, uint8_t contextId, int64_t s
     return INVALID_OPERATION;;
 }
 
+bool IpuPacAdaptor::isStatsUsed(int streamId, int64_t sequence) {
+    // Don't use statistics if it is older than last one
+    if (mLastStatsSequence >= 0 && sequence <= mLastStatsSequence) {
+        return false;
+    }
+
+    /**
+     * Normally only statistics from Video pipe is used.
+     * The statistics from Still pipe is used when working in Still pipe cases.
+     */
+    if ((streamId == STILL_STREAM_ID) && !PlatformData::isStillOnlyPipeEnabled(mCameraId)) {
+        return false;
+    }
+
+    return true;
+}
+
 status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t sequenceId,
                                     unsigned long long timestamp) {
     AutoMutex l(mPacAdaptorLock);
@@ -487,19 +505,23 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
         return OK;
     }
 
-    LOG2("<seq:%ld>@%s, decode 3A stats. streamId: %d, contextId: %d",
-         sequenceId, __func__, streamId, contextId);
+    bool statsUsed = isStatsUsed(streamId, sequenceId);
 
     cca::cca_out_stats outStatsTemp;
     cca::cca_out_stats* outStats = &outStatsTemp;
     outStats->get_rgbs_stats = false;
 
-    auto cameraContext = CameraContext::getInstance(mCameraId);
-    auto dataContext = cameraContext->getDataContextBySeq(sequenceId);
-    auto aiqResult = const_cast<AiqResult*>(mAiqResultStorage->getAiqResult(sequenceId));
-    if (aiqResult && dataContext->mAiqParams.callbackRgbs) {
-        outStats = &aiqResult->mOutStats;
-        outStats->get_rgbs_stats = true;
+    LOG2("<seq:%ld>@%s, decode 3A stats. streamId: %d, contextId: %d, statsUsed: %d",
+         sequenceId, __func__, streamId, contextId, statsUsed);
+
+    if (statsUsed) {
+        auto cameraContext = CameraContext::getInstance(mCameraId);
+        auto dataContext = cameraContext->getDataContextBySeq(sequenceId);
+        auto aiqResult = const_cast<AiqResult*>(mAiqResultStorage->getAiqResult(sequenceId));
+        if (aiqResult && dataContext->mAiqParams.callbackRgbs) {
+            outStats = &aiqResult->mOutStats;
+            outStats->get_rgbs_stats = true;
+        }
     }
 
     ia_err iaErr = mIntelCca->decodeStats(contextId, sequenceId, streamId, outStats);
@@ -507,13 +529,16 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
                      "<seq:%ld>%s, Faield to decode stats. streamId: %d, contextId: %d",
                      sequenceId, __func__, streamId, contextId);
 
-    AiqStatistics* aiqStatistics = mAiqResultStorage->acquireAiqStatistics();
-    aiqStatistics->mSequence = sequenceId;
-    aiqStatistics->mTimestamp = timestamp;
-    aiqStatistics->mTuningMode = TUNING_MODE_VIDEO;
+    if (statsUsed) {
+        AiqStatistics* aiqStatistics = mAiqResultStorage->acquireAiqStatistics();
+        aiqStatistics->mSequence = sequenceId;
+        aiqStatistics->mTimestamp = timestamp;
+        aiqStatistics->mTuningMode = TUNING_MODE_VIDEO;
 
-    mAiqResultStorage->updateAiqStatistics(sequenceId);
+        mAiqResultStorage->updateAiqStatistics(sequenceId);
+    }
 
+    mLastStatsSequence = sequenceId;
     mPacRunHistMap[pacItem] = true;
 
     if (mPacRunHistMap.size() >= MAX_CACHE_PAC_HIST) {

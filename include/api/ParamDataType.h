@@ -34,10 +34,13 @@ namespace icamera {
  * \struct vc_info_t: Define the virtual channel information for the device
  */
 typedef struct {
-    int total_num; /**< the total camera number of virtual channel. 0: the virtual channel is
-                      disabled */
-    int sequence;  /**< the current camera's sequence in all the virtual channel cameras */
-    int group;     /**< the virtual channel group id */
+    /**
+     * the total number of virtual channel in the current ISYS.
+     * 0: the virtual channel is disabled
+     */
+    int total_num;
+    int id;  /* the current virtual channel id */
+    int group;  /* the virtual channel group id */
 } vc_info_t;
 // VIRTUAL_CHANNEL_E
 

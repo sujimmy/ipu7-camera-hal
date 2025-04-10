@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Intel Corporation.
+ * Copyright (C) 2023-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 
 #include "StaticGraphReaderAutogen.h"
-
 #include <cstring>
 
 StaticGraphStatus StaticGraphReader::Init(StaticReaderBinaryData& binaryGraphSettings) {
@@ -28,9 +27,8 @@ StaticGraphStatus StaticGraphReader::Init(StaticReaderBinaryData& binaryGraphSet
     _binaryHeader = *reinterpret_cast<BinaryHeader*>(currOffset);
 
     if (_binaryHeader.binaryCommonHashCode != staticGraphCommonHashCode) {
-        STATIC_GRAPH_LOG(
-            "Binary hash code is not matching the static graph structure hash code. Binary should "
-            "be re-created.");
+        STATIC_GRAPH_LOG("Binary hash code is not matching the static graph structure hash code. "
+                         "Binary should be re-created.");
         return StaticGraphStatus::SG_ERROR;
     }
 
@@ -123,9 +121,8 @@ StaticGraphStatus StaticGraphReader::GetStaticGraphConfig(GraphConfigurationKey&
             selectedGraphConfigurationHeaders[i]->sensorModeIndex !=
                 selectedGraphConfigurationHeader->sensorModeIndex) {
             if (!selectedGraphConfigurationHeader) {
-                STATIC_GRAPH_LOG(
-                    "One or more configurations with same key have differnt graph id or sensor "
-                    "mdoe.");
+                STATIC_GRAPH_LOG("One or more configurations with same key have differnt graph id "
+                                 "or sensor mdoe.");
                 delete[] selectedGraphConfigurationHeaders;
                 return StaticGraphStatus::SG_ERROR;
             }
@@ -195,10 +192,8 @@ StaticGraphStatus StaticGraphReader::GetStaticGraphConfig(GraphConfigurationKey&
         case 100002:
             if (StaticGraph100002::hashCode != selectedGraphConfigurationHeader->graphHashCode) {
                 STATIC_GRAPH_LOG(
-                    "Graph %d hash code %x %x, is not matching the settings. Binary should be "
-                    "re-created.",
-                    selectedGraphConfigurationHeader->graphId, StaticGraph100002::hashCode,
-                    selectedGraphConfigurationHeader->graphHashCode);
+                    "Graph %d hash code is not matching the settings. Binary should be re-created.",
+                    selectedGraphConfigurationHeader->graphId);
                 delete[] selectedConfigurationData;
                 delete[] selectedGraphConfigurationHeaders;
                 return StaticGraphStatus::SG_ERROR;

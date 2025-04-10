@@ -538,7 +538,7 @@ int32_t GraphConfig::getGraphLinks(int32_t streamId, GraphLink*** links) {
     GraphTopology* pGraphTopology = nullptr;
     StaticGraphStatus status =
                     mStaticGraphs[streamId].staticGraph->getGraphTopology(&pGraphTopology);
-    CheckAndLogError(status != StaticGraphStatus::SG_OK, 0, "%s: no links for  stream %d",
+    CheckAndLogError(status != StaticGraphStatus::SG_OK, 0, "%s: no links for stream %d",
                       __func__, streamId);
 
     *links = pGraphTopology->links;
@@ -635,7 +635,9 @@ void GraphConfig::getStaticGraphConfigData(const std::map<VirtualSink, const Hal
 
 void GraphConfig::saveOuterNode(const GraphLink* link, StaticGraphInfo* graph) {
     // Save nodes, except ISYS
-    if (link->destNode == nullptr || link->destNode->type == NodeTypes::Isys) return;
+    if (!link->isActive || link->destNode == nullptr || link->destNode->type == NodeTypes::Isys) {
+        return;
+    }
 
     int32_t stageId = GraphUtils::createStageId(link->destNode->resourceId,
                                                 link->destNode->contextId);

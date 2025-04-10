@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation
+ * Copyright (C) 2022-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -350,6 +350,11 @@ status_t PipeLine::createPSysGraph(int32_t numLinks, GraphLink** links) {
         if (link->linkConfiguration)
             pLink.streamingMode = link->linkConfiguration->streamingMode;
 
+#ifndef IPU_SYSVER_ipu8
+        if ((mStreamId == VIDEO_STREAM_ID) && (link->dest == GraphElementType::BbpsWithTnr)) {
+            LOG2("This video pipeline has enabled IPU TNR feature.");
+        }
+#endif
         mPSysGraph.links.push_back(pLink);
 
         if (link->linkCompressionConfiguration && link->linkCompressionConfiguration->isEnabled)
@@ -609,7 +614,7 @@ void PipeLine::setFrameInfoForPipeStage() {
             outputConfig.id = mTerminalsDesc[terminal].usrStreamId;
             outputInfo[terminal] = outputConfig;
 
-            LOGW("%s, pipe stage:%s output terminal:%u, w:%d, h:%d, format:%x:%s", __func__,
+            LOG1("%s, pipe stage:%s output terminal:%u, w:%d, h:%d, format:%x:%s", __func__,
                  unit.pipeStage->getName(), terminal, outputConfig.width, outputConfig.height,
                  outputConfig.format, CameraUtils::pixelCode2String(outputConfig.format));
         }

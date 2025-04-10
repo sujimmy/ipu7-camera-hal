@@ -51,6 +51,12 @@ uint32_t gDumpRangeMax = 0;
 int gDumpFrequency = 1;
 char gDumpPath[50];
 bool gDumpRangeEnabled = false;
+uint32_t gDumpPatternEnabled = 0U;
+uint32_t gDumpPattern = 0xffffffffU;
+uint32_t gDumpPatternMask = 0xffffffffU;
+uint32_t gDumpPatternLineMin = 0U;
+uint32_t gDumpPatternLineMax = 0U;
+bool gDumpPatternLineEnabled = false;
 
 static const char* ModuleName[] = {
     "na",      "sensor",  "isys", "psys", "de-inter",
@@ -63,6 +69,37 @@ static const char* StreamUsage[] = {
     "app",
 };  // map to the StreamUsage
 
+/**
+ * @brief parse range string, such as "1000,2000", "1000~2000", "1000-2000"
+ *
+ * @param rangeStr range string
+ * @param rangeMin min range in rangeStr
+ * @param rangeMax max range in rangeStr
+ */
+void CameraDump::parseRange(const char* rangeStr, uint32_t* rangeMin, uint32_t* rangeMax) {
+    if (rangeStr == nullptr) {
+        return;
+    }
+
+    const int sz = strlen(rangeStr);
+    char* rangeArray = new char[sz + 1];
+    char* savePtr = nullptr, *tablePtr = nullptr;
+    (void)std::memcpy(rangeArray, rangeStr, sz);
+    rangeArray[sz] = '\0';
+
+    tablePtr = strtok_r(rangeArray, ",~-", &savePtr);
+    if (tablePtr != nullptr) {
+        *rangeMin = static_cast<uint32_t>(strtoul(tablePtr, nullptr, 0));
+    }
+
+    tablePtr = strtok_r(nullptr, ",~-", &savePtr);
+    if (tablePtr != nullptr) {
+        *rangeMax = static_cast<uint32_t>(strtoul(tablePtr, nullptr, 0));
+    }
+
+    delete[] rangeArray;
+}
+
 void CameraDump::setDumpLevel(void) {
     const char* PROP_CAMERA_HAL_DUMP = "cameraDump";
     const char* PROP_CAMERA_HAL_DUMP_FORMAT = "cameraDumpFormat";
@@ -70,6 +107,10 @@ void CameraDump::setDumpLevel(void) {
     const char* PROP_CAMERA_HAL_DUMP_SKIP_NUM = "cameraDumpSkipNum";
     const char* PROP_CAMERA_HAL_DUMP_RANGE = "cameraDumpRange";
     const char* PROP_CAMERA_HAL_DUMP_FREQUENCY = "cameraDumpFrequency";
+    const char* PROP_CAMERA_HAL_DUMP_PATTERN_ENABLED = "cameraDumpPatternEnabled";
+    const char* PROP_CAMERA_HAL_DUMP_PATTERN = "cameraDumpPattern";
+    const char* PROP_CAMERA_HAL_DUMP_PATTERN_MASK = "cameraDumpPatternMask";
+    const char* PROP_CAMERA_HAL_DUMP_PATTERN_RANGE = "cameraDumpPatternRange";
 
     // dump, it's used to dump images or some parameters to a file.
     char* dumpType = getenv(PROP_CAMERA_HAL_DUMP);
@@ -98,18 +139,7 @@ void CameraDump::setDumpLevel(void) {
 
     char* cameraDumpRange = getenv(PROP_CAMERA_HAL_DUMP_RANGE);
     if (cameraDumpRange) {
-        int sz = strlen(cameraDumpRange);
-        char dumpRange[sz + 1];
-        char *savePtr = nullptr, *tablePtr = nullptr;
-        MEMCPY_S(dumpRange, sz, cameraDumpRange, sz);
-        dumpRange[sz] = '\0';
-
-        tablePtr = strtok_r(dumpRange, ",~-", &savePtr);
-        if (tablePtr) gDumpRangeMin = strtoul(tablePtr, nullptr, 0);
-
-        tablePtr = strtok_r(nullptr, ",~-", &savePtr);
-        if (tablePtr) gDumpRangeMax = strtoul(tablePtr, nullptr, 0);
-
+        parseRange(cameraDumpRange, &gDumpRangeMin, &gDumpRangeMax);
         gDumpRangeEnabled = true;
         LOG1("Dump range is %d-%d", gDumpRangeMin, gDumpRangeMax);
     }
@@ -119,6 +149,46 @@ void CameraDump::setDumpLevel(void) {
         gDumpFrequency = strtoul(cameraDumpFrequency, nullptr, 0);
         if (gDumpFrequency == 0) gDumpFrequency = 1;
         LOG1("Dump frequency is %d", gDumpFrequency);
+    }
+
+    char* cameraDumpPatternEnabled = getenv(PROP_CAMERA_HAL_DUMP_PATTERN_ENABLED);
+    if (cameraDumpPatternEnabled != nullptr) {
+        char* endptr;
+        const uint64_t value = strtoul(cameraDumpPatternEnabled, &endptr, 0);
+        if ((errno == 0) && (endptr != cameraDumpPatternEnabled) && (*endptr == '\0') &&
+            (value <= UINT_MAX)) {
+            gDumpPatternEnabled = static_cast<uint32_t>(value);
+            LOGI("Dump pattern enabled is %u", gDumpPatternEnabled);
+        }
+    }
+
+    char* cameraDumpPattern = getenv(PROP_CAMERA_HAL_DUMP_PATTERN);
+    if (cameraDumpPattern != nullptr) {
+        char* endptr;
+        const uint64_t value = strtoul(cameraDumpPattern, &endptr, 0);
+        if ((errno == 0) && (endptr != cameraDumpPattern) && (*endptr == '\0') &&
+            (value <= UINT_MAX)) {
+            gDumpPattern = static_cast<uint32_t>(value);
+            LOGI("Dump pattern is 0x%08x", gDumpPattern);
+        }
+    }
+
+    char* cameraDumpPatternMask = getenv(PROP_CAMERA_HAL_DUMP_PATTERN_MASK);
+    if (cameraDumpPatternMask != nullptr) {
+        char* endptr;
+        const uint64_t value = strtoul(cameraDumpPatternMask, &endptr, 0);
+        if ((errno == 0) && (endptr != cameraDumpPatternMask) && (*endptr == '\0') &&
+            (value <= UINT_MAX)) {
+            gDumpPatternMask = static_cast<uint32_t>(value);
+            LOGI("Dump pattern mask is 0x%08x", gDumpPatternMask);
+        }
+    }
+
+    char* cameraDumpPatternRange = getenv(PROP_CAMERA_HAL_DUMP_PATTERN_RANGE);
+    if (cameraDumpPatternRange != nullptr) {
+        parseRange(cameraDumpPatternRange, &gDumpPatternLineMin, &gDumpPatternLineMax);
+        gDumpPatternLineEnabled = true;
+        LOG1("Dump pattern range is line %d-%d", gDumpPatternLineMin, gDumpPatternLineMax);
     }
 
     // the PG dump is implemented in libiacss
@@ -199,6 +269,10 @@ static string getNamePrefix(int cameraId, ModuleType_t type, uuid port, int sUsa
 
 static string getAiqSettingAppendix(int cameraId, int64_t sequence) {
     char settingAppendix[MAX_NAME_LEN] = {'\0'};
+
+    if (!PlatformData::isEnableAIQ(cameraId)) {
+        return string(settingAppendix);
+    }
 
     auto cameraContext = CameraContext::getInstance(cameraId);
     auto aiqResultStorage = cameraContext->getAiqResultStorage();
@@ -372,6 +446,48 @@ static string formatBinFileName(int cameraId, const char* prefix, BinParam_t* bi
     return string(fileName);
 }
 
+/*
+ * return 1, match the pattern
+ *
+ * pink pattern 0xffff may be padding bytes.
+ * 0xffff observed in bottom half of frame buffer.
+ * 0xffff not observed relative to Y/U/V plane.
+ * for example:
+ * Y plane may OK, U plane bottom half is 0xffff, V plane is whole 0xffff.
+ */
+int CameraDump::matchPattern(void* data, int bufferSize, int w, int h, int stride, int format) {
+    uint32_t val;
+    int lineStart = h - 1;
+    int lineEnd = h - 1;
+
+    if (format != V4L2_PIX_FMT_UYVY) {
+        return 0;
+    }
+
+    LOG1("%s, stride %d, w %d, h %d, buffersize %d", __func__, stride, w, h, bufferSize);
+
+    if (gDumpPatternLineEnabled && (gDumpPatternLineMin < static_cast<uint32_t>(h))) {
+        lineStart = gDumpPatternLineMin;
+    }
+
+    if (gDumpPatternLineEnabled && (gDumpPatternLineMax < static_cast<uint32_t>(h))) {
+        lineEnd = gDumpPatternLineMax;
+    }
+
+    for (; lineStart <= lineEnd; lineStart++) {
+        const size_t col_step = sizeof(uint32_t);
+        for (size_t col = 0U; col < static_cast<size_t>(w); col += col_step) {
+            val = *reinterpret_cast<uint32_t*>(reinterpret_cast<unsigned char*>(data) +
+                                               (stride * lineStart + col));
+            if (((val & gDumpPatternMask) ^ gDumpPattern) != 0x0U) {
+                return 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
 void CameraDump::dumpImage(int cameraId, const shared_ptr<CameraBuffer>& camBuffer,
                            ModuleType_t type, uuid port, const char* desc) {
     CheckAndLogError(camBuffer == nullptr, VOID_VALUE, "invalid param");
@@ -395,6 +511,15 @@ void CameraDump::dumpImage(int cameraId, const shared_ptr<CameraBuffer>& camBuff
         camBuffer->getWidth(), camBuffer->getHeight());
 
     CameraBufferMapper mapper(camBuffer);
+    if (gDumpPatternEnabled != 0U) {
+        if (matchPattern(mapper.addr(), mapper.size(),
+                         camBuffer->getWidth(), camBuffer->getHeight(),
+                         camBuffer->getStride(), camBuffer->getFormat()) != 0) {
+            LOGI("@%s, dump pattern matched frame %d", __func__, camBuffer->getSequence());
+        }
+
+        return;
+    }
     LOG1("dumpImage size:%d, buf:%p, fileName:%s", mapper.size(), mapper.addr(), fileName.c_str());
     writeData(mapper.addr(), mapper.size(), fileName.c_str());
 }

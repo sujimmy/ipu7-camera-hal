@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021 Intel Corporation.
+ * Copyright (C) 2019-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,7 @@ class StreamSource : public BufferProducer {
     /* Deinitialize stream source */
     virtual void deinit() = 0;
     /* Configure stream source */
-    virtual int configure(const std::map<uuid, stream_t>& outputFrames,
-                          const std::vector<ConfigMode>& configModes) = 0;
+    virtual int configure(const std::map<uuid, stream_t>& outputFrames) = 0;
     /* Start stream source */
     virtual int start() = 0;
     /* Stop stream source */
@@ -51,8 +50,7 @@ class DummySource : public StreamSource {
 
     int init() { return OK; }
     void deinit() {}
-    int configure(const std::map<uuid, stream_t>& outputFrames,
-                  const std::vector<ConfigMode>& configModes) {
+    int configure(const std::map<uuid, stream_t>& outputFrames) {
         return OK;
     }
     int start() { return OK; }

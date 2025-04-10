@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Intel Corporation.
+ * Copyright (C) 2023-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef STATIC_GRAPH_READER_H
+#define STATIC_GRAPH_READER_H
 
-#include "StaticGraphAutogen.h"
 #include "StaticGraphBinaryAutogen.h"
+#include "StaticGraphAutogen.h"
 
 struct StaticReaderBinaryData {
     void* data = nullptr;
@@ -75,3 +76,5 @@ class StaticGraphReader {
     int8_t* _configurationData = nullptr;
     ZoomKeyResolutions _zoomKeyResolutions;
 };
+
+#endif

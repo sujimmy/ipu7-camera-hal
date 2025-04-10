@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation
+ * Copyright (C) 2022-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -690,8 +690,12 @@ void PipeManager::handleEvent(EventData eventData) {
             mPMCallback->onStatsReady(eventData);
             break;
         case EVENT_PSYS_STATS_BUF_READY:
-            // Only handle the stats for video pipe
-            if (eventData.pipeType == VIDEO_STREAM_ID) {
+            /**
+             * Stats from PAC are saved for Video pipe or Still pipe only cases.
+             * So only handle the stats in those cases.
+             */
+            if ((eventData.pipeType == VIDEO_STREAM_ID) ||
+                PlatformData::isStillOnlyPipeEnabled(mCameraId)) {
                 mPMCallback->onStatsReady(eventData);
             }
             // Handle the metadata event in stats Done

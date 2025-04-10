@@ -794,6 +794,36 @@ int MediaControl::setSelection(int cameraId, const McFormat* format, int targetW
     return OK;
 }
 
+int MediaControl::setRouting(int cameraId, MediaCtlConf* mc, bool enableRouting) {
+    LOG1("<id%d> %s", cameraId, __func__);
+
+    for (auto& routing : mc->routings) {
+        LOG1("<id%d> route entity:%s:", cameraId, routing.first.c_str());
+        int num = routing.second.size();
+        v4l2_subdev_route* routes = new v4l2_subdev_route[num];
+        CheckAndLogError(!routes, NO_MEMORY, "Failed to alloc routes");
+        for (int i = 0; i < num; i++) {
+            const McRoute& route = routing.second[i];
+            uint32_t flag =
+                    enableRouting ? route.flag : (route.flag & ~V4L2_SUBDEV_ROUTE_FL_ACTIVE);
+            v4l2_subdev_route r = {route.sinkPad, route.sinkStream, route.srcPad, route.srcStream,
+                                   flag};
+            LOG1("sinkPad:%d, srcPad:%d, sinkStream:%d, srcStream:%d, flag:%d", r.sink_pad,
+                 r.source_pad, r.sink_stream, r.source_stream, flag);
+
+            routes[i] = r;
+        }
+        string subDeviceNodeName;
+        CameraUtils::getSubDeviceName(routing.first.c_str(), subDeviceNodeName);
+        V4L2Subdevice* subDev = V4l2DeviceFactory::getSubDev(cameraId, subDeviceNodeName);
+        int ret = subDev->SetRouting(routes, num);
+        delete[] routes;
+        CheckAndLogError(ret != 0, ret, "setRouting fail, ret:%d", ret);
+    }
+
+    return OK;
+}
+
 int MediaControl::mediaCtlSetup(int cameraId, MediaCtlConf* mc, int width, int height, int field) {
     LOG1("<id%d> %s", cameraId, __func__);
     /* Setup controls in format Configuration */
@@ -801,7 +831,8 @@ int MediaControl::mediaCtlSetup(int cameraId, MediaCtlConf* mc, int width, int h
 
     int ret = OK;
     // VIRTUAL_CHANNEL_S
-    /* TODO: Set routing */
+    ret = setRouting(cameraId, mc, true);
+    CheckAndLogError(ret != OK, ret, "set media routings failed: ret = %d", ret);
     // VIRTUAL_CHANNEL_E
 
     /* Set format & selection in format Configuration */
@@ -843,7 +874,7 @@ void MediaControl::mediaCtlClear(int cameraId, MediaCtlConf* mc) {
     LOG1("<id%d> %s", cameraId, __func__);
 
     // VIRTUAL_CHANNEL_S
-    /* TODO: Clear routing */
+    setRouting(cameraId, mc, false);
     // VIRTUAL_CHANNEL_E
 }
 
@@ -861,17 +892,29 @@ int MediaControl::getLensName(string* lensName) {
     return UNKNOWN_ERROR;
 }
 
+bool MediaControl::isMediaSourceEntity(const MediaEntity* entity) {
+    if (nullptr == entity) return false;
+    auto n_pads = entity->info.pads;
+
+    for (auto i = 0; i < n_pads; ++i) {
+        // If any sink pad in an entity, it's not the source entity
+        if (entity->pads[i].flags & MEDIA_PAD_FL_SINK) return false;
+    }
+
+    return true;
+}
+
 bool MediaControl::checkHasSource(const MediaEntity* sink, const std::string& source) {
     for (unsigned int i = 0; i < sink->numLinks; ++i) {
         if (sink->links[i].sink->entity == sink) {
             // links[i] is the link to sink entity
             // pre is the link's source entity
             MediaEntity* pre = sink->links[i].source->entity;
-            if (pre->info.type == MEDIA_ENT_T_V4L2_SUBDEV_SENSOR) {
-                // if pre is sensor, return compare name result
+            if (isMediaSourceEntity(pre)) {
+                // if pre is pure source, return compare name result
                 if (strncmp(source.c_str(), pre->info.name, source.length()) == 0) return true;
             } else {
-                // if pre is not sensor, search recursively
+                // if pre is not pure source, search recursively
                 if (checkHasSource(pre, source)) return true;
             }
         }

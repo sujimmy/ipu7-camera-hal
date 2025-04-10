@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -129,6 +129,9 @@ class DeviceBase : public EventSource {
     DeviceCallback* mDeviceCB;
     std::set<BufferConsumer*> mConsumers;
 
+    /* Queried V4L2 buffer info from driver when Calling SetupBuffers */
+    std::vector<V4L2Buffer> mV4L2BufferInfo;
+
     /**
      * Each device has below three structures to manager its buffers.
      * And please note that:
@@ -151,6 +154,8 @@ class DeviceBase : public EventSource {
 
  private:
     DISALLOW_COPY_AND_ASSIGN(DeviceBase);
+
+    bool checkAndUpdateBufLength(std::shared_ptr<CameraBuffer> buffer);
 };
 
 /**

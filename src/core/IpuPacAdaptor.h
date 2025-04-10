@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,7 @@
 #include "3a/AiqResult.h"
 #include "IspSettings.h"
 
-#ifdef ENABLE_SANDBOXING
-#include "modules/sandboxing/client/IntelCcaClient.h"
-#elif IPA_SANDBOXING
+#ifdef IPA_SANDBOXING
 #include "CcaClient.h"
 #else
 #include "modules/algowrapper/IntelCca.h"
@@ -72,6 +70,7 @@ public:
                            PacTerminalBufMap& bufferMap);
     status_t decodeStats(int streamId, uint8_t contextId, int64_t sequenceId,
                          unsigned long long timestamp);
+
  private:
     void* allocateBufferL(int streamId, uint8_t contextId, uint32_t termId, size_t size);
     void releaseBufferL(int streamId, uint8_t contextId, uint32_t termId, void* addr);
@@ -79,11 +78,13 @@ public:
     void applyMediaFormat(const AiqResult* aiqResult,
                           ia_media_format* mediaFormat, bool* useLinearGamma,
                           int64_t sequence);
+    bool isStatsUsed(int streamId, int64_t sequence);
     void dumpAicOutput(int64_t sequence, int streamId, cca::cca_multi_pal_output pacOutput);
 
     DISALLOW_COPY_AND_ASSIGN(IpuPacAdaptor);
 
     void dumpPALParams(uint8_t contextId, int64_t sequenceId, ia_binary_data binaryData);
+
  private:
     typedef std::map<uint8_t, std::vector<PacTerminalBuf> > CBTermBufferVec;
     enum IpuAdaptorState {
@@ -112,6 +113,7 @@ public:
     std::map<std::pair<int, uint8_t>, std::vector<CBTerminalResult> > mTerminalResult;
     std::map<int, cca::cca_pal_input_params*> mStreamIdToInputParams;
 
+    int64_t mLastStatsSequence;
     static const uint8_t MAX_CACHE_PAC_HIST = 6;
     // key: pair<streamId, sequence> --> bool (true means stats decoded)
     std::map<std::pair<int, int64_t>, bool> mPacRunHistMap;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ int AiqCore::initAiqPlusParams() {
 int AiqCore::init() {
     initAiqPlusParams();
 
-#ifndef ENABLE_SANDBOXING
+#ifndef IPA_SANDBOXING
     ia_env env = {&Log::ccaPrintInfo, &Log::ccaPrintError, &Log::ccaPrintInfo, nullptr};
     ia_log_init(&env);
 #endif
@@ -142,7 +142,7 @@ int AiqCore::init() {
 }
 
 int AiqCore::deinit() {
-#ifndef ENABLE_SANDBOXING
+#ifndef IPA_SANDBOXING
     ia_log_deinit();
 #endif
 

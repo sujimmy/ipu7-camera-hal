@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 The Android Open Source Project
- * Copyright (C) 2016-2021 Intel Corporation. All Rights Reserved.
+ * Copyright (C) 2016-2025 Intel Corporation. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ bool SWJpegEncoder::doJpegEncode(EncodePackage* package) {
          package->outputWidth, package->outputHeight, package->outputSize, package->quality);
 
     if (package->inputWidth == 0 || package->inputHeight == 0 || package->inputFormat == 0) {
-        ALOGE("Invalid input received!");
+        LOGE("Invalid input received!");
         mJpegSize = -1;
         goto exit;
     }
@@ -296,7 +296,7 @@ int SWJpegEncoder::doJpegEncodingMultiThread(void) {
         encThread = mSwJpegEncoder[i];
         status = encThread->runThread(threadName.c_str());
         if (status != OK) {
-            ALOGE("@%s, line:%d, start jpeg thread fail, thread name:%s", __func__, __LINE__,
+            LOGE("@%s, line:%d, start jpeg thread fail, thread name:%s", __func__, __LINE__,
                   threadName.c_str());
             return status;
         }
@@ -332,7 +332,7 @@ int SWJpegEncoder::mergeJpeg(void) {
     nsecs_t startTime;
     std::shared_ptr<CodecWorkerThread> encThread = mSwJpegEncoder.at(0);
     if (encThread == nullptr) {
-        ALOGE("encThread is nullptr");
+        LOGE("encThread is nullptr");
         return -1;
     }
     encThread->getConfig(&cfg);
@@ -542,7 +542,7 @@ int SWJpegEncoder::Codec::configEncoding(int width, int height, int stride, void
     mCInfo.image_height = height;
 
     if (setupJpegDestMgr(&mCInfo, static_cast<JSAMPLE*>(jpegBuf), jpegBufSize) < 0) {
-        ALOGE("@%s, line:%d, setupJpegDestMgr fail", __func__, __LINE__);
+        LOGE("@%s, line:%d, setupJpegDestMgr fail", __func__, __LINE__);
         return -1;
     }
 
@@ -600,7 +600,7 @@ int SWJpegEncoder::Codec::doJpegEncoding(const void* y_buf, const void* uv_buf, 
             ImageConverter::NV21ToP411Separate(width, height, mStride, srcY, srcUV, p411);
             break;
         default:
-            ALOGE("%s Unsupported fourcc %d", __func__, fourcc);
+            LOGE("%s Unsupported fourcc %d", __func__, fourcc);
             delete[] p411;
             return -1;
     }
@@ -657,7 +657,7 @@ int SWJpegEncoder::Codec::setupJpegDestMgr(j_compress_ptr cInfo, JSAMPLE* jpegBu
     JpegDestMgrPtr dest;
 
     if (nullptr == jpegBuf || jpegBufSize <= 0) {
-        ALOGE("@%s, line:%d, jpegBuf:%p, jpegBufSize:%d", __func__, __LINE__, jpegBuf, jpegBufSize);
+        LOGE("@%s, line:%d, jpegBuf:%p, jpegBufSize:%d", __func__, __LINE__, jpegBuf, jpegBufSize);
         return -1;
     }
 
@@ -707,8 +707,7 @@ void SWJpegEncoder::Codec::initDestination(j_compress_ptr cInfo) {
  * \return FALSE if something is wrong
  */
 boolean SWJpegEncoder::Codec::emptyOutputBuffer(j_compress_ptr cInfo) {
-    LOG2("@%s", __func__);
-    ALOGE("@%s, line:%d, buffer overflow!", __func__, __LINE__);
+    LOGE("@%s, line:%d, buffer overflow!", __func__, __LINE__);
     JpegDestMgrPtr dest = (JpegDestMgrPtr)cInfo->dest;
 
     /* re-cfg the buffer info */

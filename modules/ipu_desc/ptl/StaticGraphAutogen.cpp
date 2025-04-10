@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Intel Corporation.
+ * Copyright (C) 2023-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15553,6 +15553,10 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
         new LbffDol2InputsOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions =
         new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions =
+        new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwScalerOuterNodeConfiguration** swScalerOuterNodeConfigurationOptions =
+        new SwScalerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i) {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
@@ -15562,6 +15566,10 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
             &_graphConfigurations[i].lbffDol2InputsOuterNodeConfiguration;
         bbpsNoTnrOuterNodeConfigurationOptions[i] =
             &_graphConfigurations[i].bbpsNoTnrOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swNntmOuterNodeConfiguration;
+        swScalerOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swScalerOuterNodeConfiguration;
     }
 
     _isysDolOuterNode.Init(isysDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
@@ -15569,10 +15577,15 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
                                   kernelConfigurationsOptionsCount);
     _bbpsNoTnrOuterNode.Init(bbpsNoTnrOuterNodeConfigurationOptions,
                              kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swScalerOuterNode.Init(swScalerOuterNodeConfigurationOptions,
+                            kernelConfigurationsOptionsCount);
 
     delete[] isysDolOuterNodeConfigurationOptions;
     delete[] lbffDol2InputsOuterNodeConfigurationOptions;
     delete[] bbpsNoTnrOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
+    delete[] swScalerOuterNodeConfigurationOptions;
 
     // Use default configuration
     updateConfiguration(0);
@@ -15676,7 +15689,48 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     link->dest = GraphElementType::ImageDp;
     link->type = LinkType::Node2Sink;
 
-    for (uint8_t i = 0; i < 13; ++i) {
+    link = &_graphLinks[13];
+    link->src = GraphElementType::BbpsNoTnr;
+    link->srcNode = &_bbpsNoTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[14];
+    link->src = GraphElementType::BbpsNoTnr;
+    link->srcNode = &_bbpsNoTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[15];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 2;
+    link->dest = GraphElementType::SwScaler;
+    link->destNode = &_swScalerOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::SwScaler;
+    link->srcNode = &_swScalerOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedSecondary;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 18; ++i) {
         // apply link configuration. select configuration with maximal size
         uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
@@ -15697,6 +15751,8 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     _imageSubGraph.isysDolOuterNode = &_isysDolOuterNode;
     _imageSubGraph.lbffDol2InputsOuterNode = &_lbffDol2InputsOuterNode;
     _imageSubGraph.bbpsNoTnrOuterNode = &_bbpsNoTnrOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
+    _imageSubGraph.swScalerOuterNode = &_swScalerOuterNode;
 
     // choose the selected sub graph
     _selectedGraphTopology = &_imageSubGraph;
@@ -15705,6 +15761,8 @@ StaticGraph100031::StaticGraph100031(GraphConfiguration100031** selectedGraphCon
     _imageSubGraph.isysDolOuterNode->contextId = 0;
     _imageSubGraph.lbffDol2InputsOuterNode->contextId = 1;
     _imageSubGraph.bbpsNoTnrOuterNode->contextId = 2;
+    _imageSubGraph.swNntmOuterNode->contextId = 3;
+    _imageSubGraph.swScalerOuterNode->contextId = 4;
     // Apply a default inner nodes configuration for the selected sub graph
     SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
     if (_selectedGraphTopology != nullptr) {
@@ -15723,6 +15781,14 @@ StaticGraphStatus StaticGraph100031::updateConfiguration(uint32_t selectedIndex)
         return res;
     }
     res = _bbpsNoTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swScalerOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
     if (res != StaticGraphStatus::SG_OK) {
         return res;
     }
@@ -15757,10 +15823,12 @@ StaticGraphStatus imageSubGraphTopology100031::configInnerNodes(
      */
     InnerNodeOptionsFlags bbpsNoTnrInnerOptions = imagePublicInnerNodeConfiguration;
     // active public options according to sink mapping
-    if (subGraphLinks[11]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[11]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[13]->linkConfiguration->bufferSize == 0 && true) {
         bbpsNoTnrInnerOptions |= noMp;
     }
-    if (subGraphLinks[12]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[12]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[14]->linkConfiguration->bufferSize == 0 && true) {
         bbpsNoTnrInnerOptions |= noDp;
     }
 
@@ -15795,8 +15863,14 @@ StaticGraphStatus imageSubGraphTopology100031::configInnerNodes(
           no3A);  // lbff_Dol2Inputs:terminal_connect_awb_sve_output -> awb_sve_out
     subGraphLinks[11]->isActive =
         !(bbpsNoTnrInnerOptions & noMp);  // bbps_NoTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[13]->isActive =
+        !(bbpsNoTnrInnerOptions &
+          noMp);  // bbps_NoTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[12]->isActive =
         !(bbpsNoTnrInnerOptions & noDp);  // bbps_NoTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[14]->isActive =
+        !(bbpsNoTnrInnerOptions &
+          noDp);  // bbps_NoTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
 
     /*
      * Link enablement by private inner options
@@ -15809,7 +15883,7 @@ StaticGraphStatus imageSubGraphTopology100031::configInnerNodes(
      * Disable links with zero buffer size
      * (used for post processing when not all links are being used)
      */
-    for (uint32_t i = 0; i < 13; i++) {
+    for (uint32_t i = 0; i < 18; i++) {
         if (subGraphLinks[i]->linkConfiguration->bufferSize == 0) {
             subGraphLinks[i]->isActive = false;
         }
@@ -15838,6 +15912,10 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
         new LbffDol2InputsOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions =
         new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions =
+        new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwScalerOuterNodeConfiguration** swScalerOuterNodeConfigurationOptions =
+        new SwScalerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i) {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
@@ -15847,6 +15925,10 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
             &_graphConfigurations[i].lbffDol2InputsOuterNodeConfiguration;
         bbpsWithTnrOuterNodeConfigurationOptions[i] =
             &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swNntmOuterNodeConfiguration;
+        swScalerOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swScalerOuterNodeConfiguration;
     }
 
     _isysDolOuterNode.Init(isysDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
@@ -15854,10 +15936,15 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
                                   kernelConfigurationsOptionsCount);
     _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions,
                                kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swScalerOuterNode.Init(swScalerOuterNodeConfigurationOptions,
+                            kernelConfigurationsOptionsCount);
 
     delete[] isysDolOuterNodeConfigurationOptions;
     delete[] lbffDol2InputsOuterNodeConfigurationOptions;
     delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
+    delete[] swScalerOuterNodeConfigurationOptions;
 
     // Use default configuration
     updateConfiguration(0);
@@ -16009,7 +16096,48 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     link->dest = GraphElementType::ImageDp;
     link->type = LinkType::Node2Sink;
 
-    for (uint8_t i = 0; i < 18; ++i) {
+    link = &_graphLinks[18];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[19];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[20];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[21];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 2;
+    link->dest = GraphElementType::SwScaler;
+    link->destNode = &_swScalerOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[22];
+    link->src = GraphElementType::SwScaler;
+    link->srcNode = &_swScalerOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedSecondary;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 23; ++i) {
         // apply link configuration. select configuration with maximal size
         uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
@@ -16030,6 +16158,8 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     _imageSubGraph.isysDolOuterNode = &_isysDolOuterNode;
     _imageSubGraph.lbffDol2InputsOuterNode = &_lbffDol2InputsOuterNode;
     _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
+    _imageSubGraph.swScalerOuterNode = &_swScalerOuterNode;
 
     // choose the selected sub graph
     _selectedGraphTopology = &_imageSubGraph;
@@ -16038,6 +16168,8 @@ StaticGraph100032::StaticGraph100032(GraphConfiguration100032** selectedGraphCon
     _imageSubGraph.isysDolOuterNode->contextId = 0;
     _imageSubGraph.lbffDol2InputsOuterNode->contextId = 1;
     _imageSubGraph.bbpsWithTnrOuterNode->contextId = 2;
+    _imageSubGraph.swNntmOuterNode->contextId = 3;
+    _imageSubGraph.swScalerOuterNode->contextId = 4;
     // Apply a default inner nodes configuration for the selected sub graph
     SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
     if (_selectedGraphTopology != nullptr) {
@@ -16056,6 +16188,14 @@ StaticGraphStatus StaticGraph100032::updateConfiguration(uint32_t selectedIndex)
         return res;
     }
     res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swScalerOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
     if (res != StaticGraphStatus::SG_OK) {
         return res;
     }
@@ -16088,10 +16228,12 @@ StaticGraphStatus imageSubGraphTopology100032::configInnerNodes(
      */
     InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
     // active public options according to sink mapping
-    if (subGraphLinks[16]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[16]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[18]->linkConfiguration->bufferSize == 0 && true) {
         bbpsWithTnrInnerOptions |= noMp;
     }
-    if (subGraphLinks[17]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[17]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[19]->linkConfiguration->bufferSize == 0 && true) {
         bbpsWithTnrInnerOptions |= noDp;
     }
 
@@ -16128,8 +16270,14 @@ StaticGraphStatus imageSubGraphTopology100032::configInnerNodes(
           no3A);  // lbff_Dol2Inputs:terminal_connect_awb_sve_output -> awb_sve_out
     subGraphLinks[16]->isActive =
         !(bbpsWithTnrInnerOptions & noMp);  // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[18]->isActive =
+        !(bbpsWithTnrInnerOptions &
+          noMp);  // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[17]->isActive =
         !(bbpsWithTnrInnerOptions & noDp);  // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[19]->isActive =
+        !(bbpsWithTnrInnerOptions &
+          noDp);  // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
 
     /*
      * Link enablement by private inner options
@@ -16145,7 +16293,7 @@ StaticGraphStatus imageSubGraphTopology100032::configInnerNodes(
      * Disable links with zero buffer size
      * (used for post processing when not all links are being used)
      */
-    for (uint32_t i = 0; i < 18; i++) {
+    for (uint32_t i = 0; i < 23; i++) {
         if (subGraphLinks[i]->linkConfiguration->bufferSize == 0) {
             subGraphLinks[i]->isActive = false;
         }
@@ -16193,6 +16341,10 @@ StaticGraph100033::StaticGraph100033(GraphConfiguration100033** selectedGraphCon
         new LbffDol3InputsOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsNoTnrOuterNodeConfiguration** bbpsNoTnrOuterNodeConfigurationOptions =
         new BbpsNoTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions =
+        new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwScalerOuterNodeConfiguration** swScalerOuterNodeConfigurationOptions =
+        new SwScalerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i) {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
@@ -16204,6 +16356,10 @@ StaticGraph100033::StaticGraph100033(GraphConfiguration100033** selectedGraphCon
             &_graphConfigurations[i].lbffDol3InputsOuterNodeConfiguration;
         bbpsNoTnrOuterNodeConfigurationOptions[i] =
             &_graphConfigurations[i].bbpsNoTnrOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swNntmOuterNodeConfiguration;
+        swScalerOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swScalerOuterNodeConfiguration;
     }
 
     _isysDolOuterNode.Init(isysDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
@@ -16213,11 +16369,16 @@ StaticGraph100033::StaticGraph100033(GraphConfiguration100033** selectedGraphCon
                                   kernelConfigurationsOptionsCount);
     _bbpsNoTnrOuterNode.Init(bbpsNoTnrOuterNodeConfigurationOptions,
                              kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swScalerOuterNode.Init(swScalerOuterNodeConfigurationOptions,
+                            kernelConfigurationsOptionsCount);
 
     delete[] isysDolOuterNodeConfigurationOptions;
     delete[] lbffDolSmoothOuterNodeConfigurationOptions;
     delete[] lbffDol3InputsOuterNodeConfigurationOptions;
     delete[] bbpsNoTnrOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
+    delete[] swScalerOuterNodeConfigurationOptions;
 
     // Use default configuration
     updateConfiguration(0);
@@ -16339,7 +16500,48 @@ StaticGraph100033::StaticGraph100033(GraphConfiguration100033** selectedGraphCon
     link->dest = GraphElementType::ImageDp;
     link->type = LinkType::Node2Sink;
 
-    for (uint8_t i = 0; i < 15; ++i) {
+    link = &_graphLinks[15];
+    link->src = GraphElementType::BbpsNoTnr;
+    link->srcNode = &_bbpsNoTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[16];
+    link->src = GraphElementType::BbpsNoTnr;
+    link->srcNode = &_bbpsNoTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[17];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[18];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 2;
+    link->dest = GraphElementType::SwScaler;
+    link->destNode = &_swScalerOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[19];
+    link->src = GraphElementType::SwScaler;
+    link->srcNode = &_swScalerOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedSecondary;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 20; ++i) {
         // apply link configuration. select configuration with maximal size
         uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
@@ -16361,6 +16563,8 @@ StaticGraph100033::StaticGraph100033(GraphConfiguration100033** selectedGraphCon
     _imageSubGraph.lbffDolSmoothOuterNode = &_lbffDolSmoothOuterNode;
     _imageSubGraph.lbffDol3InputsOuterNode = &_lbffDol3InputsOuterNode;
     _imageSubGraph.bbpsNoTnrOuterNode = &_bbpsNoTnrOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
+    _imageSubGraph.swScalerOuterNode = &_swScalerOuterNode;
 
     // choose the selected sub graph
     _selectedGraphTopology = &_imageSubGraph;
@@ -16370,6 +16574,8 @@ StaticGraph100033::StaticGraph100033(GraphConfiguration100033** selectedGraphCon
     _imageSubGraph.lbffDolSmoothOuterNode->contextId = 1;
     _imageSubGraph.lbffDol3InputsOuterNode->contextId = 2;
     _imageSubGraph.bbpsNoTnrOuterNode->contextId = 3;
+    _imageSubGraph.swNntmOuterNode->contextId = 4;
+    _imageSubGraph.swScalerOuterNode->contextId = 5;
     // Apply a default inner nodes configuration for the selected sub graph
     SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
     if (_selectedGraphTopology != nullptr) {
@@ -16392,6 +16598,14 @@ StaticGraphStatus StaticGraph100033::updateConfiguration(uint32_t selectedIndex)
         return res;
     }
     res = _bbpsNoTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swScalerOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
     if (res != StaticGraphStatus::SG_OK) {
         return res;
     }
@@ -16426,10 +16640,12 @@ StaticGraphStatus imageSubGraphTopology100033::configInnerNodes(
      */
     InnerNodeOptionsFlags bbpsNoTnrInnerOptions = imagePublicInnerNodeConfiguration;
     // active public options according to sink mapping
-    if (subGraphLinks[13]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[13]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[15]->linkConfiguration->bufferSize == 0 && true) {
         bbpsNoTnrInnerOptions |= noMp;
     }
-    if (subGraphLinks[14]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[14]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[16]->linkConfiguration->bufferSize == 0 && true) {
         bbpsNoTnrInnerOptions |= noDp;
     }
 
@@ -16464,8 +16680,14 @@ StaticGraphStatus imageSubGraphTopology100033::configInnerNodes(
           no3A);  // lbff_Dol3Inputs:terminal_connect_awb_sve_output -> awb_sve_out
     subGraphLinks[13]->isActive =
         !(bbpsNoTnrInnerOptions & noMp);  // bbps_NoTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[15]->isActive =
+        !(bbpsNoTnrInnerOptions &
+          noMp);  // bbps_NoTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[14]->isActive =
         !(bbpsNoTnrInnerOptions & noDp);  // bbps_NoTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[16]->isActive =
+        !(bbpsNoTnrInnerOptions &
+          noDp);  // bbps_NoTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
 
     /*
      * Link enablement by private inner options
@@ -16478,7 +16700,7 @@ StaticGraphStatus imageSubGraphTopology100033::configInnerNodes(
      * Disable links with zero buffer size
      * (used for post processing when not all links are being used)
      */
-    for (uint32_t i = 0; i < 15; i++) {
+    for (uint32_t i = 0; i < 20; i++) {
         if (subGraphLinks[i]->linkConfiguration->bufferSize == 0) {
             subGraphLinks[i]->isActive = false;
         }
@@ -16509,6 +16731,10 @@ StaticGraph100034::StaticGraph100034(GraphConfiguration100034** selectedGraphCon
         new LbffDol3InputsOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
     BbpsWithTnrOuterNodeConfiguration** bbpsWithTnrOuterNodeConfigurationOptions =
         new BbpsWithTnrOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwNntmOuterNodeConfiguration** swNntmOuterNodeConfigurationOptions =
+        new SwNntmOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
+    SwScalerOuterNodeConfiguration** swScalerOuterNodeConfigurationOptions =
+        new SwScalerOuterNodeConfiguration*[kernelConfigurationsOptionsCount];
 
     for (uint32_t i = 0; i < kernelConfigurationsOptionsCount; ++i) {
         _graphConfigurations[i] = *selectedGraphConfiguration[i];
@@ -16520,6 +16746,10 @@ StaticGraph100034::StaticGraph100034(GraphConfiguration100034** selectedGraphCon
             &_graphConfigurations[i].lbffDol3InputsOuterNodeConfiguration;
         bbpsWithTnrOuterNodeConfigurationOptions[i] =
             &_graphConfigurations[i].bbpsWithTnrOuterNodeConfiguration;
+        swNntmOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swNntmOuterNodeConfiguration;
+        swScalerOuterNodeConfigurationOptions[i] =
+            &_graphConfigurations[i].swScalerOuterNodeConfiguration;
     }
 
     _isysDolOuterNode.Init(isysDolOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
@@ -16529,11 +16759,16 @@ StaticGraph100034::StaticGraph100034(GraphConfiguration100034** selectedGraphCon
                                   kernelConfigurationsOptionsCount);
     _bbpsWithTnrOuterNode.Init(bbpsWithTnrOuterNodeConfigurationOptions,
                                kernelConfigurationsOptionsCount);
+    _swNntmOuterNode.Init(swNntmOuterNodeConfigurationOptions, kernelConfigurationsOptionsCount);
+    _swScalerOuterNode.Init(swScalerOuterNodeConfigurationOptions,
+                            kernelConfigurationsOptionsCount);
 
     delete[] isysDolOuterNodeConfigurationOptions;
     delete[] lbffDolSmoothOuterNodeConfigurationOptions;
     delete[] lbffDol3InputsOuterNodeConfigurationOptions;
     delete[] bbpsWithTnrOuterNodeConfigurationOptions;
+    delete[] swNntmOuterNodeConfigurationOptions;
+    delete[] swScalerOuterNodeConfigurationOptions;
 
     // Use default configuration
     updateConfiguration(0);
@@ -16703,7 +16938,48 @@ StaticGraph100034::StaticGraph100034(GraphConfiguration100034** selectedGraphCon
     link->dest = GraphElementType::ImageDp;
     link->type = LinkType::Node2Sink;
 
-    for (uint8_t i = 0; i < 20; ++i) {
+    link = &_graphLinks[20];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 14;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[21];
+    link->src = GraphElementType::BbpsWithTnr;
+    link->srcNode = &_bbpsWithTnrOuterNode;
+    link->srcTerminalId = 15;
+    link->dest = GraphElementType::SwNntm;
+    link->destNode = &_swNntmOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[22];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedMain;
+    link->type = LinkType::Node2Sink;
+
+    link = &_graphLinks[23];
+    link->src = GraphElementType::SwNntm;
+    link->srcNode = &_swNntmOuterNode;
+    link->srcTerminalId = 2;
+    link->dest = GraphElementType::SwScaler;
+    link->destNode = &_swScalerOuterNode;
+    link->destTerminalId = 0;
+    link->type = LinkType::Node2Node;
+
+    link = &_graphLinks[24];
+    link->src = GraphElementType::SwScaler;
+    link->srcNode = &_swScalerOuterNode;
+    link->srcTerminalId = 1;
+    link->dest = GraphElementType::ProcessedSecondary;
+    link->type = LinkType::Node2Sink;
+
+    for (uint8_t i = 0; i < 25; ++i) {
         // apply link configuration. select configuration with maximal size
         uint32_t selectedLinkConfig = 0;
         uint32_t maxSize = _graphConfigurations[0].linkConfigurations[i].bufferSize;
@@ -16725,6 +17001,8 @@ StaticGraph100034::StaticGraph100034(GraphConfiguration100034** selectedGraphCon
     _imageSubGraph.lbffDolSmoothOuterNode = &_lbffDolSmoothOuterNode;
     _imageSubGraph.lbffDol3InputsOuterNode = &_lbffDol3InputsOuterNode;
     _imageSubGraph.bbpsWithTnrOuterNode = &_bbpsWithTnrOuterNode;
+    _imageSubGraph.swNntmOuterNode = &_swNntmOuterNode;
+    _imageSubGraph.swScalerOuterNode = &_swScalerOuterNode;
 
     // choose the selected sub graph
     _selectedGraphTopology = &_imageSubGraph;
@@ -16734,6 +17012,8 @@ StaticGraph100034::StaticGraph100034(GraphConfiguration100034** selectedGraphCon
     _imageSubGraph.lbffDolSmoothOuterNode->contextId = 1;
     _imageSubGraph.lbffDol3InputsOuterNode->contextId = 2;
     _imageSubGraph.bbpsWithTnrOuterNode->contextId = 3;
+    _imageSubGraph.swNntmOuterNode->contextId = 4;
+    _imageSubGraph.swScalerOuterNode->contextId = 5;
     // Apply a default inner nodes configuration for the selected sub graph
     SubGraphInnerNodeConfiguration defaultInnerNodeConfiguration;
     if (_selectedGraphTopology != nullptr) {
@@ -16756,6 +17036,14 @@ StaticGraphStatus StaticGraph100034::updateConfiguration(uint32_t selectedIndex)
         return res;
     }
     res = _bbpsWithTnrOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swNntmOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
+    if (res != StaticGraphStatus::SG_OK) {
+        return res;
+    }
+    res = _swScalerOuterNode.UpdateKernelsSelectedConfiguration(selectedIndex);
     if (res != StaticGraphStatus::SG_OK) {
         return res;
     }
@@ -16788,10 +17076,12 @@ StaticGraphStatus imageSubGraphTopology100034::configInnerNodes(
      */
     InnerNodeOptionsFlags bbpsWithTnrInnerOptions = imagePublicInnerNodeConfiguration;
     // active public options according to sink mapping
-    if (subGraphLinks[18]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[18]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[20]->linkConfiguration->bufferSize == 0 && true) {
         bbpsWithTnrInnerOptions |= noMp;
     }
-    if (subGraphLinks[19]->linkConfiguration->bufferSize == 0 && true) {
+    if (subGraphLinks[19]->linkConfiguration->bufferSize == 0 &&
+        subGraphLinks[21]->linkConfiguration->bufferSize == 0 && true) {
         bbpsWithTnrInnerOptions |= noDp;
     }
 
@@ -16828,8 +17118,14 @@ StaticGraphStatus imageSubGraphTopology100034::configInnerNodes(
           no3A);  // lbff_Dol3Inputs:terminal_connect_awb_sve_output -> awb_sve_out
     subGraphLinks[18]->isActive =
         !(bbpsWithTnrInnerOptions & noMp);  // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> image_mp
+    subGraphLinks[20]->isActive =
+        !(bbpsWithTnrInnerOptions &
+          noMp);  // bbps_WithTnr:bbps_ofs_mp_yuvn_odr -> sw_nntm:terminal_connect_input
     subGraphLinks[19]->isActive =
         !(bbpsWithTnrInnerOptions & noDp);  // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> image_dp
+    subGraphLinks[21]->isActive =
+        !(bbpsWithTnrInnerOptions &
+          noDp);  // bbps_WithTnr:bbps_ofs_dp_yuvn_odr -> sw_nntm:terminal_connect_input
 
     /*
      * Link enablement by private inner options
@@ -16845,7 +17141,7 @@ StaticGraphStatus imageSubGraphTopology100034::configInnerNodes(
      * Disable links with zero buffer size
      * (used for post processing when not all links are being used)
      */
-    for (uint32_t i = 0; i < 20; i++) {
+    for (uint32_t i = 0; i < 25; i++) {
         if (subGraphLinks[i]->linkConfiguration->bufferSize == 0) {
             subGraphLinks[i]->isActive = false;
         }

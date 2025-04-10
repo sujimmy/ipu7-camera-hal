@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2024 Intel Corporation
+ * Copyright (C) 2021-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,12 +87,7 @@ void FaceDetectionPVL::runFaceDetection(const shared_ptr<CameraBuffer>& camBuffe
     params->cameraId = mCameraId;
 
     nsecs_t startTime = CameraUtils::systemTime();
-#ifdef ENABLE_SANDBOXING
-    LOG2("@%s, w:%d, h:%d, dmafd:%d", __func__, params->width, params->height, camBuffer->getFd());
-    int ret = mFace->run(params, sizeof(FaceDetectionRunParams), camBuffer->getFd());
-#else
     int ret = mFace->run(params, sizeof(FaceDetectionRunParams), camBuffer->getBufferAddr());
-#endif
     CheckAndLogError(ret != OK, VOID_VALUE, "%s, Failed to run face for sequence: %ld",
                      __func__, sequence);
 

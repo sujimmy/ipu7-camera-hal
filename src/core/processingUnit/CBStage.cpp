@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -550,8 +550,13 @@ int CBStage::getKernelOffsetFromTerminalDesc(
             if (strcmp(terminalDesc.TerminalName, "TERMINAL_CONNECT_LSC_INPUT") == 0) {
                 offsets.kernels_offset[idx].uuid = static_cast<int32_t>(ia_pal_uuid_isp_lsc_1_2);
             } else if (strcmp(terminalDesc.TerminalName, "TERMINAL_CONNECT_GMV_INPUT") == 0) {
+#ifdef IPU_SYSVER_ipu8
+                offsets.kernels_offset[idx].uuid =
+                    static_cast<int32_t>(ia_pal_uuid_isp_gmv_statistics_1_1);
+#else
                 offsets.kernels_offset[idx].uuid =
                     static_cast<int32_t>(ia_pal_uuid_isp_gmv_statistics_1_0);
+#endif
             } else {
                 offsets.kernels_offset[idx].uuid = terminalDesc.TerminalLinkedKernel;
             }

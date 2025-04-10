@@ -16,24 +16,17 @@
 #
 
 # Use -DFACE_DETECTION to enable the face detection feature
-if (NOT ENABLE_SANDBOXING)
-    set(FACE_DETECTION_SRCS
-        ${SRC_ROOT_DIR}/fd/FaceDetection.cpp
-        ${ALGOWRAPPER_DIR}/IntelFaceDetection.cpp
-        CACHE INTERNAL "Face detect sources"
-        )
+set(FACE_DETECTION_SRCS
+    ${SRC_ROOT_DIR}/fd/FaceDetection.cpp
+    ${ALGOWRAPPER_DIR}/IntelFaceDetection.cpp
+    CACHE INTERNAL "Face detect sources"
+    )
 #---------------------------- include the header ----------------------------
-    include_directories(${USR_INCLUDE_HEADER}/ia_imaging
-                        ${ALGOWRAPPER_DIR}/IntelFaceDetection.h
-                        ${IUTILS_DIR}
-                        include/utils)
+include_directories(${USR_INCLUDE_HEADER}/ia_imaging
+                    ${ALGOWRAPPER_DIR}/IntelFaceDetection.h
+                    ${IUTILS_DIR}
+                    include/utils)
 #---------------------------- static library ----------------------------
-    add_library(face_detection STATIC ${FACE_DETECTION_SRCS})
-else ()
-    set(FACE_DETECTION_SRCS
-        ${SRC_ROOT_DIR}/fd/FaceDetection.cpp
-        CACHE INTERNAL "Face detect sources"
-        )
-endif()
+add_library(face_detection STATIC ${FACE_DETECTION_SRCS})
 
 include_directories(${MODULES_DIR}/v4l2)

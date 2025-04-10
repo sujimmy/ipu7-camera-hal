@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -651,6 +651,11 @@ std::string CameraSensorsParser::resolveI2CBusString(const std::string& name) {
 void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
     if (node.isMember("name")) mCurCam->sensorName = node["name"].asString();
     if (node.isMember("description")) mCurCam->sensorDescription = node["description"].asString();
+    // VIRTUAL_CHANNEL_S
+    if (node.isMember("vcCount")) mCurCam->mVCCount = node["vcCount"].asInt();
+    if (node.isMember("vcId")) mCurCam->mVCId = node["vcId"].asInt();
+    if (node.isMember("vcGoupId")) mCurCam->mVCGroupId = node["vcGoupId"].asInt();
+    // VIRTUAL_CHANNEL_E
     resolveCsiPortAndI2CBus();
     if (node.isMember("supportedTuningConfig"))
         parseSupportedTuningConfig(node["supportedTuningConfig"]);
@@ -712,6 +717,10 @@ void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
 
     if (node.isMember("MediaCtlConfig")) parseMediaCtlConfigSection(node["MediaCtlConfig"]);
     if (node.isMember("StaticMetadata")) parseStaticMetaDataSection(node["StaticMetadata"]);
+
+    if (node.isMember("usePSysProcessor")) {
+        mCurCam->mUsePSysProcessor = node["usePSysProcessor"].asBool();
+    }
 }
 
 void CameraSensorsParser::resolveCsiPortAndI2CBus() {

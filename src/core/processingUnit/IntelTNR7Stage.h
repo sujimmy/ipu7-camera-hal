@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 Intel Corporation
+ * Copyright (C) 2020-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,7 @@
 #include "CameraBuffer.h"
 #include "PlatformData.h"
 #include "TNRCommon.h"
-#ifdef ENABLE_SANDBOXING
-#include "modules/sandboxing/client/IntelICBMClient.h"
-#else
 #include "modules/algowrapper/IntelICBM.h"
-#endif
 #include "IntelCCATypes.h"
 #include "src/icbm/ICBMTypes.h"
 

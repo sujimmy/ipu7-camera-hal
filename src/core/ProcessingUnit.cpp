@@ -801,7 +801,8 @@ void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMa
 
     if (startSequence < 0) startSequence = 0;
     if (startSequence > mLastStillTnrSequence) {
-        LOG2("<seq%ld>: still tnr task start from seq %ld", sequence, startSequence);
+        LOG2("<seq%ld>: still tnr task start from seq %ld, run %ld frames to generate data",
+             sequence, startSequence, (sequence + 1 - startSequence));
         while (startSequence < sequence) {
             mPipeManager->setControl(startSequence, control);
 
@@ -838,6 +839,10 @@ int ProcessingUnit::getTnrFrameCount(const AiqResult* aiqResult) {
             index = i;
         }
     }
+
+    LOG2("TNR trigger frame count %d, the current total gain %f",
+         mTnrTriggerInfo.trigger_infos[index].frame_count, totalGain);
+
     return mTnrTriggerInfo.trigger_infos[index].frame_count;
 }
 

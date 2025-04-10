@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -191,9 +191,6 @@ void CameraHal::deviceCallbackRegister(int cameraId, const camera_callback_ops_t
 
     CameraDevice* device = mCameraDevices[cameraId];
     checkCameraDevice(device, VOID_VALUE);
-#ifdef ENABLE_SANDBOXING
-    IntelAlgoClient::getInstance()->registerErrorCallback(callback);
-#endif
     device->callbackRegister(callback);
 }
 

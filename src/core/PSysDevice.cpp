@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include "PSysDevice.h"
 
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -78,7 +79,7 @@ PSysDevice::~PSysDevice() {
 }
 
 int PSysDevice::init() {
-    mFd = open(DRIVER_NAME, 0, O_RDWR | O_NONBLOCK);
+    mFd = open(DRIVER_NAME, O_RDWR | O_NONBLOCK, 0);
     CheckAndLogError(mFd < 0, INVALID_OPERATION, "Failed to open psys device %s", strerror(errno));
 
     mPollThread->start();

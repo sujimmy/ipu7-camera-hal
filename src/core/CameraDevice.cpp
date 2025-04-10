@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -362,7 +362,8 @@ int CameraDevice::configure(stream_config_t* streamList) {
     int mcId = -1;
     int totalStream = 0;
 
-    if (!mGcMgr) {
+    // Graph config only be used for PSYS processor now
+    if (!mGcMgr && PlatformData::isUsePSysProcessor(mCameraId)) {
         mGcMgr = new GraphConfigManager(mCameraId);
     }
     if (mGcMgr != nullptr) {
@@ -376,18 +377,19 @@ int CameraDevice::configure(stream_config_t* streamList) {
         mcId = mGcMgr->getSelectedMcId();
     }
 
-    // Config the H-Scheduler based on graph id
-    vector<ConfigMode> configModes;
-    PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
-                                                configModes);
-
-    std::shared_ptr<GraphConfig> gc =
-            CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
-    CheckAndLogError(!gc, UNKNOWN_ERROR, "Failed to get GraphConfig!");
-    int graphId = gc->getGraphId();
-    if (mScheduler) {
-        ret = mScheduler->configurate(graphId);
-        CheckAndLogError(ret != OK, ret, "@%s Faield to configure H-Scheduler", __func__);
+    if (mGcMgr != nullptr) {
+        vector<ConfigMode> configModes;
+        PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
+                                                    configModes);
+        // Config the H-Scheduler based on graph id
+        std::shared_ptr<GraphConfig> gc =
+                CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
+        CheckAndLogError(!gc, UNKNOWN_ERROR, "Failed to get GraphConfig!");
+        int graphId = gc->getGraphId();
+        if (mScheduler) {
+            ret = mScheduler->configurate(graphId);
+            CheckAndLogError(ret != OK, ret, "@%s Faield to configure H-Scheduler", __func__);
+        }
     }
 
     ret = assignPortForStreams(streamList, inputRawStreamId, inputYuvStreamId, totalStream);
@@ -411,7 +413,7 @@ int CameraDevice::configure(stream_config_t* streamList) {
         }
     }
 
-    ret = mProducer->configure(producerConfigs, configModes);
+    ret = mProducer->configure(producerConfigs);
     CheckAndLogError(ret < 0, BAD_VALUE, "@%s Device Configure failed", __func__);
 
     // CSI_META_S
@@ -441,6 +443,9 @@ int CameraDevice::configure(stream_config_t* streamList) {
                 outputConfigs[item.second] = (item.first > 0 && item.first == mFdStream.id) ?
                                              mFdStream : streamList->streams[item.first];
             }
+            vector<ConfigMode> configModes;
+            PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
+                                                        configModes);
             ret = mProcessingUnit->configure(producerConfigs, outputConfigs, configModes[0]);
             CheckAndLogError(ret != OK, ret, "@%s failed to configure ProcessingUnit", __func__);
             mProcessingUnit->setBufferProducer(mProducer);
@@ -482,21 +487,25 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
         PlatformData::selectMcConf(mCameraId, mInputConfig, (ConfigMode)streamList->operation_mode,
                                    mcId);
     } else {
-        // Use CSI output to select MC config
-        vector<ConfigMode> configModes;
-        PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
-                                                    configModes);
         stream_t matchedStream = biggestStream;
-        std::shared_ptr<GraphConfig> gc =
-            CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
-        if (!configModes.empty() && gc) {
-            camera_resolution_t csiOutput = {0, 0};
-            gc->getCSIOutputResolution(csiOutput);
-            if (csiOutput.width > 0 && csiOutput.height > 0) {
-                matchedStream.width = csiOutput.width;
-                matchedStream.height = csiOutput.height;
+
+        if (PlatformData::isUsePSysProcessor(mCameraId)) {
+            // Use CSI output to select MC config
+            vector<ConfigMode> configModes;
+            PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
+                                                        configModes);
+            std::shared_ptr<GraphConfig> gc =
+                CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
+            if (!configModes.empty() && gc) {
+                camera_resolution_t csiOutput = {0, 0};
+                gc->getCSIOutputResolution(csiOutput);
+                if (csiOutput.width > 0 && csiOutput.height > 0) {
+                    matchedStream.width = csiOutput.width;
+                    matchedStream.height = csiOutput.height;
+                }
             }
         }
+
         PlatformData::selectMcConf(mCameraId, matchedStream, (ConfigMode)streamList->operation_mode,
                                    mcId);
     }
@@ -681,7 +690,15 @@ int CameraDevice::assignPortForStreams(const stream_config_t* streamList, int in
     mStreamIdToPortMap.clear();
 
     for (size_t i = 0; i < mSortedStreamIds.size(); i++) {
-        mStreamIdToPortMap[mSortedStreamIds[i]] = USER_STREAM_PORT_UID(i);
+        /*
+         * If PSYS Processor isn't used, treat as ISYS only case.
+         * Then set port to INPUT_STREAM_PORT_UID directly.
+         */
+        if (PlatformData::isUsePSysProcessor(mCameraId)) {
+            mStreamIdToPortMap[mSortedStreamIds[i]] = USER_STREAM_PORT_UID(i);
+        } else {
+            mStreamIdToPortMap[mSortedStreamIds[i]] = INPUT_STREAM_PORT_UID(i);
+        }
 
         // Dump the stream info by descending order.
         const stream_t& stream = streamList->streams[mSortedStreamIds[i]];

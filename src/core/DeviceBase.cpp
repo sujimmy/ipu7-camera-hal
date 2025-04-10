@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,6 +121,33 @@ int DeviceBase::streamOff() {
     return OK;
 }
 
+bool DeviceBase::checkAndUpdateBufLength(shared_ptr<CameraBuffer> buffer) {
+    /*
+     * The DMA buf length should not be smaller than external DMA buf length.
+     * So protect the buffer length when using external DMA buffer.
+     */
+    if (buffer->getMemory() == V4L2_MEMORY_DMABUF) {
+        if (mV4L2BufferInfo.empty()) {
+            LOGE("%s, No queried V4L2 buffer info.", __func__);
+            return false;
+        }
+
+        if (mV4L2BufferInfo[0].Length(0) < buffer->getBufferSize()) {
+            LOG2("%s, Update buf length, v4l2 buf %u, external DMA buf %u", __func__,
+                 mV4L2BufferInfo[0].Length(0), buffer->getBufferSize());
+
+            buffer->setBufferSize(mV4L2BufferInfo[0].Length(0));
+        } else if (mV4L2BufferInfo[0].Length(0) > buffer->getBufferSize()) {
+            LOGE("%s, external DMA buf size %u is smaller than v4l2 buf %u", __func__,
+                 buffer->getBufferSize(), mV4L2BufferInfo[0].Length(0));
+
+            return false;
+        }
+    }
+
+    return true;
+}
+
 int DeviceBase::queueBuffer(int64_t sequence) {
     LOG2("<id%d>%s, device:%s", mCameraId, __func__, mName);
 
@@ -136,7 +163,14 @@ int DeviceBase::queueBuffer(int64_t sequence) {
             LOG2("Device:%s has no pending buffer to be queued.", mName);
             return OK;
         }
+
         buffer = mPendingBuffers.front();
+
+        bool valid = checkAndUpdateBufLength(buffer);
+        if (!valid) {
+            return BAD_VALUE;
+        }
+
         mBufferQueuing = true;
     }
 
@@ -328,9 +362,10 @@ int MainDevice::createBufferPool(const stream_t& config) {
 
     LOG2("@%s: realBufSize:%d, calcBufSize:%d", __func__, realBufferSize, calcBufferSize);
 
-    std::vector<V4L2Buffer> bufs;
+    mV4L2BufferInfo.clear();
     int bufNum = mDevice->SetupBuffers(mMaxBufferNumber, true,
-                                       static_cast<enum v4l2_memory>(config.memType), &bufs);
+                                       static_cast<enum v4l2_memory>(config.memType),
+                                       &mV4L2BufferInfo);
     CheckAndLogError(bufNum < 0, BAD_VALUE, "request buffers failed return=%d", bufNum);
 
     return OK;

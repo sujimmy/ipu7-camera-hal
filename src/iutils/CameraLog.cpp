@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -281,26 +281,4 @@ __attribute__((__format__(__printf__, 1, 0))) void ccaPrintInfo(const char* fmt,
 
 }  // namespace Log
 
-#ifdef HAVE_ANDROID_OS
-
-void __camera_hal_log(bool condition, int prio, const char* tag, const char* fmt, ...) {
-    if (condition) {
-        va_list ap;
-        va_start(ap, fmt);
-        if (gLogLevel & CAMERA_DEBUG_LOG_PERSISTENT) {
-            int errnoCopy;
-            unsigned int maxTries = 20;
-            do {
-                errno = 0;
-                __android_log_vprint(prio, tag, fmt, ap);
-                errnoCopy = errno;
-                if (errnoCopy == EAGAIN) usleep(2000); /* sleep 2ms */
-            } while (errnoCopy == EAGAIN && maxTries--);
-        } else {
-            __android_log_vprint(prio, tag, fmt, ap);
-        }
-    }
-}
-
-#endif  // HAVE_ANDROID_OS
 }  // namespace icamera

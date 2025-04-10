@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,8 @@
 #pragma once
 
 #include <stdarg.h>
-
-#ifdef HAVE_ANDROID_OS
-#include <log/log.h>
-#endif
+#include <stdint.h>
+#include <stdio.h>
 
 #ifdef HAVE_CHROME_OS
 #include "utils/PerfettoTrace.h"
@@ -33,9 +31,6 @@
 #endif
 
 // ***********************************************************
-#include <stdint.h>
-#include <stdio.h>
-
 struct GroupDesc {
     uint32_t level;
 };
@@ -52,14 +47,9 @@ extern const char* tagNames[];
 extern icamera::LogOutputSink* globalLogSink;
 
 namespace icamera {
-/**
- * global log level
- * This global variable is set from system properties
- * It is used to control the level of verbosity of the traces in logcat
- * It is also used to store the status of certain RD features
- */
+
+/* global log level */
 extern int gLogLevel;
-extern int gPerfLevel;
 extern int gSlowlyRunRatio;
 
 /**
@@ -146,8 +136,6 @@ void ccaPrintInfo(const char* fmt, va_list ap);
 extern void doLogBody(int logTag, int level, int grpPosition, const char* fmt, ...);
 extern void doLogBody(int logTag, int level, const char* fmt, ...);
 
-#ifdef HAVE_LINUX_OS  // Linux OS
-
 #define LOG1(...)                                                                                \
     do {                                                                                         \
         { doLogBody(GET_FILE_SHIFT(LOG_TAG), icamera::CAMERA_DEBUG_LOG_LEVEL1, ##__VA_ARGS__); } \
@@ -178,33 +166,6 @@ extern void doLogBody(int logTag, int level, const char* fmt, ...);
         { doLogBody(GET_FILE_SHIFT(LOG_TAG), icamera::CAMERA_DEBUG_LOG_WARNING, ##__VA_ARGS__); } \
     } while (0)
 
-#define ALOGE LOGE
-#define ALOGD LOGI
-#define ALOGI LOGI
-#define ALOGW LOGW
-#define ALOGW_IF
-#define LOG_ALWAYS_FATAL_IF
-#define LOG_FATAL_IF
-
-#else  // Android OS
-
-void __camera_hal_log(bool condition, int prio, const char* tag, const char* fmt, ...);
-
-#define LOG1(...)                                                                   \
-    icamera::__camera_hal_log(icamera::gLogLevel& icamera::CAMERA_DEBUG_LOG_LEVEL1, \
-                              ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
-#define LOG2(...)                                                                   \
-    icamera::__camera_hal_log(icamera::gLogLevel& icamera::CAMERA_DEBUG_LOG_LEVEL2, \
-                              ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
-#define LOG3(...)                                                                   \
-    icamera::__camera_hal_log(icamera::gLogLevel& icamera::CAMERA_DEBUG_LOG_LEVEL3, \
-                              ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
-
-#define LOGE(...) icamera::__camera_hal_log(true, ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-#define LOGI(...) icamera::__camera_hal_log(true, ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGW(...) icamera::__camera_hal_log(true, ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
-
-#endif
 #define HAL_TRACE_NAME(level, name) ScopedTrace ___tracer(level, name)
 #define HAL_TRACE_CALL(level) HAL_TRACE_NAME(level, __PRETTY_FUNCTION__)
 
