@@ -26,8 +26,6 @@
 
 #include "AiqSetting.h"
 #include "AiqEngine.h"
-#ifndef PAC_ENABLE
-#endif
 
 namespace icamera {
 
@@ -45,11 +43,11 @@ public:
     AiqUnitBase() {}
     virtual ~AiqUnitBase() {}
 
-    virtual int init() { return OK; }
-    virtual int deinit() { return OK; }
+    virtual void init() {}
+    virtual void deinit() {}
     virtual int configure(const stream_config_t * /*streamList*/) { return OK; }
     virtual int start() { return OK; }
-    virtual int stop() { return OK; }
+    virtual void stop() {}
     virtual int run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber,
                       int64_t * /*effectSeq*/)  { return OK; }
 
@@ -78,12 +76,12 @@ public:
     /**
      * \brief Init 3a related objects
      */
-    int init();
+    void init();
 
     /**
      * \brief Deinit 3a related objects
      */
-    int deinit();
+    void deinit();
 
     /**
      * \brief configure 3a engine with stream configuration
@@ -98,7 +96,7 @@ public:
     /**
      * \brief Stop 3a Engine
      */
-    int stop();
+    void stop();
 
     /**
      * \brief Run 3a to get new 3a settings.
@@ -143,8 +141,8 @@ private:
         AIQ_UNIT_MAX
     } mAiqUnitState;
 
-#ifndef PAC_ENABLE
-#endif
+    // The operation mode of the streams
+    uint32_t mOperationMode;
 
     AiqEngine *mAiqEngine;
 

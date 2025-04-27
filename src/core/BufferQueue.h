@@ -18,6 +18,7 @@
 
 #include <map>
 #include <vector>
+#include <condition_variable>
 
 #include "CameraBuffer.h"
 #include "CameraEvent.h"

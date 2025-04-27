@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,6 @@ void ParameterConvert::setIspSettings(const Parameters& param, DataContext* data
     }
     param.getVideoStabilizationMode(dataContext->mAiqParams.videoStabilizationMode);
     param.getDigitalZoomRatio(dataContext->mIspParams.digitalZoomRatio);
-
 }
 
 void ParameterConvert::setAiqSettings(const Parameters& param, DataContext* dataContext) {
@@ -107,7 +106,6 @@ void ParameterConvert::setAiqSettings(const Parameters& param, DataContext* data
     param.getAfTrigger(dataContext->mAiqParams.afTrigger);
     param.getFocusDistance(dataContext->mAiqParams.focusDistance);
 
-    param.getWeightGridMode(dataContext->mAiqParams.weightGridMode);
     param.getSceneMode(dataContext->mAiqParams.sceneMode);
 
     param.getAeDistributionPriority(dataContext->mAiqParams.aeDistributionPriority);

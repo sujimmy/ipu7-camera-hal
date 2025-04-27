@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,6 @@ struct aiq_parameter_t {
     camera_converge_speed_t aeConvergeSpeed;
     camera_converge_speed_t awbConvergeSpeed;
     int run3ACadence;
-    camera_weight_grid_mode_t weightGridMode;
     camera_ae_distribution_priority_t aeDistributionPriority;
     custom_aic_param_t customAicParam;
     camera_yuv_color_range_mode_t yuvColorRangeMode;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 Intel Corporation
+ * Copyright (C) 2020-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ void IntelCca::releaseInstance(int cameraId, TuningMode mode) {
 
     AutoMutex lock(sLock);
     for (auto &it : sCcaInstance) {
-        if (cameraId == it.cameraId && it.ccaHandle.find(mode) != it.ccaHandle.end()) {
+        if ((cameraId == it.cameraId) && (it.ccaHandle.find(mode) != it.ccaHandle.end())) {
             IntelCca *cca = it.ccaHandle[mode];
             it.ccaHandle.erase(mode);
             delete cca;
@@ -127,9 +127,6 @@ ia_err IntelCca::runAIQ(uint64_t frameId, const cca::cca_aiq_params& params,
 
     return ret;
 }
-
-#ifndef PAC_ENABLE
-#endif
 
 ia_err IntelCca::updateTuning(uint8_t lardTags, const ia_lard_input_params& lardParams,
                               const cca::cca_nvm& nvm, int32_t streamId) {
@@ -217,7 +214,7 @@ ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
     ia_err ret = getIntelCCA()->decodeStats(groupId, sequence, aicId);
     LOG2("@%s, ret:%d", __func__, ret);
 
-    if (ret == ia_err_none && outStats && outStats->get_rgbs_stats) {
+    if ((ret == ia_err_none) && (outStats && outStats->get_rgbs_stats)) {
         auto stats = getIntelCCA()->queryStatsBuf(cca::STATS_BUF_LATEST);
         if (stats) {
             outStats->rgbs_grid[0].grid_width = stats->stats.rgbs_grids[0].grid_width;

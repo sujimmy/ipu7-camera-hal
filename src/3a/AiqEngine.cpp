@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,55 +55,31 @@ AiqEngine::~AiqEngine() {
     delete mAiqCore;
 }
 
-int AiqEngine::init() {
+void AiqEngine::init() {
     LOG1("<id%d>%s", mCameraId, __func__);
 
     AutoMutex l(mEngineLock);
-    if (mAiqCore->init() != OK) {
-        return UNKNOWN_ERROR;
-    }
 
+    mAiqCore->init();
     mSensorManager->reset();
-
-    return OK;
 }
 
-int AiqEngine::deinit() {
+void AiqEngine::deinit() {
     LOG1("<id%d>%s", mCameraId, __func__);
 
     AutoMutex l(mEngineLock);
     mSensorManager->reset();
     mAiqCore->deinit();
-
-    return OK;
 }
 
-int AiqEngine::configure() {
-    AutoMutex l(mEngineLock);
-    mAiqCore->configure();
-
-    return OK;
-}
-
-int AiqEngine::startEngine() {
+void AiqEngine::reset() {
     LOG1("<id%d>%s", mCameraId, __func__);
 
     AutoMutex l(mEngineLock);
     mFirstAiqRunning = true;
     mAiqResultStorage->resetAiqStatistics();
     mSensorManager->reset();
-    mLensManager->start();
-
-    return OK;
-}
-
-int AiqEngine::stopEngine() {
-    LOG1("<id%d>%s", mCameraId, __func__);
-
-    AutoMutex l(mEngineLock);
-    mLensManager->stop();
-
-    return OK;
+    mLensManager->reset();
 }
 
 int AiqEngine::run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber, int64_t* effectSeq) {
@@ -160,7 +136,7 @@ int AiqEngine::run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber, in
                                     mAiqResultStorage->getAiqResult()->mSequence,
                                     aiqResult->mTuningMode);
 
-    return (state == AIQ_STATE_DONE || state == AIQ_STATE_WAIT) ? 0 : UNKNOWN_ERROR;
+    return ((state == AIQ_STATE_DONE) || (state == AIQ_STATE_WAIT)) ? 0 : UNKNOWN_ERROR;
 }
 
 EventListener* AiqEngine::getSofEventListener() {
@@ -182,7 +158,7 @@ int AiqEngine::prepareStatsParams(const aiq_parameter_t& aiqParams,
     // update face detection related parameters
     if (PlatformData::isFaceAeEnabled(mCameraId)) {
         FaceDetectionResult* faceResult = mAiqResultStorage->getFaceResult();
-        if (faceResult && faceResult->ccaFaceState.num_faces > 0) {
+        if (faceResult && (faceResult->ccaFaceState.num_faces > 0)) {
             statsParams->faces = faceResult->ccaFaceState;
             ia_rectangle& rect = statsParams->faces.faces[0].face_area;
             LOG2("<seq:%ld>%s, face number:%d, left:%d, top:%d, right:%d, bottom:%d",
@@ -197,13 +173,13 @@ int AiqEngine::prepareStatsParams(const aiq_parameter_t& aiqParams,
     do {
         // HDR_FEATURE_S
         // Run 3A without statistics when switching pipe.
-        if (aiqParams.tuningMode == TUNING_MODE_VIDEO_ULL &&
-            aiqStatistics->mTuningMode == TUNING_MODE_VIDEO_HDR) {
+        if ((aiqParams.tuningMode == TUNING_MODE_VIDEO_ULL) &&
+            (aiqStatistics->mTuningMode == TUNING_MODE_VIDEO_HDR)) {
             LOG2("Switching from HDR to ULL pipe");
             ret = INVALID_OPERATION;
             break;
-        } else if (aiqParams.tuningMode == TUNING_MODE_VIDEO_HDR &&
-                   aiqStatistics->mTuningMode == TUNING_MODE_VIDEO_ULL) {
+        } else if ((aiqParams.tuningMode == TUNING_MODE_VIDEO_HDR) &&
+                   (aiqStatistics->mTuningMode == TUNING_MODE_VIDEO_ULL)) {
             LOG2("Switching from ULL to HDR pipe");
             ret = INVALID_OPERATION;
             break;
@@ -222,7 +198,7 @@ int AiqEngine::prepareStatsParams(const aiq_parameter_t& aiqParams,
         std::shared_ptr<GraphConfig> gc = nullptr;
         CameraContext* context = CameraContext::getInstance(mCameraId);
         gc = context->getGraphConfig(CAMERA_STREAM_CONFIGURATION_MODE_NORMAL);
-        if (PlatformData::isDvsSupported(mCameraId) && gc) {
+        if (PlatformData::isDvsSupported(mCameraId) && (gc != nullptr)) {
             ia_isp_bxt_resolution_info_t resolution;
             uint32_t gdcKernelId;
             int status = gc->getGdcKernelSetting(&gdcKernelId, &resolution);
@@ -420,12 +396,12 @@ int AiqEngine::applyManualTonemaps(const aiq_parameter_t& aiqParams, AiqResult* 
 
     // Due to the tone map curve effect on image IQ, so need to apply
     // manual/fixed tone map table in manual tonemap or manual ISO/ET mode
-    if (aiqParams.tonemapMode == TONEMAP_MODE_FAST ||
-        aiqParams.tonemapMode == TONEMAP_MODE_HIGH_QUALITY) {
+    if ((aiqParams.tonemapMode == TONEMAP_MODE_FAST) ||
+        (aiqParams.tonemapMode == TONEMAP_MODE_HIGH_QUALITY)) {
         aiqResult->mGbceResults.have_manual_settings = false;
 
-        if (aiqParams.aeMode != AE_MODE_AUTO && aiqParams.manualIso != 0
-            && aiqParams.manualExpTimeUs != 0) {
+        if ((aiqParams.aeMode != AE_MODE_AUTO) && (aiqParams.manualIso != 0)
+            && (aiqParams.manualExpTimeUs != 0)) {
             aiqResult->mGbceResults.have_manual_settings = true;
         }
     }

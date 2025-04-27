@@ -434,12 +434,8 @@ void CameraSensorsParser::parseStaticMetaDataSectionSupportedFeatures(const Json
             feature = NOISE_REDUCTION;
         else if (featrueStr == "SCENE_MODE")
             feature = SCENE_MODE;
-        else if (featrueStr == "WEIGHT_GRID_MODE")
-            feature = WEIGHT_GRID_MODE;
         else if (featrueStr == "PER_FRAME_CONTROL")
             feature = PER_FRAME_CONTROL;
-        else if (featrueStr == "ISP_CONTROL")
-            feature = ISP_CONTROL;
 
         if (feature != INVALID_FEATURE) features.push_back(feature);
     }

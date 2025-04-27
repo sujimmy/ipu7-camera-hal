@@ -1419,6 +1419,41 @@ StaticGraphStatus Ipu8GraphResolutionConfigurator::updateRunKernelCropper(Static
     runKernel->resolution_info->input_crop.top = 0;
     runKernel->resolution_info->input_crop.bottom = 0;
 
+    // In certain cases need to adjust negative and/or odd crop values.
+    if (downscalerCropHist.left < 0)
+    {
+        downscalerCropHist.left = 0;
+    }
+    if (downscalerCropHist.right < 0)
+    {
+        downscalerCropHist.right = 0;
+    }
+    if (downscalerCropHist.top < 0)
+    {
+        downscalerCropHist.top = 0;
+    }
+    if (downscalerCropHist.bottom < 0)
+    {
+        downscalerCropHist.bottom = 0;
+    }
+
+    if (downscalerCropHist.left & 1)
+    {
+        downscalerCropHist.left = downscalerCropHist.left - 1;
+    }
+    if (downscalerCropHist.right & 1)
+    {
+        downscalerCropHist.right = downscalerCropHist.right - 1;
+    }
+    if (downscalerCropHist.top & 1)
+    {
+        downscalerCropHist.top = downscalerCropHist.top - 1;
+    }
+    if (downscalerCropHist.bottom & 1)
+    {
+        downscalerCropHist.bottom = downscalerCropHist.bottom - 1;
+    }
+
     // Configure to crop the required amount. First try to use the original DS cropping (Remove padding)
     int32_t totalHorizontalCrop = inputWidth - outputWidth;
 

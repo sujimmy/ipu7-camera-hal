@@ -16,11 +16,9 @@
 
 #pragma once
 
-#ifndef HAVE_ANDROID_OS
 #include <semaphore.h>
 
 #include "PlatformData.h"
-#endif
 
 namespace icamera {
 
@@ -40,25 +38,6 @@ namespace icamera {
  *
  * This class is created along with cameraHal class.
  */
-#ifdef HAVE_ANDROID_OS
-// Shared memory is not necessary for Android since only single instance of HAL
-// is supported.
-class CameraSharedMemory {
- public:
-    CameraSharedMemory() { mCameraDeviceOpenNum = 0; }
-    ~CameraSharedMemory() {}
-    int CameraDeviceOpen(int cameraId) {
-        mCameraDeviceOpenNum++;
-        return OK;
-    }
-    void CameraDeviceClose(int cameraId) { mCameraDeviceOpenNum--; }
-    int cameraDeviceOpenNum() { return mCameraDeviceOpenNum; }
-
- private:
-    int mCameraDeviceOpenNum;
-};
-
-#else
 class CameraSharedMemory {
  public:
     CameraSharedMemory();
@@ -122,6 +101,5 @@ class CameraSharedMemory {
     int mSharedMemId;
     camera_shared_info* mCameraSharedInfo;
 };
-#endif
 
 }  // namespace icamera

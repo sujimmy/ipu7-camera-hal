@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Intel Corporation.
+ * Copyright (C) 2021-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,11 +82,7 @@ int MockCameraHal::deinit() {
     return OK;
 }
 
-#ifdef NO_VIRTUAL_CHANNEL
-int MockCameraHal::deviceOpen(int cameraId)
-#else
 int MockCameraHal::deviceOpen(int cameraId, int vcNum)
-#endif
 {
     LOG1("<id%d>@%s", cameraId, __func__);
 
@@ -301,8 +297,6 @@ int MockCameraHal::initDefaultParameters(int cameraId) {
     camera_image_enhancement_t enhancement;
     CLEAR(enhancement);  // All use 0 as default
     mParameter[cameraId].setImageEnhancement(enhancement);
-
-    mParameter[cameraId].setWeightGridMode(WEIGHT_GRID_AUTO);
 
     mParameter[cameraId].setWdrLevel(100);
 

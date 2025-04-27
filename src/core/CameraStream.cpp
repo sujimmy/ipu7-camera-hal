@@ -88,8 +88,9 @@ shared_ptr<CameraBuffer> CameraStream::userBufferToCameraBuffer(camera_buffer_t*
         if ((*buffer)->getUserBuffer() == ubuffer) {
             /* when memType matches, the dmafd or the addr should match */
             if (((*buffer)->getMemory() == static_cast<uint32_t>(ubuffer->s.memType)) &&
-                ((ubuffer->addr != nullptr && (*buffer)->getUserBuffer()->addr == ubuffer->addr) ||
-                 (ubuffer->dmafd >= 0 && (*buffer)->getUserBuffer()->dmafd == ubuffer->dmafd))) {
+                (((ubuffer->addr != nullptr) &&
+                ((*buffer)->getUserBuffer()->addr == ubuffer->addr)) || ((ubuffer->dmafd >= 0) &&
+                ((*buffer)->getUserBuffer()->dmafd == ubuffer->dmafd)))) {
                 camBuffer = *buffer;
             } else {
                 mInputBuffersPool.erase(buffer);

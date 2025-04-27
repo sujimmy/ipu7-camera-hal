@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -174,7 +174,7 @@ class CBStage : public IPipeStage, public IPSysDeviceCallback {
     std::unordered_map<void*, TerminalBuffer> mUserToTerminalBuffer;
 
     // first: sequence, second:: TerminalBuffer
-    std::unordered_map<int64_t, TerminalBuffer> mSeqToTerminalBufferMaps;
+    std::unordered_multimap<int64_t, TerminalBuffer> mSeqToTerminalBufferMaps;
 };
 
 }  // namespace icamera

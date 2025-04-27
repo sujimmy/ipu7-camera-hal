@@ -170,7 +170,8 @@ static const FormatInfo gFormatMapping[] = {
      FORMAT_FOURCC},
     {V4L2_PIX_FMT_SGRBG10V32, GET_FOURCC_FMT('b', 'V', '0', 'G'), "bV0G", "bV0G", 16,
      FORMAT_FOURCC},
-    {0, GET_FOURCC_FMT('V', '4', '2', '0'), "YUV420_10_PL", "V420", 24, FORMAT_FOURCC},
+    {v4l2_fourcc('V', '4', '2', '0'), GET_FOURCC_FMT('V', '4', '2', '0'), "YUV420_10_PL", "V420",
+            24, FORMAT_FOURCC},
     {0, GET_FOURCC_FMT('C', 'S', 'L', '6'), "GRBG_12_LI", "CSL6", 12, FORMAT_FOURCC},
     {0, GET_FOURCC_FMT('C', 'S', '4', '2'), "YUV420_12_P64", "CS42", 18, FORMAT_FOURCC},
     {0, GET_FOURCC_FMT('C', 'S', '4', '0'), "YUV420_10_P64", "CS40", 15, FORMAT_FOURCC},
@@ -368,12 +369,12 @@ int CameraUtils::getStride(int format, int width) {
 /**
  * Calculate bytes per line(bpl) based on fourcc format.
  *
- * \param[in] format fourcc code in OS specific format
+ * \param[in] fourcc fourcc code in OS specific format
  * \return bpl bytes per line
  */
-int32_t CameraUtils::getBpl(int32_t format, int32_t width) {
+int32_t CameraUtils::getBpl(int32_t fourcc, int32_t width) {
     int32_t bpl = 0;
-    switch (format) {
+    switch (fourcc) {
         case GET_FOURCC_FMT('C', 'S', '4', '2'):  // YUV
             /*
              * Align based on UV planes, which have half the strides compared to y plane.
@@ -407,7 +408,7 @@ int32_t CameraUtils::getBpl(int32_t format, int32_t width) {
             break;
         default:
             bpl = width;
-            LOGW("bpl defaulting to width for format:%s", format2string(format).c_str());
+            LOGW("bpl defaulting to width for format:%s", format2string(fourcc).c_str());
             break;
     }
 

@@ -32,7 +32,8 @@ public:
     LensHw(int cameraId);
     ~LensHw();
 
-    int init();
+    void start();
+    void stop();
 
     int setFocusPosition(int position);
     int getLatestPosition(int& lensPosition, unsigned long long& time);

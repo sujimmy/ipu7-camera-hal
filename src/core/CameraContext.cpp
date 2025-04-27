@@ -66,6 +66,12 @@ DataContext::DataContext(int cameraId) :
     }
 }
 
+void DataContext::reset() {
+    mFrameNumber = -1;
+    mSequence = -1;
+    mCcaId = -1;
+}
+
 CameraContext* CameraContext::getInstance(int cameraId) {
     std::lock_guard<std::mutex> lock(sLock);
 
@@ -108,6 +114,17 @@ CameraContext::~CameraContext() {
     delete mAiqResultStorage;
     for (int i = 0; i < kContextSize; i++) {
         delete mDataContext[i];
+    }
+}
+
+void CameraContext::reset() {
+    LOG2("<id%d> %s", mCameraId, __func__);
+    mFnToDataContextMap.clear();
+    mSeqToDataContextMap.clear();
+    mCcaIdToDataContextMap.clear();
+
+    for (int i = 0; i < kContextSize; i++) {
+        mDataContext[i]->reset();
     }
 }
 
@@ -227,7 +244,8 @@ const DataContext* CameraContext::getDataContextBySeq(int64_t sequence) {
     // search from the newest result
     for (int i = 0; i < kContextSize; i++) {
         int tmpIdx = (mCurrentIndex + kContextSize - i) % kContextSize;
-        if (mDataContext[tmpIdx]->mSequence >= 0 && sequence >= mDataContext[tmpIdx]->mSequence) {
+        if ((mDataContext[tmpIdx]->mSequence >= 0) &&
+            (sequence >= mDataContext[tmpIdx]->mSequence)) {
             return mDataContext[tmpIdx];
         }
     }

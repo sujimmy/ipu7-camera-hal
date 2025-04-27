@@ -113,7 +113,7 @@ int SensorManager::convertTuningModeToWdrMode(TuningMode tuningMode) {
 }
 
 void SensorManager::handleSensorModeSwitch(int64_t sequence) {
-    if (!PlatformData::isEnableHDR(mCameraId) || !mModeSwitched) {
+    if ((!PlatformData::isEnableHDR(mCameraId)) || (!mModeSwitched)) {
         return;
     }
 
@@ -222,7 +222,7 @@ uint32_t SensorManager::updateSensorExposure(SensorExpGroup sensorExposures, int
 
     if (effectSeq > 0) {
         int sensorSeq = mLastSofSequence + mExposureDataMap.size() + 1;
-        if (applyingSeq > 0 && applyingSeq == mLastSofSequence) {
+        if ((applyingSeq > 0) && (applyingSeq == mLastSofSequence)) {
             sensorSeq = applyingSeq;
             mSensorHwCtrl->setFrameDuration(exposureData.lineLengthPixels,
                                             exposureData.frameLengthLines);

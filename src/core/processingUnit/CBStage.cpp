@@ -658,8 +658,7 @@ int CBStage::pacConfig(const StaticGraphNodeKernels& kernelGroup, aic::IaAicBuff
                        PacTerminalBufMap& termBufMap) {
     uint32_t* offsetPtr = mKernelOffsetBuf;
 
-    cca::cca_aic_config aicConfig;
-    CLEAR(aicConfig);
+    cca::cca_aic_config aicConfig{};
 
     aicConfig.cb_num = 1;
     aicConfig.cb_config[0].group_id = static_cast<int32_t>(mContextId);
@@ -842,7 +841,7 @@ int CBStage::addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* term
 
         if (terminalBuf.isExtDmaBuf) {
             std::lock_guard<std::mutex> l(mDataLock);
-            mSeqToTerminalBufferMaps[sequence] = terminalBuf;
+            mSeqToTerminalBufferMaps.emplace(sequence, terminalBuf);
         }
     }
 
@@ -850,8 +849,15 @@ int CBStage::addFrameTerminals(std::unordered_map<uint8_t, TerminalBuffer>* term
 }
 
 void CBStage::unregisterExtDmaBuf(int64_t sequence) {
-    if (mSeqToTerminalBufferMaps.find(sequence) != mSeqToTerminalBufferMaps.end()) {
-        mPSysDevice->unregisterBuffer(&mSeqToTerminalBufferMaps[sequence]);
+    auto range = mSeqToTerminalBufferMaps.equal_range(sequence);
+    bool found = false;
+
+    for (auto& it = range.first; it != range.second; ++it) {
+        mPSysDevice->unregisterBuffer(&it->second);
+        found = true;
+    }
+
+    if (found) {
         mSeqToTerminalBufferMaps.erase(sequence);
     }
 }

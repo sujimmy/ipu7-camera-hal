@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <condition_variable>
 
 #include "CameraEvent.h"
 #include "CameraSchedulerPolicy.h"

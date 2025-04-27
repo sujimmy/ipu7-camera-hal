@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation
+ * Copyright (C) 2015-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,6 @@
 using std::string;
 
 namespace icamera {
-
-static const char* CAMERA_AIQD_PATH = "/run/camera/";
 
 AiqData::AiqData(const std::string& fileName, int maxSize) : mDataPtr(nullptr) {
     LOG1("%s, file name %s", __func__, fileName.c_str());

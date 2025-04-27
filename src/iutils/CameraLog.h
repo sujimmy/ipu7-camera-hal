@@ -20,11 +20,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef HAVE_CHROME_OS
-#include "utils/PerfettoTrace.h"
-#else
 #include "utils/ScopedAtrace.h"
-#endif
 
 #ifdef CAMERA_TRACE
 #include "CameraTrace.h"

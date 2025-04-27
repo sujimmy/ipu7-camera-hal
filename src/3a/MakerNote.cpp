@@ -140,7 +140,7 @@ void MakerNote::acquireMakernoteData(uint64_t timestamp, uint8_t* buf, uint32_t&
     CheckAndLogError(!buf, VOID_VALUE, "@%s, buffer is nullptr", __func__);
 
     for (auto rit = mMakernoteDataList.rbegin(); rit != mMakernoteDataList.rend(); ++rit) {
-        if ((*rit).timestamp > 0 && timestamp >= (*rit).timestamp) {
+        if (((*rit).timestamp > 0) && (timestamp >= (*rit).timestamp)) {
             LOG2("@%s, found timestamp %ld for request timestamp %ld", __func__, (*rit).timestamp,
                  timestamp);
             MEMCPY_S(buf, (*rit).mknData->size, (*rit).mknData->buf, (*rit).mknData->size);

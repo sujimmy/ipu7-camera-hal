@@ -453,7 +453,6 @@ static tag_info_t intel_control[INTEL_CONTROL_END -
     { "wdrLevel",                      ICAMERA_TYPE_BYTE   },
     { "blcAreaMode",                   ICAMERA_TYPE_BYTE   },
     { "sceneMode",                     ICAMERA_TYPE_BYTE   },
-    { "weightGridMode",                ICAMERA_TYPE_BYTE   },
     { "aeConvergeSpeedMode",           ICAMERA_TYPE_BYTE   },
     { "deinterlaceMode",               ICAMERA_TYPE_BYTE   },
     { "customAicParam",                ICAMERA_TYPE_BYTE   },
@@ -2211,16 +2210,8 @@ int icamera_metadata_enum_snprint(uint32_t tag,
                     msg = "SCENE_MODE";
                     ret = 0;
                     break;
-                case INTEL_INFO_AVAILABLE_FEATURES_WEIGHT_GRID_MODE:
-                    msg = "WEIGHT_GRID_MODE";
-                    ret = 0;
-                    break;
                 case INTEL_INFO_AVAILABLE_FEATURES_PER_FRAME_CONTROL:
                     msg = "PER_FRAME_CONTROL";
-                    ret = 0;
-                    break;
-                case INTEL_INFO_AVAILABLE_FEATURES_ISP_CONTROL:
-                    msg = "ISP_CONTROL";
                     ret = 0;
                     break;
                 default:
@@ -2421,29 +2412,6 @@ int icamera_metadata_enum_snprint(uint32_t tag,
                     break;
                 case INTEL_CONTROL_SCENE_MODE_HDR2:
                     msg = "HDR2";
-                    ret = 0;
-                    break;
-                default:
-                    msg = "error: enum value out of range";
-            }
-            break;
-        }
-        case INTEL_CONTROL_WEIGHT_GRID_MODE: {
-            switch (value) {
-                case INTEL_CONTROL_WEIGHT_GRID_MODE_AUTO:
-                    msg = "AUTO";
-                    ret = 0;
-                    break;
-                case INTEL_CONTROL_WEIGHT_GRID_MODE_CUSTOM_WEIGHT_GRID1:
-                    msg = "CUSTOM_WEIGHT_GRID1";
-                    ret = 0;
-                    break;
-                case INTEL_CONTROL_WEIGHT_GRID_MODE_CUSTOM_WEIGHT_GRID2:
-                    msg = "CUSTOM_WEIGHT_GRID2";
-                    ret = 0;
-                    break;
-                case INTEL_CONTROL_WEIGHT_GRID_MODE_CUSTOM_WEIGHT_GRID3:
-                    msg = "CUSTOM_WEIGHT_GRID3";
                     ret = 0;
                     break;
                 default:

@@ -32,13 +32,9 @@ namespace icamera {
 AiqUnit::AiqUnit(int cameraId, SensorHwCtrl *sensorHw, LensHw *lensHw) :
     mCameraId(cameraId),
     mAiqUnitState(AIQ_UNIT_NOT_INIT),
-#ifndef PAC_ENABLE
-#endif
+    mOperationMode(CAMERA_STREAM_CONFIGURATION_MODE_NORMAL),
     mCcaInitialized(false) {
     mAiqEngine = new AiqEngine(cameraId, sensorHw, lensHw);
-
-#ifndef PAC_ENABLE
-#endif
 }
 
 AiqUnit::~AiqUnit() {
@@ -49,29 +45,21 @@ AiqUnit::~AiqUnit() {
         deinit();
     }
 
-#ifndef PAC_ENABLE
-#endif
     delete mAiqEngine;
 }
 
-int AiqUnit::init() {
+void AiqUnit::init() {
     AutoMutex l(mAiqUnitLock);
     LOG1("<id%d>@%s", mCameraId, __func__);
 
     if (mAiqUnitState == AIQ_UNIT_NOT_INIT) {
-        int ret = mAiqEngine->init();
-        if (ret != OK) {
-            mAiqEngine->deinit();
-            return ret;
-        }
+        mAiqEngine->init();
     }
 
     mAiqUnitState = AIQ_UNIT_INIT;
-
-    return OK;
 }
 
-int AiqUnit::deinit() {
+void AiqUnit::deinit() {
     AutoMutex l(mAiqUnitLock);
     LOG1("<id%d>@%s", mCameraId, __func__);
 
@@ -79,8 +67,6 @@ int AiqUnit::deinit() {
 
     deinitIntelCcaHandle();
     mAiqUnitState = AIQ_UNIT_NOT_INIT;
-
-    return OK;
 }
 
 int AiqUnit::configure(const stream_config_t *streamList) {
@@ -89,7 +75,12 @@ int AiqUnit::configure(const stream_config_t *streamList) {
     AutoMutex l(mAiqUnitLock);
     LOG1("<id%d>@%s", mCameraId, __func__);
 
-    if (mAiqUnitState != AIQ_UNIT_INIT && mAiqUnitState != AIQ_UNIT_STOP) {
+    if ((mAiqUnitState == AIQ_UNIT_CONFIGURED) && (mOperationMode == streamList->operation_mode)) {
+        LOG2("%s: already configured in the same mode: %d", __func__, mOperationMode);
+        return OK;
+    }
+
+    if ((mAiqUnitState != AIQ_UNIT_INIT) && (mAiqUnitState != AIQ_UNIT_STOP)) {
         LOGW("%s: configure in wrong state: %d", __func__, mAiqUnitState);
         return BAD_VALUE;
     }
@@ -100,9 +91,7 @@ int AiqUnit::configure(const stream_config_t *streamList) {
     int ret = initIntelCcaHandle(configModes);
     CheckAndLogError(ret < 0, BAD_VALUE, "@%s failed to create intel cca handle", __func__);
 
-    ret = mAiqEngine->configure();
-    CheckAndLogError(ret != OK, ret, "configure AIQ engine error: %d", ret);
-
+    mOperationMode = streamList->operation_mode;
     mAiqUnitState = AIQ_UNIT_CONFIGURED;
     return OK;
 }
@@ -123,7 +112,7 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
         // Initialize cca_cpf data
         ia_binary_data cpfData;
         ret = PlatformData::getCpf(mCameraId, tuningMode, &cpfData);
-        if (ret == OK && cpfData.data) {
+        if ((ret == OK) && cpfData.data) {
             CheckAndLogError(cpfData.size > cca::MAX_CPF_LEN, UNKNOWN_ERROR,
                        "%s, AIQB buffer is too small cpfData:%d > MAX_CPF_LEN:%d",
                        __func__, cpfData.size, cca::MAX_CPF_LEN);
@@ -168,9 +157,6 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
         if (PlatformData::getLensHwType(mCameraId) == LENS_VCM_HW) {
             params->bitmap |= cca::CCA_MODULE_AF;
         }
-
-#ifndef PAC_ENABLE
-#endif
 
         std::shared_ptr<GraphConfig> graphConfig =
             CameraContext::getInstance(mCameraId)->getGraphConfig(cfg);
@@ -246,30 +232,22 @@ int AiqUnit::start() {
     AutoMutex l(mAiqUnitLock);
     LOG1("<id%d>@%s", mCameraId, __func__);
 
-    if (mAiqUnitState != AIQ_UNIT_CONFIGURED && mAiqUnitState != AIQ_UNIT_STOP) {
+    if ((mAiqUnitState != AIQ_UNIT_CONFIGURED) && (mAiqUnitState != AIQ_UNIT_STOP)) {
         LOGW("%s: configure in wrong state: %d", __func__, mAiqUnitState);
         return BAD_VALUE;
     }
 
-    int ret = mAiqEngine->startEngine();
-    if (ret == OK) {
-        mAiqUnitState = AIQ_UNIT_START;
-    }
+    mAiqEngine->reset();
+    mAiqUnitState = AIQ_UNIT_START;
 
     return OK;
 }
 
-int AiqUnit::stop() {
+void AiqUnit::stop() {
     AutoMutex l(mAiqUnitLock);
     LOG1("<id%d>@%s", mCameraId, __func__);
 
-    if (mAiqUnitState == AIQ_UNIT_START) {
-        mAiqEngine->stopEngine();
-    }
-
     mAiqUnitState = AIQ_UNIT_STOP;
-
-    return OK;
 }
 
 int AiqUnit::run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber, int64_t* effectSeq) {
@@ -298,8 +276,7 @@ std::vector<EventListener*> AiqUnit::getStatsEventListener() {
     AutoMutex l(mAiqUnitLock);
 
     std::vector<EventListener*> eventListenerList;
-#ifndef PAC_ENABLE
-#endif
+
     return eventListenerList;
 }
 

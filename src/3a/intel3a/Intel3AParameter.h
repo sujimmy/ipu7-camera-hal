@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ class Intel3AParameter {
     explicit Intel3AParameter(int cameraId);
     ~Intel3AParameter();
 
-    int init();
+    void init();
     int getCMCInfo(TuningMode tuningMode);
     int setSensorInfo(ia_aiq_exposure_sensor_descriptor descriptor);
     int updateParameter(aiq_parameter_t param);
@@ -76,7 +76,6 @@ class Intel3AParameter {
     camera_color_gains_t mColorGains;
     camera_awb_gains_t mManualGains;
     camera_awb_gains_t mAwbGainShift;
-    camera_weight_grid_mode_t mWeightGridMode;
 
     int mAePerTicks;
     int mAwbPerTicks;

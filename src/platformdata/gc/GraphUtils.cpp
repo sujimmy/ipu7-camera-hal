@@ -66,19 +66,24 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
 #ifdef IPU_SYSVER_ipu75
             terminalId == LBFF_TERMINAL_CONNECT_DOL_LONG ||
 #endif
-            terminalId == LBFF_TERMINAL_CONNECT_LSC_INPUT)
-            return (bpp == 10) ? GET_FOURCC_FMT('G', 'R', '1', '0')
+            terminalId == LBFF_TERMINAL_CONNECT_LSC_INPUT) {
+            // Currently only support V4L2_PIX_FMT_SGRBG10
+            // TODO: support RAW12
+            return (bpp == 10) ? GET_FOURCC_FMT('B', 'A', '1', '0')
                                 : GET_FOURCC_FMT('G', 'R', '0', '8');
+        }
         // LB output
 #ifdef IPU_SYSVER_ipu8
         if (terminalId == LBFF_TERMINAL_CONNECT_OFS_MP_OUTPUT ||
-            terminalId == LBFF_TERMINAL_CONNECT_OFS_DP_OUTPUT)
+            terminalId == LBFF_TERMINAL_CONNECT_OFS_DP_OUTPUT) {
             return (bpp == 10) ? GET_FOURCC_FMT('P', '0', '1', '0')
                                : GET_FOURCC_FMT('N', 'V', '1', '2');
+        }
 #else
         if (terminalId == LBFF_TERMINAL_CONNECT_ME_OUTPUT ||
-            terminalId == LBFF_TERMINAL_CONNECT_PS_OUTPUT)
+            terminalId == LBFF_TERMINAL_CONNECT_PS_OUTPUT) {
             return (bpp == 8) ? GET_FOURCC_FMT('V', '4', '2', '0') : 0;
+        }
 #endif
     }
 #ifndef IPU_SYSVER_ipu8
@@ -89,13 +94,15 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
             terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BC_YUV4NM1_IFD ||
             terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BLEND_YUVNM1_IFD ||
 #endif
-            terminalId == BBPS_TERMINAL_CONNECT_SLIM_SPATIAL_YUVN_IFD)
+            terminalId == BBPS_TERMINAL_CONNECT_SLIM_SPATIAL_YUVN_IFD) {
             return (bpp == 8) ? GET_FOURCC_FMT('V', '4', '2', '0') : 0;
+        }
         // BB output
         if (terminalId == BBPS_TERMINAL_CONNECT_OFS_MP_YUVN_ODR ||
-            terminalId == BBPS_TERMINAL_CONNECT_OFS_DP_YUVN_ODR)
+            terminalId == BBPS_TERMINAL_CONNECT_OFS_DP_YUVN_ODR) {
             return (bpp == 10) ? GET_FOURCC_FMT('P', '0', '1', '0')
                                 : GET_FOURCC_FMT('N', 'V', '1', '2');
+        }
     }
 #endif
     LOGW("%s: no fourcc for resourceId %d, term %d", __func__, resourceId, terminalId);

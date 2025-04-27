@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Intel Corporation.
+ * Copyright (C) 2016-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,24 +35,12 @@ LensManager::LensManager(int cameraId, LensHw *lensHw) :
 LensManager::~LensManager() {
 }
 
-int LensManager::start() {
+void LensManager::reset() {
     AutoMutex l(mLock);
 
     mDcIrisCommand = ia_aiq_aperture_control_dc_iris_close;
     mFocusPosition = -1;
     mLastSofSequence = -1;
-
-    return OK;
-}
-
-int LensManager::stop() {
-    AutoMutex l(mLock);
-
-    if (!mLensHw->isLensSubdevAvailable()) {
-        return OK;
-    }
-
-    return OK;
 }
 
 void LensManager::handleSofEvent(EventData eventData) {
@@ -80,7 +68,7 @@ int LensManager::setLensResult(const cca::cca_af_results &afResults,
                                int64_t sequence, const aiq_parameter_t &aiqParam) {
     AutoMutex l(mLock);
 
-    if (!mLensHw->isLensSubdevAvailable() || afResults.next_lens_position == 0) {
+    if ((!mLensHw->isLensSubdevAvailable()) || (afResults.next_lens_position == 0)) {
         return OK;
     }
 
@@ -89,7 +77,7 @@ int LensManager::setLensResult(const cca::cca_af_results &afResults,
     int lensHwType = PlatformData::getLensHwType(mCameraId);
     switch(lensHwType) {
         case LENS_VCM_HW:
-            if (aiqParam.afMode == AF_MODE_OFF && aiqParam.focusDistance > 0.0f) {
+            if ((aiqParam.afMode == AF_MODE_OFF) && (aiqParam.focusDistance > 0.0f)) {
                 // The manual focus setting requires perframe control
                 mSeqToPositionMap[sequence] = afResults.next_lens_position;
             } else {

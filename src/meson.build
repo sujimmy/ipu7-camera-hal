@@ -94,9 +94,10 @@ includes += include_directories(
     '3a/intel3a',
     '3a',
 )
-
+# POST_PROCESS_FEATURE_S
 if get_option('android_platform').contains('cros')
     libcamera_sources += files([
+        'core/processingUnit/PostProcessStage.cpp',
         'core/SwPostProcessUnit.cpp',
         'image_process/sw/ImageConverter.cpp',
         'image_process/sw/ImageScalerCore.cpp',
@@ -115,4 +116,4 @@ if get_option('android_platform').contains('cros')
         'image_process/chrome',
     )
 endif
-
+# POST_PROCESS_FEATURE_E

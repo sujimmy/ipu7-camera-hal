@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,6 @@ void aiq_parameter_t::reset() {
     aeConvergeSpeed = CONVERGE_NORMAL;
     awbConvergeSpeed = CONVERGE_NORMAL;
     run3ACadence = 1;
-    weightGridMode = WEIGHT_GRID_AUTO;
     aeDistributionPriority = DISTRIBUTION_AUTO;
     CLEAR(customAicParam);
     yuvColorRangeMode = CAMERA_FULL_MODE_YUV_COLOR_RANGE;
@@ -157,7 +156,6 @@ void aiq_parameter_t::dump() {
         LOG3("camera mode:%d", tuningMode);
     }
     LOG3("blc area mode:%d", blcAreaMode);
-    LOG3("weight grid mode:%d", weightGridMode);
     LOG3("Yuv Color Range Mode:%d", yuvColorRangeMode);
     LOG3("DVS mode %d", videoStabilizationMode);
 

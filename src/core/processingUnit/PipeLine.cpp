@@ -214,16 +214,22 @@ status_t PipeLine::createPipeStages() {
         unit.stageId = stageId;
         unit.stageUuid = STAGE_UID(mStreamId, stageId);
 
-        unit.contextId = GraphUtils::getContextId(stageId);
-        CheckAndLogError(outerNodes.find(unit.contextId) == outerNodes.end(), UNKNOWN_ERROR,
-                            "No outer node for psUnit contextId %d", unit.contextId);
-        unit.psysContextId = mGraphConfig->getPSysContextId(mStreamId, unit.contextId);
-        unit.node = outerNodes[unit.contextId];
-        uint8_t resourceId = GraphUtils::getResourceId(stageId);
-        unit.ipuStage = new CBStage(mCameraId, mStreamId, stageId, unit.contextId,
-                                    unit.psysContextId, resourceId, stageName, mPSysDevice,
-                                    mPacAdaptor);
-        unit.pipeStage = unit.ipuStage;
+        const StageType type = mGraphConfig->getPGType(stageId);
+        if (type == STAGE_IPU) {
+            unit.contextId = GraphUtils::getContextId(stageId);
+            CheckAndLogError(outerNodes.find(unit.contextId) == outerNodes.end(), UNKNOWN_ERROR,
+                             "No outer node for psUnit contextId %d", unit.contextId);
+            unit.psysContextId = mGraphConfig->getPSysContextId(mStreamId, unit.contextId);
+            unit.node = outerNodes[unit.contextId];
+            uint8_t resourceId = GraphUtils::getResourceId(stageId);
+            unit.ipuStage = new CBStage(mCameraId, mStreamId, stageId, unit.contextId,
+                                        unit.psysContextId, resourceId, stageName, mPSysDevice,
+                                        mPacAdaptor);
+            unit.pipeStage = unit.ipuStage;
+        } else {
+            LOGE("Not support stage type %d", type);
+            return UNKNOWN_ERROR;
+        }
 
         mPSUnit.push_back(unit);
         LOG1("%s, pipe stage name:%s, stage:%d, uuid:%x, context id %u", __func__,
@@ -283,8 +289,7 @@ status_t PipeLine::configurePipeStages() {
 }
 
 status_t PipeLine::updateConfigurationSettingForPtz(bool isKeyResChanged) {
-    cca::cca_aic_config aicConfig;
-    CLEAR(aicConfig);
+    cca::cca_aic_config aicConfig{};
 
     int32_t cbNum = 0;
     for (auto& unit : mPSUnit) {
@@ -408,7 +413,7 @@ void PipeLine::storeTerminalInfo(const IGraphType::PipelineConnection& connectio
     desc.stageUuid = 0;
     desc.frameDesc.mWidth = connection.portFormatSettings.width;
     desc.frameDesc.mHeight = connection.portFormatSettings.height;
-    desc.frameDesc.mFormat = connection.portFormatSettings.fourcc;
+    desc.frameDesc.mFormat = connection.portFormatSettings.format;
     desc.enabled = true;
     desc.usrStreamId = connection.stream ? connection.stream->streamId() : -1;
 

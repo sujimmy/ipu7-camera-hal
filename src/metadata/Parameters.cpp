@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -595,18 +595,14 @@ int Parameters::getSceneMode(camera_scene_mode_t& sceneMode) const {
 }
 
 int Parameters::setWeightGridMode(camera_weight_grid_mode_t weightGridMode) {
-    uint8_t mode = (uint8_t)weightGridMode;
-    ParameterHelper::AutoWLock wl(mData);
-    return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_WEIGHT_GRID_MODE, &mode, 1);
+    LOGW("Weight grid mode is deprecated.");
+    UNUSED(weightGridMode);
+    return OK;
 }
 
 int Parameters::getWeightGridMode(camera_weight_grid_mode_t& weightGridMode) const {
-    ParameterHelper::AutoRLock rl(mData);
-    auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_CONTROL_WEIGHT_GRID_MODE);
-    if (entry.count != 1) {
-        return NAME_NOT_FOUND;
-    }
-    weightGridMode = (camera_weight_grid_mode_t)entry.data.u8[0];
+    LOGW("Weight grid mode is deprecated.");
+    weightGridMode = WEIGHT_GRID_AUTO;
     return OK;
 }
 
