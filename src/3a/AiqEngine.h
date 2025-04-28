@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,22 +41,17 @@ class AiqEngine : public EventListener {
     /**
      * \brief Init AiqResult, AiqCore and SensorManager
      */
-    int init();
+    void init();
 
     /**
      * \brief Deinit AiqResult, AiqCore and SensorManager
      */
-    int deinit();
+    void deinit();
 
     /**
-     * \brief configure with ConfigMode
+     * \brief reset default settings.
      */
-    int configure();
-
-    /**
-     * \brief Calculate and set frame and sensor info, and run 3a with default setting.
-     */
-    int startEngine();
+    void reset();
 
     /**
      * \brief Run 3a to get new 3a settings.
@@ -71,11 +66,6 @@ class AiqEngine : public EventListener {
      * Return 0 if the operation succeeds.
      */
     int run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber, int64_t* effectSeq);
-
-    /**
-     * \brief Stop 3a thrad and LensManager.
-     */
-    int stopEngine();
 
     /**
      * \brief Get SOF EventListener

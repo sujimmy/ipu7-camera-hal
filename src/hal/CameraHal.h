@@ -75,9 +75,11 @@ class CameraHal {
     // Guard for CameraHal public API.
     Mutex mLock;
     // VIRTUAL_CHANNEL_S
-    int mTotalVirtualChannelCamNum[MAX_VC_GROUP_NUMBER];
-    int mConfigTimes[MAX_VC_GROUP_NUMBER];
-    std::condition_variable mVirtualChannelSignal[MAX_VC_GROUP_NUMBER];
+    int mCurrentGroupId;
+    int mVcNum;
+    int mConfigTimes;
+    bool mDeviceClosing[MAX_CAMERA_NUMBER];  // deinited but not destroyed when close
+    std::condition_variable mVirtualChannelSignal;
     static const nsecs_t mWaitDuration = 500000000;  // 500ms
     // VIRTUAL_CHANNEL_E
 

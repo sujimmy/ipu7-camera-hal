@@ -38,12 +38,6 @@ class LibcameraLogSink : public LogOutputSink {
     void sendOffLog(LogItem logItem) override;
 };
 #else
-#ifdef HAVE_CHROME_OS
-class GLogSink : public LogOutputSink {
- public:
-    void sendOffLog(LogItem logItem) override;
-};
-#endif
 #endif
 
 #ifdef CAMERA_TRACE

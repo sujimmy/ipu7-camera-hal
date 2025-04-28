@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -454,9 +454,9 @@ typedef enum {
     IMAGE_ENHANCEMENT,    /**< Sharpness, Brightness, Contrast, Hue, Saturation */
     NOISE_REDUCTION,      /**< Allow user to control NR mode and NR level */
     SCENE_MODE,           /**< Allow user to control scene mode */
-    WEIGHT_GRID_MODE,     /**< Allow user to control custom weight grid mode */
+    WEIGHT_GRID_MODE,     /**< Allow user to control custom weight grid mode (Deprecated) */
     PER_FRAME_CONTROL,    /**< Allow user to control most of parameters for each frame */
-    ISP_CONTROL,          /**< Allow user to control low level ISP features */
+    ISP_CONTROL,          /**< Allow user to control low level ISP features (Deprecated) */
     INVALID_FEATURE
 } camera_features;
 typedef std::vector<camera_features> camera_features_list_t;
@@ -528,6 +528,7 @@ typedef struct {
 
 /*
  * \enum camera_weight_grid_mode_t: Use to select which customized weight grid should be used.
+ * (Deprecated)
  */
 typedef enum {
     WEIGHT_GRID_AUTO,
@@ -1065,5 +1066,5 @@ typedef struct {
     camera_rotate_mode_t rotateMode;
 } camera_zoom_region_t;
 
-#define IS_INPUT_BUFFER(timestamp, sequence) ((timestamp) > 0 && (sequence) >= 0)
+#define IS_INPUT_BUFFER(timestamp, sequence) (((timestamp) > 0) && ((sequence) >= 0))
 }  // namespace icamera

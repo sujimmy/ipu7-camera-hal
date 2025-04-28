@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,6 +97,7 @@ class DataContext {
     DataContext(int cameraId);
     ~DataContext() {}
 
+    void reset();
     DataContext& operator=(const DataContext& other) {
         mFaceDetectMode = other.mFaceDetectMode;
         monoDsMode = other.monoDsMode;
@@ -124,6 +125,7 @@ class CameraContext {
     static CameraContext* getInstance(int cameraId);
     static void releaseInstance(int cameraId);
 
+    void reset();
     // used to save aiq, face and statistics results
     AiqResultStorage* getAiqResultStorage();
 

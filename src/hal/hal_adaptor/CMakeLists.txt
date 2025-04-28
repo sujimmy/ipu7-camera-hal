@@ -28,7 +28,6 @@ set(HAL_ADAPTOR_INCLUDEDIRS
     ${ROOT_DIR}/src/iutils
     ${ROOT_DIR}/src/core
     ${ROOT_DIR}/src/platformdata
-    ${ROOT_DIR}/src/isp_control
     ${ROOT_DIR}/src
     ${ROOT_DIR}/modules/v4l2
     ${ROOT_DIR}

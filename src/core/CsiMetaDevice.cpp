@@ -191,7 +191,7 @@ int CsiMetaDevice::start() {
         return OK;
     }
 
-    CheckWarning(mState != CSI_META_DEVICE_CONFIGURED && mState != CSI_META_DEVICE_STOP, OK,
+    CheckWarning((mState != CSI_META_DEVICE_CONFIGURED) && (mState != CSI_META_DEVICE_STOP), OK,
                  "%s: start in wrong state: %d", __func__, mState);
 
     int ret = mCsiMetaDevice->Start();
@@ -247,7 +247,7 @@ int CsiMetaDevice::poll() {
     }
 
     std::vector<V4L2Device*> readyDevices;
-    while (timeOutCount-- && ret == 0) {
+    while ((timeOutCount--) && (ret == 0)) {
         V4L2DevicePoller poller{pollDevs, -1};
         ret = poller.Poll(poll_timeout, POLLPRI | POLLIN | POLLOUT | POLLERR, &readyDevices);
 

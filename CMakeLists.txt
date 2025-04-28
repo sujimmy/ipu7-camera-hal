@@ -157,27 +157,6 @@ if(FACE_DETECTION)
     )
 endif() #FACE_DETECTION
 
-if(ENABLE_SANDBOXING)
-    find_package(LIBMOJO)
-    find_package(LIBCAMERA_IPC)
-    find_package(LIBCAB)
-    add_definitions(-DENABLE_SANDBOXING)
-    set(LIBCAMHAL_SRCS ${LIBCAMHAL_SRCS} ${SANDBOXING_CLIENT_SRCS})
-    include_directories(
-        ${USR_INCLUDE_HEADER}/base-${BASEVER}
-        ${LIBMOJO_INCLUDE_DIRS}
-        ${LIBCAMERA_IPC_INCLUDE_DIRS}
-        ${LIBCAB_INCLUDE_DIRS}
-    )
-    link_directories(
-        ${CMAKE_PREFIX_PATH}
-        ${LIBMOJO_LIBS}
-        ${LIBCAMERA_IPC_LIBS}
-        ${LIBCAB_LIBS}
-    )
-    set(LIBCAMHAL_LINK_LIBS ${LIBCAMHAL_LINK_LIBS} ${LIBCAB_LIBS} ${LIBMOJO_LIBS} ${LIBCAMERA_IPC_LIBS} ${CMAKE_PREFIX_PATH}/librt.a)
-endif() #ENABLE_SANDBOXING
-
 if (DYNAMIC_PAC_BUFFERS)
     add_definitions(-DMAX_PAC_BUFFERS=${DYNAMIC_PAC_BUFFERS})
 else()
@@ -265,12 +244,10 @@ elseif (IPU_VER MATCHES "ipu7.*")
     if (IPU_VER STREQUAL "ipu7x")
         message(STATUS "add definition -DIPU_SYSVER_ipu7 for ${IPU_VER}")
         set(TARGET_DEFINITIONS ${TARGET_DEFINITIONS} -DIPU_SYSVER_ipu7 -DGRC_IPU7X)
-        set(PRODUCTION_NAME "lnl")
         set(STATIC_GRAPH_IPU_PREFIXS "Ipu7x")
     elseif (IPU_VER STREQUAL "ipu75xa")
         message(STATUS "add definition -DIPU_SYSVER_ipu75 for ipu75xa")
         set(TARGET_DEFINITIONS ${TARGET_DEFINITIONS} -DIPU_SYSVER_ipu75 -DGRC_IPU75XA)
-        set(PRODUCTION_NAME "ptl")
         set(STATIC_GRAPH_IPU_PREFIXS "Ipu75xa")
     endif()
 endif()
@@ -303,24 +280,24 @@ set(TARGET_DEFINITIONS ${TARGET_DEFINITIONS} "-DCAMERA_DEFAULT_CFG_PATH=\"${CMAK
     endif()
 
 if (USE_STATIC_GRAPH)
-    set(TARGET_INCLUDE ${TARGET_INCLUDE} modules/ipu_desc modules/ipu_desc/${PRODUCTION_NAME})
+    set(TARGET_INCLUDE ${TARGET_INCLUDE} modules/ipu_desc modules/ipu_desc/${IPU_VER})
     if (USE_STATIC_GRAPH_AUTOGEN)
         message(STATUS "Use auto generated static graph code, prefix: ${STATIC_GRAPH_IPU_PREFIXS}")
         set(TARGET_SRCS ${TARGET_SRCS}
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/CBLayoutUtils.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/GraphResolutionConfigurator.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}GraphResolutionConfiguratorAutogen.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}TerminalDescriptorAutogen.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}StaticGraphAutogen.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/${STATIC_GRAPH_IPU_PREFIXS}StaticGraphReaderAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/CBLayoutUtils.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/GraphResolutionConfigurator.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/${STATIC_GRAPH_IPU_PREFIXS}GraphResolutionConfiguratorAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/${STATIC_GRAPH_IPU_PREFIXS}TerminalDescriptorAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/${STATIC_GRAPH_IPU_PREFIXS}StaticGraphAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/${STATIC_GRAPH_IPU_PREFIXS}StaticGraphReaderAutogen.cpp
             )
     else ()
-        message(STATUS "Use ${PRODUCTION_NAME} static graph code")
+        message(STATUS "Use ${IPU_VER} static graph code")
         set(TARGET_SRCS ${TARGET_SRCS}
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/CBLayoutUtils.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/TerminalDescriptorAutogen.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/StaticGraphAutogen.cpp
-            ${MODULES_DIR}/ipu_desc/${PRODUCTION_NAME}/StaticGraphReaderAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/CBLayoutUtils.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/TerminalDescriptorAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/StaticGraphAutogen.cpp
+            ${MODULES_DIR}/ipu_desc/${IPU_VER}/StaticGraphReaderAutogen.cpp
             )
     endif () # STATIC_GRAPH_IPU_PREFIXS
 endif() # USE_STATIC_GRAPH

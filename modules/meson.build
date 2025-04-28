@@ -15,12 +15,12 @@
 #
 
 libcamera_sources += files([
-    'ipu_desc/ptl/TerminalDescriptorAutogen.cpp',
-    'ipu_desc/ptl/CBLayoutUtils.cpp',
-    'ipu_desc/ptl/StaticGraphAutogen.cpp',
-    'ipu_desc/ptl/StaticGraphReaderAutogen.cpp',
-    'ipu_desc/ptl/GraphResolutionConfigurator.cpp',
-    'ipu_desc/ptl/GraphResolutionConfiguratorAutogen.cpp',
+    'ipu_desc/ipu75xa/TerminalDescriptorAutogen.cpp',
+    'ipu_desc/ipu75xa/CBLayoutUtils.cpp',
+    'ipu_desc/ipu75xa/StaticGraphAutogen.cpp',
+    'ipu_desc/ipu75xa/StaticGraphReaderAutogen.cpp',
+    'ipu_desc/ipu75xa/GraphResolutionConfigurator.cpp',
+    'ipu_desc/ipu75xa/GraphResolutionConfiguratorAutogen.cpp',
     'v4l2/v4l2_device.cc',
     'v4l2/v4l2_subdevice.cc',
     'v4l2/v4l2_video_node.cc',
@@ -29,6 +29,6 @@ libcamera_sources += files([
 includes += include_directories(
     '.',
     'ipu_desc',
-    'ipu_desc/ptl',
+    'ipu_desc/ipu75xa',
     'v4l2',
 )

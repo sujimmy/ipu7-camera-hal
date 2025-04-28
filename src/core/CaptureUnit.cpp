@@ -241,7 +241,7 @@ int CaptureUnit::configure(const map<uuid, stream_t>& outputFrames) {
 
     CheckAndLogError(outputFrames.empty(), BAD_VALUE, "No frame info configured.");
     CheckAndLogError(
-        mState != CAPTURE_CONFIGURE && mState != CAPTURE_INIT && mState != CAPTURE_STOP,
+        (mState != CAPTURE_CONFIGURE) && (mState != CAPTURE_INIT) && (mState != CAPTURE_STOP),
         INVALID_OPERATION, "@%s: Configure in wrong state %d", __func__, mState);
 
     uuid port = findDefaultPort(outputFrames);
@@ -306,7 +306,7 @@ int CaptureUnit::allocateMemory(uuid port, const std::shared_ptr<CameraBuffer>& 
 
 int CaptureUnit::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBuffer) {
     CheckAndLogError(camBuffer == nullptr, BAD_VALUE, "Camera buffer is null");
-    CheckAndLogError((mState == CAPTURE_INIT || mState == CAPTURE_UNINIT), INVALID_OPERATION,
+    CheckAndLogError(((mState == CAPTURE_INIT) || (mState == CAPTURE_UNINIT)), INVALID_OPERATION,
                      "@%s: qbuf in wrong state %d", __func__, mState);
 
     DeviceBase* device = findDeviceByPort(port);
@@ -371,8 +371,8 @@ int CaptureUnit::poll() {
     const int poll_timeout = gSlowlyRunRatio ? (gSlowlyRunRatio * 1000000) : 1000;
 
     LOG2("<id%d>%s", mCameraId, __func__);
-    CheckAndLogError((mState != CAPTURE_CONFIGURE && mState != CAPTURE_START), INVALID_OPERATION,
-                     "@%s: poll buffer in wrong state %d", __func__, mState);
+    CheckAndLogError(((mState != CAPTURE_CONFIGURE) && (mState != CAPTURE_START)),
+                     INVALID_OPERATION, "@%s: poll buffer in wrong state %d", __func__, mState);
 
     int timeOutCount = poll_timeout_count;
     std::vector<V4L2Device*> pollDevs, readyDevices;
@@ -382,7 +382,7 @@ int CaptureUnit::poll() {
              device->getBufferNumInDevice());
     }
 
-    while (timeOutCount-- && ret == 0) {
+    while ((timeOutCount--) && (ret == 0)) {
         // If stream off, no poll needed.
         if (mExitPending) {
             LOG2("%s: mExitPending is true, exit", __func__);

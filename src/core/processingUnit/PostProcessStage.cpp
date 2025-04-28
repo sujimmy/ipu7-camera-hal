@@ -39,12 +39,8 @@ void PostProcessStage::setFrameInfo(const std::map<uuid, stream_t>& inputInfo,
     mPostProcessors.clear();
     mInputPort = mInputFrameInfo.begin()->first;  // Only support one input currently
     stream_t input = mInputFrameInfo[mInputPort];
-    // Work around: Now Graphs provide fourcc format, but here we should use v4l2 format.
-    // TODO: Will pass v4l2 format and IpuPipeStage should change it to fourcc format
-    input.format = CameraUtils::getV4L2Format(input.format);
     for (auto& info : mOutputFrameInfo) {
         stream_t output = info.second;
-        output.format = CameraUtils::getV4L2Format(output.format);
         mPostProcessors[info.first] =
             std::unique_ptr<SwPostProcessUnit>(new SwPostProcessUnit(mCameraId));
         mPostProcessors[info.first]->configure(input, output);

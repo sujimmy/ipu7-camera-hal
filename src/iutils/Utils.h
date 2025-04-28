@@ -231,7 +231,7 @@ int getStride(int format, int width);
 
 int getPlanarByte(int format);
 
-int32_t getBpl(int32_t format, int32_t width);
+int32_t getBpl(int32_t fourcc, int32_t width);
 
 int32_t getV4L2Format(const int32_t iaFourcc);
 int32_t getFourccFormat(int32_t v4l2Fmt);

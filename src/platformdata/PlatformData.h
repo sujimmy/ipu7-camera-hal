@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,6 @@ namespace icamera {
 // VIRTUAL_CHANNEL_S
 #define MAX_VC_GROUP_NUMBER 8
 // VIRTUAL_CHANNEL_E
-#define MAX_WEIGHT_GRID_SIDE_LEN 1024
 
 #define FACE_ENGINE_DEFAULT_RUNNING_INTERVAL 1
 
@@ -58,24 +57,11 @@ namespace icamera {
 
 #define CSI_PORT_NAME "CSI2"
 
-#ifdef HAVE_CHROME_OS
-#define MAX_CAMERA_NUMBER 2
-#define CAMERA_CACHE_DIR "/var/cache/camera/"
-#define CAMERA_DEFAULT_CFG_PATH "/etc/camera/"
-#define CAMERA_GRAPH_SETTINGS_DIR "gcss/"
-#endif
-
-#ifdef __ANDROID__
-#define MAX_CAMERA_NUMBER 2
-#define CAMERA_CACHE_DIR "./"
-#define CAMERA_DEFAULT_CFG_PATH "/vendor/etc/"
-#define CAMERA_GRAPH_SETTINGS_DIR ""
-#endif
-
 #define MAX_CAMERA_NUMBER 100
 // Temporarily using current path to save aiqd file for none CAL platforms.
 #define CAMERA_CACHE_DIR "./"
 #define CAMERA_GRAPH_SETTINGS_DIR "gcss/"
+#define CAMERA_AIQD_PATH "/run/camera/"
 
 #ifndef CAMERA_DEFAULT_CFG_PATH
 #error CAMERA_DEFAULT_CFG_PATH not defined
@@ -336,7 +322,6 @@ class PlatformData {
 
             std::string mGraphSettingsFile;
             std::vector<MultiExpRange> mMultiExpRanges;
-            std::vector<uint32_t> mSupportedIspControlFeatures;
             int mDVSType;
             bool mPSACompression;
             bool mOFSCompression;

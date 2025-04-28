@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 Intel Corporation.
+ * Copyright (C) 2020-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,6 @@ class IntelCca {
     ia_err runAIQ(uint64_t frameId, const cca::cca_aiq_params& params,
                   cca::cca_aiq_results* results);
 
-#ifndef PAC_ENABLE
-
-#endif
     ia_err updateTuning(uint8_t lardTags, const ia_lard_input_params& lardParams,
                         const cca::cca_nvm& nvm, int32_t streamId);
 

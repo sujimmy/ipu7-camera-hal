@@ -62,9 +62,9 @@ void AiqUtils::dumpAeResults(const cca::cca_ae_results& aeResult) {
          aeResult.multiframe == ia_aiq_bracket_mode_ull ? "ULL" : "none-ULL");
 
     const cca::cca_hist_weight_grid& wg = aeResult.weight_grid;
-    if (wg.width != 0 && wg.height != 0) {
+    if ((wg.width != 0) && (wg.height != 0)) {
         LOG3("AE weight grid [%dx%d]", wg.width, wg.height);
-        for (int i = 0; i < 5 && i < wg.height; i++) {
+        for (int i = 0; (i < 5) && (i < wg.height); i++) {
             LOG3("AE weight_grid[%d] = %d ", wg.width/2, wg.weights[wg.width/2]);
         }
     }
@@ -114,7 +114,7 @@ void AiqUtils::dumpGbceResults(const cca::cca_gbce_params& gbceResult) {
     LOG3("gamma_lut_size: %u, tone_map_lut_size: %u",
          gbceResult.gamma_lut_size, gbceResult.tone_map_lut_size);
 
-    if (gbceResult.gamma_lut_size <= 0 || gbceResult.tone_map_lut_size <= 0) return;
+    if ((gbceResult.gamma_lut_size <= 0) || (gbceResult.tone_map_lut_size <= 0)) return;
 
     LOG3("gamma table: R: 0(%f), %u(%f), %u(%f)", gbceResult.r_gamma_lut[0],
          (gbceResult.gamma_lut_size / 2), gbceResult.r_gamma_lut[gbceResult.gamma_lut_size / 2],

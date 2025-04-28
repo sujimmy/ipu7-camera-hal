@@ -38,9 +38,6 @@ static const unsigned int MAX_STATISTICS_HEIGHT = BXT_RGBS_GRID_MAX_HEIGHT;
 static const unsigned int MAX_LSC_WIDTH = 100;
 static const unsigned int MAX_LSC_HEIGHT = 100;
 
-static const unsigned int MAX_IR_WEIGHT_GRID_SIZE = 480;
-static const unsigned int MAX_NUM_SECTORS = 36;
-
 static const int MAX_BAYER_ORDER_NUM = 4;
 
 /**

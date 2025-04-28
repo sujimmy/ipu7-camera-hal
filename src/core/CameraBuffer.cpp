@@ -157,7 +157,7 @@ void CameraBuffer::setUserBufferInfo(camera_buffer_t* ubuffer) {
             break;
     }
 
-    if (mU->s.streamType == CAMERA_STREAM_INPUT || ubuffer->sequence >= 0) {
+    if ((mU->s.streamType == CAMERA_STREAM_INPUT) || (ubuffer->sequence >= 0)) {
         // update timestamp if raw buffer is selected by user and timestamp is set
         if (ubuffer->timestamp > 0) {
             struct timeval timestamp = {0};
@@ -183,7 +183,7 @@ int CameraBuffer::exportMmapDmabuf(V4L2VideoNode* vDevice) {
     std::vector<int> fds;
 
     int ret = vDevice->ExportFrame(mV.Index(), &fds);
-    CheckAndLogError(ret != OK || fds.size() != 1, -1,
+    CheckAndLogError((ret != OK) || (fds.size() != 1), -1,
                      "exportMmapDmabuf failed, ret %d, fds size:%zu", ret, fds.size());
     mU->dmafd = fds[0];
 
@@ -245,7 +245,7 @@ void CameraBuffer::freeUserPtr() {
 int CameraBuffer::allocateMmap(V4L2VideoNode* dev) {
     std::vector<void*> addrs;
     int ret = dev->MapMemory(mV.Index(), PROT_READ | PROT_WRITE, MAP_SHARED, &addrs);
-    CheckAndLogError(ret != OK || addrs.size() != 1, -1,
+    CheckAndLogError((ret != OK) || (addrs.size() != 1), -1,
                      "allocateMmap failed, ret %d, addr size:%zu", ret, addrs.size());
     mU->addr = addrs[0];
 
@@ -310,7 +310,7 @@ void* CameraBuffer::DeviceRender::mapDmaBufferAddr(int fd, unsigned int bufferSi
 #endif
 
 void* CameraBuffer::mapDmaBufferAddr(int fd, unsigned int bufferSize) {
-    CheckAndLogError(fd < 0 || !bufferSize, nullptr, "%s, fd:0x%x, bufferSize:%u", __func__, fd,
+    CheckAndLogError((fd < 0) || (!bufferSize), nullptr, "%s, fd:0x%x, bufferSize:%u", __func__, fd,
                      bufferSize);
 
 #ifdef LIBDRM_SUPPORT_MMAP_OFFSET
@@ -321,7 +321,7 @@ void* CameraBuffer::mapDmaBufferAddr(int fd, unsigned int bufferSize) {
 }
 
 void CameraBuffer::unmapDmaBufferAddr(void* addr, unsigned int bufferSize) {
-    CheckAndLogError(addr == nullptr || !bufferSize, VOID_VALUE, "%s, addr:%p, bufferSize:%u",
+    CheckAndLogError((addr == nullptr) || (!bufferSize), VOID_VALUE, "%s, addr:%p, bufferSize:%u",
                      __func__, addr, bufferSize);
     munmap(addr, bufferSize);
 }
@@ -379,7 +379,8 @@ void* CameraBuffer::getBufferAddr() {
 CameraBufferMapper::CameraBufferMapper(std::shared_ptr<CameraBuffer> buffer)
         : mBuffer(buffer),
           mDMAMapped(false) {
-    if (buffer->getMemory() == V4L2_MEMORY_DMABUF && mBuffer->getUserBuffer()->addr == nullptr) {
+    if ((buffer->getMemory() == V4L2_MEMORY_DMABUF) &&
+        (mBuffer->getUserBuffer()->addr == nullptr)) {
         void* addr = CameraBuffer::mapDmaBufferAddr(mBuffer->getFd(), mBuffer->getBufferSize());
 
         mBuffer->getUserBuffer()->addr = addr;

@@ -92,6 +92,10 @@ class GraphConfig {
         return OK;
     }
 
+    std::map<int32_t, int32_t> getStreamIdToPipeId() {
+        return mStreamIdToPipeId;
+    }
+
     StageType getPGType(int32_t pgId);
 
     status_t pipelineGetConnections(int32_t streamId,
@@ -209,6 +213,9 @@ class GraphConfig {
     std::map<int32_t, PostStageInfo> mPostStageInfos;
     // GPU post stage, currently use same format as IPU post stage
     std::map<int32_t, PostStageInfo> mGPUStageInfos;
+
+    // <stream id, pipe streamId>
+    std::map<int32_t, int32_t> mStreamIdToPipeId;
 };
 
 }  // namespace icamera

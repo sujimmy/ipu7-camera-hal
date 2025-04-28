@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2013 The Android Open Source Project
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,12 @@
  *     Version        0.54       Add API to get/set fisheye dewarping mode
  *     Version        0.55       Add API to get/set LTM tuning data
  *     Version        0.56       Add API to get/set LDC/RSC/digital zoom ratio
+ *     Version        0.57       Add API to support WFOV mode, including get WFOV mode, get sensor
+ *                               mount type
+ *                               set/get view projection, rotation and fine adjustments.
  *     Version        0.58       Add API to get/set 3A state, and lens state.
  *     Version        0.59       Add API to get/set AE/AWB lock
+ *     Version        0.60       Add API to support get/set camera rotation in WFOV mode.
  *     Version        0.61       Add API to support vertical and horizontal flip.
  *     Version        0.62       Add API to support 3A cadence.
  *     Version        0.63       Add API to enable/disable MONO Downscale feature.
@@ -66,7 +70,7 @@
  *     Version        0.78       Add API to support edge enhancement
  *     Version        0.79       Add API to support set flags to callback rgbs statistics
  *     Version        0.80       Add API to support set flags to callback tone map curve
- *
+ *     Version        0.81       Remove API for unused WFOV/ISP_CONTROL features
  *
  * ------------------------------------------------------------------------------
  */
@@ -573,7 +577,7 @@ class Parameters {
     int getSensitivityGainRange(camera_range_t& sensitivityGainRange) const;
 
     /**
-     * \brief Set weight grid mode
+     * \brief Set weight grid mode (deprecated)
      *
      * \param[in] camera_weight_grid_mode_t weightGridMode
      *
@@ -582,7 +586,7 @@ class Parameters {
     int setWeightGridMode(camera_weight_grid_mode_t weightGridMode);
 
     /**
-     * \brief Get weight grid mode
+     * \brief Get weight grid mode (deprecated)
      *
      * \param[out] camera_weight_grid_mode_t& weightGridMode
      *

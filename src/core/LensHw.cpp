@@ -33,11 +33,11 @@ LensHw::LensHw(int cameraId):
 LensHw::~LensHw() {
 }
 
-int LensHw::init() {
+void LensHw::start() {
     std::string lensName = PlatformData::getLensName(mCameraId);
     if (lensName.empty()) {
         LOG1("<id%d>@%s No HW Lens", mCameraId, __func__);
-        return OK;
+        return;
     }
 
     LOG1("<id%d>@%s, lens name:%s", mCameraId, __func__, lensName.c_str());
@@ -46,11 +46,24 @@ int LensHw::init() {
     if (!subDevName.empty()) {
         mLensSubdev = V4l2DeviceFactory::getSubDev(mCameraId, subDevName);
         mLensName=lensName;
-        return OK;
+        return;
     }
 
-    LOGW("<id%d>@%s, Failed to init lens. name:%s", mCameraId, __func__, lensName.c_str());
-    return OK;
+    LOGW("<id%d>@%s, Failed to start lens. name:%s", mCameraId, __func__, lensName.c_str());
+}
+
+void LensHw::stop() {
+    if (mLensSubdev == nullptr) {
+        return;
+    }
+
+    // close the lens sub device
+    std::string subDevName;
+    CameraUtils::getSubDeviceName(mLensName.c_str(), subDevName);
+    if (!subDevName.empty()) {
+        V4l2DeviceFactory::releaseSubDev(mCameraId, subDevName);
+        mLensSubdev = nullptr;
+    }
 }
 
 /**

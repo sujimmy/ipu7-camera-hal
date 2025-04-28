@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2023 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ uint32_t gDumpSkipNum = 0;
 uint32_t gDumpRangeMin = 0;
 uint32_t gDumpRangeMax = 0;
 int gDumpFrequency = 1;
-char gDumpPath[50];
+char gDumpPath[255];
 bool gDumpRangeEnabled = false;
 uint32_t gDumpPatternEnabled = 0U;
 uint32_t gDumpPattern = 0xffffffffU;
@@ -153,35 +153,20 @@ void CameraDump::setDumpLevel(void) {
 
     char* cameraDumpPatternEnabled = getenv(PROP_CAMERA_HAL_DUMP_PATTERN_ENABLED);
     if (cameraDumpPatternEnabled != nullptr) {
-        char* endptr;
-        const uint64_t value = strtoul(cameraDumpPatternEnabled, &endptr, 0);
-        if ((errno == 0) && (endptr != cameraDumpPatternEnabled) && (*endptr == '\0') &&
-            (value <= UINT_MAX)) {
-            gDumpPatternEnabled = static_cast<uint32_t>(value);
-            LOGI("Dump pattern enabled is %u", gDumpPatternEnabled);
-        }
+        gDumpPatternEnabled = static_cast<uint32_t>(strtoul(cameraDumpPatternEnabled, nullptr, 0));
+        LOGI("Dump pattern enabled is %u", gDumpPatternEnabled);
     }
 
     char* cameraDumpPattern = getenv(PROP_CAMERA_HAL_DUMP_PATTERN);
     if (cameraDumpPattern != nullptr) {
-        char* endptr;
-        const uint64_t value = strtoul(cameraDumpPattern, &endptr, 0);
-        if ((errno == 0) && (endptr != cameraDumpPattern) && (*endptr == '\0') &&
-            (value <= UINT_MAX)) {
-            gDumpPattern = static_cast<uint32_t>(value);
-            LOGI("Dump pattern is 0x%08x", gDumpPattern);
-        }
+        gDumpPattern = static_cast<uint32_t>(strtoul(cameraDumpPattern, nullptr, 0));
+        LOGI("Dump pattern is 0x%08x", gDumpPattern);
     }
 
     char* cameraDumpPatternMask = getenv(PROP_CAMERA_HAL_DUMP_PATTERN_MASK);
     if (cameraDumpPatternMask != nullptr) {
-        char* endptr;
-        const uint64_t value = strtoul(cameraDumpPatternMask, &endptr, 0);
-        if ((errno == 0) && (endptr != cameraDumpPatternMask) && (*endptr == '\0') &&
-            (value <= UINT_MAX)) {
-            gDumpPatternMask = static_cast<uint32_t>(value);
-            LOGI("Dump pattern mask is 0x%08x", gDumpPatternMask);
-        }
+        gDumpPatternMask = static_cast<uint32_t>(strtoul(cameraDumpPatternMask, nullptr, 0));
+        LOGI("Dump pattern mask is 0x%08x", gDumpPatternMask);
     }
 
     char* cameraDumpPatternRange = getenv(PROP_CAMERA_HAL_DUMP_PATTERN_RANGE);

@@ -48,28 +48,6 @@ void LibcameraLogSink::sendOffLog(LogItem logItem) {
     libcamera::_log(cat, sev).stream() << prefix << logItem.logEntry;
 }
 #else
-#ifdef HAVE_CHROME_OS
-void GLogSink::sendOffLog(LogItem logItem) {
-    char prefix[32];
-    ::snprintf(prefix, sizeof(prefix), "CamHAL[%s]: ",
-            icamera::cameraDebugLogToString(logItem.level));
-
-    switch (logItem.level) {
-        case CAMERA_DEBUG_LOG_ERR:
-            ::logging::LogMessage(prefix, 0, -::logging::LOGGING_ERROR).stream()
-                << logItem.logTags << ':' << logItem.logEntry;
-            break;
-        case CAMERA_DEBUG_LOG_WARNING:
-            ::logging::LogMessage(prefix, 0, -::logging::LOGGING_WARNING).stream()
-                << logItem.logTags << ':' << logItem.logEntry;
-            break;
-        default:
-            ::logging::LogMessage(prefix, 0, -::logging::LOGGING_INFO).stream()
-                << logItem.logTags << ':' << logItem.logEntry;
-            break;
-    }
-}
-#endif
 #endif
 
 void StdconLogSink::sendOffLog(LogItem logItem) {

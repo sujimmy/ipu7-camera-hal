@@ -401,7 +401,6 @@ typedef enum icamera_metadata_tag {
     INTEL_CONTROL_WDR_LEVEL,                          // byte         | public
     INTEL_CONTROL_BLC_AREA_MODE,                      // enum         | public
     INTEL_CONTROL_SCENE_MODE,                         // enum         | public
-    INTEL_CONTROL_WEIGHT_GRID_MODE,                   // enum         | public
     INTEL_CONTROL_AE_CONVERGE_SPEED_MODE,             // enum         | public
     INTEL_CONTROL_DEINTERLACE_MODE,                   // enum         | public
     INTEL_CONTROL_CUSTOM_AIC_PARAM,                   // byte         | public
@@ -880,9 +879,7 @@ typedef enum icamera_metadata_enum_intel_info_available_features {
     INTEL_INFO_AVAILABLE_FEATURES_IMAGE_ENHANCEMENT             = 2,
     INTEL_INFO_AVAILABLE_FEATURES_NOISE_REDUCTION               = 3,
     INTEL_INFO_AVAILABLE_FEATURES_SCENE_MODE                    = 4,
-    INTEL_INFO_AVAILABLE_FEATURES_WEIGHT_GRID_MODE              = 5,
-    INTEL_INFO_AVAILABLE_FEATURES_PER_FRAME_CONTROL             = 6,
-    INTEL_INFO_AVAILABLE_FEATURES_ISP_CONTROL                   = 7,
+    INTEL_INFO_AVAILABLE_FEATURES_PER_FRAME_CONTROL             = 5,
 } icamera_metadata_enum_intel_info_available_features_t;
 
 // INTEL_INFO_WFOV
@@ -948,14 +945,6 @@ typedef enum icamera_metadata_enum_intel_control_scene_mode {
     INTEL_CONTROL_SCENE_MODE_VIDEO_LL,
     INTEL_CONTROL_SCENE_MODE_HDR2,
 } icamera_metadata_enum_intel_control_scene_mode_t;
-
-// INTEL_CONTROL_WEIGHT_GRID_MODE
-typedef enum icamera_metadata_enum_intel_control_weight_grid_mode {
-    INTEL_CONTROL_WEIGHT_GRID_MODE_AUTO,
-    INTEL_CONTROL_WEIGHT_GRID_MODE_CUSTOM_WEIGHT_GRID1,
-    INTEL_CONTROL_WEIGHT_GRID_MODE_CUSTOM_WEIGHT_GRID2,
-    INTEL_CONTROL_WEIGHT_GRID_MODE_CUSTOM_WEIGHT_GRID3,
-} icamera_metadata_enum_intel_control_weight_grid_mode_t;
 
 // INTEL_CONTROL_AE_CONVERGE_SPEED_MODE
 typedef enum icamera_metadata_enum_intel_control_ae_converge_speed_mode {

@@ -359,7 +359,6 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
         inputParams->manual_saturation = ispSettings->manualSettings.manualSaturation;
         LOG2("%s: ISP EE setting, level: %d, strength: %d", __func__,
              ispSettings->eeSetting.feature_level, ispSettings->eeSetting.strength);
-
     }
 
     inputParams->custom_controls.count = aiqResults->mCustomControls.count;

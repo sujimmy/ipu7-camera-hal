@@ -313,13 +313,11 @@ int PipeManager::bindYuvReprocessingPort(const std::map<uuid, stream_t>& yuvInpu
 
 bool PipeManager::isSameStreamConfig(const stream_t& internal, const stream_t& external,
                                      bool checkStreamId) const {
-    // The internal format is ia_fourcc based format, so need to convert it to V4L2 format.
-    int internalFormat = CameraUtils::getV4L2Format(internal.format);
-    int internalStride = CameraUtils::getStride(internalFormat, internal.width);
+    int internalStride = CameraUtils::getStride(internal.format, internal.width);
     int externalStride = CameraUtils::getStride(external.format, external.width);
 
     LOG1("%s: internal: %s(%dx%d: %d)(id %d), external: %s(%dx%d: %d) (id %d) usage:%d", __func__,
-         CameraUtils::format2string(internalFormat).c_str(), internal.width, internal.height,
+         CameraUtils::format2string(internal.format).c_str(), internal.width, internal.height,
          internalStride, internal.id, CameraUtils::format2string(external.format).c_str(),
          external.width, external.height, externalStride, external.id, external.usage);
 
@@ -329,13 +327,13 @@ bool PipeManager::isSameStreamConfig(const stream_t& internal, const stream_t& e
      * WA: PG accept GRBG format but actual input data is of RGGB format,
      *     PG use its kernel to crop to GRBG
      */
-    if ((internalFormat == V4L2_PIX_FMT_SGRBG10 || internalFormat == V4L2_PIX_FMT_SGRBG12) &&
+    if ((internal.format == V4L2_PIX_FMT_SGRBG10 || internal.format == V4L2_PIX_FMT_SGRBG12) &&
         (external.format == V4L2_PIX_FMT_SRGGB10 || external.format == V4L2_PIX_FMT_SRGGB12))
         return true;
 
     bool sameHeight =
         internal.height == external.height || internal.height == ALIGN_32(external.height);
-    if (internalFormat == external.format && sameHeight &&
+    if (internal.format == external.format && sameHeight &&
         (internal.width == external.width || internalStride == externalStride)) return true;
 
     return false;

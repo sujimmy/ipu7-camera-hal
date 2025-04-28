@@ -52,7 +52,6 @@ void GPUPostStage::setFrameInfo(const std::map<uuid, stream_t>& inputInfo,
     BufferQueue::setFrameInfo(inputInfo, outputInfo);
     mInputPort = mInputFrameInfo.begin()->first;  // Only support one input currently
     stream_t input = mInputFrameInfo[mInputPort];
-    input.format = CameraUtils::getV4L2Format(input.format);
     mOutputBuffersNum = mOutputFrameInfo.size();
 }
 

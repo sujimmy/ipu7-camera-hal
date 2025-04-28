@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2024 Intel Corporation.
+ * Copyright (C) 2017-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,11 +104,19 @@ int ProcessingUnit::configure(const std::map<uuid, stream_t>& inputInfo,
                                   tuningConfig.tuningMode, &mYuvInputInfo);
     CheckAndLogError(ret != OK, ret, "@%s configure psys dag failed:%d", __func__, ret);
 
+    std::shared_ptr<GraphConfig> graphConfig =
+        CameraContext::getInstance(mCameraId)->getGraphConfig(mConfigMode);
+    CheckAndLogError((graphConfig.get() == nullptr), UNKNOWN_ERROR,
+                      "Failed to get GraphConfig in PipeManager!");
+
+    mStreamIdToPipeId = graphConfig->getStreamIdToPipeId();
+
     mTuningMode = tuningConfig.tuningMode;
 
     getTnrTriggerInfo();
 
     if (ret == OK) mStatus = PIPELINE_CREATED;
+
     return ret;
 }
 
@@ -700,8 +708,8 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
         }
 
         if (aiqResult) {
-            if (PlatformData::isGpuTnrEnabled(mCameraId)) {
-                int64_t sequence = zslSequence >= 0 ? zslSequence : inputSequence;
+            if (mTnrTriggerInfo.num_gains > 0U) {
+                int64_t sequence = zslSequence >= 0U ? zslSequence : inputSequence;
                 handleExtraTasksForTnr(sequence, dstBuffers, aiqResult);
             }
 
@@ -785,14 +793,22 @@ void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMa
     CameraBufferPortMap fakeTaskBuffers = *dstBuffers;
     // Extra tasks only for ipu still pipe
     for (const auto& item : *dstBuffers) {
-        // TODO: Check if ipu still pipe is tnr pipe
-        if (GET_STREAM_ID(item.first) == STILL_STREAM_ID)
+        if (item.second == nullptr) {
+            continue;
+        }
+
+        const int32_t streamId = item.second->getStreamId();
+        const auto it = mStreamIdToPipeId.find(streamId);
+        if ((it != mStreamIdToPipeId.end()) &&
+            (mStreamIdToPipeId[streamId] == STILL_STREAM_ID)) {
             hasStill = true;
-        else
+        } else {
             fakeTaskBuffers.erase(item.first);
+        }
     }
     if (!hasStill) return;
 
+    LOG2("<seq%ld>: still tnr task start", sequence);
     int64_t startSequence = sequence - (getTnrFrameCount(aiqResult) - 1);
     StageControl ctl;
     ctl.stillTnrReferIn = true;

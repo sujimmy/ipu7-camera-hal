@@ -216,9 +216,6 @@ void setDebugLevel(void) {
     // performance
     char* perfLevel = getenv(PROP_CAMERA_HAL_PERF);
     if (perfLevel) {
-#ifdef HAVE_CHROME_OS
-        initPerfettoTrace();
-#else
         gPerfLevel = strtoul(perfLevel, nullptr, 0);
         LOGI("Performance level is 0x%x", gPerfLevel);
 
@@ -244,7 +241,6 @@ void setDebugLevel(void) {
             gIsDumpMediaInfo = true;
         }
         ScopedAtrace::setTraceLevel(gPerfLevel);
-#endif
     }
 }
 

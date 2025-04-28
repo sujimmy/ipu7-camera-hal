@@ -181,11 +181,28 @@ status_t GraphConfig::configStreams(const vector<HalStream*>& halStreams,
     vector<HalStream*> ipuStreams;
     int videoIpuStreamNum = 0;
     for (size_t i = 0; i < outStreamIpuFlags.size(); i++) {
+        int mapStreamIndex = i;
+
         if (static_cast<int>(i) == outStreamIpuFlags[i]) {
             ipuStreams.push_back(outStreams[i]);
             if (outStreams[i]->useCase() == USE_CASE_VIDEO)
                 videoIpuStreamNum++;
+        } else {
+            mapStreamIndex = outStreamIpuFlags[i];
         }
+
+        // Map the stream ID to a pipe streamId. If a stream is bound to another stream,
+        // use the pipe streamId of the bound stream instead.
+        const int streamId = outStreams[i]->streamId();
+        if (outStreams[mapStreamIndex]->useCase() == USE_CASE_VIDEO) {
+            mStreamIdToPipeId[streamId] = VIDEO_STREAM_ID;
+        } else if(outStreams[mapStreamIndex]->useCase() == USE_CASE_STILL) {
+            mStreamIdToPipeId[streamId] = STILL_STREAM_ID;
+        } else {
+            LOGW("%s: stream %d use case %d is not supported", __func__, streamId,
+                 outStreams[mapStreamIndex]->useCase());
+        }
+
         LOG3("%s: %zu: stream %d, %dx%d, usecase %d, owner stream idx %d", __func__, i,
              outStreams[i]->streamId(), outStreams[i]->width(), outStreams[i]->height(),
              outStreams[i]->useCase(), outStreamIpuFlags[i]);
@@ -746,6 +763,7 @@ status_t GraphConfig::fillConnectionFormat(const IpuGraphLink& ipuLink, const Ou
     }
     int32_t bpp = useDest ? kernel->bpp_info.input_bpp : kernel->bpp_info.output_bpp;
     fmtSettings->fourcc = GraphUtils::getFourccFmt(node->resourceId, terminal, bpp);
+    fmtSettings->format = CameraUtils::getV4L2Format(fmtSettings->fourcc);
 
     fmtSettings->bpl= CameraUtils::getBpl(fmtSettings->fourcc, fmtSettings->width);
     fmtSettings->bpp = CameraUtils::getBpp(fmtSettings->fourcc);
@@ -964,6 +982,7 @@ void GraphConfig::checkAndUpdatePostConnection(int32_t streamId,
         conn->portFormatSettings.terminalId = PORT_UID(streamId, info.stageId, POST_STAGE_INPUT);
         conn->portFormatSettings.width = info.inputStream.width();
         conn->portFormatSettings.height = info.inputStream.height();
+        conn->portFormatSettings.format = info.inputStream.format();
         conn->portFormatSettings.fourcc = CameraUtils::getFourccFormat(info.inputStream.format());
         conn->portFormatSettings.bpl =
             CameraUtils::getBpl(conn->portFormatSettings.fourcc, conn->portFormatSettings.width);
@@ -995,6 +1014,7 @@ void GraphConfig::checkAndUpdatePostConnection(int32_t streamId,
             PORT_UID(streamId, info.stageId, POST_STAGE_OUTPUT_BASE + i);
         source.portFormatSettings.width = stream->width();
         source.portFormatSettings.height = stream->height();
+        source.portFormatSettings.format = stream->format();
         source.portFormatSettings.fourcc = CameraUtils::getFourccFormat(stream->format());
         source.portFormatSettings.bpl =
             CameraUtils::getBpl(source.portFormatSettings.fourcc, stream->width());

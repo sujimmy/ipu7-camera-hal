@@ -52,7 +52,7 @@ FileSource::FileSource(int cameraId)
     if (injectedFile) {
         // Check if a xml config file is used or use frame file directly or use injection path.
         struct stat statBuf;
-        if (injectedFile && stat(injectedFile, &statBuf) == 0) {
+        if (injectedFile && (stat(injectedFile, &statBuf) == 0)) {
             mInjectedFile = std::string(injectedFile);
         }
         LOG1("@%s, Injected file path: %s", __func__, mInjectedFile.c_str());
@@ -93,8 +93,8 @@ void FileSource::deinit() {}
 int FileSource::configure(const map<uuid, stream_t>& outputFrames) {
     // multi-output should have same size and format
     for (auto& output : outputFrames) {
-        if (mStreamConfig.size != 0 && (mStreamConfig.size != output.second.size ||
-                                        mStreamConfig.format != output.second.format)) {
+        if ((mStreamConfig.size != 0) && ((mStreamConfig.size != output.second.size) ||
+                                          (mStreamConfig.format != output.second.format))) {
             LOGE("Different size of output frames are not supported.");
             return BAD_VALUE;
         }
@@ -130,8 +130,8 @@ int FileSource::allocateSourceBuffer() {
         frameFileName[0] = mInjectedFile;
     } else {
         CheckAndLogError(
-            (mInjectionWay < USING_FRAME_FILE || mInjectionWay >= UNKNOWN_INJECTED_WAY), BAD_VALUE,
-            "Invalid Injected Way");
+            (mInjectionWay < USING_FRAME_FILE) || (mInjectionWay >= UNKNOWN_INJECTED_WAY),
+             BAD_VALUE, "Invalid Injected Way");
     }
 
     for (const auto& item : frameFileName) {
@@ -217,7 +217,7 @@ bool FileSource::produce() {
             if (bufQueue.second.empty()) {
                 ret = mBufferSignal.wait_for(lock, std::chrono::nanoseconds(kWaitDuration));
             }
-            if (mExitPending || ret == std::cv_status::timeout) {
+            if (mExitPending || (ret == std::cv_status::timeout)) {
                 return false;
             }
             if (bufQueue.second.empty()) {
@@ -426,7 +426,7 @@ string FileSourceProfile::getFrameFile(int cameraId, int64_t sequence) {
             break;
         }
 
-        if (item.first < sequence && item.first > targetSequence) {
+        if ((item.first < sequence) && (item.first > targetSequence)) {
             targetSequence = item.first;
         }
     }
@@ -595,11 +595,11 @@ FileSourceFromDir::FileSourceFromDir(const string& injectionPath) : mInjectionPa
     CheckAndLogError(!dirInfo, VOID_VALUE, "Invalid injection path: %s.", mInjectionPath.c_str());
 
     while ((fileDirent = readdir(dirInfo))) {
-        if (strcmp(fileDirent->d_name, ".") == 0 || strcmp(fileDirent->d_name, "..") == 0) {
+        if ((strcmp(fileDirent->d_name, ".") == 0) || (strcmp(fileDirent->d_name, "..") == 0)) {
             continue;
         }
 
-        if (stat(fileDirent->d_name, &statBuf) == 0 && S_ISDIR(statBuf.st_mode)) {
+        if ((stat(fileDirent->d_name, &statBuf) == 0) && (S_ISDIR(statBuf.st_mode))) {
             continue;
         }
 
@@ -637,7 +637,7 @@ string FileSourceFromDir::getFrameFile(const map<int, string>& frameFilesInfo, i
             break;
         }
 
-        if (item.first < sequence && item.first > targetSequence) {
+        if ((item.first < sequence) && (item.first > targetSequence)) {
             targetSequence = item.first;
         }
     }
@@ -649,7 +649,7 @@ string FileSourceFromDir::getFrameFile(const map<int, string>& frameFilesInfo, i
 }
 
 void FileSourceFromDir::fillFrameBuffer(void* addr, size_t bufferSize, uint32_t sequence) {
-    if (mInjectionFiles.size() == 0 || !addr) return;
+    if ((mInjectionFiles.size() == 0) || (!addr)) return;
 
     uint32_t index = sequence % mInjectionFiles.size();
     string fileName;

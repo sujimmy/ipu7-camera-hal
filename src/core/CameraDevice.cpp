@@ -129,11 +129,7 @@ int CameraDevice::init() {
     ret = mSofSource->init();
     CheckAndLogError(ret != OK, ret, "@%s: init sync manager failed", __func__);
 
-    ret = m3AControl->init();
-    CheckAndLogError((ret != OK), ret, "%s: Init 3A Unit falied", __func__);
-
-    ret = mLensCtrl->init();
-    CheckAndLogError((ret != OK), ret, "%s: Init Lens falied", __func__);
+    m3AControl->init();
 
     mRequestThread->requestStart();
 
@@ -232,7 +228,7 @@ void CameraDevice::bindListeners() {
         // FILE_SOURCE_E
     }
 
-    if (mPerframeControlSupport || !PlatformData::isIsysEnabled(mCameraId)) {
+    if (mPerframeControlSupport || (!PlatformData::isIsysEnabled(mCameraId))) {
         mProcessingUnit->registerListener(EVENT_PSYS_FRAME, mRequestThread);
     } else {
         mProducer->registerListener(EVENT_ISYS_FRAME, mRequestThread);
@@ -275,7 +271,7 @@ void CameraDevice::unbindListeners() {
         // FILE_SOURCE_E
     }
 
-    if (mPerframeControlSupport || !PlatformData::isIsysEnabled(mCameraId)) {
+    if (mPerframeControlSupport || (!PlatformData::isIsysEnabled(mCameraId))) {
         mProcessingUnit->removeListener(EVENT_PSYS_FRAME, mRequestThread);
     } else {
         mProducer->removeListener(EVENT_ISYS_FRAME, mRequestThread);
@@ -300,8 +296,9 @@ int CameraDevice::configureInput(const stream_t* inputConfig) {
 int CameraDevice::configure(stream_config_t* streamList) {
     PERF_CAMERA_ATRACE();
     CheckAndLogError(!streamList->streams, BAD_VALUE, "%s: No valid stream config", __func__);
-    CheckAndLogError((streamList->num_streams > MAX_STREAM_NUMBER || streamList->num_streams <= 0),
-                     BAD_VALUE, "%s: The stream number(%d) out of range: [1-%d]", __func__,
+    CheckAndLogError(((streamList->num_streams > MAX_STREAM_NUMBER) ||
+                      (streamList->num_streams <= 0)), BAD_VALUE,
+                      "%s: The stream number(%d) out of range: [1-%d]", __func__,
                      streamList->num_streams, MAX_STREAM_NUMBER);
     CheckAndLogError(
         (mState != DEVICE_STOP) && (mState != DEVICE_INIT) && (mState != DEVICE_CONFIGURE),
@@ -363,7 +360,7 @@ int CameraDevice::configure(stream_config_t* streamList) {
     int totalStream = 0;
 
     // Graph config only be used for PSYS processor now
-    if (!mGcMgr && PlatformData::isUsePSysProcessor(mCameraId)) {
+    if ((!mGcMgr) && PlatformData::isUsePSysProcessor(mCameraId)) {
         mGcMgr = new GraphConfigManager(mCameraId);
     }
     if (mGcMgr != nullptr) {
@@ -440,7 +437,7 @@ int CameraDevice::configure(stream_config_t* streamList) {
         if (mProcessingUnit) {
             std::map<uuid, stream_t> outputConfigs;
             for (const auto& item : mStreamIdToPortMap) {
-                outputConfigs[item.second] = (item.first > 0 && item.first == mFdStream.id) ?
+                outputConfigs[item.second] = ((item.first > 0) && (item.first == mFdStream.id)) ?
                                              mFdStream : streamList->streams[item.first];
             }
             vector<ConfigMode> configModes;
@@ -496,10 +493,10 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
                                                         configModes);
             std::shared_ptr<GraphConfig> gc =
                 CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
-            if (!configModes.empty() && gc) {
+            if ((!configModes.empty()) && gc) {
                 camera_resolution_t csiOutput = {0, 0};
                 gc->getCSIOutputResolution(csiOutput);
-                if (csiOutput.width > 0 && csiOutput.height > 0) {
+                if ((csiOutput.width > 0) && (csiOutput.height > 0)) {
                     matchedStream.width = csiOutput.width;
                     matchedStream.height = csiOutput.height;
                 }
@@ -527,7 +524,7 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
     mainConfig.memType = biggestStream.memType;
     mainConfig.field = biggestStream.field;
 
-    if (mainConfig.width != 0 && mainConfig.height != 0) {
+    if ((mainConfig.width != 0) && (mainConfig.height != 0)) {
         producerConfigs[MAIN_INPUT_PORT_UID] = mainConfig;
         LOG2("%s: mcId %d, select the biggest stream", __func__, mcId);
         return producerConfigs;
@@ -537,7 +534,7 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
     int inputWidth = mInputConfig.width;
     int inputHeight = mInputConfig.height;
     camera_resolution_t producerRes = {inputWidth, inputHeight};
-    if (inputWidth == 0 && inputHeight == 0) {
+    if ((inputWidth == 0) && (inputHeight == 0)) {
         // Only get the ISYS resolution when input config is not specified.
         producerRes = PlatformData::getISysBestResolution(
             mCameraId, biggestStream.width, biggestStream.height, biggestStream.field);
@@ -577,9 +574,9 @@ bool CameraDevice::isProcessorNeeded(const stream_config_t* streamList,
     if (producerConfig.field != V4L2_FIELD_ALTERNATE) {
         int streamCounts = streamList->num_streams;
         for (int streamId = 0; streamId < streamCounts; streamId++) {
-            if (producerConfig.width != streamList->streams[streamId].width ||
-                producerConfig.height != streamList->streams[streamId].height ||
-                producerConfig.format != streamList->streams[streamId].format) {
+            if ((producerConfig.width != streamList->streams[streamId].width) ||
+                (producerConfig.height != streamList->streams[streamId].height) ||
+                (producerConfig.format != streamList->streams[streamId].format)) {
                 return true;
             }
         }
@@ -634,8 +631,8 @@ int CameraDevice::analyzeStream(stream_config_t* streamList, int* inputRawStream
 
         if (stream.streamType == CAMERA_STREAM_INPUT) {
             CheckAndLogError(*inputRawStreamId >= 0, BAD_VALUE, "Don't support two INPUT streams!");
-            if (stream.usage == CAMERA_STREAM_PREVIEW ||
-                stream.usage == CAMERA_STREAM_VIDEO_CAPTURE) {
+            if ((stream.usage == CAMERA_STREAM_PREVIEW) ||
+                (stream.usage == CAMERA_STREAM_VIDEO_CAPTURE)) {
                 *inputYuvStreamId = i;
             } else {
                 *inputRawStreamId = i;
@@ -643,13 +640,14 @@ int CameraDevice::analyzeStream(stream_config_t* streamList, int* inputRawStream
             continue;
         }
 
-        if (stream.usage == CAMERA_STREAM_OPAQUE_RAW && stream.streamType != CAMERA_STREAM_INPUT) {
+        if ((stream.usage == CAMERA_STREAM_OPAQUE_RAW) &&
+            (stream.streamType != CAMERA_STREAM_INPUT)) {
             CheckAndLogError(opaqueRawStreamId >= 0, BAD_VALUE, "Don't support two RAW streams!");
             opaqueRawStreamId = i;
             continue;
         }
 
-        if (stream.usage == CAMERA_STREAM_PREVIEW && stream.format != V4L2_PIX_FMT_JPEG) {
+        if ((stream.usage == CAMERA_STREAM_PREVIEW) && (stream.format != V4L2_PIX_FMT_JPEG)) {
             *preStreamIdForFace = i;
         }
 
@@ -783,6 +781,7 @@ int CameraDevice::stop() {
     mRequestThread->clearRequests();
 
     m3AControl->stop();
+    mLensCtrl->stop();
 
     if (mState == DEVICE_START) stopLocked();
 
@@ -798,7 +797,7 @@ int CameraDevice::allocateMemory(camera_buffer_t* ubuffer) {
     LOG1("<id%d>@%s", mCameraId, __func__);
     CheckAndLogError(mState < DEVICE_CONFIGURE, BAD_VALUE, "@%s: Wrong state id %d", __func__,
                      mState);
-    CheckAndLogError(ubuffer->s.id < 0 || ubuffer->s.id >= mStreamNum, BAD_VALUE,
+    CheckAndLogError((ubuffer->s.id < 0) || (ubuffer->s.id >= mStreamNum), BAD_VALUE,
                      "@%s: Wrong stream id %d", __func__, ubuffer->s.id);
 
     int ret = mStreams[ubuffer->s.id]->allocateMemory(ubuffer);
@@ -811,7 +810,7 @@ int CameraDevice::allocateMemory(camera_buffer_t* ubuffer) {
  * Delegate it to RequestThread, make RequestThread manage all buffer related actions.
  */
 int CameraDevice::dqbuf(int streamId, camera_buffer_t** ubuffer) {
-    CheckAndLogError(streamId < 0 || streamId > mStreamNum, BAD_VALUE,
+    CheckAndLogError((streamId < 0) || (streamId > mStreamNum), BAD_VALUE,
                      "@%s: the given stream(%d) is invalid.", __func__, streamId);
     PERF_CAMERA_ATRACE();
     LOG2("<id%d>@%s, stream id:%d", mCameraId, __func__, streamId);
@@ -821,7 +820,8 @@ int CameraDevice::dqbuf(int streamId, camera_buffer_t** ubuffer) {
 
     if (ret == NO_INIT) return ret;
 
-    CheckAndLogError(!*ubuffer || ret != OK, ret, "failed to get ubuffer from stream %d", streamId);
+    CheckAndLogError((!*ubuffer) || (ret != OK),
+                     ret, "failed to get ubuffer from stream %d", streamId);
 
     return ret;
 }
@@ -842,12 +842,12 @@ int CameraDevice::handleQueueBuffer(int bufferNum, camera_buffer_t** ubuffer, in
         for (int bufferId = 0; bufferId < bufferNum; bufferId++) {
             camera_buffer_t* buffer = ubuffer[bufferId];
             int streamIdInBuf = buffer->s.id;
-            CheckAndLogError(streamIdInBuf < 0 || streamIdInBuf > mStreamNum, BAD_VALUE,
+            CheckAndLogError((streamIdInBuf < 0) || (streamIdInBuf > mStreamNum), BAD_VALUE,
                              "@%s: Wrong stream id %d", __func__, streamIdInBuf);
 
             if (IS_INPUT_BUFFER(buffer->timestamp, buffer->sequence)) hasInput = true;
-            if (buffer->s.usage == CAMERA_STREAM_PREVIEW ||
-                buffer->s.usage == CAMERA_STREAM_VIDEO_CAPTURE) {
+            if ((buffer->s.usage == CAMERA_STREAM_PREVIEW) ||
+                (buffer->s.usage == CAMERA_STREAM_VIDEO_CAPTURE)) {
                 hasYuvOutput = true;
             }
 
@@ -867,7 +867,7 @@ int CameraDevice::handleQueueBuffer(int bufferNum, camera_buffer_t** ubuffer, in
             if (streamId == mFdStream.id) {
                 // Use private CameraStream to run face detection for non-reprocessing case
                 // and there is one YUV output stream at least
-                bool addExtraBuf = (!hasInput && hasYuvOutput) ? true : false;
+                bool addExtraBuf = ((!hasInput) && hasYuvOutput) ? true : false;
                 ret = mStreams[streamId]->qbuf(nullptr, sequence, addExtraBuf);
             } else {
                 ret = mStreams[streamId]->qbuf(nullptr, sequence);
@@ -885,9 +885,10 @@ int CameraDevice::qbuf(camera_buffer_t** ubuffer, int bufferNum) {
 
     {
         AutoMutex m(mDeviceLock);
-        if (mState == DEVICE_CONFIGURE || mState == DEVICE_STOP) {
+        if ((mState == DEVICE_CONFIGURE) || (mState == DEVICE_STOP)) {
             // Start 3A here then the HAL can run 3A for request
-            int ret = m3AControl->start();
+            mLensCtrl->start();
+            const int ret = m3AControl->start();
             CheckAndLogError((ret != OK), BAD_VALUE, "Start 3a unit failed with ret:%d.", ret);
 
             mState = DEVICE_BUFFER_READY;

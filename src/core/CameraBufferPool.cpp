@@ -76,7 +76,7 @@ std::shared_ptr<CameraBuffer> CameraBufferPool::acquireBuffer() {
 void CameraBufferPool::returnBuffer(std::shared_ptr<CameraBuffer> buffer) {
     std::lock_guard<std::mutex> l(mLock);
     for (auto& buf : mBuffers) {
-        if (buf.second && buf.first == buffer) {
+        if (buf.second && (buf.first == buffer)) {
             buf.second = false;
             return;
         }

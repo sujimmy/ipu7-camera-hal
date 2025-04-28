@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2024 Intel Corporation.
+ * Copyright (C) 2017-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,6 +134,9 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
     tnr7us_trigger_info_t mTnrTriggerInfo;
     // Indicate the latest sequence of raw buffer used in still TNR
     int64_t mLastStillTnrSequence;
+
+    // <stream id, pipe streamId>
+    std::map<int32_t, int32_t> mStreamIdToPipeId;
 };  // End of class ProcessingUnit
 
 }  // namespace icamera

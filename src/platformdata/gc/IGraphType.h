@@ -116,6 +116,7 @@ struct PortFormatSettings {
     int32_t      width;    /**< Width of the frame in pixels */
     int32_t      height;   /**< Height of the frame in lines */
     int32_t      fourcc;   /**< Frame format */
+    int32_t      format;   /**< v4l2 format */
     int32_t      bpl;      /**< Bytes per line*/
     int32_t      bpp;      /**< Bits per pixel */
 };

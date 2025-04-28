@@ -44,22 +44,13 @@ class AiqCore {
 
     /**
      * \brief AiqCore init
-     *
-     * Init AiqPlus and AAAObject
      */
-    int init();
+    void init();
 
     /**
      * \brief AiqCore deinit
-     *
-     * Deinit AiqPlus and AAAObject
      */
-    int deinit();
-
-    /**
-     * \brief AiqCore configure
-     */
-    int configure();
+    void deinit();
 
     /**
      * \brief Set sensor and frame info
@@ -167,8 +158,6 @@ class AiqCore {
     uint64_t mAiqRunTime;
 
     std::unordered_map<TuningMode, IntelCca*> mIntelCcaHandles;
-
-    enum AiqState { AIQ_NOT_INIT = 0, AIQ_INIT, AIQ_CONFIGURED, AIQ_MAX } mAiqState;
 
     ia_aiq_frame_params mFrameParams;
 
