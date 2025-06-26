@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAPTURE_UNIT_H
+#define CAPTURE_UNIT_H
 
 #include <map>
 #include <vector>
@@ -170,3 +171,5 @@ class CaptureUnit : public StreamSource, public DeviceCallback {
 };
 
 }  // namespace icamera
+
+#endif // CAPTURE_UNIT_H

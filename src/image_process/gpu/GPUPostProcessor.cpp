@@ -43,10 +43,11 @@ void GPUPostProcessor::renderBuffers(const void* in, void* out) {
     GLuint attachments[] = {GL_COLOR_ATTACHMENT0};
     glBindFramebuffer(GL_FRAMEBUFFER, mContext.fbo);
     for (int i = PLANE_Y; i < PLANE_MAX; i++) {
-        if (i == PLANE_UV)
+        if (i == PLANE_UV) {
             glViewport(0, 0, mDstStream.width / 2, mDstStream.height / 2);
-        else
+        } else {
             glViewport(0, 0, mDstStream.width, mDstStream.height);
+        }
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -128,7 +129,9 @@ status_t GPUPostProcessor::doPostProcessing(const std::shared_ptr<CameraBuffer>&
 }
 
 status_t GPUPostProcessor::createContext() {
-    if (mContext.initialized) return OK;
+    if (mContext.initialized) {
+        return OK;
+    }
 
     mContext.eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     CheckAndLogError(mContext.eglDisplay == EGL_NO_DISPLAY, NO_INIT, "Failed to get egl display");
@@ -217,19 +220,33 @@ status_t GPUPostProcessor::createTextures() {
 void GPUPostProcessor::destroyContext() {
     LOG1(" %s", __func__);
     for (int i = PLANE_Y; i < PLANE_MAX; i++) {
-        if (mContext.program[i] > 0) glDeleteProgram(mContext.program[i]);
-        if (mContext.inTexture[i] > 0) glDeleteTextures(1, &mContext.inTexture[i]);
-        if (mContext.outTexture[i] > 0) glDeleteTextures(1, &mContext.outTexture[i]);
+        if (mContext.program[i] > 0) {
+            glDeleteProgram(mContext.program[i]);
+        }
+        if (mContext.inTexture[i] > 0) {
+            glDeleteTextures(1, &mContext.inTexture[i]);
+        }
+        if (mContext.outTexture[i] > 0) {
+            glDeleteTextures(1, &mContext.outTexture[i]);
+        }
     }
 
-    if (mContext.fbo > 0) glDeleteFramebuffers(1, &mContext.fbo);
+    if (mContext.fbo > 0) {
+        glDeleteFramebuffers(1, &mContext.fbo);
+    }
 
-    if (mContext.eglDisplay != EGL_NO_DISPLAY)
+    if (mContext.eglDisplay != EGL_NO_DISPLAY) {
         eglMakeCurrent(mContext.eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    if (mContext.eglCtx != EGL_NO_CONTEXT) eglDestroyContext(mContext.eglDisplay, mContext.eglCtx);
-    if (mContext.eglSurface != EGL_NO_SURFACE)
+    }
+    if (mContext.eglCtx != EGL_NO_CONTEXT) {
+        eglDestroyContext(mContext.eglDisplay, mContext.eglCtx);
+    }
+    if (mContext.eglSurface != EGL_NO_SURFACE) {
         eglDestroySurface(mContext.eglDisplay, mContext.eglSurface);
-    if (mContext.eglDisplay != EGL_NO_DISPLAY) eglTerminate(mContext.eglDisplay);
+    }
+    if (mContext.eglDisplay != EGL_NO_DISPLAY) {
+        eglTerminate(mContext.eglDisplay);
+    }
 
     CLEAR(mContext);
 }

@@ -29,26 +29,37 @@ CameraCommonParser::~CameraCommonParser() {}
 
 bool CameraCommonParser::run(const std::string& filename) {
     auto root = openJsonFile(filename);
-    if (root.empty()) return true;
+    if (root.empty()) {
+        return true;
+    }
 
-    if (!root.isMember("Common")) return false;
+    if (!root.isMember("Common")) {
+        return false;
+    }
 
     const Json::Value& node = root["Common"];
 
-    if (node.isMember("version")) mStaticCfg->mCommonConfig.xmlVersion = node["version"].asFloat();
-    if (node.isMember("platform")) mStaticCfg->mCommonConfig.ipuName = node["platform"].asString();
+    if (node.isMember("version")) {
+        mStaticCfg->mCommonConfig.xmlVersion = node["version"].asFloat();
+    }
+    if (node.isMember("platform")) {
+        mStaticCfg->mCommonConfig.ipuName = node["platform"].asString();
+    }
     if (node.isMember("availableSensors")) {
         auto ele = node["availableSensors"];
         for (Json::Value::ArrayIndex i = 0; i < ele.size(); ++i)
             mStaticCfg->mCommonConfig.availableSensors.push_back(ele[i].asString());
     }
 
-    if (node.isMember("cameraNumber"))
+    if (node.isMember("cameraNumber")) {
         mStaticCfg->mCommonConfig.cameraNumber = node["cameraNumber"].asInt();
-    if (node.isMember("videoStreamNum"))
+    }
+    if (node.isMember("videoStreamNum")) {
         mStaticCfg->mCommonConfig.videoStreamNum = node["videoStreamNum"].asInt();
-    if (node.isMember("useGpuProcessor"))
+    }
+    if (node.isMember("useGpuProcessor")) {
         mStaticCfg->mCommonConfig.useGpuProcessor = node["useGpuProcessor"].asBool();
+    }
     return true;
 }
 

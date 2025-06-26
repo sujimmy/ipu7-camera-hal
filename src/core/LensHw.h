@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Intel Corporation
+ * Copyright (C) 2016-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef LENS_HW_H
+#define LENS_HW_H
 
 #include <string>
 
@@ -48,3 +49,5 @@ private:
 };  // class LensHW
 
 } // namespace icamera
+
+#endif // LENS_HW_H

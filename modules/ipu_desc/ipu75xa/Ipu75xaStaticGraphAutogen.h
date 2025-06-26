@@ -1,4 +1,3 @@
-
 /*
 * INTEL CONFIDENTIAL
 * Copyright (c) 2025 Intel Corporation
@@ -133,9 +132,11 @@ public:
 
     GraphTopology(GraphLink** links, int32_t numOfLinks, VirtualSinkMapping* sinkMappingConfiguration);
     virtual StaticGraphStatus configInnerNodes(SubGraphInnerNodeConfiguration& subGraphInnerNodeConfiguration);
+
 protected:
     VirtualSinkMapping* _sinkMappingConfiguration = nullptr;
     static InnerNodeOptionsFlags GetInnerOptions(SubGraphPublicInnerNodeConfiguration* publicInnerOptions);
+
 };
 
 class IStaticGraphConfig
@@ -1397,7 +1398,6 @@ class rawSubGraphTopology100026 : public GraphTopology {
 
 public:
     rawSubGraphTopology100026(VirtualSinkMapping* sinkMappingConfiguration) : GraphTopology(subGraphLinks, 2, sinkMappingConfiguration) {}
-
     IsysOuterNode* isysOuterNode = nullptr;
     GraphLink* subGraphLinks[2];
 
@@ -1756,7 +1756,6 @@ class rawSubGraphTopology100035 : public GraphTopology {
 
 public:
     rawSubGraphTopology100035(VirtualSinkMapping* sinkMappingConfiguration) : GraphTopology(subGraphLinks, 4, sinkMappingConfiguration) {}
-
     IsysDolOuterNode* isysDolOuterNode = nullptr;
     GraphLink* subGraphLinks[4];
 
@@ -1791,7 +1790,6 @@ class rawSubGraphTopology100036 : public GraphTopology {
 
 public:
     rawSubGraphTopology100036(VirtualSinkMapping* sinkMappingConfiguration) : GraphTopology(subGraphLinks, 4, sinkMappingConfiguration) {}
-
     IsysPdaf2OuterNode* isysPdaf2OuterNode = nullptr;
     GraphLink* subGraphLinks[4];
 

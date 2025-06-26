@@ -75,7 +75,7 @@ add_compile_options(
     -Wformat-security
 )
 if (USE_STATIC_GRAPH)
-    add_compile_options(-fpermissive -Wno-unused-variable -Wno-maybe-uninitialized)
+    add_compile_options(-Wno-error=changes-meaning)
 endif()
 
 include(CheckCXXCompilerFlag)

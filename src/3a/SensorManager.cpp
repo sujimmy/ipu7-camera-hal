@@ -87,7 +87,7 @@ void SensorManager::handleSofEvent(EventData eventData) {
 
         SofEventInfo info;
         info.sequence = eventData.data.sync.sequence;
-        info.timestamp = ((long)eventData.data.sync.timestamp.tv_sec) * 1000000
+        info.timestamp = static_cast<long>(eventData.data.sync.timestamp.tv_sec) * 1000000
                          + eventData.data.sync.timestamp.tv_usec;
         if (mSofEventInfo.size() >= kMaxSofEventInfo) {
             mSofEventInfo.erase(mSofEventInfo.begin());
@@ -108,7 +108,7 @@ uint64_t SensorManager::getSofTimestamp(int64_t sequence) {
 }
 
 // HDR_FEATURE_S
-int SensorManager::convertTuningModeToWdrMode(TuningMode tuningMode) {
+int SensorManager::convertTuningModeToWdrMode(TuningMode tuningMode) const {
     return ((tuningMode == TUNING_MODE_VIDEO_HDR) || (tuningMode == TUNING_MODE_VIDEO_HDR2)) ? 1 : 0;
 }
 
@@ -118,7 +118,7 @@ void SensorManager::handleSensorModeSwitch(int64_t sequence) {
     }
 
     if (mWdrModeSetting.sequence <= sequence) {
-        int wdrMode = convertTuningModeToWdrMode(mWdrModeSetting.tuningMode);
+        const int wdrMode = convertTuningModeToWdrMode(mWdrModeSetting.tuningMode);
         LOG2("<seq%ld>@%s, tunning mode %d, set wdrMode %d sequence %ld", sequence, __func__,
              wdrMode, mWdrModeSetting.sequence);
 
@@ -139,7 +139,7 @@ int SensorManager::setWdrMode(TuningMode tuningMode, int64_t sequence) {
 
     // Set Wdr Mode after running AIQ first time.
     if (mWdrModeSetting.tuningMode == TUNING_MODE_MAX) {
-        int wdrMode = convertTuningModeToWdrMode(tuningMode);
+        const int wdrMode = convertTuningModeToWdrMode(tuningMode);
         ret = mSensorHwCtrl->setWdrMode(wdrMode);
         mWdrModeSetting.tuningMode = tuningMode;
         return ret;
@@ -161,8 +161,7 @@ int SensorManager::setAWB(float r_per_g, float b_per_g) {
     AutoMutex l(mLock);
     LOG2("@%s, r_per_g %f, b_per_g %f", __func__, r_per_g, b_per_g);
 
-    int ret = mSensorHwCtrl->setAWB(r_per_g, b_per_g);
-    return ret;
+    return mSensorHwCtrl->setAWB(r_per_g, b_per_g);
 }
 // HDR_FEATURE_E
 
@@ -200,7 +199,7 @@ uint32_t SensorManager::updateSensorExposure(SensorExpGroup sensorExposures, int
 
     if (sensorExposures.empty()) {
         LOGW("%s: No exposure parameter", __func__);
-        return ((uint32_t)effectSeq);
+        return static_cast<uint32_t>(effectSeq);
     }
 
     ExposureData exposureData;
@@ -252,7 +251,7 @@ uint32_t SensorManager::updateSensorExposure(SensorExpGroup sensorExposures, int
 
     LOG2("<seq%ld>@%s: effectSeq %ld, applyingSeq %ld", mLastSofSequence, __func__,
          effectSeq, applyingSeq);
-    return ((uint32_t)effectSeq);
+    return static_cast<uint32_t>(effectSeq);
 }
 // CRL_MODULE_S
 int SensorManager::setFrameRate(float fps)
@@ -266,8 +265,7 @@ int SensorManager::getSensorInfo(ia_aiq_frame_params &frameParams,
     SensorFrameParams sensorFrameParams;
     CLEAR(sensorFrameParams);
 
-    int ret = PlatformData::calculateFrameParams(mCameraId, sensorFrameParams);
-    if (ret == OK) {
+    if (PlatformData::calculateFrameParams(mCameraId, sensorFrameParams) == OK) {
         AiqUtils::convertToAiqFrameParam(sensorFrameParams, frameParams);
     }
 
@@ -277,7 +275,7 @@ int SensorManager::getSensorInfo(ia_aiq_frame_params &frameParams,
 
         CheckAndLogError(res.empty(), BAD_VALUE, "Supported ISYS resolutions are not configured.");
         // In none-ISYS cases, only take 30 fps into account.
-        int fps = 30;
+        const int fps = 30;
         float freq = res[0].width * res[0].height * fps / 1000000;
         sensorDescriptor = {freq, static_cast<unsigned short>(res[0].width),
                             static_cast<unsigned short>(res[0].height), 24, 0,
@@ -287,7 +285,7 @@ int SensorManager::getSensorInfo(ia_aiq_frame_params &frameParams,
         return OK;
     }
 
-    ret |= getSensorModeData(sensorDescriptor);
+    const int ret = getSensorModeData(sensorDescriptor);
 
     LOG3("ia_aiq_frame_params=[%u, %u, %u, %u, %u, %u, %u, %u]",
          frameParams.horizontal_crop_offset,
@@ -322,7 +320,7 @@ int SensorManager::getSensorModeData(ia_aiq_exposure_sensor_descriptor& sensorDa
     int pixel = 0;
     int status =  mSensorHwCtrl->getPixelRate(pixel);
     CheckAndLogError(status != OK, status, "Failed to get pixel clock ret:%d", status);
-    sensorData.pixel_clock_freq_mhz = (float)pixel / 1000000;
+    sensorData.pixel_clock_freq_mhz = static_cast<float>(pixel) / 1000000;
 
     int width = 0, height = 0, pixelCode = 0;
     status = mSensorHwCtrl->getActivePixelArraySize(width, height, pixelCode);
@@ -343,7 +341,7 @@ int SensorManager::getSensorModeData(ia_aiq_exposure_sensor_descriptor& sensorDa
     sensorData.coarse_integration_time_max_margin = PlatformData::getCITMaxMargin(mCameraId);
 
     // fine integration is not supported by v4l2
-    sensorData.fine_integration_time_min = 0;
+    sensorData.fine_integration_time_min = 0U;
     sensorData.fine_integration_time_max_margin = sensorData.pixel_periods_per_line;
     int vblank;
     status = mSensorHwCtrl->getVBlank(vblank);

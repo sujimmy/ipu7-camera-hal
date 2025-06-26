@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation.
+ * Copyright (C) 2022-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef IPROCESSING_UNIT_FACTORY_H
+#define IPROCESSING_UNIT_FACTORY_H
 
 #include "AiqUnit.h"
 #include "CameraScheduler.h"
@@ -40,3 +41,5 @@ class IProcessingUnitFactory {
                                                   std::shared_ptr<CameraScheduler> scheduler);
 };
 }  // namespace icamera
+
+#endif // IPROCESSING_UNIT_FACTORY_H

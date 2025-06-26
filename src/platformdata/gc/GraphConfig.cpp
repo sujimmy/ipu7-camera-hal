@@ -81,7 +81,7 @@ void GraphConfig::releaseGraphNodes() {
 }
 
 uint32_t GraphConfig::createQueryKeyAttribute(int cameraId) {
-    uint32_t attributes = 0;
+    uint32_t attributes = 0U;
     return attributes;
 }
 
@@ -102,7 +102,7 @@ status_t GraphConfig::queryGraphSettings(const vector<HalStream*>& outStreams) {
     int32_t stillCount = 0;
     map<VirtualSink, const HalStream*> streams;
     for (auto& stream : outStreams) {
-        if (stream->useCase() & USE_CASE_VIDEO) {
+        if ((stream->useCase() & USE_CASE_VIDEO) != 0) {
             if (videoCount == 0) {
                 queryVideoKey.preview.width = stream->width();
                 queryVideoKey.preview.height = stream->height();
@@ -120,7 +120,7 @@ status_t GraphConfig::queryGraphSettings(const vector<HalStream*>& outStreams) {
                      VirtualSink::VideoSink);
             }
             videoCount++;
-        } else if (stream->useCase() & USE_CASE_STILL) {
+        } else if ((stream->useCase() & USE_CASE_STILL) != 0) {
             if (stillCount == 0) {
                 queryStillKey.stills.width = stream->width();
                 queryStillKey.stills.height = stream->height();
@@ -163,11 +163,13 @@ status_t GraphConfig::queryGraphSettings(const vector<HalStream*>& outStreams) {
 status_t GraphConfig::configStreams(const vector<HalStream*>& halStreams,
                                     const vector<HalStream*>& extraOutStreams) {
     LOG1("@%s", __func__);
-    if (mSensorRatio < RATIO_TOLERANCE) mSensorRatio = PlatformData::getSensorRatio(mCameraId);
+    if (mSensorRatio < RATIO_TOLERANCE) {
+        mSensorRatio = PlatformData::getSensorRatio(mCameraId);
+    }
 
     vector<HalStream*> outStreams;
     vector<HalStream*> inStreams;
-    for (size_t i = 0; i < halStreams.size(); i++) {
+    for (size_t i = 0U; i < halStreams.size(); i++) {
         if (static_cast<stream_t*>(halStreams[i]->mPrivate)->streamType != CAMERA_STREAM_INPUT) {
             outStreams.push_back(halStreams[i]);
         } else {
@@ -180,13 +182,14 @@ status_t GraphConfig::configStreams(const vector<HalStream*>& halStreams,
     chooseIpuOutputStreams(outStreams, &outStreamIpuFlags);
     vector<HalStream*> ipuStreams;
     int videoIpuStreamNum = 0;
-    for (size_t i = 0; i < outStreamIpuFlags.size(); i++) {
+    for (size_t i = 0U; i < outStreamIpuFlags.size(); i++) {
         int mapStreamIndex = i;
 
         if (static_cast<int>(i) == outStreamIpuFlags[i]) {
             ipuStreams.push_back(outStreams[i]);
-            if (outStreams[i]->useCase() == USE_CASE_VIDEO)
+            if (outStreams[i]->useCase() == USE_CASE_VIDEO) {
                 videoIpuStreamNum++;
+            }
         } else {
             mapStreamIndex = outStreamIpuFlags[i];
         }
@@ -212,9 +215,9 @@ status_t GraphConfig::configStreams(const vector<HalStream*>& halStreams,
     int32_t ret = UNKNOWN_ERROR;  // Not query yet
     int configuredStreamNum = halStreams.size();
     // Only one video stream is supported currently.
-    if (extraOutStreams.size() == 1 &&
-        extraOutStreams.front()->useCase() == USE_CASE_VIDEO &&
-        videoIpuStreamNum < icamera::PlatformData::getVideoStreamNum()) {
+    if ((extraOutStreams.size() == 1) &&
+        (extraOutStreams.front()->useCase() == USE_CASE_VIDEO) &&
+        (videoIpuStreamNum < icamera::PlatformData::getVideoStreamNum())) {
         ipuStreams.push_back(extraOutStreams.front());
         configuredStreamNum++;
         ret = queryGraphSettings(ipuStreams);
@@ -229,7 +232,9 @@ status_t GraphConfig::configStreams(const vector<HalStream*>& halStreams,
     }
 
     // Re-query if extraStreams is not supported
-    if (ret != OK) ret = queryGraphSettings(ipuStreams);
+    if (ret != OK) {
+        ret = queryGraphSettings(ipuStreams);
+    }
     CheckAndLogError(ret != OK, UNKNOWN_ERROR, "%s, Failed to config streams", __func__);
 
     // Get the whole graph (ipu + post processor)
@@ -247,7 +252,7 @@ void GraphConfig::chooseIpuOutputStreams(const vector<HalStream*>& halStreams,
     map<int, const HalStream*> videoStreams;
     map<int, const HalStream*> stillStreams;
 
-    for (uint32_t i = 0; i < halStreams.size(); i++) {
+    for (uint32_t i = 0U; i < halStreams.size(); i++) {
         if (halStreams[i]->useCase() == USE_CASE_VIDEO) {
             videoStreams[i] = halStreams[i];
         } else {
@@ -257,7 +262,7 @@ void GraphConfig::chooseIpuOutputStreams(const vector<HalStream*>& halStreams,
     }
 
     size_t avaVideoSlot = icamera::PlatformData::getVideoStreamNum();
-    size_t avaStillSlot = 1;
+    size_t avaStillSlot = 1U;
     if (videoStreams.size() > avaVideoSlot)
         chooseIpuStreams(videoStreams, avaVideoSlot, ipuStreamFlags);
     if (stillStreams.size() > avaStillSlot)
@@ -305,12 +310,16 @@ void GraphConfig::chooseIpuStreams(map<int, const HalStream*>& streams, int avaS
      * This stream with the biggest size will be default ipu stream for those special streams.
      */
     int bigIpuStreamIdx = streams.begin()->first;
-    if (bigStreamSameRatio >= 0) ipuStreams.insert(ipuStreams.begin(), bigStreamSameRatio);
+    if (bigStreamSameRatio >= 0) {
+        ipuStreams.insert(ipuStreams.begin(), bigStreamSameRatio);
+    }
     // Limit the number of ipu streams
     while (ipuStreams.size() > static_cast<size_t>(avaSlot)) ipuStreams.pop_back();
     // Reselect default ipu stream if there is only one ipu stream which might be stream with same
     // ratio as sensor's
-    if (avaSlot == 1) bigIpuStreamIdx = ipuStreams[0];
+    if (avaSlot == 1) {
+        bigIpuStreamIdx = ipuStreams[0];
+    }
 
     // Find own ipu streams for others
     for (auto& stream : streams) {
@@ -344,20 +353,22 @@ status_t GraphConfig::createPipeGraphConfigData(const vector<HalStream*>& outStr
     createPostStages(outStreams, outStreamIpuFlags, inStream);
 
     // Handle other streams
-    for (size_t i = 0; i < outStreamIpuFlags.size(); i++) {
+    for (size_t i = 0U; i < outStreamIpuFlags.size(); i++) {
         int32_t ipuStreamId = outStreams[outStreamIpuFlags[i]]->streamId();
         fillOutputToPostProcessor(ipuStreamId, outStreams[i]);
     }
 
     // Remove disabled post processors
-    for (size_t i = 0; i < outStreamIpuFlags.size(); i++) {
-        if (static_cast<int>(i) != outStreamIpuFlags[i]) continue;
+    for (size_t i = 0U; i < outStreamIpuFlags.size(); i++) {
+        if (static_cast<int>(i) != outStreamIpuFlags[i]) {
+            continue;
+        }
         int32_t streamId = outStreams[i]->streamId();
-        if (mPostStageInfos.find(streamId) != mPostStageInfos.end() &&
-            !mPostStageInfos[streamId].enabled)
+        if ((mPostStageInfos.find(streamId) != mPostStageInfos.end()) &&
+            (!mPostStageInfos[streamId].enabled))
             mPostStageInfos.erase(streamId);
-        if (mGPUStageInfos.find(streamId) != mGPUStageInfos.end() &&
-            !mGPUStageInfos[streamId].enabled)
+        if ((mGPUStageInfos.find(streamId) != mGPUStageInfos.end()) &&
+            (!mGPUStageInfos[streamId].enabled))
             mGPUStageInfos.erase(streamId);
     }
 
@@ -369,11 +380,15 @@ void GraphConfig::createPostStages(const vector<HalStream*>& outStreams,
                                    const vector<int>& outStreamIpuFlags,
                                    const HalStream* inStream) {
     int32_t videoPostCount = 1;  // 0 is post processor of still
-    for (size_t i = 0; i < outStreamIpuFlags.size(); i++) {
-        if (static_cast<int>(i) != outStreamIpuFlags[i]) continue;
+
+    for (size_t i = 0U; i < outStreamIpuFlags.size(); i++) {
+        if (static_cast<int>(i) != outStreamIpuFlags[i]) {
+            continue;
+        }
 
         const HalStream* ipuStream = outStreams[i];
-        if (ipuStream->useCase() == USE_CASE_STILL && PlatformData::isGpuTnrEnabled(mCameraId)) {
+        if ((ipuStream->useCase() == USE_CASE_STILL) &&
+            PlatformData::isGpuTnrEnabled(mCameraId)) {
             PostStageInfo gpuPost;
             gpuPost.stageName = GPU_POST_STAGE_NAME_BASE;
             gpuPost.stageId = GPU_TNR_STAGE_ID;
@@ -401,8 +416,8 @@ void GraphConfig::createPostStages(const vector<HalStream*>& outStreams,
             videoPostCount++;
         }
 
-        if (ipuStream->format() == V4L2_PIX_FMT_JPEG ||
-            (PlatformData::useGPUProcessor() && ipuStream->useCase() != USE_CASE_STILL)) {
+        if ((ipuStream->format() == V4L2_PIX_FMT_JPEG) ||
+            (PlatformData::useGPUProcessor() && (ipuStream->useCase() != USE_CASE_STILL))) {
             post.enabled = true;
             LOG1("Create post stage: %s, id %x for stream %d", post.stageName.c_str(), post.stageId,
                  ipuStream->streamId());
@@ -461,7 +476,9 @@ status_t GraphConfig::graphGetStreamIds(vector<int32_t>& streamIds, bool fullPip
     CheckAndLogError(mStaticGraphs.empty(), UNKNOWN_ERROR,
                      "%s, The streamIds vector is empty", __func__);
     for (auto& graph : mStaticGraphs) streamIds.push_back(graph.first);
-    if (!fullPipes) return OK;
+    if (!fullPipes) {
+        return OK;
+    }
 
     for (auto& gpuPost : mGPUStageInfos) {
         bool found = false;
@@ -471,7 +488,9 @@ status_t GraphConfig::graphGetStreamIds(vector<int32_t>& streamIds, bool fullPip
                 break;
             }
         }
-        if (!found) streamIds.push_back(gpuPost.second.streamId);
+        if (!found) {
+            streamIds.push_back(gpuPost.second.streamId);
+        }
     }
 
     for (auto& post : mPostStageInfos) {
@@ -482,7 +501,9 @@ status_t GraphConfig::graphGetStreamIds(vector<int32_t>& streamIds, bool fullPip
                 break;
             }
         }
-        if (!found) streamIds.push_back(post.second.streamId);
+        if (!found) {
+            streamIds.push_back(post.second.streamId);
+        }
     }
     return OK;
 }
@@ -535,8 +556,10 @@ status_t GraphConfig::getOuterNodes(int32_t streamId,
 
 uint8_t GraphConfig::getPSysContextId(int32_t streamId, uint8_t outerNodeCtxId) {
     for (auto &gc : mStaticGraphs) {
-        if (streamId != gc.first) continue;
-        for (uint32_t i = 0; i < gc.second.stageInfos.size(); i++) {
+        if (streamId != gc.first) {
+            continue;
+        }
+        for (uint32_t i = 0U; i < gc.second.stageInfos.size(); i++) {
             IpuStageInfo& info = gc.second.stageInfos[i];
             if (info.node->contextId == outerNodeCtxId) {
                 return static_cast<uint8_t>(i);
@@ -589,12 +612,12 @@ int32_t GraphConfig::loadStaticGraphConfig(const std::string& name) {
     binData.data = malloc(binData.size);
     if (binData.data == nullptr) {
         LOGE("%s: inputBinary.data is null", __func__);
-        fclose(file);
+        (void)fclose(file);
         return NO_MEMORY;
     }
 
     size_t len = fread(binData.data, 1, binData.size, file);
-    fclose(file);
+    (void)fclose(file);
     if (len != binData.size) {
         LOGE("%s, read data %zu from file %s, should be %u", __func__, len, fileName, binData.size);
         free(binData.data);
@@ -613,7 +636,9 @@ void GraphConfig::getStaticGraphConfigData(const std::map<VirtualSink, const Hal
         StaticGraphInfo& graph = item.second;
         GraphTopology* pGraphTopology = nullptr;
         StaticGraphStatus status = graph.staticGraph->getGraphTopology(&pGraphTopology);
-        if (status != StaticGraphStatus::SG_OK) continue;
+        if (status != StaticGraphStatus::SG_OK) {
+            continue;
+        }
 
         std::map<HwSink, const HalStream*> streamsSinkMap;
         for (auto& stream : streams) {
@@ -652,14 +677,17 @@ void GraphConfig::getStaticGraphConfigData(const std::map<VirtualSink, const Hal
 
 void GraphConfig::saveOuterNode(const GraphLink* link, StaticGraphInfo* graph) {
     // Save nodes, except ISYS
-    if (!link->isActive || link->destNode == nullptr || link->destNode->type == NodeTypes::Isys) {
+    if ((!link->isActive) || (link->destNode == nullptr) ||
+        (link->destNode->type == NodeTypes::Isys)) {
         return;
     }
 
     int32_t stageId = GraphUtils::createStageId(link->destNode->resourceId,
                                                 link->destNode->contextId);
     for (auto& stage : graph->stageInfos)
-        if (stage.stageId == stageId) return;
+        if (stage.stageId == stageId) {
+            return;
+        }
 
     IpuStageInfo info;
     info.streamId = link->destNode->nodeKernels.streamId;
@@ -668,14 +696,16 @@ void GraphConfig::saveOuterNode(const GraphLink* link, StaticGraphInfo* graph) {
     info.node = link->destNode;
 
     bool saved = false;
-    for (uint32_t i = 0; i < graph->stageInfos.size(); i++) {
+    for (uint32_t i = 0U; i < graph->stageInfos.size(); i++) {
         uint8_t refId= graph->stageInfos[i].node->contextId;
         if (info.node->contextId < refId) {
             graph->stageInfos.insert(graph->stageInfos.begin() + i, info);
             saved = true;
         }
     }
-    if (!saved) graph->stageInfos.push_back(info);
+    if (!saved) {
+        graph->stageInfos.push_back(info);
+    }
 
     LOG3("%s: stream %d, node %s:%d, context %d", __func__, info.streamId, info.stageName.c_str(),
          info.stageId, info.node->contextId);
@@ -683,9 +713,13 @@ void GraphConfig::saveOuterNode(const GraphLink* link, StaticGraphInfo* graph) {
 
 void GraphConfig::saveLink(int32_t streamId, const GraphLink* link,
                            std::map<HwSink, const HalStream*>* streams, StaticGraphInfo* graph) {
-    if (!link->isActive) return;
+    if (!link->isActive) {
+        return;
+    }
     // Ignore link: src="-1:Sensor:0" dest="2:Isys:0" type="Source2Node"
-    if (link->type == LinkType::Source2Node && link->destNode->type == NodeTypes::Isys) return;
+    if ((link->type == LinkType::Source2Node) && (link->destNode->type == NodeTypes::Isys)) {
+        return;
+    }
 
     IpuGraphLink ipuLink(streamId, link);
     bool hasNecessaryNode = true;
@@ -693,7 +727,7 @@ void GraphConfig::saveLink(int32_t streamId, const GraphLink* link,
         // src="-1:LscBuffer:0" dest="0:LbffBayer:4" type="Source2Node"
         ipuLink.isEdge = true;
         hasNecessaryNode = link->destNode;
-    } else if (link->type == LinkType::Node2Node && link->srcNode->type == NodeTypes::Isys) {
+    } else if ((link->type == LinkType::Node2Node) && (link->srcNode->type == NodeTypes::Isys)) {
         // src="2:Isys:1" dest="0:LbffBayer:3" type="Node2Node"
         ipuLink.isEdge = true;
         hasNecessaryNode = link->destNode;
@@ -704,8 +738,8 @@ void GraphConfig::saveLink(int32_t streamId, const GraphLink* link,
         hasNecessaryNode = link->srcNode;
         // Find output stream
         for (auto& s : *streams) {
-            if ((link->dest == GraphElementType::ImageMp && s.first == HwSink::ImageMpSink) ||
-                (link->dest == GraphElementType::ImageDp && s.first == HwSink::ImageDpSink)) {
+            if (((link->dest == GraphElementType::ImageMp) && (s.first == HwSink::ImageMpSink)) ||
+                ((link->dest == GraphElementType::ImageDp) && (s.first == HwSink::ImageDpSink))) {
                 ipuLink.stream = s.second;
                 streams->erase(s.first);
                 break;
@@ -717,7 +751,9 @@ void GraphConfig::saveLink(int32_t streamId, const GraphLink* link,
           hasNecessaryNode ? "yes" : "no", ipuLink.isEdge ? "yes" : "no",
           ipuLink.stream ? ipuLink.stream->streamId() : -1);
 
-    if (hasNecessaryNode) graph->links.push_back(ipuLink);
+    if (hasNecessaryNode) {
+        graph->links.push_back(ipuLink);
+    }
 }
 
 // Check which node in link has frame terminal. Return source node if both have.
@@ -741,7 +777,8 @@ status_t GraphConfig::fillConnectionFormat(const IpuGraphLink& ipuLink, const Ou
     int32_t terminal = useDest ? link->destTerminalId : link->srcTerminalId;
     const StaticGraphRunKernel* kernel = nullptr;
     kernel = findKernalForFrameTerminal(node, terminal);
-    CheckAndLogError(!ipuLink.stream && !kernel, NO_ENTRY, "%s: Can't find kernel for link", __func__);
+    CheckAndLogError((ipuLink.stream == nullptr) && (kernel == nullptr), NO_ENTRY,
+                     "%s: Can't find kernel for link", __func__);
 
     int32_t stageId = GraphUtils::createStageId(node->resourceId, node->contextId);
     fmtSettings->enabled = true;
@@ -779,8 +816,8 @@ const StaticGraphRunKernel*
 GraphConfig::findKernalForFrameTerminal(const OuterNode* node, int32_t terminalId) {
     int32_t kernelId = CBLayoutUtils::getKernelForDataTerminal(node->resourceId, terminalId);
     if (kernelId > 0) {
-        for (uint32_t i = 0; i < node->nodeKernels.kernelCount; i++) {
-            if ((node->nodeKernels.kernelList[i].run_kernel.enable == 1) &&
+        for (uint32_t i = 0U; i < node->nodeKernels.kernelCount; i++) {
+            if ((node->nodeKernels.kernelList[i].run_kernel.enable == 1U) &&
                 (node->nodeKernels.kernelList[i].run_kernel.kernel_uuid == static_cast<uint32_t>(kernelId))) {
                 return &(node->nodeKernels.kernelList[i].run_kernel);
             }
@@ -797,7 +834,7 @@ void GraphConfig::fillConnectionConfig(const IpuGraphLink& ipuLink, int32_t term
     int32_t stageId = 0;
 
     // Fill source
-    if (link->srcNode && link->srcNode->type != NodeTypes::Isys) {
+    if (link->srcNode && (link->srcNode->type != NodeTypes::Isys)) {
         stageId = GraphUtils::createStageId(link->srcNode->resourceId, link->srcNode->contextId);
         conn->mSourceStage = STAGE_UID(ipuLink.streamId, stageId);
         conn->mSourceTerminal = PORT_UID(ipuLink.streamId, stageId, link->srcTerminalId);
@@ -826,7 +863,9 @@ status_t GraphConfig::updateGraphSettingForPtz(const PtzInfo& cur, const PtzInfo
 
     for (auto& item : mStaticGraphs) {
         StaticGraphInfo& info = item.second;
-        if (!info.graphResolutionConfig) continue;
+        if (!info.graphResolutionConfig) {
+            continue;
+        }
 
         bool changed = false;
         StaticGraphStatus ret = info.graphResolutionConfig->updateStaticGraphConfig(
@@ -835,7 +874,9 @@ status_t GraphConfig::updateGraphSettingForPtz(const PtzInfo& cur, const PtzInfo
                          "Update resolution for PTZ fail for stream %d", item.first);
         LOG2("%s: update done for stream %d, isKeyResChanged %d", __func__, item.first,
              changed);
-        if (isKeyResChanged) *isKeyResChanged = changed;
+        if (isKeyResChanged != nullptr) {
+            *isKeyResChanged = changed;
+        }
 
         dumpNodes(info);
     }
@@ -862,19 +903,23 @@ void GraphConfig::dumpLink(const IpuGraphLink& ipuLink) {
 }
 
 void GraphConfig::dumpNodes(const StaticGraphInfo& graph) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphConfig)) ||
-        !Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3)) return;
+    if ((!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphConfig))) ||
+        (!Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3))) return;
 
     for (auto& stage : graph.stageInfos) {
-        if (!stage.node) continue;
+        if (!stage.node) {
+            continue;
+        }
         LOG3("<node res=\"%d\" stream=\"%d\" >", stage.node->resourceId, stage.streamId);
 
-        for (uint32_t i = 0; i < stage.node->nodeKernels.kernelCount; i++) {
+        for (uint32_t i = 0U; i < stage.node->nodeKernels.kernelCount; i++) {
             const StaticGraphPacRunKernel& kernel =
                 static_cast<const StaticGraphPacRunKernel>(stage.node->nodeKernels.kernelList[i]);
             const StaticGraphRunKernel& k =
                 static_cast<const StaticGraphRunKernel&>(kernel.run_kernel);
-            if (!k.enable) continue;
+            if (!k.enable) {
+                continue;
+            }
 
             LOG3("  <kernel id=\"%d\">", k.kernel_uuid);
             if (k.resolution_info) {
@@ -904,10 +949,14 @@ void GraphConfig::dumpNodes(const StaticGraphInfo& graph) {
 
 StageType GraphConfig::getPGType(int32_t pgId) {
     for (auto& info : mGPUStageInfos) {
-        if (info.second.stageId == pgId) return STAGE_GPU_TNR;
+        if (info.second.stageId == pgId) {
+            return STAGE_GPU_TNR;
+        }
     }
     for (auto& info : mPostStageInfos) {
-        if (info.second.stageId == pgId) return STAGE_SW_POST;
+        if (info.second.stageId == pgId) {
+            return STAGE_SW_POST;
+        }
     }
     return STAGE_IPU;
 }
@@ -921,7 +970,9 @@ status_t GraphConfig::pipelineGetConnections(int32_t streamId,
     if (streamId == YUV_REPROCESSING_STREAM_ID) {
         for (auto& post : mPostStageInfos) {
             PostStageInfo& info = post.second;
-            if (info.streamId != YUV_REPROCESSING_STREAM_ID) continue;
+            if (info.streamId != YUV_REPROCESSING_STREAM_ID) {
+                continue;
+            }
 
             IGraphType::PipelineConnection sink;
             sink.stream = &info.inputStream;
@@ -937,10 +988,12 @@ status_t GraphConfig::pipelineGetConnections(int32_t streamId,
         // Currently only return frame links (include sis)
         dumpLink(ipuLink);
         const OuterNode* node = findFrameTerminalOwner(ipuLink.graphLink);
-        if (!node) continue;
+        if (!node) {
+            continue;
+        }
 
         IGraphType::PipelineConnection conn;
-        fillConnectionFormat(ipuLink, node, &conn.portFormatSettings);
+        (void)fillConnectionFormat(ipuLink, node, &conn.portFormatSettings);
         fillConnectionConfig(ipuLink, conn.portFormatSettings.terminalId, &conn.connectionConfig);
         conn.stream = ipuLink.stream;
         conn.hasEdgePort = ipuLink.isEdge;
@@ -950,8 +1003,12 @@ status_t GraphConfig::pipelineGetConnections(int32_t streamId,
     vector<IGraphType::PipelineConnection> postVector;
     for (auto& conn : *confVector) {
         // TODO: clean sink/source if the link is between streams
-        if (!conn.portFormatSettings.enabled) continue;
-        if (conn.stream) checkAndUpdatePostConnection(streamId, &conn, &postVector, mGPUStageInfos);
+        if (!conn.portFormatSettings.enabled) {
+            continue;
+        }
+        if (conn.stream != nullptr) {
+            checkAndUpdatePostConnection(streamId, &conn, &postVector, mGPUStageInfos);
+        }
         IGraphType::PipelineConnection* connPtr =
             postVector.size() > 0 ? &(postVector[postVector.size() - 1]) : &conn;
         if (connPtr->stream)
@@ -970,7 +1027,9 @@ void GraphConfig::checkAndUpdatePostConnection(int32_t streamId,
                                                std::map<int32_t, PostStageInfo>& postStageInfos) {
     int32_t useStreamId = conn->stream->streamId();
 
-    if (postStageInfos.find(useStreamId) == postStageInfos.end()) return;
+    if (postStageInfos.find(useStreamId) == postStageInfos.end()) {
+        return;
+    }
 
     PostStageInfo& info = postStageInfos[useStreamId];
     uuid stageUuid = STAGE_UID(streamId, info.stageId);
@@ -1007,7 +1066,7 @@ void GraphConfig::checkAndUpdatePostConnection(int32_t streamId,
     }
 
     // Add source terminals conn for post stage
-    for (size_t i = 0; i < info.outputStreams.size(); i++) {
+    for (size_t i = 0U; i < info.outputStreams.size(); i++) {
         const HalStream* stream = info.outputStreams[i];
         IGraphType::PipelineConnection source;
         source.portFormatSettings.terminalId =
@@ -1035,7 +1094,7 @@ void GraphConfig::checkAndUpdatePostConnection(int32_t streamId,
 status_t GraphConfig::graphGetEdgeConnections(
                          std::vector<IGraphType::PipelineConnection> *confVector) {
     vector<int32_t> streamIds;
-    graphGetStreamIds(streamIds);
+    (void)graphGetStreamIds(streamIds);
     for (auto id : streamIds) {
         vector<IGraphType::PipelineConnection> confV;
         std::vector<IGraphType::PrivPortFormat> tnrPortFormat;
@@ -1044,8 +1103,8 @@ status_t GraphConfig::graphGetEdgeConnections(
 
         for (auto& conn : confV) {
             if (conn.portFormatSettings.enabled &&
-                (conn.connectionConfig.mSinkStage == 0 ||
-                conn.connectionConfig.mSourceStage == 0)) {
+                ((conn.connectionConfig.mSinkStage == 0U) ||
+                 (conn.connectionConfig.mSourceStage == 0U))) {
                 confVector->push_back(conn);
             }
         }
@@ -1055,8 +1114,8 @@ status_t GraphConfig::graphGetEdgeConnections(
 }
 
 void GraphConfig::dumpPostStageInfo() {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphConfig)) ||
-        !Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3)) return;
+    if ((!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphConfig))) ||
+        (!Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3))) return;
 
     for (auto& item : mGPUStageInfos) {
         PostStageInfo& info= item.second;
@@ -1102,7 +1161,7 @@ status_t GraphConfig::getIspRawCropInfo(IspRawCropInfo& info) {
     uint32_t kernel_id = CBLayoutUtils::getIspIfdKernelId();
     for (auto& node : nodes) {
         StaticGraphNodeKernels& nks = node.second->nodeKernels;
-        for (uint32_t i = 0; i < nks.kernelCount; ++i) {
+        for (uint32_t i = 0U; i < nks.kernelCount; ++i) {
             if (nks.kernelList[i].run_kernel.kernel_uuid == kernel_id) {
                 info.left = nks.kernelList[i].run_kernel.resolution_info->input_crop.left;
                 info.top = nks.kernelList[i].run_kernel.resolution_info->input_crop.top;
@@ -1121,7 +1180,9 @@ status_t GraphConfig::getIspRawCropInfo(IspRawCropInfo& info) {
 
 status_t GraphConfig::getIspTuningModeByStreamId(int32_t streamId, uint32_t& ispTuningMode) {
     for (auto& gc : mStaticGraphs) {
-        if (streamId != gc.first) continue;
+        if (streamId != gc.first) {
+            continue;
+        }
         if (gc.second.stageInfos.size() > 0) {
             auto& info = gc.second.stageInfos[0];
             ispTuningMode = info.node->nodeKernels.operationMode;

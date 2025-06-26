@@ -41,9 +41,9 @@ PSysDevice::PSysDevice(int cameraId)
     LOG1("<%id> Construct PSysDevice", mCameraId);
 
     CLEAR(mFrameId);
-    memset(&mFrameIdToSeqMap, -1, sizeof(mFrameIdToSeqMap));
+    (void)memset(&mFrameIdToSeqMap, -1, sizeof(mFrameIdToSeqMap));
     mGraphNode = new graph_node[MAX_GRAPH_NODES];
-    for (uint8_t i = 0; i < MAX_GRAPH_NODES; i++) {
+    for (uint8_t i = 0U; i < MAX_GRAPH_NODES; i++) {
         mTaskBuffers[i] = new ipu_psys_term_buffers[MAX_GRAPH_TERMINALS];
     }
 
@@ -56,11 +56,11 @@ PSysDevice::~PSysDevice() {
     // Unregister PSYS buffer
     while (!mPtrToTermBufMap.empty()) {
         auto it = mPtrToTermBufMap.begin();
-        unregisterBuffer(&it->second);
+        PSysDevice::unregisterBuffer(&it->second);
     }
 
     if (mFd >= 0) {
-        int ret = ::close(mFd);
+        const int ret = ::close(mFd);
         if (ret < 0) {
             LOGE("Failed to close psys device %s, ret %d", strerror(errno), ret);
         }
@@ -73,7 +73,7 @@ PSysDevice::~PSysDevice() {
     delete mPollThread;
 
     delete[] mGraphNode;
-    for (uint8_t i = 0; i < MAX_GRAPH_NODES; i++) {
+    for (uint8_t i = 0U; i < MAX_GRAPH_NODES; i++) {
         delete[] mTaskBuffers[i];
     }
 }
@@ -94,9 +94,9 @@ int PSysDevice::addGraph(const PSysGraph& graph) {
     CLEAR(graphDrv);
 
     graphDrv.graph_id = INVALID_GRAPH_ID;
-    graphDrv.num_nodes = 0;
+    graphDrv.num_nodes = 0U;
     graphDrv.nodes = mGraphNode;
-    memset(mGraphNode, 0, sizeof(graph_node) * MAX_GRAPH_NODES);
+    (void)memset(mGraphNode, 0, sizeof(graph_node) * MAX_GRAPH_NODES);
 
     for (const auto& node : graph.nodes) {
         graph_node& drvNode = graphDrv.nodes[node.nodeCtxId];
@@ -113,7 +113,7 @@ int PSysDevice::addGraph(const PSysGraph& graph) {
         MEMCPY_S(&drvNode.profiles[0].reb, sizeof(drvNode.profiles[0].reb), &node.bitmaps.reb,
                  sizeof(node.bitmaps.reb));
 
-        uint8_t termIndex = 0;
+        uint8_t termIndex = 0U;
         for (const auto& term : node.terminalConfig) {
             const uint8_t termId = term.first;
             drvNode.terminals[termIndex].term_id = termId;
@@ -125,7 +125,7 @@ int PSysDevice::addGraph(const PSysGraph& graph) {
         graphDrv.num_nodes++;
     }
 
-    uint8_t linkIndex = 0;
+    uint8_t linkIndex = 0U;
     for (const auto& link : graph.links) {
         graph_link& drvLink = graphDrv.links[linkIndex];
 
@@ -144,7 +144,7 @@ int PSysDevice::addGraph(const PSysGraph& graph) {
     }
 
     int ret = ::ioctl(mFd, static_cast<int>(IPU_IOC_GRAPH_OPEN), &graphDrv);
-    CheckAndLogError(ret != 0 || graphDrv.graph_id == INVALID_GRAPH_ID, INVALID_OPERATION,
+    CheckAndLogError((ret != 0) || (graphDrv.graph_id == INVALID_GRAPH_ID), INVALID_OPERATION,
                      "Failed to open graph %s", strerror(errno));
 
     mGraphId = graphDrv.graph_id;
@@ -174,8 +174,9 @@ int PSysDevice::addTask(const PSysTask& task) {
     taskData.node_ctx_id = task.nodeCtxId;
     taskData.frame_id = mFrameId[task.nodeCtxId];
     taskData.task_buffers = mTaskBuffers[task.nodeCtxId];
-    memset(mTaskBuffers[task.nodeCtxId], 0, sizeof(ipu_psys_term_buffers) * MAX_GRAPH_TERMINALS);
-    taskData.term_buf_count = 0;
+    (void)memset(mTaskBuffers[task.nodeCtxId], 0,
+                 sizeof(ipu_psys_term_buffers) * MAX_GRAPH_TERMINALS);
+    taskData.term_buf_count = 0U;
 
     for (const auto& item : task.terminalBuffers) {
         taskData.task_buffers[taskData.term_buf_count].term_id = item.first;
@@ -185,20 +186,20 @@ int PSysDevice::addTask(const PSysTask& task) {
 
     {
         std::lock_guard<std::mutex> l(mDataLock);
-        uint8_t idx = taskData.frame_id % MAX_TASK_NUM;
+        const uint8_t idx = taskData.frame_id % MAX_TASK_NUM;
         CheckWarningNoReturn(mFrameIdToSeqMap[task.nodeCtxId][idx] >= 0,
                              "context %d sequence %lld not done", task.nodeCtxId,
                              mFrameIdToSeqMap[task.nodeCtxId][idx]);
 
         mFrameIdToSeqMap[task.nodeCtxId][idx] = task.sequence;
         if (mFrameId[task.nodeCtxId] >= MAX_DRV_FRAME_ID) {
-            mFrameId[task.nodeCtxId] = 0;
+            mFrameId[task.nodeCtxId] = 0U;
         } else {
             ++mFrameId[task.nodeCtxId];
         }
     }
 
-    int ret = ioctl(mFd, static_cast<int>(IPU_IOC_TASK_REQUEST), &taskData);
+    const int ret = ioctl(mFd, static_cast<int>(IPU_IOC_TASK_REQUEST), &taskData);
     CheckAndLogError(ret != 0, INVALID_OPERATION, "Failed to add task %s", strerror(errno));
 
     return OK;
@@ -257,7 +258,9 @@ int PSysDevice::registerBuffer(TerminalBuffer* buf) {
     CheckAndLogError(!buf, INVALID_OPERATION, "buf is nullptr");
 
     // If already registered, just return
-    if (getPsysBufMap(buf)) return OK;
+    if (getPsysBufMap(buf)) {
+        return OK;
+    }
 
     int ret = OK;
     buf->psysBuf.len = buf->size;
@@ -284,11 +287,11 @@ int PSysDevice::registerBuffer(TerminalBuffer* buf) {
         buf->psysBuf.flags |= IPU_BUFFER_FLAG_NO_FLUSH;
     }
 
-    buf->psysBuf.data_offset = 0;
+    buf->psysBuf.data_offset = 0U;
     buf->psysBuf.bytes_used = buf->psysBuf.len;
 
     ret = ioctl(mFd, static_cast<int>(IPU_IOC_MAPBUF),
-                reinterpret_cast<void*>((intptr_t)buf->psysBuf.base.fd));
+                reinterpret_cast<void*>(static_cast<intptr_t>(buf->psysBuf.base.fd)));
     CheckAndLogError(ret != 0, INVALID_OPERATION, "Failed to map buffer %s", strerror(errno));
 
     // Save PSYS buf
@@ -310,13 +313,13 @@ void PSysDevice::unregisterBuffer(TerminalBuffer* buf) {
         return;
     }
 
-    if ((buf->flags & IPU_BUFFER_FLAG_DMA_HANDLE) && !buf->isExtDmaBuf) {
+    if ((buf->flags & IPU_BUFFER_FLAG_DMA_HANDLE) && (!buf->isExtDmaBuf)) {
         LOGW("cannot unmap buffer fd %d", buf->psysBuf.base.fd);
         return;
     }
 
     int ret = ioctl(mFd, static_cast<int>(IPU_IOC_UNMAPBUF),
-                    reinterpret_cast<void*>((intptr_t)buf->psysBuf.base.fd));
+                    reinterpret_cast<void*>(static_cast<intptr_t>(buf->psysBuf.base.fd)));
     if (ret != 0) {
         LOGW("Failed to unmap buffer %s", strerror(errno));
     }
@@ -345,7 +348,7 @@ int PSysDevice::poll(short events, int timeout)
 
 void PSysDevice::handleEvent(const ipu_psys_event& event) {
     int64_t sequence = -1;
-    uint8_t idx = event.frame_id % MAX_TASK_NUM;;
+    const uint8_t idx = event.frame_id % MAX_TASK_NUM;;
 
     {
         std::lock_guard<std::mutex> l(mDataLock);
@@ -374,7 +377,9 @@ void PSysDevice::handleEvent(const ipu_psys_event& event) {
 int PSysDevice::poll() {
     int ret = poll(POLLIN | POLLHUP | POLLERR, kEventTimeout * SLOWLY_MULTIPLIER);
 
-    if (mExitPending) return NO_INIT;
+    if (mExitPending) {
+        return NO_INIT;
+    }
 
     if (ret == POLLIN) {
         ipu_psys_event event;

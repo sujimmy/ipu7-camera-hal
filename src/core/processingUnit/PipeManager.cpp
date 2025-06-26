@@ -66,7 +66,8 @@ int PipeManager::configure(const std::map<uuid, stream_t>& inputInfo,
 
     status_t ret = OK;
     mGraphConfig = CameraContext::getInstance(mCameraId)->getGraphConfig(mConfigMode);
-    CheckAndLogError(!mGraphConfig, UNKNOWN_ERROR, "Failed to get GraphConfig in PipeManager!");
+    CheckAndLogError(mGraphConfig == nullptr, UNKNOWN_ERROR,
+                     "Failed to get GraphConfig in PipeManager!");
 
     std::vector<int32_t> activeStreamIds;
     ret = mGraphConfig->graphGetStreamIds(activeStreamIds);
@@ -79,7 +80,7 @@ int PipeManager::configure(const std::map<uuid, stream_t>& inputInfo,
     ret = createPipeLines(activeStreamIds);
     CheckAndLogError(ret != OK, ret, "@%s, create pipelines failed", __func__);
 
-    if (yuvInputInfo && !mYuvPipeLine.empty()) {
+    if ((yuvInputInfo != nullptr) && (!mYuvPipeLine.empty())) {
         ret = bindYuvReprocessingPort(*yuvInputInfo);
     }
 
@@ -114,16 +115,18 @@ int PipeManager::analyzeConnections() {
     // Get external connections
     std::map<int32_t, std::vector<IGraphType::PipelineConnection>> conVectors;
     for (auto& pipeLine : mPipeLines) {
-        int streamId = pipeLine.first;
-        auto& conVectors = pipeLine.second->getEdgeConnections();
+        const int streamId = pipeLine.first;
+        const auto& conVectors = pipeLine.second->getEdgeConnections();
 
         for (auto const& connection : conVectors) {
-            if (!connection.portFormatSettings.enabled || !connection.hasEdgePort) continue;
+            if ((connection.portFormatSettings.enabled == 0) || (!connection.hasEdgePort)) {
+                continue;
+            }
 
-            if (!connection.connectionConfig.mSourceStage) {
+            if (connection.connectionConfig.mSourceStage == 0U) {
                 // In edge port: no source stage
                 inputEdgePorts.push_back(connection.connectionConfig.mSinkTerminal);
-            } else if (connection.stream) {
+            } else if (connection.stream != nullptr) {
                 // Out edge: has user stream
                 outputEdgePorts.push_back(
                     std::make_pair(streamId, connection.connectionConfig.mSourceTerminal));
@@ -165,19 +168,21 @@ int PipeManager::bindExternalPorts(
         for (auto& portInfo : inputInfo) {
             // Check if input port of pipeline is external input
             bool isInEdge = false;
-            for (auto port : inputEdgePorts) {
+            for (const auto port : inputEdgePorts) {
                 if (portInfo.first == port) {
                     isInEdge = true;
                     break;
                 }
             }
-            if (!isInEdge) continue;
+            if (!isInEdge) {
+                continue;
+            }
 
             // Link to external input
             bool bind = false;
             auto frameInfo = inputFrameInfo.begin();
             while (frameInfo != inputFrameInfo.end()) {
-                bool match = isSameStreamConfig(portInfo.second, frameInfo->second, false);
+                const bool match = isSameStreamConfig(portInfo.second, frameInfo->second, false);
                 if (match) {
                     PortMapping portMap;
                     portMap.mPipeStage = pipeLine.second->getInput();
@@ -209,13 +214,17 @@ int PipeManager::bindExternalPorts(
                 bool isOutEdge = false;
                 // Check if output port of pipeline is external output
                 for (auto pair : outputEdgePorts) {
-                    if (pair.first != static_cast<uint32_t>(streamId)) continue;
+                    if (pair.first != static_cast<uint32_t>(streamId)) {
+                        continue;
+                    }
                     if (portInfo.first == pair.second) {
                         isOutEdge = true;
                         break;
                     }
                 }
-                if (!isOutEdge) continue;
+                if (!isOutEdge) {
+                    continue;
+                }
 
                 // Link to external input
                 bool bound = false;
@@ -313,28 +322,33 @@ int PipeManager::bindYuvReprocessingPort(const std::map<uuid, stream_t>& yuvInpu
 
 bool PipeManager::isSameStreamConfig(const stream_t& internal, const stream_t& external,
                                      bool checkStreamId) const {
-    int internalStride = CameraUtils::getStride(internal.format, internal.width);
-    int externalStride = CameraUtils::getStride(external.format, external.width);
+    const int internalStride = CameraUtils::getStride(internal.format, internal.width);
+    const int externalStride = CameraUtils::getStride(external.format, external.width);
 
     LOG1("%s: internal: %s(%dx%d: %d)(id %d), external: %s(%dx%d: %d) (id %d) usage:%d", __func__,
          CameraUtils::format2string(internal.format).c_str(), internal.width, internal.height,
          internalStride, internal.id, CameraUtils::format2string(external.format).c_str(),
          external.width, external.height, externalStride, external.id, external.usage);
 
-    if (checkStreamId) return internal.id == external.id;
+    if (checkStreamId) {
+        return internal.id == external.id;
+    }
 
     /*
      * WA: PG accept GRBG format but actual input data is of RGGB format,
      *     PG use its kernel to crop to GRBG
      */
-    if ((internal.format == V4L2_PIX_FMT_SGRBG10 || internal.format == V4L2_PIX_FMT_SGRBG12) &&
-        (external.format == V4L2_PIX_FMT_SRGGB10 || external.format == V4L2_PIX_FMT_SRGGB12))
+    if (((internal.format == V4L2_PIX_FMT_SGRBG10) || (internal.format == V4L2_PIX_FMT_SGRBG12)) &&
+        ((external.format == V4L2_PIX_FMT_SRGGB10) || (external.format == V4L2_PIX_FMT_SRGGB12))) {
         return true;
+    }
 
-    bool sameHeight =
-        internal.height == external.height || internal.height == ALIGN_32(external.height);
-    if (internal.format == external.format && sameHeight &&
-        (internal.width == external.width || internalStride == externalStride)) return true;
+    const bool sameHeight =
+        (internal.height == external.height) || (internal.height == ALIGN_32(external.height));
+    if ((internal.format == external.format) && sameHeight &&
+        ((internal.width == external.width) || (internalStride == externalStride))) {
+        return true;
+    }
 
     return false;
 }
@@ -351,7 +365,8 @@ int PipeManager::createPipeLines(const std::vector<int32_t>& activeStreamIds) {
         }
         mPipeLines[id] =
             std::shared_ptr<PipeLine>(new PipeLine(mCameraId, id, mGraphConfig, mScheduler));
-        mPipeLines[id]->configure(mTuningMode, mPacAdaptor);
+        const int ret = mPipeLines[id]->configure(mTuningMode, mPacAdaptor);
+        CheckAndLogError(ret != OK, ret, "Failed to configure pipeline");
         mPipeLines[id]->registerListener(EVENT_PSYS_STATS_BUF_READY, this);
         mPipeLines[id]->registerListener(EVENT_PSYS_STATS_SIS_BUF_READY, this);
         mPipeLines[id]->registerListener(EVENT_STAGE_BUF_READY, this);
@@ -376,8 +391,9 @@ void PipeManager::releasePipeLines() {
 
 void PipeManager::setControl(int64_t sequence, const PipeControl& control) {
     for (auto pipeline : mPipeLines) {
-        if (control.find(pipeline.first) != control.end())
+        if (control.find(pipeline.first) != control.end()) {
             pipeline.second->setControl(sequence, control.at(pipeline.first));
+        }
     }
 }
 
@@ -389,7 +405,9 @@ void PipeManager::addTask(PipeTaskData taskParam) {
     task.mTaskData = taskParam;
     // Count how many valid output buffers need to be returned.
     for (auto& outBuf : taskParam.mOutputBuffers) {
-        if (outBuf.second) task.mNumOfValidBuffers++;
+        if (outBuf.second != nullptr) {
+            task.mNumOfValidBuffers++;
+        }
     }
 
     uuid port = mDefaultMainInputPort;
@@ -397,7 +415,7 @@ void PipeManager::addTask(PipeTaskData taskParam) {
         port = YUV_REPROCESSING_INPUT_PORT_ID;
     }
 
-    int64_t sequence = taskParam.mInputBuffers.at(port)->getSequence();
+    const int64_t sequence = taskParam.mInputBuffers.at(port)->getSequence();
     LOG2("%s:<id%d:seq%ld> push task with %d output buffers", __func__, mCameraId,
          sequence, task.mNumOfValidBuffers);
     {
@@ -411,13 +429,13 @@ void PipeManager::addTask(PipeTaskData taskParam) {
     } else {
         // Normally run AIC before execute psys
         std::vector<int32_t> activeStreamIds;
-        getActiveStreamIds(taskParam, &activeStreamIds);
+        (void)getActiveStreamIds(taskParam, &activeStreamIds);
         LOG2("%s, <seq%ld> run AIC before execute psys, active stream Ids: %zu",
              __func__, sequence, activeStreamIds.size());
 
         TRACE_LOG_PROCESS("run PAC", __func__, MAKE_COLOR(sequence), sequence);
-        for (auto& id : activeStreamIds) {
-            prepareIpuParams(&taskParam.mIspSettings, sequence, id);
+        for (const auto& id : activeStreamIds) {
+            (void)prepareIpuParams(&taskParam.mIspSettings, sequence, id);
         }
         queueBuffers(taskParam, mInputMaps, mOutputMaps, mDefaultMainInputPort);
     }
@@ -429,17 +447,20 @@ int PipeManager::getActiveStreamIds(const PipeTaskData& taskData,
 
     // According to the output port to filter the valid executor stream Ids, and then run AIC
     for (auto& outputFrame : taskData.mOutputBuffers) {
-        if (outputFrame.second.get() == nullptr) continue;
+        if (outputFrame.second.get() == nullptr) {
+            continue;
+        }
 
         CheckAndLogError(
             mOutputPortToStreamId.find(outputFrame.first) == mOutputPortToStreamId.end(),
             UNKNOWN_ERROR, "%s, failed to find streamIds for output port: %x", __func__,
             outputFrame.first);
 
-        int32_t streamId = mOutputPortToStreamId[outputFrame.first];
+        const int32_t streamId = mOutputPortToStreamId[outputFrame.first];
         if (std::find(activeStreamIds->begin(), activeStreamIds->end(), streamId) ==
-            activeStreamIds->end())
+            activeStreamIds->end()) {
             activeStreamIds->push_back(streamId);
+        }
     }
 
     return OK;
@@ -452,7 +473,7 @@ int PipeManager::prepareIpuParams(IspSettings* settings, int64_t sequence, int s
     }
 
     PtzInfo ptz;
-    bool zoomChanged = updateZoomSettings(settings->zoom, &ptz);
+    const bool zoomChanged = updateZoomSettings(settings->zoom, &ptz);
     if (zoomChanged) {
         LOG2("<seq%ld>Update graph for ptz", sequence);
         LOG3("zoom region: (%d, %d, %d, %d), ratio %f", settings->zoom.left, settings->zoom.right,
@@ -460,7 +481,8 @@ int PipeManager::prepareIpuParams(IspSettings* settings, int64_t sequence, int s
         LOG3("convert to ptz: start point (%f, %f), region size (%f, %f), ratio %f, centered? %d",
              ptz.x, ptz.y, ptz.xSize, ptz.ySize, ptz.zoomRatio, ptz.zoomCentered);
         bool isKeyResChanged = false;
-        status_t status = mGraphConfig->updateGraphSettingForPtz(ptz, mCurPtz, &isKeyResChanged);
+        const status_t status =
+            mGraphConfig->updateGraphSettingForPtz(ptz, mCurPtz, &isKeyResChanged);
         if (status == OK ) {
             for (auto& pipe : mPipeLines) {
                 pipe.second->updateConfigurationSettingForPtz(isKeyResChanged);
@@ -470,7 +492,7 @@ int PipeManager::prepareIpuParams(IspSettings* settings, int64_t sequence, int s
         }
     }
 
-    int ret = mPacAdaptor->runAIC(settings, sequence, streamId);
+    const int ret = mPacAdaptor->runAIC(settings, sequence, streamId);
     CheckAndLogError(ret != OK, UNKNOWN_ERROR, "%s, <seq%ld> Failed to run AIC: streamId: %d",
                      __func__, sequence, streamId);
 
@@ -478,11 +500,13 @@ int PipeManager::prepareIpuParams(IspSettings* settings, int64_t sequence, int s
 }
 
 bool PipeManager::updateZoomSettings(const camera_zoom_region_t& zoom, PtzInfo* ptz) {
-    if (!mActivePixels.width || !mActivePixels.height) return false;
+    if ((mActivePixels.width == 0) || (mActivePixels.height == 0)) {
+        return false;
+    }
 
 #define RATIO_TOL 0.005
     // Check centered zoom (user zoom ratio > 1.0, don't support zoom ratio < 1.0)
-    bool ratioChanged = fabs(zoom.ratio - mZoom.ratio) > RATIO_TOL ? true : false;
+    const bool ratioChanged = fabs(zoom.ratio - mZoom.ratio) > RATIO_TOL ? true : false;
     if (zoom.ratio - 1.0 > RATIO_TOL) {
         ptz->zoomCentered = true;
         ptz->zoomRatio = 1.0 / zoom.ratio;
@@ -492,29 +516,29 @@ bool PipeManager::updateZoomSettings(const camera_zoom_region_t& zoom, PtzInfo* 
     }
 
     // Handle crop region setting when user zoom ratio = 1.0
-    if (zoom.left == mZoom.left && zoom.right == mZoom.right &&
-        zoom.top == mZoom.top && zoom.bottom == mZoom.bottom && !ratioChanged) {
+    if ((zoom.left == mZoom.left) && (zoom.right == mZoom.right) &&
+        (zoom.top == mZoom.top) && (zoom.bottom == mZoom.bottom) && (!ratioChanged)) {
         return false;
     }
 
     // Support region with same aspect ratio as sensor only. Re-calc appropriate region
-    if (zoom.left >= 0 && zoom.right > zoom.left &&
-        zoom.top >= 0 && zoom.bottom > zoom.top &&
-        zoom.right <= mActivePixels.width && zoom.bottom <= mActivePixels.height) {
+    if ((zoom.left >= 0) && (zoom.right > zoom.left) &&
+        (zoom.top >= 0) && (zoom.bottom > zoom.top) &&
+        (zoom.right <= mActivePixels.width) && (zoom.bottom <= mActivePixels.height)) {
         // Calc user region
-        float left   = (float)zoom.left / mActivePixels.width;
-        float right  = (float)zoom.right / mActivePixels.width;
-        float top    = (float)zoom.top / mActivePixels.height;
-        float bottom = (float)zoom.bottom / mActivePixels.height;
-        float xSize  = right - left;
-        float ySize  = bottom - top;
+        const float left   = static_cast<float>(zoom.left) / mActivePixels.width;
+        const float right  = static_cast<float>(zoom.right) / mActivePixels.width;
+        const float top    = static_cast<float>(zoom.top) / mActivePixels.height;
+        const float bottom = static_cast<float>(zoom.bottom) / mActivePixels.height;
+        const float xSize  = right - left;
+        const float ySize  = bottom - top;
 
         ptz->x = left;
         ptz->y = top;
         ptz->xSize = xSize;
         ptz->ySize = ySize;
-        ptz->zoomCentered = fabs(left + right - 1.0) < RATIO_TOL ||
-                            fabs(top + bottom - 1.0) < RATIO_TOL;
+        ptz->zoomCentered = (fabs(left + right - 1.0) < RATIO_TOL) ||
+                            (fabs(top + bottom - 1.0) < RATIO_TOL);
         /*
          * Only support same aspect ratio as active array crrently, extend region if need
          * original region 16:9, active 4:3: increase h
@@ -541,19 +565,29 @@ bool PipeManager::updateZoomSettings(const camera_zoom_region_t& zoom, PtzInfo* 
             ptz->y -= (ptz->xSize - ptz->ySize) / 2;
             ptz->ySize = xSize;
             // Check the boundry
-            if (ptz->y < 0.0) ptz->y = 0.0;
-            else if ((ptz->y + ptz->ySize) > 1.0) ptz->y = 1.0 - ptz->ySize;
+            if (ptz->y < 0.0) {
+                ptz->y = 0.0;
+            } else {
+                if ((ptz->y + ptz->ySize) > 1.0) {
+                    ptz->y = 1.0 - ptz->ySize;
+                }
+            }
         } else if (ptz->xSize < ptz->ySize) {
             // Increase w
             ptz->x -= (ptz->ySize - ptz->xSize) / 2;
             ptz->xSize = ySize;
             // Check the boundry
-            if (ptz->x < 0.0) ptz->x = 0.0;
-            else if ((ptz->x + ptz->xSize) > 1.0) ptz->x = 1.0 - ptz->xSize;
+            if (ptz->x < 0.0) {
+                ptz->x = 0.0;
+            } else {
+                if ((ptz->x + ptz->xSize) > 1.0) {
+                    ptz->x = 1.0 - ptz->xSize;
+                }
+            }
         }
 
-        // Calc zoom ratio according to crop region
-        ptz->zoomRatio = 1.0 / ptz->xSize;
+        // ptz zoom ratio is percentage of crop region
+        ptz->zoomRatio = ptz->xSize;
         return true;
     }
 
@@ -566,7 +600,7 @@ void PipeManager::queueBuffers(const PipeTaskData& task, const std::vector<PortM
     LOG2("<id%d>@%s", mCameraId, __func__);
 
     std::vector<int32_t> activeStreamIds;
-    getActiveStreamIds(task, &activeStreamIds);
+    (void)getActiveStreamIds(task, &activeStreamIds);
 
     int64_t sequence = task.mInputBuffers.at(inputPort)->getSequence();
     // Provide the output buffers for the output edge.
@@ -574,8 +608,9 @@ void PipeManager::queueBuffers(const PipeTaskData& task, const std::vector<PortM
         for (auto& outputFrame : task.mOutputBuffers) {
             if (outputMap.mExternalPort == outputFrame.first) {
                 if (std::find(activeStreamIds.begin(), activeStreamIds.end(),
-                    outputMap.mStreamId) == activeStreamIds.end())
+                    outputMap.mStreamId) == activeStreamIds.end()) {
                     continue;
+                }
 
                 LOG2("<seq%ld>queue output for stream:%d stage uuid: %u, external:%d", sequence,
                      outputMap.mStreamId, outputMap.mStagePort, outputFrame.first);
@@ -589,8 +624,9 @@ void PipeManager::queueBuffers(const PipeTaskData& task, const std::vector<PortM
         for (auto& inputFrame : task.mInputBuffers) {
             if (inputMap.mExternalPort == inputFrame.first) {
                 if (std::find(activeStreamIds.begin(), activeStreamIds.end(),
-                    inputMap.mStreamId) == activeStreamIds.end())
+                    inputMap.mStreamId) == activeStreamIds.end()) {
                     continue;
+                }
 
                 LOG2("<seq%ld>queue input buffer for stream:%d stage uuid: %u, external:%d",
                      sequence, inputMap.mStreamId, inputMap.mStagePort, inputFrame.first);
@@ -625,7 +661,9 @@ void PipeManager::onMetadataReady(int64_t sequence) {
  * ProcessingUnit.
  */
 int PipeManager::onBufferDone(uuid port, const std::shared_ptr<CameraBuffer>& buffer) {
-    if (!buffer) return OK;  // No need to handle if the buffer is nullptr.
+    if (buffer == nullptr) {
+        return OK;  // No need to handle if the buffer is nullptr.
+    }
 
     int64_t sequence = buffer->getSequence();
     LOG2("<id%d:seq%ld>@%s buffer=%p, port %u", mCameraId, sequence, __func__,
@@ -649,7 +687,9 @@ int PipeManager::onBufferDone(uuid port, const std::shared_ptr<CameraBuffer>& bu
             ** to user buffer or none edge port connect to post stage. all these ports will send
             ** buffer ready event, should ignore the none edge port event
             */
-            if (outputPort == INVALID_PORT) continue;
+            if (outputPort == INVALID_PORT) {
+                continue;
+            }
 
             task.mNumOfReturnedBuffers++;
             if (task.mNumOfReturnedBuffers >= task.mNumOfValidBuffers) {
@@ -666,7 +706,9 @@ int PipeManager::onBufferDone(uuid port, const std::shared_ptr<CameraBuffer>& bu
         }
     }
 
-    if (outputPort == INVALID_PORT) return OK;
+    if (outputPort == INVALID_PORT) {
+        return OK;
+    }
 
     if (mPMCallback) {
         // Return buffer
@@ -700,7 +742,7 @@ void PipeManager::handleEvent(EventData eventData) {
             onMetadataReady(eventData.data.statsReady.sequence);
             break;
         case EVENT_STAGE_BUF_READY:
-            onBufferDone(eventData.data.stageBufReady.uuid, eventData.buffer);
+            (void)onBufferDone(eventData.data.stageBufReady.uuid, eventData.buffer);
             break;
         default:
             break;

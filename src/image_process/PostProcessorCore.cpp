@@ -66,7 +66,9 @@ status_t PostProcessorCore::createProcessor() {
 
         int memoryType = processor->getMemoryType();
         // If DMA buffer is preferred, use DMA buffer for post-processing
-        if (memoryType == V4L2_MEMORY_DMABUF) mMemoryType = V4L2_MEMORY_DMABUF;
+        if (memoryType == V4L2_MEMORY_DMABUF) {
+            mMemoryType = V4L2_MEMORY_DMABUF;
+        }
 
         mProcessorVector.push_back(processor);
     }
@@ -76,7 +78,9 @@ status_t PostProcessorCore::createProcessor() {
 }
 
 status_t PostProcessorCore::configure(const std::vector<PostProcessInfo>& processorOrder) {
-    if (processorOrder.empty()) return OK;
+    if (processorOrder.empty()) {
+        return OK;
+    }
 
     mProcessorsInfo = processorOrder;
     int ret = createProcessor();
@@ -90,8 +94,9 @@ status_t PostProcessorCore::configure(const std::vector<PostProcessInfo>& proces
 
 bool PostProcessorCore::isBypassed(int64_t sequence) {
     for (auto& processor : mProcessorVector) {
-        if (!processor->isBypassed(sequence))
+        if (!processor->isBypassed(sequence)) {
             return false;
+        }
     }
     return true;
 }
@@ -126,8 +131,9 @@ status_t PostProcessorCore::doPostProcessing(const shared_ptr<CameraBuffer>& inB
     shared_ptr<CameraBuffer> output = nullptr;
     std::vector<std::shared_ptr<PostProcessorBase>> processors;
     for (size_t i = 0; i < mProcessorVector.size(); i++) {
-        if (!mProcessorVector[i]->isBypassed(inBuf->getSequence()))
+        if (!mProcessorVector[i]->isBypassed(inBuf->getSequence())) {
             processors.push_back(mProcessorVector[i]);
+        }
     }
     if (processors.empty()) {
         MEMCPY_S(outBuf->getBufferAddr(), outBuf->getBufferSize(),

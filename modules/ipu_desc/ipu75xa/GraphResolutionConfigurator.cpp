@@ -158,7 +158,6 @@ StaticGraphStatus GraphResolutionConfigurator::getZoomKeyResolutionIndex(ZoomKey
     return StaticGraphStatus::SG_OK;
 }
 
-#endif
 // This function receives a static graph and updates kernels resolution info and resolution history to
 // perform the required crop and scaling for the give roi
 // Expected changes in graph:
@@ -174,7 +173,6 @@ StaticGraphStatus GraphResolutionConfigurator::getZoomKeyResolutionIndex(ZoomKey
 StaticGraphStatus GraphResolutionConfigurator::updateStaticGraphConfig(const RegionOfInterest& roi, const RegionOfInterest& prevRoi,
     bool isCenteredZoom, bool prevIsCenteredZoom, bool& isKeyResolutionChanged)
 {
-#if SUPPORT_KEY_RESOLUTIONS == 1
     if (_staticGraph == nullptr)
     {
         return StaticGraphStatus::SG_ERROR;
@@ -277,20 +275,9 @@ StaticGraphStatus GraphResolutionConfigurator::updateStaticGraphConfig(const Reg
     // Step #2 Dynamic update according to this ROI
     //
     return updateRunKernelOfScalers(sensorRoi);
-#else
-    // This version is not supported when key resolutions are not used (NVL and up)
-    // Will be removed once driver will use new API for Ipu8GraphResolutionConfigurator
-    (void*)&roi;
-    (void*)&prevRoi;
-    (void*)&isCenteredZoom;
-    (void*)&prevIsCenteredZoom;
-    (void*)&isKeyResolutionChanged;
-
-     return StaticGraphStatus::SG_ERROR;
-#endif
-
 }
 
+#endif
 // This function translates ROI from factors (as given by user) to sensor resolution (as required by resolution Configurator)
 // There are 2 modes of work -
 // if userRoi.fromInput is true it means zoomFactor panFactor and tiltFactor are relative to sensor FOV
@@ -611,7 +598,7 @@ StaticGraphStatus GraphResolutionConfigurator::updateRunKernelUpScaler(StaticGra
         }
     }
 
-    // Now try to work with "sensor" resolution - take original ESPA crop's values
+    // Try to work with "sensor" resolution - take original ESPA crop's values
     // This is usually better when US output is not regular (and mp/dp cropping is used) and/or DS input is irregular (and ESPA is fixing A/R in original settings)
     // HSD 15016169206 and 15017041003 are 2 examples
     uint32_t newOutputWidth = outputWidth + _originalCropOfFinalCropper.left + _originalCropOfFinalCropper.right;
@@ -634,7 +621,33 @@ StaticGraphStatus GraphResolutionConfigurator::updateRunKernelUpScaler(StaticGra
     uint32_t stepW = stepW1;
     uint32_t stepH = stepH1;
 
-    if (stepW2 < stepW1)
+    if (stepW2 > 1 && stepW2 < stepW1)
+    {
+        stepW = stepW2;
+        stepH = stepH2;
+        upscalerActualOutputWidth = newOutputWidth;
+        upscalerActualOutputHeight = newOutputHeight;
+    }
+
+    // Now try to work with upscaler's direct output (remove espa cropping from output size)
+    newOutputWidth = runKernel->resolution_info->output_width;
+    newOutputHeight = runKernel->resolution_info->output_height;
+
+    stepW2 = 1;
+    stepH2 = 1;
+
+    for (stepH2 = 1; stepH2 < newOutputHeight / 2; stepH2++)
+    {
+        double horStep = static_cast<double>(stepH2) * newOutputWidth / 2 / newOutputHeight;
+        if (floor((horStep)) == horStep)
+        {
+            stepW2 = static_cast<uint32_t>(horStep) * 2;
+            break;
+        }
+    }
+
+    // Select which steps to take
+    if (stepW2 > 1 && stepW2 < stepW)
     {
         stepW = stepW2;
         stepH = stepH2;

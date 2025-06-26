@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2021 Intel Corporation
+ * Copyright (C) 2014-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef TRACE_H
+#define TRACE_H
 
 #include <errno.h>
 #include <inttypes.h>
@@ -39,8 +40,7 @@ namespace icamera {
 #define CAMERA_PRId32 "d"
 #define CAMERA_PRId64 "I64d"
 
-#define ATRACE_MESSAGE_LENGTH 1024
-#define PROPERTY_VALUE_MAX 1024
+#define ATRACE_MESSAGE_LENGTH 1024U
 /**
  * The ATRACE_TAG macro can be defined before including this header to trace
  * using one of the tags defined below.  It must be defined to one of the
@@ -54,11 +54,11 @@ namespace icamera {
  * in the tracing always being disabled.
  */
 #define ATRACE_TAG_NEVER 0          // This tag is never enabled.
-#define ATRACE_TAG_ALWAYS (1 << 0)  // This tag is always enabled.
+#define ATRACE_TAG_ALWAYS (1ULL << 0)  // This tag is always enabled.
 #define ATRACE_TAG_LAST ATRACE_TAG_ALWAYS
 
 // Reserved for initialization.
-#define ATRACE_TAG_NOT_READY (1LL << 63)
+#define ATRACE_TAG_NOT_READY (1ULL << 63)
 
 #define ATRACE_TAG_VALID_MASK ((ATRACE_TAG_LAST - 1) | ATRACE_TAG_LAST)
 
@@ -220,3 +220,5 @@ static inline void atrace_int64(uint64_t tag, const char* name, int64_t value) {
 // ASYNC_TRACE_E
 
 }  // namespace icamera
+
+#endif // TRACE_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef SW_IMAGE_PROCESSOR_H
+#define SW_IMAGE_PROCESSOR_H
 
 #include "IProcessingUnit.h"
 
@@ -44,3 +45,5 @@ private:
 };
 
 } //namespace icamera
+
+#endif // SW_IMAGE_PROCESSOR_H

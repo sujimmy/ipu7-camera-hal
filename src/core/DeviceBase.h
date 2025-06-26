@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef DEVICE_BASE_H
+#define DEVICE_BASE_H
 
 #include <atomic>
 #include <list>
@@ -173,3 +174,5 @@ class MainDevice : public DeviceBase {
     bool needQueueBack(std::shared_ptr<CameraBuffer> buffer);
 };
 }  // namespace icamera
+
+#endif // DEVICE_BASE_H

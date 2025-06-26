@@ -37,7 +37,9 @@ std::unordered_map<std::string, TraceEvent> CameraTrace::mRegisteredEvent;
 CameraTrace::CameraTrace(TraceEventType type, const char* eventName, uint32_t data1, uint32_t data2)
         : mEventType(type),
           mTraceEvent(0) {
-    if ((mTraceEvent = registerTraceEvent(eventName)) == 0) return;
+    if ((mTraceEvent = registerTraceEvent(eventName)) == 0) {
+        return;
+    }
 
     cameraTraceLog(data1, data2);
 }
@@ -46,7 +48,9 @@ CameraTrace::CameraTrace(TraceEventType type, const char* eventName, const char*
                          uint32_t data1, uint32_t data2)
         : mEventType(type),
           mTraceEvent(0) {
-    if ((mTraceEvent = registerTraceEvent(eventName)) == 0) return;
+    if ((mTraceEvent = registerTraceEvent(eventName)) == 0) {
+        return;
+    }
 
     cameraTraceLogString(paramStr, data1, data2);
 }
@@ -55,13 +59,17 @@ CameraTrace::CameraTrace(TraceEventType type, const char* eventName, const char*
                          void* pStruct, size_t structSize, uint32_t data1, uint32_t data2)
         : mEventType(type),
           mTraceEvent(0) {
-    if ((mTraceEvent = registerTraceEvent(eventName)) == 0) return;
+    if ((mTraceEvent = registerTraceEvent(eventName)) == 0) {
+        return;
+    }
 
     cameraTraceLogStructure(structName, structSize, pStruct, data1, data2);
 }
 
 CameraTrace::~CameraTrace() {
-    if (mTraceEvent == 0) return;
+    if (mTraceEvent == 0) {
+        return;
+    }
 
     // Don't support parameters in trace event end
     if (mEventType == TraceEventStart) {
@@ -89,7 +97,9 @@ void CameraTrace::enableEvent(TraceEvent event) {
 }
 
 TraceEvent CameraTrace::registerTraceEvent(const char* eventName) {
-    if (!isTraceEventEnabled()) return 0;
+    if (!isTraceEventEnabled()) {
+        return 0;
+    }
 
     if (mRegisteredEvent.find(eventName) != mRegisteredEvent.end())
         return mRegisteredEvent[eventName];
@@ -107,7 +117,9 @@ TraceEvent CameraTrace::registerTraceEvent(const char* eventName) {
 }
 
 unsigned int CameraTrace::isTraceEventEnabled(void) {
-    if (!initTraceFd()) return 0;
+    if (!initTraceFd()) {
+        return 0;
+    }
 
     unsigned int enable = 0;
     ioctl(mTraceFd, TRACE_IOC_ISENABLE, &enable);
@@ -121,8 +133,12 @@ bool CameraTrace::initTraceFd() {
         const char* fileName = "/dev/mmp";
         struct stat statBuf;
 
-        if (stat(fileName, &statBuf) != 0) return false;
-        if ((mTraceFd = open(fileName, O_RDONLY)) < 0) return false;
+        if (stat(fileName, &statBuf) != 0) {
+            return false;
+        }
+        if ((mTraceFd = open(fileName, O_RDONLY)) < 0) {
+            return false;
+        }
 
         mRegisteredEvent.clear();
     }
@@ -142,7 +158,9 @@ int CameraTrace::cameraTraceLog(unsigned int data1, unsigned int data2) {
 
 int CameraTrace::cameraTraceLogString(const char* paramStr, unsigned int data1,
                                       unsigned int data2) {
-    if (ioctl(mTraceFd, TRACE_IOC_TRYLOG, mTraceEvent) != 0) return -1;
+    if (ioctl(mTraceFd, TRACE_IOC_TRYLOG, mTraceEvent) != 0) {
+        return -1;
+    }
 
     TraceMetadataLog MetaLog = {};
     MetaLog.metaData.data1 = data1;
@@ -165,7 +183,9 @@ int CameraTrace::cameraTraceLogString(const char* paramStr, unsigned int data1,
 
 int CameraTrace::cameraTraceLogStructure(const char* structName, size_t structSize, void* pStruct,
                                          uint32_t data1, uint32_t data2) {
-    if (ioctl(mTraceFd, TRACE_IOC_TRYLOG, mTraceEvent) != 0) return -1;
+    if (ioctl(mTraceFd, TRACE_IOC_TRYLOG, mTraceEvent) != 0) {
+        return -1;
+    }
 
     TraceMetadataLog MetaLog = {};
     MetaLog.metaData.data1 = data1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ int SofSource::deinit() {
         return OK;
     }
 
-    int status = deinitDev();
+    const int status = deinitDev();
     mPollThread->wait();
     delete mPollThread;
     return status;
@@ -72,7 +72,7 @@ int SofSource::initDev() {
         LOG1("%s: found ISYS receiver subdevice %s", __func__, subDeviceNodeName.c_str());
     }
 
-    deinitDev();
+    (void)deinitDev();
 
     mIsysReceiverSubDev = V4l2DeviceFactory::getSubDev(mCameraId, subDeviceNodeName);
 
@@ -81,7 +81,7 @@ int SofSource::initDev() {
     /* The value of virtual channel id is 0, 1, 2, 3, ... if virtual channel supported */
     vcId = PlatformData::getVirtualChannelId(mCameraId);
     // VIRTUAL_CHANNEL_E
-    int status = mIsysReceiverSubDev->SubscribeEvent(V4L2_EVENT_FRAME_SYNC, vcId);
+    const int status = mIsysReceiverSubDev->SubscribeEvent(V4L2_EVENT_FRAME_SYNC, vcId);
     CheckAndLogError(status != OK, status, "Failed to subscribe sync event %d", vcId);
     LOG1("%s: Using SOF event id %d for sync", __func__, vcId);
 
@@ -89,14 +89,16 @@ int SofSource::initDev() {
 }
 
 int SofSource::deinitDev() {
-    if (mIsysReceiverSubDev == nullptr) return OK;
+    if (mIsysReceiverSubDev == nullptr) {
+        return OK;
+    }
 
     int vcId = 0;
     // VIRTUAL_CHANNEL_S
     /* The value of virtual channel sequence is 0, 1, 2, 3, ... if virtual channel supported. */
     vcId = PlatformData::getVirtualChannelId(mCameraId);
     // VIRTUAL_CHANNEL_E
-    int status = mIsysReceiverSubDev->UnsubscribeEvent(V4L2_EVENT_FRAME_SYNC, vcId);
+    const int status = mIsysReceiverSubDev->UnsubscribeEvent(V4L2_EVENT_FRAME_SYNC, vcId);
     if (status == OK) {
         LOG1("%s: Unsubscribe SOF event id %d done", __func__, vcId);
     } else {
@@ -152,10 +154,10 @@ int SofSource::poll() {
 
     int timeOutCount = pollTimeoutCount;
 
-    while (timeOutCount-- && ret == 0) {
+    while (((timeOutCount--) != 0) && (ret == 0)) {
         ret = poller.Poll(pollTimeout, POLLPRI | POLLIN | POLLOUT | POLLERR, &readyDevices);
 
-        if (ret == 0 && mExitPending) {
+        if ((ret == 0) && mExitPending) {
             // timed out
             LOGI("Time out or thread is not running, ret = %d", ret);
             return BAD_VALUE;

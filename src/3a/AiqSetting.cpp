@@ -42,7 +42,7 @@ void aiq_parameter_t::reset() {
     evShift = 0;
     evStep = {1, 3};
     evRange = {-6, 6};
-    fps = 30;
+    fps = 30.0;
     aeFpsRange = { 10.0, 60.0 };
     antibandingMode = ANTIBANDING_MODE_AUTO;
     cctRange = { 0, 0 };
@@ -70,13 +70,13 @@ void aiq_parameter_t::reset() {
     ldcMode = LDC_MODE_OFF;
     rscMode = RSC_MODE_OFF;
     flipMode = FLIP_MODE_NONE;
-    digitalZoomRatio = 1.0f;
+    digitalZoomRatio = 1.0F;
 
     lensPosition = 0;
-    lensMovementStartTimestamp = 0;
+    lensMovementStartTimestamp = 0U;
     makernoteMode = MAKERNOTE_MODE_OFF;
-    minFocusDistance = 0.0f;
-    focusDistance = 0.0f;
+    minFocusDistance = 0.0F;
+    focusDistance = 0.0F;
     shadingMode = SHADING_MODE_FAST;
     lensShadingMapMode = LENS_SHADING_MAP_MODE_OFF;
     lensShadingMapSize = {0, 0};
@@ -84,7 +84,7 @@ void aiq_parameter_t::reset() {
 
     tonemapMode = TONEMAP_MODE_FAST;
     tonemapPresetCurve = TONEMAP_PRESET_CURVE_SRGB;
-    tonemapGamma = 0.0f;
+    tonemapGamma = 0.0F;
     tonemapCurves.rSize = 0;
     tonemapCurves.gSize = 0;
     tonemapCurves.bSize = 0;
@@ -102,7 +102,9 @@ void aiq_parameter_t::reset() {
 }
 
 void aiq_parameter_t::dump() {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqSetting))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqSetting))) {
+        return;
+    }
 
     LOG3("Application parameters:");
     LOG3("3A mode: ae %d, awb %d, af %d, scene %d", aeMode, awbMode, afMode, sceneMode);
@@ -149,7 +151,7 @@ void aiq_parameter_t::dump() {
     LOG3("digitalZoomRatio %f", digitalZoomRatio);
 
     LOG3("custom AIC parameter length:%u", customAicParam.length);
-    if (customAicParam.length > 0) {
+    if (customAicParam.length > 0U) {
         LOG3("custom AIC parameter data:%s", customAicParam.data);
     }
     if (tuningMode != TUNING_MODE_MAX) {

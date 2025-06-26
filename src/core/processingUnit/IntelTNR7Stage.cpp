@@ -28,7 +28,9 @@
 namespace icamera {
 
 IntelTNR7Stage* IntelTNR7Stage::createIntelTNR(int cameraId) {
-    if (!PlatformData::isGpuTnrEnabled(cameraId)) return nullptr;
+    if (!PlatformData::isGpuTnrEnabled(cameraId)) {
+        return nullptr;
+    }
     return new IntelTNR7Stage(cameraId);
 }
 
@@ -149,7 +151,9 @@ int IntelTNR7Stage::getTotalGain(int64_t seq, float* totalGain) {
 }
 
 int IntelTNR7Stage::getTnrExtraFrameCount(int64_t seq) {
-    if (!mStillTnrTriggerInfo.num_gains) return 0;
+    if (!mStillTnrTriggerInfo.num_gains) {
+        return 0;
+    }
 
     float totalGain = 0.0f;
     int ret = getTotalGain(seq, &totalGain);
@@ -158,8 +162,9 @@ int IntelTNR7Stage::getTnrExtraFrameCount(int64_t seq) {
     int index = 0;
     for (int i = 1; i < mStillTnrTriggerInfo.num_gains; i++) {
         if (fabs(mStillTnrTriggerInfo.trigger_infos[i].gain - totalGain) <
-            fabs(mStillTnrTriggerInfo.trigger_infos[i - 1].gain - totalGain))
+            fabs(mStillTnrTriggerInfo.trigger_infos[i - 1].gain - totalGain)) {
             index = i;
+        }
     }
     /* the frame_count is total tnr7 frame count, already run 1 frame */
     LOG2("%s total gain %f with tnr frame count %d", __func__, totalGain,

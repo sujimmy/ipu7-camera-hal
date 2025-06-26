@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,13 +43,13 @@ int SwImageProcessor::start() {
     LOG1("<id%d>@%s", mCameraId, __func__);
     AutoMutex l(mBufferQueueLock);
 
-    int memType = mOutputFrameInfo.begin()->second.memType;
+    const int memType = mOutputFrameInfo.begin()->second.memType;
     CheckAndLogError(memType == V4L2_MEMORY_DMABUF, BAD_VALUE,
                      "@%s: DMABUF is not supported in SwProcessor as output", __func__);
 
-    int ret = allocProducerBuffers(mCameraId, MAX_BUFFER_COUNT);
+    int ret = BufferQueue::allocProducerBuffers(mCameraId, MAX_BUFFER_COUNT);
     CheckAndLogError(ret != OK, ret, "@%s: Allocate Buffer failed", __func__);
-    mThreadRunning = true;
+    IProcessingUnit::mThreadRunning = true;
     mProcessThread->start();
 
     return 0;
@@ -59,7 +59,7 @@ void SwImageProcessor::stop() {
     PERF_CAMERA_ATRACE();
     LOG1("<id%d>@%s", mCameraId, __func__);
 
-    mThreadRunning = false;
+    IProcessingUnit::mThreadRunning = false;
     mProcessThread->exit();
 
     {
@@ -70,7 +70,7 @@ void SwImageProcessor::stop() {
     mProcessThread->wait();
 
     // Thread is not running. It is safe to clear the Queue
-    clearBufferQueues();
+    BufferQueue::clearBufferQueues();
 }
 
 int SwImageProcessor::processNewFrame() {
@@ -84,12 +84,18 @@ int SwImageProcessor::processNewFrame() {
 
     {
         std::unique_lock<std::mutex> lock(mBufferQueueLock);
-        if (!mThreadRunning) return -1;  // Already stopped
+        if (!this->mThreadRunning) {
+            return -1;  // Already stopped
+        }
 
-        ret = waitFreeBuffersInQueue(lock, srcBuffers, dstBuffers);
+        ret = BufferQueue::waitFreeBuffersInQueue(lock, srcBuffers, dstBuffers);
 
-        if (!mThreadRunning) return -1;  // Already stopped
-        if (ret == NOT_ENOUGH_DATA) return OK;
+        if (!this->mThreadRunning) {
+            return -1;  // Already stopped
+        }
+        if (ret == NOT_ENOUGH_DATA) {
+            return OK;
+        }
 
         // Wait frame buffer time out should not involve thread exit.
         if (ret == TIMED_OUT) {
@@ -100,22 +106,22 @@ int SwImageProcessor::processNewFrame() {
         inputPort = srcBuffers.begin()->first;
         cInBuffer = srcBuffers[inputPort];
 
-        for (auto& output : mOutputQueue) {
+        for (auto& output : BufferQueue::mOutputQueue) {
             output.second.pop();
         }
 
-        for (auto& input : mInputQueue) {
+        for (auto& input : BufferQueue::mInputQueue) {
             input.second.pop();
         }
     }
-    CheckAndLogError(!cInBuffer, BAD_VALUE, "Invalid input buffer.");
+    CheckAndLogError(cInBuffer == nullptr, BAD_VALUE, "Invalid input buffer.");
 
     for (auto& dst : dstBuffers) {
-        uuid port = dst.first;
+        const uuid port = dst.first;
         std::shared_ptr<CameraBuffer> cOutBuffer = dst.second;
         // If the output buffer is nullptr, that means user doesn't request that buffer,
         // so it doesn't need to be handled here.
-        if (!cOutBuffer) {
+        if (cOutBuffer == nullptr) {
             continue;
         }
 
@@ -135,13 +141,13 @@ int SwImageProcessor::processNewFrame() {
         cOutBuffer->updateV4l2Buffer(*cInBuffer->getV4L2Buffer().Get());
 
         // Notify listener: No lock here: mBufferConsumerList will not updated in this state
-        for (auto& it : mBufferConsumerList) {
+        for (auto& it : BufferQueue::mBufferConsumerList) {
             it->onFrameAvailable(port, cOutBuffer);
         }
     }
 
     // Return the buffers to the producer
-    if (mBufferProducer) {
+    if (mBufferProducer != nullptr) {
         mBufferProducer->qbuf(inputPort, cInBuffer);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation
+ * Copyright (C) 2015-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,9 +55,9 @@ SensorHwCtrl::SensorHwCtrl(int cameraId, V4L2Subdevice* pixelArraySubdev,
      * be read directly from sensor. Then calculate it with HBlank.
      * fll will be in the same case.
      */
-    if (mPixelArraySubdev) {
+    if (mPixelArraySubdev != nullptr) {
         int llp = 0;
-        int status = mPixelArraySubdev->GetControl(V4L2_CID_LINE_LENGTH_PIXELS, &llp);
+        const int status = mPixelArraySubdev->GetControl(V4L2_CID_LINE_LENGTH_PIXELS, &llp);
         if (status == OK) {
             LOG1("%s, some sensors can get llp directly, don't calculate it", __func__);
             mCalculatingFrameDuration = false;
@@ -114,9 +114,9 @@ int SensorHwCtrl::configure() {
 
 int SensorHwCtrl::getActivePixelArraySize(int& width, int& height, int& pixelCode) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
 
-    int status = mPixelArraySubdev->GetPadFormat(0, &width, &height, &pixelCode);
+    const int status = mPixelArraySubdev->GetPadFormat(0, &width, &height, &pixelCode);
     mCropWidth = width;
     mCropHeight = height;
 
@@ -126,9 +126,9 @@ int SensorHwCtrl::getActivePixelArraySize(int& width, int& height, int& pixelCod
 
 int SensorHwCtrl::getPixelRate(int& pixelRate) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
 
-    int ret = mPixelArraySubdev->GetControl(V4L2_CID_PIXEL_RATE, &pixelRate);
+    const int ret = mPixelArraySubdev->GetControl(V4L2_CID_PIXEL_RATE, &pixelRate);
 
     LOG2("@%s, pixelRate:%d, ret:%d", __func__, pixelRate, ret);
 
@@ -137,7 +137,7 @@ int SensorHwCtrl::getPixelRate(int& pixelRate) {
 
 int SensorHwCtrl::setTestPatternMode(int32_t testPatternMode) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
 
     LOG2("@%s, testPatternMode: %d", __func__, testPatternMode);
     return mPixelArraySubdev->SetControl(V4L2_CID_TEST_PATTERN, testPatternMode);
@@ -146,7 +146,7 @@ int SensorHwCtrl::setTestPatternMode(int32_t testPatternMode) {
 int SensorHwCtrl::setExposure(const vector<int>& coarseExposures,
                               const vector<int>& fineExposures) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
     CheckAndLogError((coarseExposures.empty() || fineExposures.empty()), BAD_VALUE,
                      "No exposure data!");
 
@@ -225,7 +225,7 @@ int SensorHwCtrl::setDualExposuresDCGAndVS(const vector<int>& coarseExposures,
 
 int SensorHwCtrl::setAnalogGains(const vector<int>& analogGains) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
     CheckAndLogError(analogGains.empty(), BAD_VALUE, "No analog gain data!");
 
     // CRL_MODULE_S
@@ -245,7 +245,7 @@ int SensorHwCtrl::setAnalogGains(const vector<int>& analogGains) {
 
 int SensorHwCtrl::setDigitalGains(const vector<int>& digitalGains) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
     CheckAndLogError(digitalGains.empty(), BAD_VALUE, "No digital gain data!");
 
     // CRL_MODULE_S
@@ -258,7 +258,8 @@ int SensorHwCtrl::setDigitalGains(const vector<int>& digitalGains) {
         }
     }
 
-    if (mWdrMode && PlatformData::getSensorGainType(mCameraId) == ISP_DG_AND_SENSOR_DIRECT_AG) {
+    if ((mWdrMode != 0) &&
+        (PlatformData::getSensorGainType(mCameraId) == ISP_DG_AND_SENSOR_DIRECT_AG)) {
         LOG2("%s: WDR mode, skip sensor DG, all digital gain is passed to ISP", __func__);
     } else if (PlatformData::isUsingSensorDigitalGain(mCameraId)) {
         if (mPixelArraySubdev->SetControl(V4L2_CID_GAIN, digitalGains[0]) != OK) {
@@ -303,7 +304,7 @@ int SensorHwCtrl::setMultiAnalogGain(const vector<int>& analogGains) {
 
     if (analogGains.size() > 2) {
         LOG2("VS AG %d", analogGains[0]);
-        int status = mPixelArraySubdev->SetControl(CRL_CID_ANALOG_GAIN_VS, analogGains[0]);
+        const int status = mPixelArraySubdev->SetControl(CRL_CID_ANALOG_GAIN_VS, analogGains[0]);
         CheckAndLogError(status != OK, status, "failed to set VS AG %d", analogGains[0]);
 
         shortAg = analogGains[1];
@@ -336,7 +337,7 @@ int SensorHwCtrl::setConversionGain(const vector<int>& analogGains) {
     LOG2("very short AG %d, short AG %d, long AG %d, conversion value %d", analogGains[0],
          analogGains[1], analogGains[2], value);
 
-    int status = mPixelArraySubdev->SetControl(V4L2_CID_ANALOGUE_GAIN, value);
+    const int status = mPixelArraySubdev->SetControl(V4L2_CID_ANALOGUE_GAIN, value);
     CheckAndLogError(status != OK, status, "failed to set AG %d", value);
 
     return OK;
@@ -348,7 +349,7 @@ int SensorHwCtrl::setLineLengthPixels(int llp) {
     LOG2("@%s, llp:%d", __func__, llp);
 
     if (mCalculatingFrameDuration) {
-        int horzBlank = llp - mCropWidth;
+        const int horzBlank = llp - mCropWidth;
         if (mHorzBlank != horzBlank) {
             status = mPixelArraySubdev->SetControl(V4L2_CID_HBLANK, horzBlank);
         }
@@ -358,7 +359,7 @@ int SensorHwCtrl::setLineLengthPixels(int llp) {
         // CRL_MODULE_E
     }
 
-    CheckAndLogError(status != OK, status, "failed to set llp.");
+    CheckAndLogError(status != OK, status, "failed to set llp. (%d)", status);
 
     mHorzBlank = llp - mCropWidth;
     return status;
@@ -369,7 +370,7 @@ int SensorHwCtrl::setFrameLengthLines(int fll) {
     LOG2("@%s, fll:%d", __func__, fll);
 
     if (mCalculatingFrameDuration) {
-        int vertBlank = fll - mCropHeight;
+        const int vertBlank = fll - mCropHeight;
         if (mVertBlank != vertBlank) {
             status = mPixelArraySubdev->SetControl(V4L2_CID_VBLANK, vertBlank);
         }
@@ -381,7 +382,7 @@ int SensorHwCtrl::setFrameLengthLines(int fll) {
 
     mCurFll = fll;
 
-    CheckAndLogError(status != OK, status, "failed to set fll.");
+    CheckAndLogError(status != OK, status, "failed to set fll. (%d)", status);
 
     mVertBlank = fll - mCropHeight;
     return status;
@@ -390,20 +391,18 @@ int SensorHwCtrl::setFrameLengthLines(int fll) {
 int SensorHwCtrl::setFrameDuration(int llp, int fll) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
     CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
-
-    int status = OK;
     LOG2("@%s, llp:%d, fll:%d", __func__, llp, fll);
 
     /* only set them to driver when llp or fll is not 0 */
-    if (llp) {
-        status = setLineLengthPixels(llp);
+    if (llp != 0) {
+        (void)setLineLengthPixels(llp);   
     }
 
-    if (fll) {
-        status |= setFrameLengthLines(fll);
+    if (fll != 0) {
+        (void)setFrameLengthLines(fll);
     }
 
-    return status;
+    return OK;
 }
 
 int SensorHwCtrl::getLineLengthPixels(int& llp) {
@@ -458,7 +457,7 @@ int SensorHwCtrl::getFrameLengthLines(int& fll) {
 
 int SensorHwCtrl::getFrameDuration(int& llp, int& fll) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
 
     int status = getLineLengthPixels(llp);
 
@@ -488,7 +487,7 @@ int SensorHwCtrl::getVBlank(int& vblank) {
  */
 int SensorHwCtrl::getExposureRange(int& exposureMin, int& exposureMax, int& exposureStep) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
 
     v4l2_queryctrl exposure = {};
     exposure.id = V4L2_CID_EXPOSURE;
@@ -507,15 +506,15 @@ int SensorHwCtrl::getExposureRange(int& exposureMin, int& exposureMax, int& expo
 // HDR_FEATURE_S
 int SensorHwCtrl::setWdrMode(int mode) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mSensorOutputSubdev, NO_INIT, "sensor output sub device is not set");
+    CheckAndLogError(mSensorOutputSubdev == nullptr, NO_INIT, "sensor output sub device is not set");
 
     LOG2("%s WDR Mode=%d", __func__, mode);
     int ret = OK;
 
     mWdrMode = mode;
 
-    if (PlatformData::getSensorExposureType(mCameraId) != SENSOR_RELATIVE_MULTI_EXPOSURES &&
-        PlatformData::getSensorExposureType(mCameraId) != SENSOR_DUAL_EXPOSURES_DCG_AND_VS) {
+    if ((PlatformData::getSensorExposureType(mCameraId) != SENSOR_RELATIVE_MULTI_EXPOSURES) &&
+        (PlatformData::getSensorExposureType(mCameraId) != SENSOR_DUAL_EXPOSURES_DCG_AND_VS)) {
         LOG2("%s: set WDR mode", __func__);
         ret = mSensorOutputSubdev->SetControl(V4L2_CID_WDR_MODE, mode);
     }
@@ -525,7 +524,7 @@ int SensorHwCtrl::setWdrMode(int mode) {
 
 int SensorHwCtrl::setAWB(float r_per_g, float b_per_g) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mPixelArraySubdev, NO_INIT, "pixel array sub device is not set");
+    CheckAndLogError(mPixelArraySubdev == nullptr, NO_INIT, "pixel array sub device is not set");
 
     LOG2("%s set AWB r_per_g=%f, b_per_g=%f", __func__, r_per_g, b_per_g);
 
@@ -539,7 +538,7 @@ int SensorHwCtrl::setAWB(float r_per_g, float b_per_g) {
 // CRL_MODULE_S
 int SensorHwCtrl::setFrameRate(float fps) {
     HAL_TRACE_CALL(CAMERA_DEBUG_LOG_LEVEL2);
-    CheckAndLogError(!mSensorOutputSubdev, NO_INIT, "sensor output sub device is not set");
+    CheckAndLogError(mSensorOutputSubdev == nullptr, NO_INIT, "sensor output sub device is not set");
 
     struct v4l2_queryctrl query;
     CLEAR(query);

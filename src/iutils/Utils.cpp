@@ -58,7 +58,10 @@ int CameraUtils::getFileContent(const char* filename, char* buffer, int maxSize)
 }
 
 #define GET_FOURCC_FMT(a, b, c, d) \
-    ((uint32_t)(d) | ((uint32_t)(c) << 8) | ((uint32_t)(b) << 16) | ((uint32_t)(a) << 24))
+    ((static_cast<uint32_t>(d)) | \
+    ((static_cast<uint32_t>(c) << 8)) | \
+    ((static_cast<uint32_t>(b) << 16)) | \
+    ((static_cast<uint32_t>(a) << 24)))
 
 enum FormatType {
     FORMAT_RAW,
@@ -72,7 +75,7 @@ enum FormatType {
 };
 
 struct FormatInfo {
-    int v4l2Fmt;
+    uint32_t v4l2Fmt;
     int iaFourcc;
     const char* fullName;
     const char* shortName;
@@ -205,7 +208,7 @@ static const TuningModeStringInfo TuningModeStringInfoTable[] = {
 };
 
 const char* CameraUtils::tuningMode2String(TuningMode mode) {
-    int size = ARRAY_SIZE(TuningModeStringInfoTable);
+    const int size = ARRAY_SIZE(TuningModeStringInfoTable);
     for (int i = 0; i < size; i++) {
         if (TuningModeStringInfoTable[i].mode == mode) {
             return TuningModeStringInfoTable[i].str;
@@ -216,7 +219,7 @@ const char* CameraUtils::tuningMode2String(TuningMode mode) {
 }
 
 TuningMode CameraUtils::string2TuningMode(const char* str) {
-    int size = ARRAY_SIZE(TuningModeStringInfoTable);
+    const int size = ARRAY_SIZE(TuningModeStringInfoTable);
     for (int i = 0; i < size; i++) {
         if (strcmp(TuningModeStringInfoTable[i].str, str) == 0) {
             return TuningModeStringInfoTable[i].mode;
@@ -227,9 +230,9 @@ TuningMode CameraUtils::string2TuningMode(const char* str) {
 }
 
 const char* CameraUtils::pixelCode2String(int code) {
-    int size = ARRAY_SIZE(gFormatMapping);
+    const int size = ARRAY_SIZE(gFormatMapping);
     for (int i = 0; i < size; i++) {
-        if (gFormatMapping[i].v4l2Fmt == code || gFormatMapping[i].iaFourcc == code) {
+        if ((gFormatMapping[i].v4l2Fmt == code) || (gFormatMapping[i].iaFourcc == code)) {
             return gFormatMapping[i].fullName;
         }
     }
@@ -241,11 +244,11 @@ const char* CameraUtils::pixelCode2String(int code) {
 int CameraUtils::string2PixelCode(const char* code) {
     CheckAndLogError(code == nullptr, -1, "Invalid null pixel format.");
 
-    int size = ARRAY_SIZE(gFormatMapping);
+    const int size = ARRAY_SIZE(gFormatMapping);
     for (int i = 0; i < size; i++) {
         if (gFormatMapping[i].type != FORMAT_FOURCC) {
-            if (!strcmp(gFormatMapping[i].fullName, code) ||
-                !strcmp(gFormatMapping[i].shortName, code)) {
+            if ((strcmp(gFormatMapping[i].fullName, code) == 0) ||
+                (strcmp(gFormatMapping[i].shortName, code) == 0)) {
                 return gFormatMapping[i].v4l2Fmt;
             }
         }
@@ -258,11 +261,11 @@ int CameraUtils::string2PixelCode(const char* code) {
 int CameraUtils::string2IaFourccCode(const char* code) {
     CheckAndLogError(code == nullptr, -1, "Invalid null pixel format.");
 
-    int size = ARRAY_SIZE(gFormatMapping);
+    const int size = ARRAY_SIZE(gFormatMapping);
     for (int i = 0; i < size; i++) {
         if (gFormatMapping[i].type == FORMAT_FOURCC) {
-            if (!strcmp(gFormatMapping[i].fullName, code) ||
-                !strcmp(gFormatMapping[i].shortName, code)) {
+            if ((strcmp(gFormatMapping[i].fullName, code) == 0) ||
+                (strcmp(gFormatMapping[i].shortName, code) == 0)) {
                 return gFormatMapping[i].iaFourcc;
             }
         }
@@ -275,16 +278,17 @@ int CameraUtils::string2IaFourccCode(const char* code) {
 const string CameraUtils::fourcc2String(int format4cc) {
     char fourccBuf[5];
     CLEAR(fourccBuf);
-    snprintf(fourccBuf, sizeof(fourccBuf), "%c%c%c%c", (format4cc >> 24) & 0xff,
-             (format4cc >> 16) & 0xff, (format4cc >> 8) & 0xff, format4cc & 0xff);
+    const auto v = static_cast<unsigned int>(format4cc);
+    snprintf(fourccBuf, sizeof(fourccBuf), "%c%c%c%c", (v >> 24) & 0xffU,
+             (v >> 16) & 0xffU, (v >> 8) & 0xffU, v & 0xffU);
 
     return string(fourccBuf);
 }
 
 std::string CameraUtils::format2string(int format) {
-    int size = ARRAY_SIZE(gFormatMapping);
+    const int size = ARRAY_SIZE(gFormatMapping);
     for (int i = 0; i < size; i++) {
-        if (gFormatMapping[i].v4l2Fmt == format || gFormatMapping[i].iaFourcc == format) {
+        if ((gFormatMapping[i].v4l2Fmt == format) || (gFormatMapping[i].iaFourcc == format)) {
             return std::string(gFormatMapping[i].shortName);
         }
     }
@@ -301,18 +305,19 @@ unsigned int CameraUtils::fourcc2UL(const char* str4cc) {
 }
 
 bool CameraUtils::isPlanarFormat(int format) {
-    return (format == V4L2_PIX_FMT_NV12 || format == V4L2_PIX_FMT_NV21 ||
-            format == V4L2_PIX_FMT_YUV420 || format == V4L2_PIX_FMT_YVU420 ||
-            format == V4L2_PIX_FMT_YUV422P || format == V4L2_PIX_FMT_NV16 ||
-            format == V4L2_PIX_FMT_P010);
+    return (format == V4L2_PIX_FMT_NV12) || (format == V4L2_PIX_FMT_NV21) ||
+           (format == V4L2_PIX_FMT_YUV420) || (format == V4L2_PIX_FMT_YVU420) ||
+           (format == V4L2_PIX_FMT_YUV422P) || (format == V4L2_PIX_FMT_NV16) ||
+           (format == V4L2_PIX_FMT_P010);
 }
 
 bool CameraUtils::isRaw(int format) {
-    int size = ARRAY_SIZE(gFormatMapping);
+    const int size = ARRAY_SIZE(gFormatMapping);
     for (int i = 0; i < size; i++) {
         if (gFormatMapping[i].v4l2Fmt == format) {
             // Both normal raw and vector raw treated as raw here.
-            return gFormatMapping[i].type == FORMAT_RAW_VEC || gFormatMapping[i].type == FORMAT_RAW;
+            return (gFormatMapping[i].type == FORMAT_RAW_VEC) ||
+                   (gFormatMapping[i].type == FORMAT_RAW);
         }
     }
 
@@ -320,9 +325,9 @@ bool CameraUtils::isRaw(int format) {
 }
 
 int CameraUtils::getBpp(int format) {
-    int size = ARRAY_SIZE(gFormatMapping);
+    const int size = ARRAY_SIZE(gFormatMapping);
     for (int i = 0; i < size; i++) {
-        if (gFormatMapping[i].v4l2Fmt == format || gFormatMapping[i].iaFourcc == format) {
+        if ((gFormatMapping[i].v4l2Fmt == format) || (gFormatMapping[i].iaFourcc == format)) {
             return gFormatMapping[i].bpp;
         }
     }
@@ -416,8 +421,10 @@ int32_t CameraUtils::getBpl(int32_t fourcc, int32_t width) {
 }
 
 int32_t CameraUtils::getV4L2Format(const int32_t iaFourcc) {
-    for (size_t i = 0; i < ARRAY_SIZE(gFormatMapping); i++) {
-        if (gFormatMapping[i].iaFourcc == iaFourcc) return gFormatMapping[i].v4l2Fmt;
+    for (size_t i = 0U; i < ARRAY_SIZE(gFormatMapping); i++) {
+        if (gFormatMapping[i].iaFourcc == iaFourcc) {
+            return gFormatMapping[i].v4l2Fmt;
+        }
     }
 
     LOGE("Failed to find any V4L2 format with format %s", pixelCode2String(iaFourcc));
@@ -426,10 +433,11 @@ int32_t CameraUtils::getV4L2Format(const int32_t iaFourcc) {
 }
 
 int32_t CameraUtils::getFourccFormat(int32_t v4l2Fmt) {
-    int32_t a = v4l2Fmt & 0xFF;
-    int32_t b = (v4l2Fmt >> 8) & 0xFF;
-    int32_t c = (v4l2Fmt >> 16) & 0xFF;
-    int32_t d = (v4l2Fmt >> 24) & 0xFF;
+    const auto v = static_cast<uint32_t>(v4l2Fmt);
+    const int32_t a = v & 0xFFU;
+    const int32_t b = (v >> 8) & 0xFFU;
+    const int32_t c = (v >> 16) & 0xFFU;
+    const int32_t d = (v >> 24) & 0xFFU;
     return GET_FOURCC_FMT(a, b, c, d);
 }
 
@@ -449,13 +457,14 @@ int CameraUtils::getCompressedFrameSize(int format, int width, int height) {
         case V4L2_PIX_FMT_SRGGB10: {
             int alignedBpl = getStride(format, width);
             alignedBpl = ALIGN(alignedBpl, ISYS_COMPRESSION_STRIDE_ALIGNMENT_BYTES);
-            int alignedHeight = ALIGN(height, ISYS_COMPRESSION_HEIGHT_ALIGNMENT);
-            int imageBufferSize = ALIGN(alignedBpl * alignedHeight, ISYS_COMPRESSION_PAGE_SIZE);
-            int singlePlanarTileStatusSize =
+            const int alignedHeight = ALIGN(height, ISYS_COMPRESSION_HEIGHT_ALIGNMENT);
+            const int imageBufferSize =
+                ALIGN(alignedBpl * alignedHeight, ISYS_COMPRESSION_PAGE_SIZE);
+            const int singlePlanarTileStatusSize =
                 CAMHAL_CEIL_DIV(((alignedBpl * alignedHeight / ISYS_COMPRESSION_TILE_SIZE_BYTES) *
                                  ISYS_COMPRESSION_TILE_STATUS_BITS),
                                 8);
-            int singleTileStatusSize =
+            const int singleTileStatusSize =
                 ALIGN(singlePlanarTileStatusSize, ISYS_COMPRESSION_PAGE_SIZE);
 
             frameSize = imageBufferSize + singleTileStatusSize;
@@ -465,11 +474,11 @@ int CameraUtils::getCompressedFrameSize(int format, int width, int height) {
         case GET_FOURCC_FMT('I', 'Y', 'U', 'V'): {
             int alignedBpl = format == GET_FOURCC_FMT('V', '4', '2', '0') ? width * 2 : width;
             alignedBpl = ALIGN(alignedBpl, PSYS_COMPRESSION_PSA_Y_STRIDE_ALIGNMENT);
-            int alignedHeight = ALIGN(height, PSYS_COMPRESSION_PSA_HEIGHT_ALIGNMENT);
-            int alignWidthUV = alignedBpl / 2;
-            int alignHeightUV = alignedHeight / 2;
+            const int alignedHeight = ALIGN(height, PSYS_COMPRESSION_PSA_HEIGHT_ALIGNMENT);
+            const int alignWidthUV = alignedBpl / 2;
+            const int alignHeightUV = alignedHeight / 2;
 
-            int imageBufferSize =
+            const int imageBufferSize =
                 ALIGN((alignedBpl * alignedHeight + alignWidthUV * alignHeightUV * 2),
                       PSYS_COMPRESSION_PAGE_SIZE);
 
@@ -498,10 +507,10 @@ int CameraUtils::getCompressedFrameSize(int format, int width, int height) {
                 tsBit = TILE_STATUS_BITS_OFS_P010_TILE_Y;
                 tileSize = TILE_SIZE_OFS10_12_TILEY;
             }
-            int alignedBpl = ALIGN(bpl, PSYS_COMPRESSION_TNR_STRIDE_ALIGNMENT);
-            int alignedHeight = ALIGN(height, heightAlignment);
-            int alignedHeightUV = ALIGN(height / UV_HEIGHT_DIVIDER, heightAlignment);
-            int imageBufferSize = ALIGN(alignedBpl * (alignedHeight + alignedHeightUV),
+            const int alignedBpl = ALIGN(bpl, PSYS_COMPRESSION_TNR_STRIDE_ALIGNMENT);
+            const int alignedHeight = ALIGN(height, heightAlignment);
+            const int alignedHeightUV = ALIGN(height / UV_HEIGHT_DIVIDER, heightAlignment);
+            const int imageBufferSize = ALIGN(alignedBpl * (alignedHeight + alignedHeightUV),
                                   PSYS_COMPRESSION_PAGE_SIZE);
             int planarYTileStatus =
                 CAMHAL_CEIL_DIV((alignedBpl * alignedHeight / tileSize) * tsBit, 8);
@@ -545,7 +554,7 @@ int CameraUtils::getCompressedFrameSize(int format, int width, int height) {
  */
 int CameraUtils::getFrameSize(int format, int width, int height, bool needAlignedHeight,
                               bool needExtraSize, bool needCompression) {
-    int alignedBpl = getStride(format, width);
+    const int alignedBpl = getStride(format, width);
 
     // Get frame size with aligned height taking in count for internal buffers.
     // To garantee PSYS kernel like GDC always get enough buffer size to process.
@@ -554,7 +563,7 @@ int CameraUtils::getFrameSize(int format, int width, int height, bool needAligne
         height = ALIGN_64(height);
         LOG2("@%s buffer aligned height %d", __func__, height);
     }
-    int bufferHeight =
+    const int bufferHeight =
         isPlanarFormat(format) ? ((height * getBpp(format) / 8) / getPlanarByte(format)) : height;
 
     if (!needExtraSize) {
@@ -563,7 +572,7 @@ int CameraUtils::getFrameSize(int format, int width, int height, bool needAligne
     }
 
     if (needCompression) {
-        int compressedFrameSize = getCompressedFrameSize(format, width, height);
+        const int compressedFrameSize = getCompressedFrameSize(format, width, height);
         return compressedFrameSize;
     }
 
@@ -591,7 +600,9 @@ int CameraUtils::getNumOfPlanes(int format) {
 void CameraUtils::getDeviceName(const char* entityName, string& deviceNodeName, bool isSubDev) {
     const char* filePrefix = "video";
     const char* dirPath = "/sys/class/video4linux/";
-    if (isSubDev) filePrefix = "v4l-subdev";
+    if (isSubDev) {
+        filePrefix = "v4l-subdev";
+    }
 
     DIR* dp = opendir(dirPath);
     CheckAndLogError((dp == nullptr), VOID_VALUE, "@%s, Fail open : %s", __func__, dirPath);
@@ -603,7 +614,7 @@ void CameraUtils::getDeviceName(const char* entityName, string& deviceNodeName, 
             string subDeviceName = dirPath;
             subDeviceName += dirp->d_name;
             subDeviceName += "/name";
-            int fd = open(subDeviceName.c_str(), O_RDONLY);
+            const int fd = open(subDeviceName.c_str(), O_RDONLY);
             CheckAndLogError((fd < 0), VOID_VALUE, "@%s, open file %s failed. err: %s", __func__,
                              subDeviceName.c_str(), strerror(errno));
 
@@ -611,7 +622,8 @@ void CameraUtils::getDeviceName(const char* entityName, string& deviceNodeName, 
             int len = read(fd, buf, sizeof(buf));
             close(fd);
             len--;  // remove "\n"
-            if (len == (int)strlen(entityName) && memcmp(buf, entityName, len) == 0) {
+            if ((len == static_cast<int>(strlen(entityName))) &&
+                (memcmp(buf, entityName, len) == 0)) {
                 deviceNodeName = "/dev/";
                 deviceNodeName += dirp->d_name;
                 break;
@@ -626,14 +638,15 @@ void CameraUtils::getSubDeviceName(const char* entityName, string& deviceNodeNam
 }
 
 int CameraUtils::getInterlaceHeight(int field, int height) {
-    if (SINGLE_FIELD(field))
+    if (SINGLE_FIELD(field)) {
         return height / 2;
-    else
+    } else {
         return height;
+    }
 }
 
 bool CameraUtils::isUllPsysPipe(TuningMode tuningMode) {
-    return (tuningMode == TUNING_MODE_VIDEO_ULL || tuningMode == TUNING_MODE_VIDEO_CUSTOM_AIC);
+    return (tuningMode == TUNING_MODE_VIDEO_ULL) || (tuningMode == TUNING_MODE_VIDEO_CUSTOM_AIC);
 }
 
 ConfigMode CameraUtils::getConfigModeByName(const char* ConfigName) {
@@ -679,13 +692,13 @@ void CameraUtils::getConfigModeFromString(string str, std::vector<ConfigMode>& c
     string resultStr, modeStr = str;
 
     while (split) {
-        size_t pos = 0;
+        size_t pos = 0U;
         if ((pos = modeStr.find(",")) == string::npos) {
             mode = getConfigModeByName(modeStr.c_str());
             split = false;
         } else {
             resultStr = modeStr.substr(0, pos);
-            modeStr = modeStr.substr(pos + 1);
+            modeStr = modeStr.substr(pos + 1U);
             mode = getConfigModeByName(resultStr.c_str());
         }
         cfgModes.push_back(mode);
@@ -693,63 +706,65 @@ void CameraUtils::getConfigModeFromString(string str, std::vector<ConfigMode>& c
 }
 
 camera_scene_mode_t CameraUtils::getSceneModeByName(const char* sceneName) {
-    if (sceneName == nullptr)
+    if (sceneName == nullptr) {
         return SCENE_MODE_MAX;
-    else if (strcmp(sceneName, "AUTO") == 0)
+    } else if (strcmp(sceneName, "AUTO") == 0) {
         return SCENE_MODE_AUTO;
     // HDR_FEATURE_S
-    else if (strcmp(sceneName, "HDR") == 0)
+    } else if (strcmp(sceneName, "HDR") == 0) {
         return SCENE_MODE_HDR;
-    else if (strcmp(sceneName, "HDR2") == 0)
+    } else if (strcmp(sceneName, "HDR2") == 0) {
         return SCENE_MODE_HDR2;
-    else if (strcmp(sceneName, "HLC") == 0)
+    } else if (strcmp(sceneName, "HLC") == 0) {
         return SCENE_MODE_HLC;
     // HDR_FEATURE_E
-    else if (strcmp(sceneName, "ULL") == 0)
+    } else if (strcmp(sceneName, "ULL") == 0) {
         return SCENE_MODE_ULL;
-    else if (strcmp(sceneName, "VIDEO_LL") == 0)
+    } else if (strcmp(sceneName, "VIDEO_LL") == 0) {
         return SCENE_MODE_VIDEO_LL;
-    else if (strcmp(sceneName, "NORMAL") == 0)
+    } else if (strcmp(sceneName, "NORMAL") == 0) {
         return SCENE_MODE_NORMAL;
-    else if (strcmp(sceneName, "CUSTOM_AIC") == 0)
+    } else if (strcmp(sceneName, "CUSTOM_AIC") == 0) {
         return SCENE_MODE_CUSTOM_AIC;
-
-    return SCENE_MODE_MAX;
+    } else {
+        return SCENE_MODE_MAX;
+    }
 }
 
 camera_awb_mode_t CameraUtils::getAwbModeByName(const char* awbName) {
-    if (awbName == nullptr)
+    if (awbName == nullptr) {
         return AWB_MODE_MAX;
-    else if (strcmp(awbName, "AUTO") == 0)
+    } else if (strcmp(awbName, "AUTO") == 0) {
         return AWB_MODE_AUTO;
-    else if (strcmp(awbName, "INCANDESCENT") == 0)
+    } else if (strcmp(awbName, "INCANDESCENT") == 0) {
         return AWB_MODE_INCANDESCENT;
-    else if (strcmp(awbName, "FLUORESCENT") == 0)
+    } else if (strcmp(awbName, "FLUORESCENT") == 0) {
         return AWB_MODE_FLUORESCENT;
-    else if (strcmp(awbName, "DAYLIGHT") == 0)
+    } else if (strcmp(awbName, "DAYLIGHT") == 0) {
         return AWB_MODE_DAYLIGHT;
-    else if (strcmp(awbName, "FULL_OVERCAST") == 0)
+    } else if (strcmp(awbName, "FULL_OVERCAST") == 0) {
         return AWB_MODE_FULL_OVERCAST;
-    else if (strcmp(awbName, "PARTLY_OVERCAST") == 0)
+    } else if (strcmp(awbName, "PARTLY_OVERCAST") == 0) {
         return AWB_MODE_PARTLY_OVERCAST;
-    else if (strcmp(awbName, "SUNSET") == 0)
+    } else if (strcmp(awbName, "SUNSET") == 0) {
         return AWB_MODE_SUNSET;
-    else if (strcmp(awbName, "VIDEO_CONFERENCE") == 0)
+    } else if (strcmp(awbName, "VIDEO_CONFERENCE") == 0) {
         return AWB_MODE_VIDEO_CONFERENCE;
-    else if (strcmp(awbName, "MANUAL_CCT_RANGE") == 0)
+    } else if (strcmp(awbName, "MANUAL_CCT_RANGE") == 0) {
         return AWB_MODE_MANUAL_CCT_RANGE;
-    else if (strcmp(awbName, "MANUAL_WHITE_POINT") == 0)
+    } else if (strcmp(awbName, "MANUAL_WHITE_POINT") == 0) {
         return AWB_MODE_MANUAL_WHITE_POINT;
-    else if (strcmp(awbName, "MANUAL_GAIN") == 0)
+    } else if (strcmp(awbName, "MANUAL_GAIN") == 0) {
         return AWB_MODE_MANUAL_GAIN;
-    else if (strcmp(awbName, "MANUAL_COLOR_TRANSFORM") == 0)
+    } else if (strcmp(awbName, "MANUAL_COLOR_TRANSFORM") == 0) {
         return AWB_MODE_MANUAL_COLOR_TRANSFORM;
-
-    return AWB_MODE_MAX;
+    } else {
+        return AWB_MODE_MAX;
+    }
 }
 
 unsigned int CameraUtils::getMBusFormat(int cameraId, unsigned int isysFmt) {
-    unsigned int pixelCode = 0;
+    unsigned int pixelCode = 0U;
 
     switch (isysFmt) {
         case V4L2_PIX_FMT_UYVY:
@@ -798,14 +813,16 @@ nsecs_t CameraUtils::systemTime() {
 }
 
 void CameraUtils::checkFps(unsigned int frameNumber, timeval *startPoint) {
-    if (Log::isLogTagEnabled(ST_FPS) && (frameNumber % FPS_FRAME_COUNT == 0)) {
-        if (!startPoint) return;
+    if (Log::isLogTagEnabled(ST_FPS) && (frameNumber % FPS_FRAME_COUNT == 0U)) {
+        if (startPoint == nullptr) {
+            return;
+        }
 
         struct timeval curTime;
         gettimeofday(&curTime, nullptr);
-        int duration = static_cast<int>(curTime.tv_usec - startPoint->tv_usec +
-                                        ((curTime.tv_sec - startPoint->tv_sec) * 1000000));
-        if (frameNumber == 0) {
+        const int duration = static_cast<int>(curTime.tv_usec - startPoint->tv_usec +
+                                             ((curTime.tv_sec - startPoint->tv_sec) * 1000000));
+        if (frameNumber == 0U) {
             LOGI("%s: time of launch to preview: %d ms", __func__, duration / 1000);
         } else {
             float curFps =
@@ -823,8 +840,8 @@ frame_usage_mode_t CameraUtils::getFrameUsage(const stream_config_t *streamList)
             video = true;
         } else if (streamList->streams[i].usage == CAMERA_STREAM_STILL_CAPTURE) {
             still = true;
-        } else if (streamList->streams[i].usage == CAMERA_STREAM_PREVIEW
-                   || streamList->streams[i].usage == CAMERA_STREAM_APP) {
+        } else if ((streamList->streams[i].usage == CAMERA_STREAM_PREVIEW) ||
+                   (streamList->streams[i].usage == CAMERA_STREAM_APP)) {
             preview = true;
         }
     }

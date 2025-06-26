@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2024 Intel Corporation
+ * Copyright (C) 2019-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef FACE_DETECTION_H
+#define FACE_DETECTION_H
 
 #include <ia_types.h>
 
@@ -70,3 +71,5 @@ class FaceDetection {
 };
 
 }  // namespace icamera
+
+#endif // FACE_DETECTION_H

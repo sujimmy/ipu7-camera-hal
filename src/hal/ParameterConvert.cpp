@@ -36,7 +36,7 @@ void ParameterConvert::getConfigInfo(const stream_config_t* streamList, ConfigIn
 }
 
 int ParameterConvert::setParameters(const Parameters& param, DataContext* dataContext) {
-    CheckAndLogError(!dataContext, UNKNOWN_ERROR, "dataContext is nullptr");
+    CheckAndLogError(dataContext == nullptr, UNKNOWN_ERROR, "dataContext is nullptr");
 
     param.getCropRegion(dataContext->cropRegion);
     param.getDeinterlaceMode(dataContext->deinterlaceMode);
@@ -132,7 +132,7 @@ void ParameterConvert::setAiqSettings(const Parameters& param, DataContext* data
 }
 
 int ParameterConvert::getParameters(CameraContext* cameraContext, Parameters& param) {
-    CheckAndLogError(!cameraContext, UNKNOWN_ERROR, "cameraContext is nullptr");
+    CheckAndLogError(cameraContext == nullptr, UNKNOWN_ERROR, "cameraContext is nullptr");
 
     auto resultStorage = cameraContext->getAiqResultStorage();
     auto aiqResult = resultStorage->getAiqResult();
@@ -140,7 +140,7 @@ int ParameterConvert::getParameters(CameraContext* cameraContext, Parameters& pa
     param.setExposureTime(aiqResult->mAeResults.exposures[0].exposure[0].exposure_time_us);
 
     param.setSensitivityIso(aiqResult->mAeResults.exposures[0].exposure[0].iso);
-    float fps = 1000000.0 / aiqResult->mFrameDuration;
+    const float fps = 1000000.0 / aiqResult->mFrameDuration;
     param.setFrameRate(fps);
     LOG2("@%s, ae result: iso %d, exposure time %u, fps %f", __func__,
          aiqResult->mAeResults.exposures[0].exposure[0].iso,
@@ -214,7 +214,7 @@ void ParameterConvert::getCapabilityInfo(int cameraId, Parameters& param) {
     if (staticMetadata->mConfigsArray.size() > 0) {
         const stream_array_t& configsArray = staticMetadata->mConfigsArray;
         const int STREAM_MEMBER_NUM = sizeof(stream_t) / sizeof(int);
-        int dataSize = configsArray.size() * STREAM_MEMBER_NUM;
+        const int dataSize = configsArray.size() * STREAM_MEMBER_NUM;
         int configs[dataSize];
         CLEAR(configs);
         for (size_t i = 0; i < configsArray.size(); i++) {
@@ -255,7 +255,7 @@ void ParameterConvert::getCapabilityInfo(int cameraId, Parameters& param) {
     }
     if (staticMetadata->mSupportedFeatures.size() > 0) {
         const camera_features_list_t& supportedFeatures = staticMetadata->mSupportedFeatures;
-        int numberOfFeatures = supportedFeatures.size();
+        const int numberOfFeatures = supportedFeatures.size();
         uint8_t features[numberOfFeatures];
         CLEAR(features);
         for (int i = 0; i < numberOfFeatures; i++) {

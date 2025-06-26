@@ -22,12 +22,12 @@
 
 namespace icamera {
 
-#define STAGE_UID(stream, stage)          ((((stream)&0xFFFF) << 16) | (((stage)&0xFF) << 8))
-#define PORT_UID(stream, stage, terminal) (STAGE_UID(stream, stage) + ((terminal) & 0xFF)+ 1)
+#define STAGE_UID(stream, stage)          ((((stream)&0xFFFFU) << 16) | (((stage) & 0xFFU) << 8))
+#define PORT_UID(stream, stage, terminal) (STAGE_UID(stream, stage) + ((terminal) & 0xFFU)+ 1U)
 
 #define GET_STREAM_ID(uuid)   (((uuid) >> 16) & 0xFFFF)
 #define GET_STAGE_ID(uuid)    (((uuid) >> 8) & 0xFF)
-#define GET_TERMINAL_ID(uuid) (((uuid) & 0xFF) - 1)
+#define GET_TERMINAL_ID(uuid) (((uuid) & 0xFFU) - 1)
 
 // IPU stage start with 0x10
 #define IPU_STAGE_ID_BASE   0x10
@@ -54,19 +54,19 @@ namespace icamera {
 #define YUV_REPROCESSING_STREAM_ID      70000
 
 // Define stream id for ISYS and user port because they have no stream id in graph
-#define IPU_ISYS_STREAM_ID  0
-#define ISYS_STAGE_ID       0x1
+#define IPU_ISYS_STREAM_ID  0U
+#define ISYS_STAGE_ID       0x1U
 #define ISYS_STAGE_UID                  STAGE_UID(IPU_ISYS_STREAM_ID, ISYS_STAGE_ID)
 #define INPUT_STREAM_PORT_UID(terminal) PORT_UID(IPU_ISYS_STREAM_ID, ISYS_STAGE_ID, terminal)
-#define MAIN_INPUT_PORT_UID             INPUT_STREAM_PORT_UID(0)
-#define YUV_REPROCESSING_INPUT_STAGE_ID 0x3
+#define MAIN_INPUT_PORT_UID             INPUT_STREAM_PORT_UID(0U)
+#define YUV_REPROCESSING_INPUT_STAGE_ID 0x3U
 #define YUV_REPROCESSING_INPUT_PORT_ID \
-        PORT_UID(IPU_ISYS_STREAM_ID, YUV_REPROCESSING_INPUT_STAGE_ID, 0)
+        PORT_UID(IPU_ISYS_STREAM_ID, YUV_REPROCESSING_INPUT_STAGE_ID, 0U)
 
 #define USER_PORT_STREAM_ID 0
-#define USER_STAGE_ID       0x2
+#define USER_STAGE_ID       0x2U
 #define USER_STREAM_STAGE_UID           STAGE_UID(USER_PORT_STREAM_ID, USER_STAGE_ID)
 #define USER_STREAM_PORT_UID(terminal)  PORT_UID(USER_PORT_STREAM_ID, USER_STAGE_ID, terminal)
-#define USER_DEFAULT_PORT_UID           USER_STREAM_PORT_UID(0)
+#define USER_DEFAULT_PORT_UID           USER_STREAM_PORT_UID(0U)
 
 }  // namespace icamera

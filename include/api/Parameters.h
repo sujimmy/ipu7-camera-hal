@@ -75,7 +75,8 @@
  * ------------------------------------------------------------------------------
  */
 
-#pragma once
+#ifndef PARAMETERS_H
+#define PARAMETERS_H
 
 #include <vector>
 #include <set>
@@ -1561,3 +1562,5 @@ class Parameters {
 /*******************End of Camera Parameters Definition**********************/
 
 }  // namespace icamera
+
+#endif // PARAMETERS_H

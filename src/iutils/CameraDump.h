@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_DUMP_H
+#define CAMERA_DUMP_H
 
 #include <linux/v4l2-subdev.h>
 #include <string.h>
@@ -30,37 +31,37 @@ namespace icamera {
 // Dump bit mask definition
 enum {
     // IPU Buffer dump (bit[0-3]), export cameraDump=0xf
-    DUMP_ISYS_BUFFER =          1 << 0,
-    DUMP_PSYS_OUTPUT_BUFFER =   1 << 1,
-    DUMP_PSYS_INTERM_BUFFER =   1 << 2, // dump Psys intermediate buffers
-    DUMP_EXECUTOR_OUTPUT =      1 << 3,
+    DUMP_ISYS_BUFFER =          1U << 0,
+    DUMP_PSYS_OUTPUT_BUFFER =   1U << 1,
+    DUMP_PSYS_INTERM_BUFFER =   1U << 2, // dump Psys intermediate buffers
+    DUMP_EXECUTOR_OUTPUT =      1U << 3,
 
     // Other buffer dump (bit[4-7]), export cameraDump=0xf0
-    DUMP_JPEG_BUFFER =          1 << 4,
-    DUMP_UT_BUFFER =            1 << 5,
-    DUMP_SW_IMG_PROC_OUTPUT =   1 << 6,
-    DUMP_GPU_TNR =              1 << 7,
+    DUMP_JPEG_BUFFER =          1U << 4,
+    DUMP_UT_BUFFER =            1U << 5,
+    DUMP_SW_IMG_PROC_OUTPUT =   1U << 6,
+    DUMP_GPU_TNR =              1U << 7,
 
     // PG/PAL/Stats dump (bit[8-11]), export cameraDump=0xf00
-    DUMP_PSYS_PAL =             1 << 8,  // ISP param binary
-    DUMP_PSYS_PG =              1 << 9,  // PSYS whole PG dump assisted by libiacss
-    DUMP_PSYS_DECODED_STAT =    1 << 10, // p2p decoded statistics
-    DUMP_PSYS_CB =              1 << 11, // PSYS terminal data
+    DUMP_PSYS_PAL =             1U << 8,  // ISP param binary
+    DUMP_PSYS_PG =              1U << 9,  // PSYS whole PG dump assisted by libiacss
+    DUMP_PSYS_DECODED_STAT =    1U << 10, // p2p decoded statistics
+    DUMP_PSYS_CB =              1U << 11, // PSYS terminal data
 
     // AAL dump (bit[12-15]), export cameraDump=0xf000
-    DUMP_AAL_OUTPUT =           1 << 12,
-    DUMP_AAL_INPUT =            1 << 13,
+    DUMP_AAL_OUTPUT =           1U << 12,
+    DUMP_AAL_INPUT =            1U << 13,
 
     // Other dump (bit[16-19]), export cameraDump=0xf0000
-    DUMP_NVM_DATA =             1 << 16,
-    DUMP_MAKER_NOTE =           1 << 17,
-    DUMP_EMBEDDED_METADATA =    1 << 18,
-    DUMP_PIPELINE_OUTPUT =      1 << 19,
+    DUMP_NVM_DATA =             1U << 16,
+    DUMP_MAKER_NOTE =           1U << 17,
+    DUMP_EMBEDDED_METADATA =    1U << 18,
+    DUMP_PIPELINE_OUTPUT =      1U << 19,
 };
 
 enum {
-    DUMP_FORMAT_NORMAL =          1 << 0,  // Normal format
-    DUMP_FORMAT_IQSTUDIO =        1 << 1,  // IQStudio format
+    DUMP_FORMAT_NORMAL =          1U << 0,  // Normal format
+    DUMP_FORMAT_IQSTUDIO =        1U << 1,  // IQStudio format
 };
 
 const int MAX_NAME_LEN = 256;
@@ -137,8 +138,8 @@ namespace CameraDump {
  * File dump control functions.
  */
 void setDumpLevel(void);
-bool isDumpTypeEnable(int dumpType);
-bool isDumpFormatEnable(int dumpFormat);
+bool isDumpTypeEnable(uint32_t dumpType);
+bool isDumpFormatEnable(uint32_t dumpFormat);
 void writeData(const void* data, int size, const char* fileName);
 const char* getDumpPath(void);
 void parseRange(const char* rangeStr, uint32_t* rangeMin, uint32_t* rangeMax);
@@ -155,3 +156,5 @@ void dumpBinary(int cameraId, const void* data, int size, BinParam_t* binParam);
 }  // namespace CameraDump
 
 }  // namespace icamera
+
+#endif // CAMERA_DUMP_H

@@ -137,7 +137,9 @@ bool FaceStage::isFaceEnabled(int64_t sequence) {
 
 int FaceStage::onFrameAvailable(uuid port, const shared_ptr<CameraBuffer>& camBuffer) {
     // Ignore if the buffer is not for this stream.
-    if (mPort != port) return OK;
+    if (mPort != port) {
+        return OK;
+    }
 
     int64_t sequence = camBuffer->getSequence();
     if (mIsPrivate) {
@@ -157,8 +159,12 @@ int FaceStage::onFrameAvailable(uuid port, const shared_ptr<CameraBuffer>& camBu
         }
 
         AutoMutex l(mBufferPoolLock);
-        if (mBufferInProcessing > 0) mBufferInProcessing--;
-        if (mInternalBufferPool) mInternalBufferPool->returnBuffer(camBuffer);
+        if (this->mBufferInProcessing > 0) {
+            this->mBufferInProcessing--;
+        }
+        if (mInternalBufferPool != nullptr) {
+            mInternalBufferPool->returnBuffer(camBuffer);
+        }
     } else {
         if (isFaceEnabled(sequence) && mFaceDetection->needRunFace(sequence)) {
             if (PlatformData::runFaceWithSyncMode(mCameraId)) {
@@ -187,7 +193,9 @@ bool FaceStage::process(int64_t triggerId) {
     shared_ptr<CameraBuffer> faceBuffer = nullptr;
     {
         AutoMutex l(mBufferPoolLock);
-        if (mPendingBufferQ.empty()) return true;
+        if (mPendingBufferQ.empty()) {
+            return true;
+        }
         faceBuffer = mPendingBufferQ.front();
         mPendingBufferQ.pop();
 
@@ -195,8 +203,12 @@ bool FaceStage::process(int64_t triggerId) {
             LOG2("%s, Skip this time due to many buffer in pendding: %d", __func__,
                  mPendingBufferQ.size());
 
-            if (mIsPrivate && mBufferInProcessing > 0) mBufferInProcessing--;
-            if (mInternalBufferPool) mInternalBufferPool->returnBuffer(faceBuffer);
+            if (mIsPrivate && this->mBufferInProcessing > 0) {
+                this->mBufferInProcessing--;
+            }
+            if (mInternalBufferPool != nullptr) {
+                mInternalBufferPool->returnBuffer(faceBuffer);
+            }
             return true;
         }
     }
@@ -207,8 +219,12 @@ bool FaceStage::process(int64_t triggerId) {
     mFaceDetection->runFaceDetection(faceBuffer);
 
     AutoMutex l(mBufferPoolLock);
-    if (mIsPrivate && mBufferInProcessing > 0) mBufferInProcessing--;
-    if (mInternalBufferPool) mInternalBufferPool->returnBuffer(faceBuffer);
+    if (mIsPrivate && this->mBufferInProcessing > 0) {
+        this->mBufferInProcessing--;
+    }
+    if (mInternalBufferPool != nullptr) {
+        mInternalBufferPool->returnBuffer(faceBuffer);
+    }
 
     return true;
 }

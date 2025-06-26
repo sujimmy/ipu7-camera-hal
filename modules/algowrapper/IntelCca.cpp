@@ -86,7 +86,7 @@ void IntelCca::releaseIntelCCA() {
     mIntelCCA = nullptr;
 }
 ia_err IntelCca::init(const cca::cca_init_params& initParams) {
-    ia_err ret = getIntelCCA()->init(initParams);
+    const ia_err ret = getIntelCCA()->init(initParams);
     LOG2("@%s, bitmap:0x%x, ret:%d, version:%s", __func__, initParams.bitmap, ret,
          getIntelCCA()->getVersion());
 
@@ -94,7 +94,7 @@ ia_err IntelCca::init(const cca::cca_init_params& initParams) {
 }
 
 ia_err IntelCca::reinitAic(const int32_t aicId) {
-    ia_err ret = getIntelCCA()->reinitAic(aicId);
+    const ia_err ret = getIntelCCA()->reinitAic(aicId);
 
     LOG2("@%s, aicId:%d, ret:%d", __func__, aicId, ret);
 
@@ -102,7 +102,7 @@ ia_err IntelCca::reinitAic(const int32_t aicId) {
 }
 
 ia_err IntelCca::setStatsParams(const cca::cca_stats_params& params) {
-    ia_err ret = getIntelCCA()->setStatsParams(params);
+    const ia_err ret = getIntelCCA()->setStatsParams(params);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
@@ -110,9 +110,9 @@ ia_err IntelCca::setStatsParams(const cca::cca_stats_params& params) {
 
 ia_err IntelCca::runAEC(uint64_t frameId, const cca::cca_ae_input_params& params,
                         cca::cca_ae_results* results) {
-    CheckAndLogError(!results, ia_err_argument, "@%s, results is nullptr", __func__);
+    CheckAndLogError(results == nullptr, ia_err_argument, "@%s, results is nullptr", __func__);
 
-    ia_err ret = getIntelCCA()->runAEC(frameId, params, results);
+    const ia_err ret = getIntelCCA()->runAEC(frameId, params, results);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
@@ -120,9 +120,9 @@ ia_err IntelCca::runAEC(uint64_t frameId, const cca::cca_ae_input_params& params
 
 ia_err IntelCca::runAIQ(uint64_t frameId, const cca::cca_aiq_params& params,
                         cca::cca_aiq_results* results) {
-    CheckAndLogError(!results, ia_err_argument, "@%s, results is nullptr", __func__);
+    CheckAndLogError(results == nullptr, ia_err_argument, "@%s, results is nullptr", __func__);
 
-    ia_err ret = getIntelCCA()->runAIQ(frameId, params, results);
+    const ia_err ret = getIntelCCA()->runAIQ(frameId, params, results);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
@@ -131,34 +131,34 @@ ia_err IntelCca::runAIQ(uint64_t frameId, const cca::cca_aiq_params& params,
 ia_err IntelCca::updateTuning(uint8_t lardTags, const ia_lard_input_params& lardParams,
                               const cca::cca_nvm& nvm, int32_t streamId) {
     ia_lard_input_params& lardInputParam = const_cast<ia_lard_input_params&>(lardParams);
-    ia_err ret = getIntelCCA()->updateTuning(lardTags, lardInputParam, nvm, streamId);
+    const ia_err ret = getIntelCCA()->updateTuning(lardTags, lardInputParam, nvm, streamId);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
 }
 
 ia_err IntelCca::getCMC(cca::cca_cmc* cmc) {
-    CheckAndLogError(!cmc, ia_err_argument, "@%s, cmc is nullptr", __func__);
+    CheckAndLogError(cmc == nullptr, ia_err_argument, "@%s, cmc is nullptr", __func__);
 
-    ia_err ret = getIntelCCA()->getCMC(*cmc);
+    const ia_err ret = getIntelCCA()->getCMC(*cmc);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
 }
 
 ia_err IntelCca::getMKN(ia_mkn_trg type, cca::cca_mkn* mkn) {
-    CheckAndLogError(!mkn, ia_err_argument, "@%s, mkn is nullptr", __func__);
+    CheckAndLogError(mkn == nullptr, ia_err_argument, "@%s, mkn is nullptr", __func__);
 
-    ia_err ret = getIntelCCA()->getMKN(type, *mkn);
+    const ia_err ret = getIntelCCA()->getMKN(type, *mkn);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
 }
 
 ia_err IntelCca::getAiqd(cca::cca_aiqd* aiqd) {
-    CheckAndLogError(!aiqd, ia_err_argument, "@%s, aiqd is nullptr", __func__);
+    CheckAndLogError(aiqd == nullptr, ia_err_argument, "@%s, aiqd is nullptr", __func__);
 
-    ia_err ret = getIntelCCA()->getAiqd(*aiqd);
+    const ia_err ret = getIntelCCA()->getAiqd(*aiqd);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
@@ -169,8 +169,8 @@ void* IntelCca::allocMem(int streamId, const std::string& name, int index, int s
          name.c_str(), index, streamId, size);
 
     void* ptr = nullptr;
-    int ret = posix_memalign(&ptr, PAGE_SIZE_U, PAGE_ALIGN(size));
-    if (ret) LOGE("alloc fail");
+    const int ret = posix_memalign(&ptr, PAGE_SIZE_U, PAGE_ALIGN(size));
+    if (ret != 0) LOGE("alloc fail");
     return ptr;
 }
 
@@ -188,7 +188,7 @@ ia_err IntelCca::configAic(const cca::cca_aic_config& aicConf,
                            const cca::cca_aic_kernel_offset& kernelOffset, uint32_t* offsetPtr,
                            cca::cca_aic_terminal_config& termConfig, int32_t aicId,
                            const int32_t* statsBufToTermIds) {
-    ia_err ret = getIntelCCA()->configAIC(aicConf, kernelOffset, termConfig, aicId,
+    const ia_err ret = getIntelCCA()->configAIC(aicConf, kernelOffset, termConfig, aicId,
                                           statsBufToTermIds);
     LOG2("@%s, ret:%d", __func__, ret);
 
@@ -196,14 +196,14 @@ ia_err IntelCca::configAic(const cca::cca_aic_config& aicConf,
 }
 
 ia_err IntelCca::registerAicBuf(const cca::cca_aic_terminal_config& termConfig, int32_t aicId) {
-    ia_err ret = getIntelCCA()->registerAICBuf(termConfig, aicId);
+    const ia_err ret = getIntelCCA()->registerAICBuf(termConfig, aicId);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
 }
 
 ia_err IntelCca::getAicBuf(cca::cca_aic_terminal_config& termConfig, int32_t aicId) {
-    ia_err ret = getIntelCCA()->getAICBuf(termConfig, aicId);
+    const ia_err ret = getIntelCCA()->getAICBuf(termConfig, aicId);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
@@ -211,19 +211,19 @@ ia_err IntelCca::getAicBuf(cca::cca_aic_terminal_config& termConfig, int32_t aic
 
 ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
                              cca::cca_out_stats* outStats) {
-    ia_err ret = getIntelCCA()->decodeStats(groupId, sequence, aicId);
+    const ia_err ret = getIntelCCA()->decodeStats(groupId, sequence, aicId);
     LOG2("@%s, ret:%d", __func__, ret);
 
-    if ((ret == ia_err_none) && (outStats && outStats->get_rgbs_stats)) {
+    if ((ret == ia_err_none) && ((outStats != nullptr) && outStats->get_rgbs_stats)) {
         auto stats = getIntelCCA()->queryStatsBuf(cca::STATS_BUF_LATEST);
-        if (stats) {
+        if (stats != nullptr) {
             outStats->rgbs_grid[0].grid_width = stats->stats.rgbs_grids[0].grid_width;
             outStats->rgbs_grid[0].grid_height = stats->stats.rgbs_grids[0].grid_height;
             outStats->rgbs_grid[0].shading_correction = stats->stats.shading_corrected;
 
-            unsigned int width = stats->stats.rgbs_grids[0].grid_width;
-            unsigned int height = stats->stats.rgbs_grids[0].grid_height;
-            for (unsigned int i = 0; i < width * height; i++) {
+            const unsigned int width = stats->stats.rgbs_grids[0].grid_width;
+            const unsigned int height = stats->stats.rgbs_grids[0].grid_height;
+            for (unsigned int i = 0U; i < width * height; i++) {
                 outStats->rgbs_blocks[0][i].avg_gr = stats->stats.rgbs_grids[0].avg[i].gr;
                 outStats->rgbs_blocks[0][i].avg_r = stats->stats.rgbs_grids[0].avg[i].r;
                 outStats->rgbs_blocks[0][i].avg_b = stats->stats.rgbs_grids[0].avg[i].b;
@@ -239,7 +239,7 @@ ia_err IntelCca::decodeStats(int32_t groupId, int64_t sequence, int32_t aicId,
 ia_err IntelCca::runAIC(uint64_t frameId, const cca::cca_pal_input_params* params,
                          uint8_t bitmap, int32_t aicId) {
     cca::cca_multi_pal_output output = {};
-    ia_err ret = getIntelCCA()->runAIC(frameId, *params, output, bitmap, aicId);
+    const ia_err ret = getIntelCCA()->runAIC(frameId, *params, output, bitmap, aicId);
     LOG2("@%s, ret:%d", __func__, ret);
 
     return ret;
@@ -247,7 +247,8 @@ ia_err IntelCca::runAIC(uint64_t frameId, const cca::cca_pal_input_params* param
 
 ia_err IntelCca::updateConfigurationResolutions(const cca::cca_aic_config& aicConf,
                                                 int32_t aicId, bool isKeyResChanged) {
-    ia_err ret = getIntelCCA()->updateConfigurationResolutions(aicConf, aicId, isKeyResChanged);
+    const ia_err ret =
+        getIntelCCA()->updateConfigurationResolutions(aicConf, aicId, isKeyResChanged);
     LOG2("@%s, ret:%d ", __func__, ret);
 
     return ret;

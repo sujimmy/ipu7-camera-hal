@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2022 Intel Corporation.
+ * Copyright (C) 2016-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef REQUEST_THREAD_H
+#define REQUEST_THREAD_H
 
 #include <atomic>
 #include <condition_variable>
@@ -128,14 +129,14 @@ private:
     };
     std::atomic<State> mState;
 
-    enum RequestTriggerEvent {
-        NONE_EVENT  = 0,
-        NEW_REQUEST = 1,
-        NEW_FRAME   = 1 << 1,
-        NEW_STATS   = 1 << 2,
-        NEW_SOF     = 1 << 3,
+    enum RequestTriggerEvent : uint32_t {
+        NONE_EVENT  = 0U,
+        NEW_REQUEST = 1U,
+        NEW_FRAME   = 1U << 1,
+        NEW_STATS   = 1U << 2,
+        NEW_SOF     = 1U << 3,
     };
-    int mRequestTriggerEvent;
+    uint32_t mRequestTriggerEvent;
 
     int64_t mLastCcaId;
     int64_t mLastEffectSeq;  // Last sequence is which last results had been taken effect on
@@ -147,3 +148,5 @@ private:
 };
 
 } //namespace icamera
+
+#endif // REQUEST_THREAD_H

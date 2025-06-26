@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef PLATFORM_DATA_H
+#define PLATFORM_DATA_H
 
 #include <limits.h>
 #include <map>
@@ -74,7 +75,7 @@ namespace icamera {
 class StaticMetadata {
  public:
     StaticMetadata() {
-        mMountType = WALL_MOUNTED;
+        mMountType = static_cast<uint8_t>(WALL_MOUNTED);
 
         mStaticMetadataToType = {
             {"ae.lockAvailable", TYPE_BYTE},
@@ -114,6 +115,7 @@ class StaticMetadata {
             {"scaler.availableInputOutputFormatsMap", TYPE_INT32},
             {"scaler.availableStreamConfigurations", TYPE_INT32},
             {"scaler.availableMinFrameDurations", TYPE_INT64},
+            {"scaler.availableMaxDigitalZoom", TYPE_FLOAT},
             {"scaler.availableStallDurations", TYPE_INT64},
             {"reprocess.maxCaptureStall", TYPE_INT32},
             {"jpeg.maxSize", TYPE_INT32},
@@ -199,7 +201,8 @@ class PlatformData {
                       mIspTuningUpdate(true),
                       mSkipFrameV4L2Error(false),
                       mCITMaxMargin(0),
-                      mYuvColorRangeMode(CAMERA_FULL_MODE_YUV_COLOR_RANGE),
+                      mYuvColorRangeMode(
+                        camera_yuv_color_range_mode_t::CAMERA_FULL_MODE_YUV_COLOR_RANGE),
                       mInitialSkipFrame(0),
                       mMaxRawDataNum(MAX_BUFFER_COUNT),
                       mTopBottomReverse(false),
@@ -210,7 +213,7 @@ class PlatformData {
                       mExposureLag(MAX_BUFFER_COUNT),
                       mAnalogGainLag(0),
                       mMaxSensorDigitalGain(0),
-                      mSensorDgType(SENSOR_DG_TYPE_NONE),
+                      mSensorDgType(SensorDgType::SENSOR_DG_TYPE_NONE),
                       mISysFourcc(V4L2_PIX_FMT_SGRBG8),
                       mISysRawFormat(V4L2_PIX_FMT_SGRBG10),
                       mUseCrlModule(true),
@@ -1535,3 +1538,4 @@ class PlatformData {
 
 };
 } /* namespace icamera */
+#endif // PLATFORM_DATA_H

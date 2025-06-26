@@ -162,7 +162,9 @@ int CameraHal::deviceOpen(int cameraId, int vcNum) {
     // Create CameraContext instance
     CameraContext::getInstance(cameraId);
 
-    if (mCameraShm.CameraDeviceOpen(cameraId) != OK) return INVALID_OPERATION;
+    if (mCameraShm.CameraDeviceOpen(cameraId) != OK) {
+        return INVALID_OPERATION;
+    }
 
     mCameraDevices[cameraId] = new CameraDevice(cameraId);
     // The check is to handle dual camera cases

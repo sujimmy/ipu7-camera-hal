@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef SYNC_MANAGER_H
+#define SYNC_MANAGER_H
 
 #include "PlatformData.h"
 
@@ -60,3 +61,5 @@ class SyncManager {
 };
 
 } /* namespace icamera */
+
+#endif // SYNC_MANAGER_H

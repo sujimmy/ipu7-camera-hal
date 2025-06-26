@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Intel Corporation
+ * Copyright (C) 2016-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,13 +70,13 @@ void LensHw::stop() {
  * focus with absolute value
  */
 int LensHw::setFocusPosition(int position) {
-    CheckAndLogError(!mLensSubdev, NO_INIT, "%s: No Lens device inited.", __func__);
+    CheckAndLogError(mLensSubdev == nullptr, NO_INIT, "%s: No Lens device inited.", __func__);
     mLastLensPosition = position;
 
     struct timespec t = {};
     clock_gettime(CLOCK_MONOTONIC, &t);
 
-    mLensMovementStartTime = ((long)t.tv_sec) * 1000000 + (long)t.tv_nsec / 1000;
+    mLensMovementStartTime = static_cast<long>(t.tv_sec) * 1000000 + static_cast<long>(t.tv_nsec) / 1000;
 
     LOG2("@%s: %d, time %lld", __func__, position, mLensMovementStartTime);
     return mLensSubdev->SetControl(V4L2_CID_FOCUS_ABSOLUTE, position);

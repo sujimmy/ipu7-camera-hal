@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_LOG_H
+#define CAMERA_LOG_H
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -45,7 +46,7 @@ extern icamera::LogOutputSink* globalLogSink;
 namespace icamera {
 
 /* global log level */
-extern int gLogLevel;
+extern uint32_t gLogLevel;
 extern int gSlowlyRunRatio;
 
 /**
@@ -66,58 +67,58 @@ extern int gSlowlyRunRatio;
 enum {
     /* verbosity level of general traces */
     // [0 - 3] bits
-    CAMERA_DEBUG_LOG_LEVEL1 = 1,
-    CAMERA_DEBUG_LOG_LEVEL2 = 1 << 1,
-    CAMERA_DEBUG_LOG_LEVEL3 = 1 << 2,
+    CAMERA_DEBUG_LOG_LEVEL1 = 1U,
+    CAMERA_DEBUG_LOG_LEVEL2 = 1U << 1,
+    CAMERA_DEBUG_LOG_LEVEL3 = 1U << 2,
     // [4 - 7] bits
-    CAMERA_DEBUG_LOG_INFO = 1 << 4,
-    CAMERA_DEBUG_LOG_WARNING = 1 << 5,
-    CAMERA_DEBUG_LOG_ERR = 1 << 6,
+    CAMERA_DEBUG_LOG_INFO = 1U << 4,
+    CAMERA_DEBUG_LOG_WARNING = 1U << 5,
+    CAMERA_DEBUG_LOG_ERR = 1U << 6,
     // [8 - 11] bits
-    CAMERA_DEBUG_LOG_CCA = 1 << 8,
-    CAMERA_DEBUG_LOG_METADATA = 1 << 9,
-    CAMERA_DEBUG_LOG_KERNEL_TOGGLE = 1 << 10,
+    CAMERA_DEBUG_LOG_CCA = 1U << 8,
+    CAMERA_DEBUG_LOG_METADATA = 1U << 9,
+    CAMERA_DEBUG_LOG_KERNEL_TOGGLE = 1U << 10,
 };
 
 enum {
     /* Emit well-formed performance traces */
-    CAMERA_DEBUG_LOG_PERF_TRACES = 1,
+    CAMERA_DEBUG_LOG_PERF_TRACES = 1U,
 
     /* Print out detailed timing analysis */
-    CAMERA_DEBUG_LOG_PERF_TRACES_BREAKDOWN = 2,
+    CAMERA_DEBUG_LOG_PERF_TRACES_BREAKDOWN = 2U,
 
     /* Print out detailed timing analysis for IOCTL */
-    CAMERA_DEBUG_LOG_PERF_IOCTL_BREAKDOWN = 1 << 2,
+    CAMERA_DEBUG_LOG_PERF_IOCTL_BREAKDOWN = 1U << 2,
 
     /* Print out detailed memory information analysis for IOCTL */
-    CAMERA_DEBUG_LOG_PERF_MEMORY = 1 << 3,
+    CAMERA_DEBUG_LOG_PERF_MEMORY = 1U << 3,
 
     /*enable camera atrace level 0 for camtune-record*/
-    CAMERA_DEBUG_LOG_ATRACE_LEVEL0 = 1 << 4,
+    CAMERA_DEBUG_LOG_ATRACE_LEVEL0 = 1U << 4,
 
     // DUMP_ENTITY_TOPOLOGY_S
     /*enable media topology dump*/
-    CAMERA_DEBUG_LOG_MEDIA_TOPO_LEVEL = 1 << 5,
+    CAMERA_DEBUG_LOG_MEDIA_TOPO_LEVEL = 1U << 5,
     // DUMP_ENTITY_TOPOLOGY_E
 
     /*enable media controller info dump*/
-    CAMERA_DEBUG_LOG_MEDIA_CONTROLLER_LEVEL = 1 << 6,
+    CAMERA_DEBUG_LOG_MEDIA_CONTROLLER_LEVEL = 1U << 6,
 
     /*enable camera imaging atrace level 1 for camtune-record*/
-    CAMERA_DEBUG_LOG_ATRACE_LEVEL1 = 1 << 7,
+    CAMERA_DEBUG_LOG_ATRACE_LEVEL1 = 1U << 7,
 };
 
 enum {
-    CAMERA_POWERBREAKDOWN_DISABLE_PREVIEW = 1 << 0,
-    CAMERA_POWERBREAKDOWN_DISABLE_FDFR = 1 << 1,
-    CAMERA_POWERBREAKDOWN_DISABLE_3A = 1 << 2,
+    CAMERA_POWERBREAKDOWN_DISABLE_PREVIEW = 1U << 0,
+    CAMERA_POWERBREAKDOWN_DISABLE_FDFR = 1U << 1,
+    CAMERA_POWERBREAKDOWN_DISABLE_3A = 1U << 2,
 };
 
-const char* cameraDebugLogToString(int level);
+const char* cameraDebugLogToString(uint32_t level);
 
 namespace Log {
 void setDebugLevel(void);
-bool isDebugLevelEnable(int level);
+bool isDebugLevelEnable(uint32_t level);
 bool isLogTagEnabled(int tag);
 // DUMP_ENTITY_TOPOLOGY_S
 bool isDumpMediaTopo(void);
@@ -129,8 +130,8 @@ void ccaPrintInfo(const char* fmt, va_list ap);
 
 #define SLOWLY_MULTIPLIER (icamera::gSlowlyRunRatio ? icamera::gSlowlyRunRatio : 1)
 
-extern void doLogBody(int logTag, int level, int grpPosition, const char* fmt, ...);
-extern void doLogBody(int logTag, int level, const char* fmt, ...);
+extern void doLogBody(int logTag, uint32_t level, int grpPosition, const char* fmt, ...);
+extern void doLogBody(int logTag, uint32_t level, const char* fmt, ...);
 
 #define LOG1(...)                                                                                \
     do {                                                                                         \
@@ -189,11 +190,15 @@ extern void doLogBody(int logTag, int level, const char* fmt, ...);
 class ScopedTrace {
  public:
     inline ScopedTrace(int level, const char* name) : mLevel(level), mName(name) {
-        if (mLevel <= gLogLevel) LOG1("ENTER-%s", name);
+        if (mLevel <= gLogLevel) {
+            LOG1("ENTER-%s", name);
+        }
     }
 
     inline ~ScopedTrace() {
-        if (mLevel <= gLogLevel) LOG1("EXIT-%s", mName);
+        if (mLevel <= gLogLevel) {
+            LOG1("EXIT-%s", mName);
+        }
     }
 
  private:
@@ -202,3 +207,5 @@ class ScopedTrace {
 };
 
 }  // namespace icamera
+
+#endif // CAMERA_LOG_H

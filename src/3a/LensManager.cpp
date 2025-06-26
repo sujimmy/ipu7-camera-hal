@@ -68,21 +68,23 @@ int LensManager::setLensResult(const cca::cca_af_results &afResults,
                                int64_t sequence, const aiq_parameter_t &aiqParam) {
     AutoMutex l(mLock);
 
-    if ((!mLensHw->isLensSubdevAvailable()) || (afResults.next_lens_position == 0)) {
+    if ((!mLensHw->isLensSubdevAvailable()) || (afResults.next_lens_position == 0U)) {
         return OK;
     }
 
-    int ret = OK;
+    const int ret = OK;
 
     int lensHwType = PlatformData::getLensHwType(mCameraId);
     switch(lensHwType) {
         case LENS_VCM_HW:
-            if ((aiqParam.afMode == AF_MODE_OFF) && (aiqParam.focusDistance > 0.0f)) {
+            if ((aiqParam.afMode == AF_MODE_OFF) && (aiqParam.focusDistance > 0.0F)) {
                 // The manual focus setting requires perframe control
                 mSeqToPositionMap[sequence] = afResults.next_lens_position;
             } else {
                 // Ignore auto focus result if there is manual settings before.
-                if (!mSeqToPositionMap.empty()) return OK;
+                if (!mSeqToPositionMap.empty()) {
+                    return OK;
+                }
 
                 setFocusPosition(static_cast<int>(afResults.next_lens_position));
             }
@@ -97,7 +99,7 @@ int LensManager::setLensResult(const cca::cca_af_results &afResults,
 
 void LensManager::setFocusPosition(int focusPosition) {
     if (mFocusPosition != focusPosition) {
-        int ret = mLensHw->setFocusPosition(focusPosition);
+        const int ret = mLensHw->setFocusPosition(focusPosition);
         if (ret == OK) {
             mFocusPosition = focusPosition;
             LOG2("SENSORCTRLINFO: vcm_step=%d", mFocusPosition);

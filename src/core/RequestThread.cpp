@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,14 +112,15 @@ int RequestThread::configure(const stream_config_t *streamList) {
     }
 
     // Don't block request handling if no 3A stats (from video pipe)
-    mBlockRequest = PlatformData::isEnableAIQ(mCameraId) && (previewIndex >= 0 || videoIndex >= 0);
+    mBlockRequest = PlatformData::isEnableAIQ(mCameraId) && ((previewIndex >= 0) ||
+                                                             (videoIndex >= 0));
     LOG1("%s: user specified Configmode: %d, blockRequest: %d", __func__,
          static_cast<ConfigMode>(streamList->operation_mode), mBlockRequest);
 
     mGet3AStatWithFakeRequest =
         mPerframeControlSupport ? PlatformData::isPsysContinueStats(mCameraId) : false;
     if (mGet3AStatWithFakeRequest) {
-        int fakeStreamIndex = (previewIndex >= 0) ? previewIndex :
+        const int fakeStreamIndex = (previewIndex >= 0) ? previewIndex :
                               ((videoIndex >= 0) ? videoIndex : stillIndex);
         if (fakeStreamIndex < 0) {
             LOGW("There isn't valid stream to trigger stats event");
@@ -143,7 +144,9 @@ int RequestThread::configure(const stream_config_t *streamList) {
 }
 
 bool RequestThread::blockRequest() {
-    if (mPendingRequests.empty()) return true;
+    if (mPendingRequests.empty()) {
+        return true;
+    }
 
     /**
      * Block request processing if:
@@ -151,7 +154,7 @@ bool RequestThread::blockRequest() {
      * 2. Too many requests in flight;
      * 3. if no trigger event is available.
      */
-    int maxRequest = PlatformData::getMaxRequestsInflight(mCameraId);
+    const int maxRequest = PlatformData::getMaxRequestsInflight(mCameraId);
 
     return ((mBlockRequest && (mLastCcaId >= 0)) ||
         (mRequestsInProcessing >= maxRequest) ||
@@ -166,13 +169,13 @@ int RequestThread::processRequest(int bufferNum, camera_buffer_t **ubuffer) {
 
     for (int id = 0; id < bufferNum; id++) {
         request.mBuffer[id] = ubuffer[id];
-        if (ubuffer[id]->s.usage == CAMERA_STREAM_PREVIEW ||
-            ubuffer[id]->s.usage == CAMERA_STREAM_VIDEO_CAPTURE) {
+        if ((ubuffer[id]->s.usage == CAMERA_STREAM_PREVIEW) ||
+            (ubuffer[id]->s.usage == CAMERA_STREAM_VIDEO_CAPTURE)) {
             hasVideoBuffer = true;
         }
     }
 
-    if (mFirstRequest && !hasVideoBuffer) {
+    if (mFirstRequest && (!hasVideoBuffer)) {
         LOG2("there is no video buffer in first request, so don't block request processing.");
         mBlockRequest = false;
     }
@@ -192,12 +195,16 @@ int RequestThread::waitFrame(int streamId, camera_buffer_t **ubuffer) {
     FrameQueue& frameQueue = mOutputFrames[streamId];
     std::unique_lock<std::mutex> lock(frameQueue.mFrameMutex);
 
-    if (mState == EXIT) return NO_INIT;
+    if (mState == EXIT) {
+        return NO_INIT;
+    }
     while (frameQueue.mFrameQueue.empty()) {
         std::cv_status ret = frameQueue.mFrameAvailableSignal.wait_for(
                       lock,
                       std::chrono::nanoseconds(kWaitFrameDuration * SLOWLY_MULTIPLIER));
-        if (mState == EXIT) return NO_INIT;
+        if (mState == EXIT) {
+            return NO_INIT;
+        }
 
         CheckWarning(ret == std::cv_status::timeout, TIMED_OUT,
                      "<id%d>@%s, time out happens, wait recovery", mCameraId, __func__);
@@ -230,7 +237,9 @@ int RequestThread::wait1stRequestDone() {
 }
 
 void RequestThread::handleEvent(EventData eventData) {
-    if (mState == EXIT) return;
+    if (mState == EXIT) {
+        return;
+    }
 
     /* Notes:
       * There should be only one of EVENT_ISYS_FRAME
@@ -275,11 +284,11 @@ void RequestThread::handleEvent(EventData eventData) {
         case EVENT_FRAME_AVAILABLE:
             {
                 if (eventData.buffer->getUserBuffer() != &mFakeReqBuf) {
-                    int streamId = eventData.data.frameDone.streamId;
+                    const int streamId = eventData.data.frameDone.streamId;
                     FrameQueue& frameQueue = mOutputFrames[streamId];
 
                     AutoMutex lock(frameQueue.mFrameMutex);
-                    bool needSignal = frameQueue.mFrameQueue.empty();
+                    const bool needSignal = frameQueue.mFrameQueue.empty();
                     frameQueue.mFrameQueue.push(eventData.buffer);
                     if (needSignal) {
                         frameQueue.mFrameAvailableSignal.notify_one();
@@ -291,7 +300,7 @@ void RequestThread::handleEvent(EventData eventData) {
                 AutoMutex l(mPendingReqLock);
                 // Insert fake request if no any request in the HAL to keep 3A running
                 if (mGet3AStatWithFakeRequest &&
-                    eventData.buffer->getSequence() >= mLastEffectSeq &&
+                    (eventData.buffer->getSequence() >= mLastEffectSeq) &&
                     mPendingRequests.empty()) {
                     LOGW("No request, insert fake req after req %ld to keep 3A stats update",
                          mLastCcaId);
@@ -331,7 +340,9 @@ bool RequestThread::fetchNextRequest(CameraRequest& request) {
 }
 
 bool RequestThread::threadLoop() {
-    if (mState == EXIT) return false;
+    if (mState == EXIT) {
+        return false;
+    }
 
     int64_t applyingSeq = -1;
     {
@@ -357,13 +368,15 @@ bool RequestThread::threadLoop() {
          * 2, for new stats, processes request for next sequence;
          * 3, for new request or frame done, processes request only no buffer processed in HAL.
          */
-        if (mPerframeControlSupport && mRequestTriggerEvent != NONE_EVENT) {
-            if ((mRequestTriggerEvent & NEW_SOF) && (mLastSofSeq > mLastAppliedSeq)) {
+        if (mPerframeControlSupport && (mRequestTriggerEvent != NONE_EVENT)) {
+            if (((mRequestTriggerEvent & static_cast<uint32_t>(NEW_SOF)) != 0U) &&
+                (mLastSofSeq > mLastAppliedSeq)) {
                 applyingSeq = mLastSofSeq;
-            } else if ((mRequestTriggerEvent & NEW_STATS) && (mLastSofSeq >= mLastAppliedSeq)) {
+            } else if (((mRequestTriggerEvent & static_cast<uint32_t>(NEW_STATS)) != 0U) &&
+                       (mLastSofSeq >= mLastAppliedSeq)) {
                 applyingSeq = mLastSofSeq + 1;
-            } else if ((mRequestTriggerEvent & (NEW_REQUEST | NEW_FRAME)) &&
-                       (mRequestsInProcessing == 0)) {
+            } else if (((mRequestTriggerEvent & (NEW_REQUEST | NEW_FRAME)) != 0U) &&
+                       (mRequestsInProcessing == 0U)) {
                 applyingSeq = mLastSofSeq + 1;
             } else {
                 mRequestTriggerEvent = NONE_EVENT;
@@ -382,7 +395,9 @@ bool RequestThread::threadLoop() {
         }
     }
 
-    if (mState == EXIT) return false;
+    if (mState == EXIT) {
+        return false;
+    }
 
     CameraRequest request;
     if (fetchNextRequest(request)) {
@@ -418,7 +433,9 @@ void RequestThread::handleRequest(CameraRequest& request, int64_t applyingSeq) {
 
         {
             AutoMutex l(mPendingReqLock);
-            if (mState == EXIT) return;
+            if (mState == EXIT) {
+                return;
+            }
 
             // Check the final prediction value from 3A
             if (effectSeq <= mLastEffectSeq) {
@@ -432,7 +449,8 @@ void RequestThread::handleRequest(CameraRequest& request, int64_t applyingSeq) {
         }
 
         auto cameraContext = CameraContext::getInstance(mCameraId);
-        auto dataContext = cameraContext->acquireDataContextByFn(request.mBuffer[0]->frameNumber);
+        const auto dataContext =
+            cameraContext->acquireDataContextByFn(request.mBuffer[0]->frameNumber);
 
         cameraContext->updateDataContextMapBySeq(effectSeq, dataContext);
         cameraContext->updateDataContextMapByCcaId(mLastCcaId, dataContext);

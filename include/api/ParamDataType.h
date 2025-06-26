@@ -170,7 +170,7 @@ typedef struct {
      */
     uint32_t max_buffers;
 
-    int usage;          /**<The usage of this stream defined in camera_stream_usage_t. */
+    int32_t usage;      /**<The usage of this stream defined in camera_stream_usage_t. */
     int streamType;     /**<The stream type of this stream defined in camera_stream_type_t. */
     int orientation;    /**<The orientation of this stream. [0, 90, 180, 270] */
 } stream_t;
@@ -202,7 +202,7 @@ typedef struct {
  *
  * The buffer's properties can be one of them or combined with some of them.
  */
-typedef enum {
+typedef enum : uint32_t{
     BUFFER_FLAG_DMA_EXPORT = 1 << 0,
     BUFFER_FLAG_INTERNAL = 1 << 1,
     BUFFER_FLAG_SW_READ = 1 << 2,
@@ -223,7 +223,7 @@ typedef struct {
     int64_t sequence;   /**< buffer sequence, filled by HAL, to record buffer dqueue sequence from
                            device */
     int dmafd;          /**< buffer dmafd for DMA import and export mode */
-    int flags;          /**< buffer flags, its type is camera_buffer_flags_t, used to specify buffer
+    uint32_t flags;     /**< buffer flags, its type is camera_buffer_flags_t, used to specify buffer
                            properties */
     uint64_t timestamp; /**< buffer timestamp, it's a time reference measured in nanosecond */
     uint32_t frameNumber;   /**< buffer frameNumber, it's an id of buffer */
@@ -1066,5 +1066,5 @@ typedef struct {
     camera_rotate_mode_t rotateMode;
 } camera_zoom_region_t;
 
-#define IS_INPUT_BUFFER(timestamp, sequence) (((timestamp) > 0) && ((sequence) >= 0))
+#define IS_INPUT_BUFFER(timestamp, sequence) (((timestamp) > 0U) && ((sequence) >= 0))
 }  // namespace icamera

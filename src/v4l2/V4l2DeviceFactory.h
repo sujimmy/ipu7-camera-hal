@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef V4L2_DEVICE_FACTORY_H
+#define V4L2_DEVICE_FACTORY_H
 
 #include <map>
 #include <string>
@@ -56,3 +57,5 @@ class V4l2DeviceFactory {
 };
 
 }  // namespace icamera
+
+#endif // V4L2_DEVICE_FACTORY_H

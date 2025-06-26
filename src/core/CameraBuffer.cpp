@@ -53,13 +53,15 @@ CameraBuffer::CameraBuffer(int memory, uint32_t size, int index)
     mV.SetIndex(index);
     mV.SetType(V4L2_BUF_TYPE_VIDEO_CAPTURE);
     mV.SetLength(size, 0);
-    mV.SetFlags(mV.Flags() | V4L2_BUF_FLAG_NO_CACHE_INVALIDATE | V4L2_BUF_FLAG_NO_CACHE_CLEAN);
+    mV.SetFlags(mV.Flags() |\
+                static_cast<uint32_t>(V4L2_BUF_FLAG_NO_CACHE_INVALIDATE) |\
+                static_cast<uint32_t>(V4L2_BUF_FLAG_NO_CACHE_CLEAN));
 }
 
 CameraBuffer::~CameraBuffer() {
     freeMemory();
 
-    if (mBufferflag & BUFFER_FLAG_INTERNAL) {
+    if ((mBufferflag & BUFFER_FLAG_INTERNAL) != 0U) {
         delete mU;
     }
 }
@@ -71,7 +73,7 @@ std::shared_ptr<CameraBuffer> CameraBuffer::create(int memory, unsigned int size
          srcWidth, srcHeight, memory, size, srcFmt, index);
     std::shared_ptr<CameraBuffer> camBuffer =
         std::make_shared<CameraBuffer>(memory, size, index);
-    CheckAndLogError(!camBuffer, nullptr, "@%s: fail to alloc CameraBuffer", __func__);
+    CheckAndLogError(camBuffer == nullptr, nullptr, "@%s: fail to alloc CameraBuffer", __func__);
 
     camBuffer->setUserBufferInfo(srcFmt, srcWidth, srcHeight);
     int ret = camBuffer->allocateMemory();
@@ -83,12 +85,12 @@ std::shared_ptr<CameraBuffer> CameraBuffer::create(int memory, unsigned int size
 // Helper function to construct a CameraBuffer from camera_buffer_t pointer
 std::shared_ptr<CameraBuffer> CameraBuffer::create(int memory, int size, int index,
                                                    camera_buffer_t* ubuffer) {
-    CheckAndLogError(!ubuffer, nullptr, "ubuffer is nullptr");
+    CheckAndLogError(ubuffer == nullptr, nullptr, "ubuffer is nullptr");
     LOG1("%s, memory type:%d, size:%d, index:%d", __func__, memory, size, index);
 
     std::shared_ptr<CameraBuffer> camBuffer =
         std::make_shared<CameraBuffer>(memory, size, index);
-    CheckAndLogError(!camBuffer, nullptr, "@%s: fail to alloc CameraBuffer", __func__);
+    CheckAndLogError(camBuffer == nullptr, nullptr, "@%s: fail to alloc CameraBuffer", __func__);
 
     camBuffer->setUserBufferInfo(ubuffer);
     camBuffer->updateFlags();
@@ -99,13 +101,13 @@ std::shared_ptr<CameraBuffer> CameraBuffer::create(int memory, int size, int ind
 // Helper function to construct a CameraBuffer from void* pointer
 std::shared_ptr<CameraBuffer> CameraBuffer::create(int srcWidth, int srcHeight, int size,
                                                    int srcFmt, int index, void* buffer) {
-    CheckAndLogError(!buffer, nullptr, "buffer is nullptr");
+    CheckAndLogError(buffer == nullptr, nullptr, "buffer is nullptr");
     LOG1("%s, width:%d, height:%d, size:%d, format:%d, index:%d", __func__, srcWidth, srcHeight,
          size, srcFmt, index);
 
     std::shared_ptr<CameraBuffer> camBuffer =
         std::make_shared<CameraBuffer>(V4L2_MEMORY_USERPTR, size, index);
-    CheckAndLogError(!camBuffer, nullptr, "Fail to alloc CameraBuffer");
+    CheckAndLogError(camBuffer == nullptr, nullptr, "Fail to alloc CameraBuffer");
 
     camBuffer->setUserBufferInfo(srcFmt, srcWidth, srcHeight, buffer);
 
@@ -132,12 +134,14 @@ void CameraBuffer::setUserBufferInfo(int format, int width, int height, void* us
 void CameraBuffer::setUserBufferInfo(camera_buffer_t* ubuffer) {
     CheckAndLogError(ubuffer == nullptr, VOID_VALUE, "%s: ubuffer is nullptr", __func__);
 
-    if (mU->flags & BUFFER_FLAG_INTERNAL) delete mU;
+    if ((mU->flags & BUFFER_FLAG_INTERNAL) != 0U) {
+        delete mU;
+    }
     mU = ubuffer;
     mBufferflag = mU->flags;
 
     mV.SetSequence(0);
-    struct timeval ts = {0};
+    const struct timeval ts = {0};
     mV.SetTimestamp(ts);
 
     // update the v4l2 buffer memory with user info
@@ -159,10 +163,10 @@ void CameraBuffer::setUserBufferInfo(camera_buffer_t* ubuffer) {
 
     if ((mU->s.streamType == CAMERA_STREAM_INPUT) || (ubuffer->sequence >= 0)) {
         // update timestamp if raw buffer is selected by user and timestamp is set
-        if (ubuffer->timestamp > 0) {
+        if (ubuffer->timestamp > 0U) {
             struct timeval timestamp = {0};
-            timestamp.tv_sec = ubuffer->timestamp / 1000000000LL;
-            timestamp.tv_usec = (ubuffer->timestamp - timestamp.tv_sec * 1000000000LL) / 1000LL;
+            timestamp.tv_sec = ubuffer->timestamp / 1000000000ULL;
+            timestamp.tv_usec = (ubuffer->timestamp - timestamp.tv_sec * 1000000000ULL) / 1000ULL;
             mV.SetTimestamp(timestamp);
         }
         mV.SetSequence(ubuffer->sequence);
@@ -197,7 +201,7 @@ int CameraBuffer::allocateMemory(V4L2VideoNode* vDevice) {
             ret = allocateUserPtr();
             break;
         case V4L2_MEMORY_MMAP:
-            exportMmapDmabuf(vDevice);
+            (void)exportMmapDmabuf(vDevice);
             ret = allocateMmap(vDevice);
             break;
         case V4L2_MEMORY_DMABUF:
@@ -206,13 +210,17 @@ int CameraBuffer::allocateMemory(V4L2VideoNode* vDevice) {
             break;
     }
 
-    if (ret == OK) mAllocatedMemory = true;
+    if (ret == OK) {
+        mAllocatedMemory = true;
+    }
 
     return ret;
 }
 
 void CameraBuffer::freeMemory() {
-    if (!mAllocatedMemory) return;
+    if (!mAllocatedMemory) {
+        return;
+    }
 
     switch (mV.Memory()) {
         case V4L2_MEMORY_USERPTR:
@@ -230,7 +238,7 @@ void CameraBuffer::freeMemory() {
 
 int CameraBuffer::allocateUserPtr() {
     void* buffer = nullptr;
-    int ret = posix_memalign(&buffer, getpagesize(), mV.Length(0));
+    const int ret = posix_memalign(&buffer, getpagesize(), mV.Length(0));
     CheckAndLogError(ret != 0, -1, "%s, posix_memalign fails, ret:%d", __func__, ret);
     mV.SetUserptr(reinterpret_cast<uintptr_t>(buffer), 0);
     return OK;
@@ -257,8 +265,8 @@ void CameraBuffer::freeMmap() {
         ::close(mU->dmafd);
         mU->dmafd = -1;
     }
-    if (mU->addr) {
-        int ret = ::munmap(mU->addr, mV.Length(0));
+    if (mU->addr != nullptr) {
+        const int ret = ::munmap(mU->addr, mV.Length(0));
         CheckAndLogError(ret != 0, VOID_VALUE, "failed to munmap buffer");
     }
 }
@@ -310,8 +318,8 @@ void* CameraBuffer::DeviceRender::mapDmaBufferAddr(int fd, unsigned int bufferSi
 #endif
 
 void* CameraBuffer::mapDmaBufferAddr(int fd, unsigned int bufferSize) {
-    CheckAndLogError((fd < 0) || (!bufferSize), nullptr, "%s, fd:0x%x, bufferSize:%u", __func__, fd,
-                     bufferSize);
+    CheckAndLogError((fd < 0) || (bufferSize == 0U), nullptr, "%s, fd:0x%x, bufferSize:%u",
+                     __func__, fd, bufferSize);
 
 #ifdef LIBDRM_SUPPORT_MMAP_OFFSET
     return mDeviceRender.mapDmaBufferAddr(fd, bufferSize);
@@ -321,8 +329,8 @@ void* CameraBuffer::mapDmaBufferAddr(int fd, unsigned int bufferSize) {
 }
 
 void CameraBuffer::unmapDmaBufferAddr(void* addr, unsigned int bufferSize) {
-    CheckAndLogError((addr == nullptr) || (!bufferSize), VOID_VALUE, "%s, addr:%p, bufferSize:%u",
-                     __func__, addr, bufferSize);
+    CheckAndLogError((addr == nullptr) || (bufferSize == 0U), VOID_VALUE,
+                     "%s, addr:%p, bufferSize:%u", __func__, addr, bufferSize);
     munmap(addr, bufferSize);
 }
 
@@ -335,18 +343,19 @@ void CameraBuffer::updateUserBuffer(void) {
 }
 
 void CameraBuffer::updateFlags(void) {
-    int flag = V4L2_BUF_FLAG_NO_CACHE_INVALIDATE | V4L2_BUF_FLAG_NO_CACHE_CLEAN;
+    const uint32_t flag = static_cast<uint32_t>(V4L2_BUF_FLAG_NO_CACHE_INVALIDATE) | \
+                          static_cast<uint32_t>(V4L2_BUF_FLAG_NO_CACHE_CLEAN);
     bool set = true;
 
     // clear the flags if the buffers is accessed by the SW
-    if ((mU->flags & BUFFER_FLAG_SW_READ) || (mU->flags & BUFFER_FLAG_SW_WRITE)) {
+    if (((mU->flags & BUFFER_FLAG_SW_READ) != 0U) || ((mU->flags & BUFFER_FLAG_SW_WRITE) != 0U)) {
         set = false;
     }
 
     mV.SetFlags(set ? (mV.Flags() | flag) : (mV.Flags() & (~flag)));
 }
 
-bool CameraBuffer::isFlagsSet(int flag) {
+bool CameraBuffer::isFlagsSet(uint32_t flag) const {
     return ((mU->flags & flag) ? true : false);
 }
 

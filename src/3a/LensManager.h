@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef LENS_MANAGER_H  
+#define LENS_MANAGER_H
 
 #include <map>
 
@@ -84,3 +85,5 @@ private:
 };
 
 } /* namespace icamera */
+
+#endif // LENS_MANAGER_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation
+ * Copyright (C) 2022-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 
 namespace icamera {
 
-std::map<int, CameraContext*> CameraContext::sInstances;
+std::map<int32_t, CameraContext*> CameraContext::sInstances;
 std::mutex CameraContext::sLock;
 
 DataContext::DataContext(int cameraId) :
@@ -37,7 +37,7 @@ DataContext::DataContext(int cameraId) :
     monoDsMode(MONO_DS_MODE_OFF),
     deinterlaceMode(DEINTERLACE_OFF) {
     cropRegion = {0, 0, 0};
-    zoomRegion = {0, 0, 0, 0, 1.0f, icamera::ROTATE_NONE};
+    zoomRegion = {0, 0, 0, 0, 1.0F, icamera::ROTATE_NONE};
 
     camera_coordinate_system_t activePixelArray = PlatformData::getActivePixelArray(cameraId);
     if ((activePixelArray.right > activePixelArray.left) &&
@@ -55,12 +55,12 @@ DataContext::DataContext(int cameraId) :
     };
 
     std::string str = "lens.info.shadingMapSize";
-    auto vI = PlatformData::getInt32StaticMetadata(cameraId, str);
+    const auto vI = PlatformData::getInt32StaticMetadata(cameraId, str);
     if (vI.size() == 2) {
         mAiqParams.lensShadingMapSize = {vI[0], vI[1]};
     }
     str = "lens.info.minimumFocusDistance";
-    auto vF = PlatformData::getFloatStaticMetadata(cameraId, str);
+    const auto vF = PlatformData::getFloatStaticMetadata(cameraId, str);
     if (vF.size() == 1) {
         mAiqParams.minFocusDistance = vF[0];
     }
@@ -243,7 +243,7 @@ const DataContext* CameraContext::getDataContextBySeq(int64_t sequence) {
 
     // search from the newest result
     for (int i = 0; i < kContextSize; i++) {
-        int tmpIdx = (mCurrentIndex + kContextSize - i) % kContextSize;
+        const int tmpIdx = (mCurrentIndex + kContextSize - i) % kContextSize;
         if ((mDataContext[tmpIdx]->mSequence >= 0) &&
             (sequence >= mDataContext[tmpIdx]->mSequence)) {
             return mDataContext[tmpIdx];

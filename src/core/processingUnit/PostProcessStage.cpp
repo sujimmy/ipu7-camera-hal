@@ -47,7 +47,9 @@ void PostProcessStage::setFrameInfo(const std::map<uuid, stream_t>& inputInfo,
 
         // If DMA buffer is preferred, use DMA buffer for post-processing
         int memoryType = mPostProcessors[info.first]->getMemoryType();
-        if (memoryType == V4L2_MEMORY_DMABUF) mMemoryType = V4L2_MEMORY_DMABUF;
+        if (memoryType == V4L2_MEMORY_DMABUF) {
+            mMemoryType = V4L2_MEMORY_DMABUF;
+        }
 
         LOG1("%s created, out port %u, post type %d", getName(), info.first,
              mPostProcessors[info.first]->getPostProcessType());
@@ -66,18 +68,24 @@ int PostProcessStage::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBu
     mPendingOutBuffers[port] = camBuffer;
     // Wait for all output buffers come for one request.
     // Assume no buffer of request n+1 comes before stage gets all output buffers of request n.
-    if (mPendingOutBuffers.size() < mOutputBuffersNum) return OK;
+    if (mPendingOutBuffers.size() < mOutputBuffersNum) {
+        return OK;
+    }
 
     int64_t sequence = -1;
     for (auto& item : mPendingOutBuffers) {
         CameraBufQ& output = mOutputQueue[item.first];
         output.push(item.second);
-        if (item.second) sequence = item.second->getSettingSequence();
+        if (item.second != nullptr) {
+            sequence = item.second->getSettingSequence();
+        }
     }
 
     // Select input buffers for the request
     std::shared_ptr<CameraBuffer> inBuffer;
-    if (!fetchRequestBuffer(sequence, inBuffer)) return INVALID_OPERATION;
+    if (!fetchRequestBuffer(sequence, inBuffer)) {
+        return INVALID_OPERATION;
+    }
     mBufferProducer->qbuf(mInputPort, inBuffer);
 
     mPendingOutBuffers.clear();
@@ -90,20 +98,28 @@ bool PostProcessStage::fetchRequestBuffer(int64_t sequence,
 
     // Check if internal buffer is need
     for (auto& item : mPendingOutBuffers) {
-        if (!item.second) continue;
+        if (!item.second) {
+            continue;
+        }
 
         if (inBuffer)
             useInternal = true;  // Request multiple streams output
         else
             inBuffer = item.second;
-        if (!mPostProcessors[item.first]->isBypassed(sequence)) useInternal = true;
+        if (!mPostProcessors[item.first]->isBypassed(sequence)) {
+            useInternal = true;
+        }
 
-        if (useInternal) break;
+        if (useInternal) {
+            break;
+        }
     }
 
     LOG2("<seq%ld>%s: %s, inBuffer %p, use internal buffer? %d", sequence, getName(), __func__,
          inBuffer.get(), useInternal);
-    if (!useInternal && inBuffer) return true;
+    if (!useInternal && inBuffer) {
+        return true;
+    }
 
     CameraBufVector& bufV = mInternalBuffers[mInputPort];
     CheckAndLogError(bufV.empty(), false, "%s: queued %d, no avaiable buffer", getName(),
@@ -130,7 +146,9 @@ bool PostProcessStage::process(int64_t triggerId) {
     int64_t sequence = -1;
     {
         AutoMutex l(mBufferQueueLock);
-        if (getFreeBuffersInQueue(inBuffers, outBuffers) != OK) return true;
+        if (getFreeBuffersInQueue(inBuffers, outBuffers) != OK) {
+            return true;
+        }
 
         inBuffer = inBuffers.begin()->second;
         sequence = inBuffer->getSequence();
@@ -142,7 +160,9 @@ bool PostProcessStage::process(int64_t triggerId) {
 
     v4l2_buffer_t inV4l2Buf = *inBuffer->getV4L2Buffer().Get();
     for (auto& output : outBuffers) {
-        if (!output.second) continue;
+        if (!output.second) {
+            continue;
+        }
 
         uuid outPort = output.first;
         LOG2("<seq%ld>%s: handle port %x in async", sequence, getName(), outPort);
@@ -198,7 +218,9 @@ int32_t PostProcessStage::allocateBuffers() {
     while (!mQueuedInputBuffers.empty()) mQueuedInputBuffers.pop();
     CheckAndLogError(!mBufferProducer, BAD_VALUE, "@%s: Buffer Producer is nullptr", __func__);
 
-    if (mInputFrameInfo.empty()) return OK;
+    if (mInputFrameInfo.empty()) {
+        return OK;
+    }
 
     // Only support one input currently
     const stream_t& input = mInputFrameInfo[mInputPort];

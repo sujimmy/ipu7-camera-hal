@@ -67,8 +67,9 @@ void AiqResultStorage::resetAiqStatistics() {
 const AiqStatistics* AiqResultStorage::getAndLockAiqStatistics() {
     AutoRMutex rlock(mDataLock);
 
-    if (mCurrentAiqStatsIndex == -1)
+    if (mCurrentAiqStatsIndex == -1) {
         return nullptr;
+    }
 
     CheckAndLogError(mAiqStatistics[mCurrentAiqStatsIndex].mSequence == -1,
                      nullptr, "Invalid sequence id -1 of stored aiq statistics");
@@ -114,7 +115,7 @@ const AiqResult* AiqResultStorage::getAiqResult(int64_t sequence) {
 
     for (int i = 0; i < kStorageSize; i++) {
         // Search from the newest result
-        int tmpIdx = (mCurrentIndex + kStorageSize - i) % kStorageSize;
+        const int tmpIdx = (mCurrentIndex + kStorageSize - i) % kStorageSize;
         if ((mAiqResults[tmpIdx]->mSequence >= 0) && (sequence >= mAiqResults[tmpIdx]->mSequence)) {
             return mAiqResults[tmpIdx];
         }
@@ -145,8 +146,9 @@ FaceDetectionResult* AiqResultStorage::getFaceResult() {
     AutoRMutex rlock(mFaceLock);
 
     if ((mCurrentFaceResultIndex == -1) ||
-        (mFaceResult[mCurrentFaceResultIndex].sequence == -1))
+        (mFaceResult[mCurrentFaceResultIndex].sequence == -1)) {
         return nullptr;
+    }
 
     // Always return the latest result
     return &mFaceResult[mCurrentFaceResultIndex];

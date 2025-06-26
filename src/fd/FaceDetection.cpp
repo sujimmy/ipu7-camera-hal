@@ -77,7 +77,9 @@ void FaceDetection::initRatioInfo(struct RatioInfo* ratioInfo) {
 }
 
 bool FaceDetection::needRunFace(int64_t sequence) {
-    if (!mInitialized) return false;
+    if (!mInitialized) {
+        return false;
+    }
 
     int lastFaceNum = getFaceNum();
 
@@ -117,7 +119,9 @@ int FaceDetection::getFaceNum() {
 }
 
 void FaceDetection::printfFDRunRate() {
-    if (!Log::isLogTagEnabled(ST_FPS)) return;
+    if (!Log::isLogTagEnabled(ST_FPS)) {
+        return;
+    }
 
     static int runCount = 0;
     static timeval lastTime = {};
@@ -125,7 +129,9 @@ void FaceDetection::printfFDRunRate() {
         gettimeofday(&lastTime, nullptr);
     }
 
-    if (++runCount % FPS_FD_COUNT != 0) return;
+    if (++runCount % FPS_FD_COUNT != 0) {
+        return;
+    }
 
     struct timeval curTime;
     gettimeofday(&curTime, nullptr);

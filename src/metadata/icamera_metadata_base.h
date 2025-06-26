@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef ICAMERA_METADATA_BASE_H
+#define ICAMERA_METADATA_BASE_H
 
 #include <string.h>
 #include <stdint.h>
@@ -25,7 +26,7 @@ extern "C" {
 #endif
 
 #define ALIGN_TO(val, alignment) \
-    (((uintptr_t)(val) + ((alignment) - 1)) & ~((alignment) - 1))
+    ((reinterpret_cast<uintptr_t>(val) + ((alignment) - 1)) & ~((alignment) - 1))
 
 /**
  * Tag hierarchy and enum definitions for camera_metadata_entry
@@ -449,3 +450,5 @@ int icamera_metadata_enum_snprint(uint32_t tag,
 #ifdef __cplusplus
 }
 #endif
+
+#endif // ICAMERA_METADATA_BASE_H

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIQ_CORE_H
+#define AIQ_CORE_H
 
 #include <memory>
 #include <unordered_map>
@@ -203,3 +204,5 @@ class AiqCore {
 };
 
 } /* namespace icamera */
+
+#endif // AIQ_CORE_H

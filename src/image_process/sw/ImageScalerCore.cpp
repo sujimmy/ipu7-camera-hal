@@ -76,11 +76,13 @@ void ImageScalerCore::downScaleYUY2Image(unsigned char *dest, const unsigned cha
                                          const int dest_w, const int dest_h, const int dest_stride,
                                          const int src_w, const int src_h, const int src_stride)
 {
-    if (dest==NULL || dest_w <=0 || dest_h <=0 || src==NULL || src_w <=0 || src_h <= 0 )
+    if (dest==NULL || dest_w <=0 || dest_h <=0 || src==NULL || src_w <=0 || src_h <= 0 ) {
         return;
+    }
 
-    if (dest_w%2 != 0) // if the dest_w is not an even number, exit
+    if (dest_w%2 != 0) {// if the dest_w is not an even number, exit
         return;
+    }
 
     const int scale_w = (src_w<<8) / dest_w; // scale factors
     const int scale_h = (src_h<<8) / dest_h;
@@ -223,8 +225,9 @@ void ImageScalerCore::downScaleAndCropNv12Image(unsigned char *dest, const unsig
     }
 
     // skip lines from top
-    if (src_skip_lines_top > 0)
+    if (src_skip_lines_top > 0) {
         src += src_skip_lines_top * src_stride;
+    }
 
     // Correct aspect ratio is defined by destination buffer
     long int aspect_ratio = (dest_w << 16) / dest_h;

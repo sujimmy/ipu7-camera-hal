@@ -128,8 +128,13 @@ exif_status ExifCreater::makeExif(void* exifOut, exif_attribute_t* exifInfo, siz
     pCur = pIfdStart + LongerTagOffset;
 
     int drop_num = 0;
-    if (exifInfo->exposure_time.den == 0) drop_num++;
-    if (exifInfo->shutter_speed.den == 0) drop_num++;
+    if (exifInfo->exposure_time.den == 0) {
+        drop_num++;
+    }
+    if (exifInfo->shutter_speed.den == 0) {
+        drop_num++;
+    }
+
     if (exifInfo->makerNoteDataSize == 0 || exifInfo->makernoteToApp2) {
         // skip the makernote IFD in APP1, when we don't have any,
         // or if we want it to APP2
@@ -178,7 +183,9 @@ exif_status ExifCreater::makeExif(void* exifOut, exif_attribute_t* exifInfo, siz
                  &LongerTagOffset, pIfdStart);
     char code[8] = {0x41, 0x53, 0x43, 0x49, 0x49, 0x00, 0x00, 0x00};
     size_t commentsLen = strlen((char*)exifInfo->user_comment) + 1;
-    if (commentsLen > (sizeof(exifInfo->user_comment) - sizeof(code))) return EXIF_FAIL;
+    if (commentsLen > (sizeof(exifInfo->user_comment) - sizeof(code))) {
+        return EXIF_FAIL;
+    }
     memmove(exifInfo->user_comment + sizeof(code), exifInfo->user_comment, commentsLen);
     MEMCPY_S(exifInfo->user_comment, sizeof(exifInfo->user_comment), code, sizeof(code));
     writeExifIfd(&pCur, EXIF_TAG_USER_COMMENT, EXIF_TYPE_UNDEFINED, commentsLen + sizeof(code),
@@ -227,12 +234,24 @@ exif_status ExifCreater::makeExif(void* exifOut, exif_attribute_t* exifInfo, siz
         pCur = pIfdStart + LongerTagOffset;
 
         tmp = NUM_0TH_IFD_GPS;
-        if ((exifInfo->enableGps & EXIF_GPS_LATITUDE) == 0) tmp -= 2;
-        if ((exifInfo->enableGps & EXIF_GPS_LONGITUDE) == 0) tmp -= 2;
-        if ((exifInfo->enableGps & EXIF_GPS_ALTITUDE) == 0) tmp -= 2;
-        if ((exifInfo->enableGps & EXIF_GPS_TIMESTAMP) == 0) tmp -= 1;
-        if ((exifInfo->enableGps & EXIF_GPS_PROCMETHOD) == 0) tmp -= 1;
-        if ((exifInfo->enableGps & EXIF_GPS_IMG_DIRECTION) == 0) tmp -= 2;
+        if ((exifInfo->enableGps & EXIF_GPS_LATITUDE) == 0) {
+            tmp -= 2;
+        }
+        if ((exifInfo->enableGps & EXIF_GPS_LONGITUDE) == 0) {
+            tmp -= 2;
+        }
+        if ((exifInfo->enableGps & EXIF_GPS_ALTITUDE) == 0) {
+            tmp -= 2;
+        }
+        if ((exifInfo->enableGps & EXIF_GPS_TIMESTAMP) == 0) {
+            tmp -= 1;
+        }
+        if ((exifInfo->enableGps & EXIF_GPS_PROCMETHOD) == 0) {
+            tmp -= 1;
+        }
+        if ((exifInfo->enableGps & EXIF_GPS_IMG_DIRECTION) == 0) {
+            tmp -= 2;
+        }
 
         MEMCPY_S(pCur, NUM_SIZE, (int8_t*)&tmp, NUM_SIZE);
         pCur += NUM_SIZE;
@@ -326,7 +345,9 @@ exif_status ExifCreater::makeExif(void* exifOut, exif_attribute_t* exifInfo, siz
         status = makeApp2((pApp1Start + app2StartOffset), *size, exifInfo);
     }
 
-    if (status != EXIF_SUCCESS) LOGW("Failed to create EXIF APP2 section");
+    if (status != EXIF_SUCCESS) {
+        LOGW("Failed to create EXIF APP2 section");
+    }
 
     LOG1("makeExif End");
 
@@ -356,7 +377,9 @@ exif_status ExifCreater::makeApp2(void* pStartApp2, size_t& size, exif_attribute
     // APP2 marker will be written starting from the pos pointed to by
     // pStartApp2
 
-    if (exifInfo->makerNoteDataSize <= 0) return EXIF_SUCCESS;
+    if (exifInfo->makerNoteDataSize <= 0) {
+        return EXIF_SUCCESS;
+    }
 
     int bytesLeftForSegment = EXIF_SIZE_LIMITATION;
     int bytesToWrite = exifInfo->makerNoteDataSize;
@@ -406,7 +429,9 @@ exif_status ExifCreater::makeApp2(void* pStartApp2, size_t& size, exif_attribute
 
         // Length field goes after the APP2 marker
         int app2SegmentSize = writeCount + SIZEOF_LENGTH_FIELD;  // Raw data written + overhead
-        if (writeId) app2SegmentSize += sizeof(MAKERNOTE_ID);
+        if (writeId) {
+            app2SegmentSize += sizeof(MAKERNOTE_ID);
+        }
 
         writeMarkerSizeToBuf(pApp2Start, app2SegmentSize);
 

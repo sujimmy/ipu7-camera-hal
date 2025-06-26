@@ -48,7 +48,7 @@ CsiMetaDevice::~CsiMetaDevice() {
     delete mPollThread;
 }
 
-int CsiMetaDevice::init() {
+int CsiMetaDevice::init() const {
     return OK;
 }
 
@@ -106,7 +106,7 @@ int CsiMetaDevice::initDev() {
 
 void CsiMetaDevice::deinitDev() {
     mConfiguredDevices.clear();
-    if (mCsiMetaDevice) {
+    if (mCsiMetaDevice != nullptr) {
         // Release V4L2 buffers
         mCsiMetaDevice->Stop(true);
         mCsiMetaDevice->Close();
@@ -130,7 +130,7 @@ int CsiMetaDevice::initEmdMetaData() {
     int bpp = CameraUtils::getBpp(format.pixelCode);
     CheckAndLogError(bpp < 0, BAD_VALUE, "failed to get bpp (%d)", bpp);
 
-    int bpl = format.width * bpp / 8;
+    const int bpl = format.width * bpp / 8;
 
     mEmbeddedMetaData.csiMetaFormat = V4L2_FMT_IPU_ISYS_META;
     // for embedded meta data, width is equal with bytes per line
@@ -140,7 +140,9 @@ int CsiMetaDevice::initEmdMetaData() {
     ret = PlatformData::getVideoNodeNameByType(mCameraId, VIDEO_CSI_META, videoNodeName);
     if (ret == OK) {
         ret = PlatformData::getFormatByDevName(mCameraId, videoNodeName, format);
-        if (ret == OK) mEmbeddedMetaData.height = format.height;
+        if (ret == OK) {
+            mEmbeddedMetaData.height = format.height;
+        }
     }
 
     mEmbeddedMetaData.bpl = bpl;
@@ -158,7 +160,9 @@ int CsiMetaDevice::configure() {
                      __func__, mState);
 
     deinitLocked();
-    if (PlatformData::isCsiMetaEnabled(mCameraId)) mIsCsiMetaEnabled = true;
+    if (PlatformData::isCsiMetaEnabled(mCameraId)) {
+        mIsCsiMetaEnabled = true;
+    }
 
     int ret = resetState();
     CheckAndLogError(ret != OK, ret, "@%s: init csi meta device failed", __func__);
@@ -237,7 +241,7 @@ int CsiMetaDevice::poll() {
 
     LOG2("@%s before poll number buffer in devices: %d", __func__, mBuffersInCsiMetaDevice.load());
 
-    if (!hasBufferIndevice()) {
+    if (hasBufferIndevice() == 0) {
         LOG2("@%s there is no buffers in device, skip this poll", __func__);
         return OK;
     }
@@ -247,7 +251,7 @@ int CsiMetaDevice::poll() {
     }
 
     std::vector<V4L2Device*> readyDevices;
-    while ((timeOutCount--) && (ret == 0)) {
+    while (((timeOutCount--) != 0) && (ret == 0)) {
         V4L2DevicePoller poller{pollDevs, -1};
         ret = poller.Poll(poll_timeout, POLLPRI | POLLIN | POLLOUT | POLLERR, &readyDevices);
 
@@ -278,7 +282,7 @@ int CsiMetaDevice::hasBufferIndevice() {
 }
 
 int CsiMetaDevice::queueCsiMetaBuffer(const shared_ptr<CameraBuffer>& camBuffer) {
-    int ret = mCsiMetaDevice->PutFrame(&camBuffer->getV4L2Buffer());
+    const int ret = mCsiMetaDevice->PutFrame(&camBuffer->getV4L2Buffer());
     CheckAndLogError(ret < 0, BAD_VALUE, "%s: Failed to queue CSI meta buffer, ret=%d", __func__,
                      ret);
 
@@ -293,13 +297,15 @@ void CsiMetaDevice::handleCsiMetaBuffer() {
     AutoMutex l(mCsiMetaBuffersLock);
 
     shared_ptr<CameraBuffer> camBuffer = mCsiMetaCameraBuffers[mCsiMetaBufferDQIndex];
-    CheckAndLogError(!camBuffer, VOID_VALUE, "Csi meta camera buffer %d is null",
+    CheckAndLogError(camBuffer == nullptr, VOID_VALUE, "Csi meta camera buffer %d is null",
                      mCsiMetaBufferDQIndex);
 
     V4L2Buffer& vbuf = camBuffer->getV4L2Buffer();
     int index = mCsiMetaDevice->GrabFrame(&vbuf);
 
-    if (mExitPending) return;
+    if (mExitPending) {
+        return;
+    }
     CheckAndLogError(index < 0, VOID_VALUE, "grab frame failed. index %d", index);
 
     LOG2("%s: grab meta data buffer sequence %u timestamp %ld", __func__, camBuffer->getSequence(),
@@ -335,7 +341,7 @@ void CsiMetaDevice::handleCsiMetaBuffer() {
     metaData.timestamp = camBuffer->getTimestamp();
     metaData.sequence = camBuffer->getSequence();
 
-    queueCsiMetaBuffer(camBuffer);
+    (void)queueCsiMetaBuffer(camBuffer);
 }
 
 int CsiMetaDevice::setFormat() {
@@ -382,7 +388,8 @@ int CsiMetaDevice::allocCsiMetaBuffers() {
 
     for (int i = 0; i < bufNum; i++) {
         shared_ptr<CameraBuffer> camBuffer = std::make_shared<CameraBuffer>(V4L2_MEMORY_MMAP, 0, i);
-        CheckAndLogError(!camBuffer, NO_MEMORY, "@%s: fail to alloc CameraBuffer", __func__);
+        CheckAndLogError(camBuffer == nullptr, NO_MEMORY, "@%s: fail to alloc CameraBuffer",
+                         __func__);
 
         for (int j = 0; j < mEmbeddedMetaData.planesNum; j++) {
             LOG2("@%s, buffer size [%d] = %d", __func__, j, mEmbeddedMetaData.size[j]);
@@ -394,7 +401,7 @@ int CsiMetaDevice::allocCsiMetaBuffers() {
         mCsiMetaCameraBuffers.push_back(camBuffer);
 
         // Enqueue CSI meta buffer to ISP
-        queueCsiMetaBuffer(camBuffer);
+        (void)queueCsiMetaBuffer(camBuffer);
 
         LOG2("%s: store csi meta, index: %d, vbuff index: %d camBuffer->getBufferAddr() = %p",
              __func__, i, camBuffer->getIndex(), camBuffer->getBufferAddr());

@@ -209,14 +209,17 @@ int MockCameraHal::streamDqbuf(int cameraId, int streamId, camera_buffer_t** ubu
         mBufferReadyCondition[cameraId][streamId].wait_for(lock,
                                                            std::chrono::nanoseconds(kMaxDuration));
 
-        if (mCaptureResult[cameraId][streamId].empty())
+        if (mCaptureResult[cameraId][streamId].empty()) {
             LOGW("<id%d>@%s, wait buffer %d ready timeout", cameraId, __func__, streamId);
+        }
     }
 
     *ubuffer = mCaptureResult[cameraId][streamId].at(0);
     LOG2("<id%d>@%s, stream %d", cameraId, __func__, streamId);
     mCaptureResult[cameraId][streamId].pop_front();
-    if (settings) *settings = mParameter[cameraId];
+    if (settings != nullptr) {
+        *settings = mParameter[cameraId];
+    }
 
     return OK;
 }
@@ -234,7 +237,9 @@ void MockCameraHal::generateFrames(int cameraId) {
     std::shared_ptr<CaptureRequest> req = nullptr;
     {
         std::unique_lock<std::mutex> lock(mLock);
-        if (mCaptureRequest[cameraId].empty()) return;
+        if (mCaptureRequest[cameraId].empty()) {
+            return;
+        }
         req = mCaptureRequest[cameraId].at(0);
     }
     if (req) {
@@ -269,7 +274,9 @@ void MockCameraHal::generateFrames(int cameraId) {
 }
 
 bool MockCameraHal::threadLoop() {
-    if (Thread::isExiting()) return true;
+    if (Thread::isExiting()) {
+        return true;
+    }
 
     for (int cameraId = 0; cameraId < MAX_CAMERA_NUMBER; cameraId++) generateFrames(cameraId);
 
@@ -278,7 +285,9 @@ bool MockCameraHal::threadLoop() {
     uint64_t currentTimestamp = currentTime.tv_sec * 1000000000 + currentTime.tv_nsec;
     int waitTimeNs = mTimestamp + 33000000 - currentTimestamp;
 
-    if (waitTimeNs > 1000) usleep(waitTimeNs / 1000);
+    if (waitTimeNs > 1000) {
+        usleep(waitTimeNs / 1000);
+    }
     mTimestamp = currentTimestamp + waitTimeNs;
     return true;
 }

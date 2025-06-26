@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef PROCESSING_UNIT_H
+#define PROCESSING_UNIT_H
 
 #include <queue>
 #include <set>
@@ -65,10 +66,10 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
                       bool fakeTask = false, bool callbackRgbs = false);
     int setParameters(const DataContext* dataContext);
 
-    int64_t getSettingSequence(const CameraBufferPortMap& outBuf);
+    int64_t getSettingSequence(const CameraBufferPortMap& outBuf) const;
     bool needSkipOutputFrame(int64_t sequence);
-    bool needExecutePipe(int64_t settingSequence, int64_t inputSequence);
-    bool needHoldOnInputFrame(int64_t settingSequence, int64_t inputSequence);
+    bool needExecutePipe(int64_t settingSequence, int64_t inputSequence) const;
+    bool needHoldOnInputFrame(int64_t settingSequence, int64_t inputSequence) const;
 
     void outputRawImage(std::shared_ptr<CameraBuffer>& srcBuf,
                         std::shared_ptr<CameraBuffer>& dstBuf);
@@ -140,3 +141,5 @@ class ProcessingUnit : public IProcessingUnit, public PipeManagerCallback {
 };  // End of class ProcessingUnit
 
 }  // namespace icamera
+
+#endif // PROCESSING_UNIT_H

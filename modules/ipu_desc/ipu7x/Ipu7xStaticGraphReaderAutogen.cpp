@@ -80,6 +80,11 @@ StaticGraphStatus StaticGraphReader::Init(StaticReaderBinaryData& binaryGraphSet
     return StaticGraphStatus::SG_OK;
 }
 
+std::pair<int, const GraphConfigurationHeader*> StaticGraphReader::GetGraphConfigurationHeaders() const 
+{
+    return std::make_pair(_binaryHeader.numberOfResolutions, _graphConfigurationHeaders);
+}
+
 StaticGraphStatus StaticGraphReader::GetStaticGraphConfig(GraphConfigurationKey& settingsKey, IStaticGraphConfig** graph)
 {
     if (!_graphConfigurationHeaders || !_sensorModes || !_configurationData)

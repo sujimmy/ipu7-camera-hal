@@ -60,7 +60,7 @@ int Parameters::getAeMode(camera_ae_mode_t& aeMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    aeMode = (camera_ae_mode_t)entry.data.u8[0];
+    aeMode = static_cast<camera_ae_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -76,7 +76,7 @@ int Parameters::getAeState(camera_ae_state_t& aeState) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    aeState = (camera_ae_state_t)entry.data.u8[0];
+    aeState = static_cast<camera_ae_state_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -88,7 +88,7 @@ static int setRegions(CameraMetadata& metadata, camera_window_list_t regions, in
 
     const int ELEM_NUM = sizeof(camera_window_t) / sizeof(int);
     int values[regions.size() * ELEM_NUM];
-    for (size_t i = 0; i < regions.size(); i++) {
+    for (size_t i = 0U; i < regions.size(); i++) {
         values[i * ELEM_NUM] = regions[i].left;
         values[i * ELEM_NUM + 1] = regions[i].top;
         values[i * ELEM_NUM + 2] = regions[i].right;
@@ -102,12 +102,12 @@ static int setRegions(CameraMetadata& metadata, camera_window_list_t regions, in
 static int getRegions(icamera_metadata_ro_entry_t entry, camera_window_list_t& regions) {
     regions.clear();
     const int ELEM_NUM = sizeof(camera_window_t) / sizeof(int);
-    if (entry.count == 0 || entry.count % ELEM_NUM != 0) {
+    if ((entry.count == 0U) || ((entry.count % ELEM_NUM) != 0U)) {
         return NAME_NOT_FOUND;
     }
 
     camera_window_t w;
-    for (size_t i = 0; i < entry.count; i += ELEM_NUM) {
+    for (size_t i = 0U; i < entry.count; i += ELEM_NUM) {
         w.left = entry.data.i32[i];
         w.top = entry.data.i32[i + 1];
         w.right = entry.data.i32[i + 2];
@@ -233,7 +233,7 @@ int Parameters::getAntiBandingMode(camera_antibanding_mode_t& bandingMode) const
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    bandingMode = (camera_antibanding_mode_t)entry.data.u8[0];
+    bandingMode = static_cast<camera_antibanding_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -249,7 +249,7 @@ int Parameters::getAwbMode(camera_awb_mode_t& awbMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    awbMode = (camera_awb_mode_t)entry.data.u8[0];
+    awbMode = static_cast<camera_awb_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -265,7 +265,7 @@ int Parameters::getAwbState(camera_awb_state_t& awbState) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    awbState = (camera_awb_state_t)entry.data.u8[0];
+    awbState = static_cast<camera_awb_state_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -286,7 +286,7 @@ int Parameters::getAwbLock(bool& lock) const {
 }
 
 int Parameters::setAwbCctRange(camera_range_t cct) {
-    int range[] = {(int)cct.min, (int)cct.max};
+    int range[] = { static_cast<int>(cct.min), static_cast<int>(cct.max)};
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_AWB_CCT_RANGE, range,
                                                       ARRAY_SIZE(range));
@@ -299,8 +299,8 @@ int Parameters::getAwbCctRange(camera_range_t& cct) const {
     if (entry.count != ELEM_NUM) {
         return NAME_NOT_FOUND;
     }
-    cct.min = entry.data.i32[0];
-    cct.max = entry.data.i32[1];
+    cct.min = static_cast<float>(entry.data.i32[0]);
+    cct.max = static_cast<float>(entry.data.i32[1]);
     return OK;
 }
 
@@ -324,14 +324,14 @@ int Parameters::getAwbGains(camera_awb_gains_t& awbGains) const {
 }
 
 int Parameters::setAwbResult(void* data) {
-    uint32_t size = sizeof(camera_awb_result_t);
-    uint32_t tag = CAMERA_AWB_RESULT;
+    const uint32_t size = sizeof(camera_awb_result_t);
+    const uint32_t tag = CAMERA_AWB_RESULT;
     ParameterHelper::AutoWLock wl(mData);
 
     if (data == NULL) {
         return ParameterHelper::getMetadata(mData).erase(tag);
     }
-    return ParameterHelper::getMetadata(mData).update(tag, (uint8_t*)data, size);
+    return ParameterHelper::getMetadata(mData).update(tag, reinterpret_cast<uint8_t*>(data), size);
 }
 
 int Parameters::getAwbResult(void* data) const {
@@ -339,8 +339,8 @@ int Parameters::getAwbResult(void* data) const {
         return BAD_VALUE;
     }
 
-    uint32_t size = sizeof(camera_awb_result_t);
-    uint32_t tag = CAMERA_AWB_RESULT;
+    const uint32_t size = sizeof(camera_awb_result_t);
+    const uint32_t tag = CAMERA_AWB_RESULT;
     ParameterHelper::AutoRLock rl(mData);
 
     auto entry = ParameterHelper::getMetadataEntry(mData, tag);
@@ -395,7 +395,7 @@ int Parameters::getAwbWhitePoint(camera_coordinate_t& whitePoint) const {
 }
 
 int Parameters::setColorTransform(camera_color_transform_t colorTransform) {
-    float* transform = (float*)colorTransform.color_transform;
+    float* transform = reinterpret_cast<float*>(colorTransform.color_transform);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_AWB_COLOR_TRANSFORM, transform, 3 * 3);
 }
@@ -403,11 +403,11 @@ int Parameters::setColorTransform(camera_color_transform_t colorTransform) {
 int Parameters::getColorTransform(camera_color_transform_t& colorTransform) const {
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, CAMERA_AWB_COLOR_TRANSFORM);
-    const size_t ELEM_NUM = 3 * 3;
+    const size_t ELEM_NUM = 3U * 3U;
     if (entry.count != ELEM_NUM) {
         return NAME_NOT_FOUND;
     }
-    for (size_t i = 0; i < ELEM_NUM; i++) {
+    for (size_t i = 0U; i < ELEM_NUM; i++) {
         colorTransform.color_transform[i / 3][i % 3] = entry.data.f[i];
     }
 
@@ -424,11 +424,11 @@ int Parameters::getColorGains(camera_color_gains_t& colorGains) const {
     ParameterHelper::AutoRLock rl(mData);
     icamera_metadata_ro_entry_t entry =
         ParameterHelper::getMetadataEntry(mData, CAMERA_AWB_COLOR_GAINS);
-    const size_t ELEM_NUM = 4;
+    const size_t ELEM_NUM = 4U;
     if (entry.count != ELEM_NUM) {
         return NAME_NOT_FOUND;
     }
-    for (size_t i = 0; i < ELEM_NUM; i++) {
+    for (size_t i = 0U; i < ELEM_NUM; i++) {
         colorGains.color_gains_rggb[i] = entry.data.f[i];
     }
     return OK;
@@ -445,7 +445,7 @@ int Parameters::getAwbRegions(camera_window_list_t& awbRegions) const {
 }
 
 int Parameters::setEdgeMode(camera_edge_mode_t edgeMode) {
-    uint8_t mode = edgeMode;
+    uint8_t mode = static_cast<uint8_t>(edgeMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_EDGE_MODE, &mode, 1);
 }
@@ -456,12 +456,12 @@ int Parameters::getEdgeMode(camera_edge_mode_t& edgeMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    edgeMode = (camera_edge_mode_t)entry.data.u8[0];
+    edgeMode = static_cast<camera_edge_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setNrMode(camera_nr_mode_t nrMode) {
-    uint8_t mode = nrMode;
+    uint8_t mode = static_cast<uint8_t>(nrMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_NR_MODE, &mode, 1);
 }
@@ -472,7 +472,7 @@ int Parameters::getNrMode(camera_nr_mode_t& nrMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    nrMode = (camera_nr_mode_t)entry.data.u8[0];
+    nrMode = static_cast<camera_nr_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -497,7 +497,7 @@ int Parameters::getNrLevel(camera_nr_level_t& level) const {
 }
 
 int Parameters::setIrisMode(camera_iris_mode_t irisMode) {
-    uint8_t mode = irisMode;
+    uint8_t mode = static_cast<uint8_t>(irisMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_IRIS_MODE, &mode, 1);
 }
@@ -508,7 +508,7 @@ int Parameters::getIrisMode(camera_iris_mode_t& irisMode) {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    irisMode = (camera_iris_mode_t)entry.data.u8[0];
+    irisMode = static_cast<camera_iris_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -529,7 +529,7 @@ int Parameters::getIrisLevel(int& level) {
 
 // HDR_FEATURE_S
 int Parameters::setWdrMode(camera_wdr_mode_t wdrMode) {
-    uint8_t mode = wdrMode;
+    uint8_t mode = static_cast<uint8_t>(wdrMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_WDR_MODE, &mode, 1);
 }
@@ -540,7 +540,7 @@ int Parameters::getWdrMode(camera_wdr_mode_t& wdrMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    wdrMode = (camera_wdr_mode_t)entry.data.u8[0];
+    wdrMode = static_cast<camera_wdr_mode_t>(entry.data.u8[0]);
     return OK;
 }
 // HDR_FEATURE_E
@@ -561,7 +561,7 @@ int Parameters::getWdrLevel(uint8_t& level) const {
 }
 
 int Parameters::setEffectSceneMode(camera_scene_mode_t sceneMode) {
-    uint8_t mode = sceneMode;
+    uint8_t mode = static_cast<uint8_t>(sceneMode);
     LOGW("Effect scene mode is deprecated. Please use setSceneMode() instead.");
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_SCENE_MODE, &mode, 1);
@@ -574,12 +574,12 @@ int Parameters::getEffectSceneMode(camera_scene_mode_t& sceneMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    sceneMode = (camera_scene_mode_t)entry.data.u8[0];
+    sceneMode = static_cast<camera_scene_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setSceneMode(camera_scene_mode_t sceneMode) {
-    uint8_t mode = sceneMode;
+    uint8_t mode = static_cast<uint8_t>(sceneMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_SCENE_MODE, &mode, 1);
 }
@@ -590,7 +590,7 @@ int Parameters::getSceneMode(camera_scene_mode_t& sceneMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    sceneMode = (camera_scene_mode_t)entry.data.u8[0];
+    sceneMode = static_cast<camera_scene_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -607,7 +607,7 @@ int Parameters::getWeightGridMode(camera_weight_grid_mode_t& weightGridMode) con
 }
 
 int Parameters::setBlcAreaMode(camera_blc_area_mode_t blcAreaMode) {
-    uint8_t mode = blcAreaMode;
+    uint8_t mode = static_cast<uint8_t>(blcAreaMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_BLC_AREA_MODE, &mode, 1);
 }
@@ -618,7 +618,7 @@ int Parameters::getBlcAreaMode(camera_blc_area_mode_t& blcAreaMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    blcAreaMode = (camera_blc_area_mode_t)entry.data.u8[0];
+    blcAreaMode = static_cast<camera_blc_area_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -652,7 +652,7 @@ int Parameters::setImageEnhancement(camera_image_enhancement_t effects) {
 int Parameters::getImageEnhancement(camera_image_enhancement_t& effects) const {
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_CONTROL_IMAGE_ENHANCEMENT);
-    size_t number_of_effects = sizeof(camera_image_enhancement_t) / sizeof(int);
+    const size_t number_of_effects = sizeof(camera_image_enhancement_t) / sizeof(int);
     if (entry.count != number_of_effects) {
         return NAME_NOT_FOUND;
     }
@@ -666,7 +666,7 @@ int Parameters::getImageEnhancement(camera_image_enhancement_t& effects) const {
 }
 
 int Parameters::setDeinterlaceMode(camera_deinterlace_mode_t deinterlaceMode) {
-    uint8_t mode = deinterlaceMode;
+    uint8_t mode = static_cast<uint8_t>(deinterlaceMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_DEINTERLACE_MODE, &mode, 1);
 }
@@ -677,7 +677,7 @@ int Parameters::getDeinterlaceMode(camera_deinterlace_mode_t& deinterlaceMode) c
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    deinterlaceMode = (camera_deinterlace_mode_t)entry.data.u8[0];
+    deinterlaceMode = static_cast<camera_deinterlace_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -687,8 +687,8 @@ int Parameters::getSupportedVideoStabilizationMode(
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(
         mData, CAMERA_CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
-    for (size_t i = 0; i < entry.count; i++) {
-        supportedModes.push_back((camera_video_stabilization_mode_t)entry.data.u8[i]);
+    for (size_t i = 0U; i < entry.count; i++) {
+        supportedModes.push_back(static_cast<camera_video_stabilization_mode_t>(entry.data.u8[i]));
     }
 
     return OK;
@@ -698,8 +698,8 @@ int Parameters::getSupportedAeMode(vector<camera_ae_mode_t>& supportedAeModes) c
     supportedAeModes.clear();
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, CAMERA_AE_AVAILABLE_MODES);
-    for (size_t i = 0; i < entry.count; i++) {
-        supportedAeModes.push_back((camera_ae_mode_t)entry.data.u8[i]);
+    for (size_t i = 0U; i < entry.count; i++) {
+        supportedAeModes.push_back(static_cast<camera_ae_mode_t>(entry.data.u8[i]));
     }
 
     return OK;
@@ -709,8 +709,8 @@ int Parameters::getSupportedAwbMode(vector<camera_awb_mode_t>& supportedAwbModes
     supportedAwbModes.clear();
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, CAMERA_AWB_AVAILABLE_MODES);
-    for (size_t i = 0; i < entry.count; i++) {
-        supportedAwbModes.push_back((camera_awb_mode_t)entry.data.u8[i]);
+    for (size_t i = 0U; i < entry.count; i++) {
+        supportedAwbModes.push_back(static_cast<camera_awb_mode_t>(entry.data.u8[i]));
     }
 
     return OK;
@@ -720,8 +720,8 @@ int Parameters::getSupportedAfMode(vector<camera_af_mode_t>& supportedAfModes) c
     supportedAfModes.clear();
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, CAMERA_AF_AVAILABLE_MODES);
-    for (size_t i = 0; i < entry.count; i++) {
-        supportedAfModes.push_back((camera_af_mode_t)entry.data.u8[i]);
+    for (size_t i = 0U; i < entry.count; i++) {
+        supportedAfModes.push_back(static_cast<camera_af_mode_t>(entry.data.u8[i]));
     }
 
     return OK;
@@ -731,8 +731,8 @@ int Parameters::getSupportedSceneMode(vector<camera_scene_mode_t>& supportedScen
     supportedSceneModes.clear();
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, CAMERA_CONTROL_AVAILABLE_SCENE_MODES);
-    for (size_t i = 0; i < entry.count; i++) {
-        supportedSceneModes.push_back((camera_scene_mode_t)entry.data.u8[i]);
+    for (size_t i = 0U; i < entry.count; i++) {
+        supportedSceneModes.push_back(static_cast<camera_scene_mode_t>(entry.data.u8[i]));
     }
 
     return OK;
@@ -743,8 +743,9 @@ int Parameters::getSupportedAntibandingMode(
     supportedAntibindingModes.clear();
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, CAMERA_AE_AVAILABLE_ANTIBANDING_MODES);
-    for (size_t i = 0; i < entry.count; i++) {
-        supportedAntibindingModes.push_back((camera_antibanding_mode_t)entry.data.u8[i]);
+    for (size_t i = 0U; i < entry.count; i++) {
+        supportedAntibindingModes.push_back(
+            static_cast<camera_antibanding_mode_t>(entry.data.u8[i]));
     }
 
     return OK;
@@ -754,12 +755,12 @@ int Parameters::getSupportedFpsRange(camera_range_array_t& ranges) const {
     ranges.clear();
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, CAMERA_AE_AVAILABLE_TARGET_FPS_RANGES);
-    if (entry.count == 0 || entry.count % 2 != 0) {
+    if ((entry.count == 0) || ((entry.count % 2) != 0)) {
         return NAME_NOT_FOUND;
     }
 
     camera_range_t fps;
-    for (size_t i = 0; i < entry.count; i += 2) {
+    for (size_t i = 0U; i < entry.count; i += 2) {
         fps.min = entry.data.f[i];
         fps.max = entry.data.f[i + 1];
         ranges.push_back(fps);
@@ -773,14 +774,14 @@ int Parameters::getSupportedStreamConfig(stream_array_t& config) const {
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_INFO_AVAILABLE_CONFIGURATIONS);
     const int streamConfMemberNum = sizeof(stream_t) / sizeof(int);
-    if (entry.count == 0 || entry.count % streamConfMemberNum != 0) {
+    if ((entry.count == 0) || ((entry.count % streamConfMemberNum) != 0)) {
         return NAME_NOT_FOUND;
     }
 
     stream_t cfg;
     CLEAR(cfg);
 
-    for (size_t i = 0; i < entry.count; i += streamConfMemberNum) {
+    for (size_t i = 0U; i < entry.count; i += streamConfMemberNum) {
         MEMCPY_S(&cfg, sizeof(stream_t), &entry.data.i32[i], sizeof(stream_t));
         cfg.stride = CameraUtils::getStride(cfg.format, cfg.width);
         cfg.size = CameraUtils::getFrameSize(cfg.format, cfg.width, cfg.height);
@@ -797,8 +798,8 @@ int Parameters::getSupportedSensorExposureTimeRange(camera_range_t& range) const
         return NAME_NOT_FOUND;
     }
 
-    range.min = (float)(entry.data.i64[0]);
-    range.max = (float)(entry.data.i64[1]);
+    range.min = static_cast<float>(entry.data.i64[0]);
+    range.max = static_cast<float>(entry.data.i64[1]);
     return OK;
 }
 
@@ -810,8 +811,8 @@ int Parameters::getSupportedSensorSensitivityRange(camera_range_t& range) const 
         return NAME_NOT_FOUND;
     }
 
-    range.min = entry.data.i32[0];
-    range.max = entry.data.i32[1];
+    range.min = static_cast<float>(entry.data.i32[0]);
+    range.max = static_cast<float>(entry.data.i32[1]);
     return OK;
 }
 
@@ -819,8 +820,8 @@ int Parameters::getSupportedFeatures(camera_features_list_t& features) const {
     features.clear();
     ParameterHelper::AutoRLock rl(mData);
     auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_INFO_AVAILABLE_FEATURES);
-    for (size_t i = 0; i < entry.count; i++) {
-        features.push_back((camera_features)entry.data.u8[i]);
+    for (size_t i = 0U; i < entry.count; i++) {
+        features.push_back(static_cast<camera_features>(entry.data.u8[i]));
     }
     return OK;
 }
@@ -833,8 +834,8 @@ int Parameters::getAeCompensationRange(camera_range_t& evRange) const {
         return NAME_NOT_FOUND;
     }
 
-    evRange.min = entry.data.i32[0];
-    evRange.max = entry.data.i32[1];
+    evRange.min = static_cast<float>(entry.data.i32[0]);
+    evRange.max = static_cast<float>(entry.data.i32[1]);
     return OK;
 }
 
@@ -856,17 +857,17 @@ int Parameters::getSupportedAeExposureTimeRange(
 
     const int MEMBER_COUNT = 3;
     auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_INFO_AE_EXPOSURE_TIME_RANGE);
-    if (entry.count == 0 || entry.count % MEMBER_COUNT != 0) {
+    if ((entry.count == 0) || ((entry.count % MEMBER_COUNT) != 0)) {
         return NAME_NOT_FOUND;
     }
 
     camera_ae_exposure_time_range_t range;
     CLEAR(range);
 
-    for (size_t i = 0; i < entry.count; i += MEMBER_COUNT) {
-        range.scene_mode = (camera_scene_mode_t)entry.data.i32[i];
-        range.et_range.min = entry.data.i32[i + 1];
-        range.et_range.max = entry.data.i32[i + 2];
+    for (size_t i = 0U; i < entry.count; i += MEMBER_COUNT) {
+        range.scene_mode = static_cast<camera_scene_mode_t>(entry.data.i32[i]);
+        range.et_range.min = static_cast<float>(entry.data.i32[i + 1]);
+        range.et_range.max = static_cast<float>(entry.data.i32[i + 2]);
         etRanges.push_back(range);
     }
     return OK;
@@ -877,19 +878,19 @@ int Parameters::getSupportedAeGainRange(std::vector<camera_ae_gain_range_t>& gai
 
     const int MEMBER_COUNT = 3;
     auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_INFO_AE_GAIN_RANGE);
-    if (entry.count == 0 || entry.count % MEMBER_COUNT != 0) {
+    if ((entry.count == 0) || ((entry.count % MEMBER_COUNT) != 0)) {
         return NAME_NOT_FOUND;
     }
 
     camera_ae_gain_range_t range;
     CLEAR(range);
 
-    for (size_t i = 0; i < entry.count; i += MEMBER_COUNT) {
-        range.scene_mode = (camera_scene_mode_t)entry.data.i32[i];
+    for (size_t i = 0U; i < entry.count; i += MEMBER_COUNT) {
+        range.scene_mode = static_cast<camera_scene_mode_t>(entry.data.i32[i]);
         // Since we use int to store float, before storing it we multiply min and max by 100,
         // so we need to divide 100 when giving them outside.
-        range.gain_range.min = (float)entry.data.i32[i + 1] / 100.0;
-        range.gain_range.max = (float)entry.data.i32[i + 2] / 100.0;
+        range.gain_range.min = static_cast<float>(entry.data.i32[i + 1]) / 100.0;
+        range.gain_range.max = static_cast<float>(entry.data.i32[i + 2]) / 100.0;
         gainRanges.push_back(range);
     }
     return OK;
@@ -918,7 +919,8 @@ bool Parameters::getAwbLockAvailable() const {
 int Parameters::setExposureTimeRange(camera_range_t exposureTimeRange) {
     ParameterHelper::AutoWLock wl(mData);
     const int MEMBER_COUNT = 2;
-    int values[MEMBER_COUNT] = {(int)exposureTimeRange.min, (int)exposureTimeRange.max};
+    int values[MEMBER_COUNT] = { static_cast<int>(exposureTimeRange.min),
+                            static_cast<int>(exposureTimeRange.max) };
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_EXPOSURE_TIME_RANGE, values,
                                                       MEMBER_COUNT);
 }
@@ -928,12 +930,12 @@ int Parameters::getExposureTimeRange(camera_range_t& exposureTimeRange) const {
 
     const int MEMBER_COUNT = 2;
     auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_CONTROL_EXPOSURE_TIME_RANGE);
-    if (entry.count == 0 || entry.count != MEMBER_COUNT) {
+    if ((entry.count == 0) || (entry.count != MEMBER_COUNT)) {
         return NAME_NOT_FOUND;
     }
 
-    exposureTimeRange.min = entry.data.i32[0];
-    exposureTimeRange.max = entry.data.i32[1];
+    exposureTimeRange.min = static_cast<float>(entry.data.i32[0]);
+    exposureTimeRange.max = static_cast<float>(entry.data.i32[1]);
     return OK;
 }
 
@@ -960,7 +962,7 @@ int Parameters::getSensitivityGainRange(camera_range_t& sensitivityGainRange) co
 }
 
 int Parameters::setAeConvergeSpeed(camera_converge_speed_t speed) {
-    uint8_t aeSpeed = speed;
+    uint8_t aeSpeed = static_cast<uint8_t>(speed);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_AE_CONVERGE_SPEED, &aeSpeed, 1);
 }
@@ -972,12 +974,12 @@ int Parameters::getAeConvergeSpeed(camera_converge_speed_t& speed) const {
         return NAME_NOT_FOUND;
     }
 
-    speed = (camera_converge_speed_t)entry.data.u8[0];
+    speed = static_cast<camera_converge_speed_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setAwbConvergeSpeed(camera_converge_speed_t speed) {
-    uint8_t awbSpeed = speed;
+    uint8_t awbSpeed = static_cast<uint8_t>(speed);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_AWB_CONVERGE_SPEED, &awbSpeed, 1);
 }
@@ -989,12 +991,12 @@ int Parameters::getAwbConvergeSpeed(camera_converge_speed_t& speed) const {
         return NAME_NOT_FOUND;
     }
 
-    speed = (camera_converge_speed_t)entry.data.u8[0];
+    speed = static_cast<camera_converge_speed_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setAeConvergeSpeedMode(camera_converge_speed_mode_t mode) {
-    uint8_t speedMode = mode;
+    uint8_t speedMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_AE_CONVERGE_SPEED_MODE,
                                                       &speedMode, 1);
@@ -1007,12 +1009,12 @@ int Parameters::getAeConvergeSpeedMode(camera_converge_speed_mode_t& mode) const
         return NAME_NOT_FOUND;
     }
 
-    mode = (camera_converge_speed_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_converge_speed_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setAwbConvergeSpeedMode(camera_converge_speed_mode_t mode) {
-    uint8_t speedMode = mode;
+    uint8_t speedMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_AWB_CONVERGE_SPEED_MODE, &speedMode,
                                                       1);
@@ -1025,20 +1027,21 @@ int Parameters::getAwbConvergeSpeedMode(camera_converge_speed_mode_t& mode) cons
         return NAME_NOT_FOUND;
     }
 
-    mode = (camera_converge_speed_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_converge_speed_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setCustomAicParam(const void* data, unsigned int length) {
-    CheckAndLogError(!data, BAD_VALUE, "%s, invalid parameters", __func__);
+    CheckAndLogError(data == nullptr, BAD_VALUE, "%s, invalid parameters", __func__);
     ParameterHelper::AutoWLock wl(mData);
 
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_CUSTOM_AIC_PARAM,
-                                                      (uint8_t*)data, length);
+                                       reinterpret_cast<const uint8_t*>(data), length);
 }
 
 int Parameters::getCustomAicParam(void* data, unsigned int* length) const {
-    CheckAndLogError(!data || !length, BAD_VALUE, "%s, invalid parameters", __func__);
+    CheckAndLogError((data == nullptr) || (length == nullptr),
+                     BAD_VALUE, "%s, invalid parameters", __func__);
     ParameterHelper::AutoRLock rl(mData);
 
     auto entry = ParameterHelper::getMetadataEntry(mData, INTEL_CONTROL_CUSTOM_AIC_PARAM);
@@ -1068,7 +1071,7 @@ int Parameters::getDigitalZoomRatio(float& ratio) const {
 }
 
 int Parameters::setLdcMode(camera_ldc_mode_t mode) {
-    uint8_t ldcMode = mode;
+    uint8_t ldcMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_LDC_MODE, &ldcMode, 1);
 }
@@ -1079,12 +1082,12 @@ int Parameters::getLdcMode(camera_ldc_mode_t& mode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    mode = (camera_ldc_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_ldc_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setRscMode(camera_rsc_mode_t mode) {
-    uint8_t rscMode = mode;
+    uint8_t rscMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_RSC_MODE, &rscMode, 1);
 }
@@ -1095,12 +1098,12 @@ int Parameters::getRscMode(camera_rsc_mode_t& mode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    mode = (camera_rsc_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_rsc_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setFlipMode(camera_flip_mode_t mode) {
-    uint8_t flipMode = mode;
+    uint8_t flipMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_FLIP_MODE, &flipMode, 1);
 }
@@ -1111,12 +1114,12 @@ int Parameters::getFlipMode(camera_flip_mode_t& mode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    mode = (camera_flip_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_flip_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setMonoDsMode(camera_mono_downscale_mode_t mode) {
-    uint8_t monoDsMode = mode;
+    uint8_t monoDsMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_MONO_DOWNSCALE, &monoDsMode, 1);
 }
@@ -1127,7 +1130,7 @@ int Parameters::getMonoDsMode(camera_mono_downscale_mode_t& mode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    mode = (camera_mono_downscale_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_mono_downscale_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -1147,7 +1150,7 @@ int Parameters::getRun3ACadence(int& cadence) const {
 }
 
 int Parameters::setFisheyeDewarpingMode(camera_fisheye_dewarping_mode_t mode) {
-    uint8_t dewarpingMode = mode;
+    uint8_t dewarpingMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_FISHEYE_DEWARPING_MODE,
                                                       &dewarpingMode, 1);
@@ -1159,12 +1162,12 @@ int Parameters::getFisheyeDewarpingMode(camera_fisheye_dewarping_mode_t& mode) c
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    mode = (camera_fisheye_dewarping_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_fisheye_dewarping_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setAeDistributionPriority(camera_ae_distribution_priority_t priority) {
-    uint8_t distributionPriority = priority;
+    uint8_t distributionPriority = static_cast<uint8_t>(priority);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_AE_DISTRIBUTION_PRIORITY,
                                                       &distributionPriority, 1);
@@ -1177,12 +1180,12 @@ int Parameters::getAeDistributionPriority(camera_ae_distribution_priority_t& pri
         return NAME_NOT_FOUND;
     }
 
-    priority = (camera_ae_distribution_priority_t)entry.data.u8[0];
+    priority = static_cast<camera_ae_distribution_priority_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setYuvColorRangeMode(camera_yuv_color_range_mode_t colorRange) {
-    uint8_t mode = colorRange;
+    uint8_t mode = static_cast<uint8_t>(colorRange);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(INTEL_CONTROL_YUV_COLOR_RANGE, &mode, 1);
 }
@@ -1194,7 +1197,7 @@ int Parameters::getYuvColorRangeMode(camera_yuv_color_range_mode_t& colorRange) 
         return NAME_NOT_FOUND;
     }
 
-    colorRange = (camera_yuv_color_range_mode_t)entry.data.u8[0];
+    colorRange = static_cast<camera_yuv_color_range_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -1330,7 +1333,7 @@ int Parameters::setJpegGpsProcessingMethod(const char* processMethod) {
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_JPEG_GPS_PROCESSING_METHOD,
                                                       (const uint8_t*)processMethod,
-                                                      strlen(processMethod) + 1);
+                                                      strlen(processMethod) + 1U);
 }
 
 int Parameters::getJpegGpsProcessingMethod(int size, char* processMethod) const {
@@ -1344,7 +1347,7 @@ int Parameters::getJpegGpsProcessingMethod(int size, char* processMethod) const 
 }
 
 int Parameters::setImageEffect(camera_effect_mode_t effect) {
-    uint8_t effectmode = effect;
+    uint8_t effectmode = static_cast<uint8_t>(effect);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_CONTROL_EFFECT_MODE, &effectmode, 1);
 }
@@ -1355,12 +1358,12 @@ int Parameters::getImageEffect(camera_effect_mode_t& effect) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    effect = (camera_effect_mode_t)entry.data.u8[0];
+    effect = static_cast<camera_effect_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setVideoStabilizationMode(camera_video_stabilization_mode_t mode) {
-    uint8_t dvsMode = mode;
+    uint8_t dvsMode = static_cast<uint8_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_CONTROL_VIDEO_STABILIZATION_MODE,
                                                       &dvsMode, 1);
@@ -1372,7 +1375,7 @@ int Parameters::getVideoStabilizationMode(camera_video_stabilization_mode_t& mod
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    mode = (camera_video_stabilization_mode_t)entry.data.u8[0];
+    mode = static_cast<camera_video_stabilization_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -1382,7 +1385,7 @@ int Parameters::getFocalLength(float& focal) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    focal = (float)entry.data.f[0];
+    focal = static_cast<float>(entry.data.f[0]);
     return OK;
 }
 
@@ -1440,7 +1443,7 @@ int Parameters::getFocusRange(camera_range_t& focusRange) const {
 }
 
 int Parameters::setAfMode(camera_af_mode_t afMode) {
-    uint8_t mode = afMode;
+    uint8_t mode = static_cast<uint8_t>(afMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_AF_MODE, &mode, 1);
 }
@@ -1451,12 +1454,12 @@ int Parameters::getAfMode(camera_af_mode_t& afMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    afMode = (camera_af_mode_t)entry.data.u8[0];
+    afMode = static_cast<camera_af_mode_t>(entry.data.u8[0]);
     return OK;
 }
 
 int Parameters::setAfTrigger(camera_af_trigger_t afTrigger) {
-    uint8_t trigger = afTrigger;
+    uint8_t trigger = static_cast<uint8_t>(afTrigger);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_AF_TRIGGER, &trigger, 1);
 }
@@ -1467,7 +1470,7 @@ int Parameters::getAfTrigger(camera_af_trigger_t& afTrigger) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    afTrigger = (camera_af_trigger_t)entry.data.u8[0];
+    afTrigger = static_cast<camera_af_trigger_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -1482,7 +1485,7 @@ int Parameters::getAfRegions(camera_window_list_t& afRegions) const {
 }
 
 int Parameters::setAfState(camera_af_state_t afState) {
-    uint8_t state = afState;
+    uint8_t state = static_cast<uint8_t>(afState);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_AF_STATE, &state, 1);
 }
@@ -1493,7 +1496,7 @@ int Parameters::getAfState(camera_af_state_t& afState) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    afState = (camera_af_state_t)entry.data.u8[0];
+    afState = static_cast<camera_af_state_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -1561,7 +1564,7 @@ int Parameters::getSensorMountType(camera_mount_type_t& sensorMountType) const {
         return NAME_NOT_FOUND;
     }
 
-    sensorMountType = (camera_mount_type_t)entry.data.u8[0];
+    sensorMountType = static_cast<camera_mount_type_t>(entry.data.u8[0]);
     return OK;
 }
 
@@ -1572,7 +1575,7 @@ int Parameters::updateDebugLevel() {
 }
 
 int Parameters::setTestPatternMode(camera_test_pattern_mode_t mode) {
-    int32_t testPatterMode = mode;
+    int32_t testPatterMode = static_cast<int32_t>(mode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_SENSOR_TEST_PATTERN_MODE,
                                                       &testPatterMode, 1);
@@ -1584,7 +1587,7 @@ int Parameters::getTestPatternMode(camera_test_pattern_mode_t& mode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    mode = (camera_test_pattern_mode_t)entry.data.i32[0];
+    mode = static_cast<camera_test_pattern_mode_t>(entry.data.i32[0]);
     return OK;
 }
 
@@ -1648,7 +1651,7 @@ int Parameters::getSensorActiveArraySize(camera_coordinate_system_t& arraySize) 
 }
 
 int Parameters::setShadingMode(camera_shading_mode_t shadingMode) {
-    uint8_t mode = shadingMode;
+    uint8_t mode = static_cast<uint8_t>(shadingMode);
     ParameterHelper::AutoWLock wl(mData);
     return ParameterHelper::getMetadata(mData).update(CAMERA_SHADING_MODE, &mode, 1);
 }
@@ -1659,7 +1662,7 @@ int Parameters::getShadingMode(camera_shading_mode_t& shadingMode) const {
     if (entry.count != 1) {
         return NAME_NOT_FOUND;
     }
-    shadingMode = (camera_shading_mode_t)entry.data.u8[0];
+    shadingMode = static_cast<camera_shading_mode_t>(entry.data.u8[0]);
     return OK;
 }
 

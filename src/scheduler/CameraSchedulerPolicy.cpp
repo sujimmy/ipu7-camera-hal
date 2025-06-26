@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation
+ * Copyright (C) 2022-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,9 +54,11 @@ CameraSchedulerPolicy::CameraSchedulerPolicy()
 
     std::string filename(SCHEDULER_POLICY_FILE_NAME);
     std::string fullPath = PlatformData::getCameraCfgPath() + filename;
-    run(fullPath);
+    CameraSchedulerPolicy::run(fullPath);
 
-    if (!mPolicyConfigs.empty()) mActiveConfig = &mPolicyConfigs.front();
+    if (!mPolicyConfigs.empty()) {
+        mActiveConfig = &mPolicyConfigs.front();
+    }
 }
 
 CameraSchedulerPolicy::~CameraSchedulerPolicy() {
@@ -106,8 +108,12 @@ void CameraSchedulerPolicy::parseExecutorsObject(const Json::Value& node,
         auto ele = node[i];
         ExecutorDesc exe;
 
-        if (ele.isMember("name")) exe.exeName = ele["name"].asString();
-        if (ele.isMember("trigger")) exe.triggerName = ele["trigger"].asString();
+        if (ele.isMember("name")) {
+            exe.exeName = ele["name"].asString();
+        }
+        if (ele.isMember("trigger")) {
+            exe.triggerName = ele["trigger"].asString();
+        }
         if (ele.isMember("nodes")) {
             for (Json::Value::ArrayIndex j = 0; j < ele["nodes"].size(); j++)
                 exe.nodeList.push_back(ele["nodes"][j].asString());
@@ -119,9 +125,13 @@ void CameraSchedulerPolicy::parseExecutorsObject(const Json::Value& node,
 
 bool CameraSchedulerPolicy::run(const std::string& filename) {
     auto root = openJsonFile(filename);
-    if (root.empty()) return true;
+    if (root.empty()) {
+        return true;
+    }
 
-    if (!root.isMember("PipeSchedulerPolicy")) return false;
+    if (!root.isMember("PipeSchedulerPolicy")) {
+        return false;
+    }
 
     const Json::Value& node = root["PipeSchedulerPolicy"];
     if (node.isMember("schedulers")) {
@@ -130,9 +140,15 @@ bool CameraSchedulerPolicy::run(const std::string& filename) {
             auto ele = scheduler[i];
             PolicyConfigDesc desc;
 
-            if (ele.isMember("id")) desc.configId = ele["id"].asUInt();
-            if (ele.isMember("graphId")) desc.graphId = ele["graphId"].asUInt();
-            if (ele.isMember("pipe_executors")) parseExecutorsObject(ele["pipe_executors"], &desc);
+            if (ele.isMember("id")) {
+                desc.configId = ele["id"].asUInt();
+            }
+            if (ele.isMember("graphId")) {
+                desc.graphId = ele["graphId"].asUInt();
+            }
+            if (ele.isMember("pipe_executors")) {
+                parseExecutorsObject(ele["pipe_executors"], &desc);
+            }
 
             mPolicyConfigs.push_back(desc);
         }

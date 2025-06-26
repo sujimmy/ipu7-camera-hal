@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef BUFFER_QUEUE_H
+#define BUFFER_QUEUE_H
 
 #include <map>
 #include <vector>
@@ -182,3 +183,5 @@ class BufferQueue : public BufferConsumer, public BufferProducer, public EventLi
 };
 
 }  // namespace icamera
+
+#endif // BUFFER_QUEUE_H

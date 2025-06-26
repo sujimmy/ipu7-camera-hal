@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIQ_ENGINE_H
+#define AIQ_ENGINE_H
 
 #include "AiqCore.h"
 #include "AiqResult.h"
@@ -140,3 +141,5 @@ class AiqEngine : public EventListener {
 };
 
 } /* namespace icamera */
+
+#endif // AIQ_ENGINE_H

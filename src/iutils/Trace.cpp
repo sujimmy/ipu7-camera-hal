@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2021 Intel Corporation
+ * Copyright (C) 2014-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@
 
 namespace icamera {
 
-std::atomic<int> atrace_is_ready(0);
+std::atomic<int32_t> atrace_is_ready(0);
 uint64_t atrace_enabled_tags = ATRACE_TAG_NOT_READY;
-int atrace_marker_fd = -1;
+int32_t atrace_marker_fd = -1;
 static pthread_once_t atrace_once_control = PTHREAD_ONCE_INIT;
 
 static void atrace_init_once() {
