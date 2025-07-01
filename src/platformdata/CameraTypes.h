@@ -26,10 +26,10 @@ namespace icamera {
 
 typedef uint32_t uuid;
 
-#define INVALID_PORT 0
+#define INVALID_PORT 0U
 #define MAX_BUFFER_COUNT (10)
-#define MAX_STREAM_NUMBER 7
-#define MAX_SETTING_COUNT 40
+#define MAX_STREAM_NUMBER 7U
+#define MAX_SETTING_COUNT 40U
 
 #define DEFAULT_JPEG_QUALITY 95
 #define DEFAULT_THUMBNAIL_QUALITY 0

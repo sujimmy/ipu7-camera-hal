@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_CONTEXT_H
+#define CAMERA_CONTEXT_H
 
 #include <map>
 #include <mutex>
@@ -173,3 +174,5 @@ class CameraContext {
 }; /* CameraContext */
 
 } /* namespace icamera */
+
+#endif // CAMERA_CONTEXT_H

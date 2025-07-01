@@ -41,7 +41,9 @@ void GPUPostStage::setFrameInfo(const std::map<uuid, stream_t>& inputInfo,
     if (mTnr7Stage) {
         int ret =
             mTnr7Stage->init(inputInfo.begin()->second.width, inputInfo.begin()->second.height);
-        if (ret) mTnr7Stage = nullptr;
+        if (ret != 0) {
+            mTnr7Stage = nullptr;
+        }
     }
 
     if (mTnr7Stage) {
@@ -63,18 +65,24 @@ int GPUPostStage::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBuffer
     mPendingOutBuffers[port] = camBuffer;
     // Wait for all output buffers come for one request.
     // Assume no buffer of request n+1 comes before stage gets all output buffers of request n.
-    if (mPendingOutBuffers.size() < mOutputBuffersNum) return OK;
+    if (mPendingOutBuffers.size() < mOutputBuffersNum) {
+        return OK;
+    }
 
     int64_t sequence = -1;
     for (auto& item : mPendingOutBuffers) {
         CameraBufQ& output = mOutputQueue[item.first];
         output.push(item.second);
-        if (item.second) sequence = item.second->getSettingSequence();
+        if (item.second != nullptr) {
+            sequence = item.second->getSettingSequence();
+        }
     }
 
     // Select input buffers for the request
     std::shared_ptr<CameraBuffer> inBuffer;
-    if (!fetchRequestBuffer(sequence, inBuffer)) return INVALID_OPERATION;
+    if (!fetchRequestBuffer(sequence, inBuffer)) {
+        return INVALID_OPERATION;
+    }
     mBufferProducer->qbuf(mInputPort, inBuffer);
 
     mPendingOutBuffers.clear();
@@ -100,14 +108,18 @@ bool GPUPostStage::process(int64_t triggerId) {
 
     {
         AutoMutex l(mBufferQueueLock);
-        if (getFreeBuffersInQueue(inBuffers, outBuffers) != OK) return true;
+        if (getFreeBuffersInQueue(inBuffers, outBuffers) != OK) {
+            return true;
+        }
     }
 
     std::shared_ptr<CameraBuffer> inBuffer = inBuffers.begin()->second;
     v4l2_buffer_t inV4l2Buf = *inBuffer->getV4L2Buffer().Get();
     int64_t sequence = inBuffer->getSequence();
     for (auto& output : outBuffers) {
-        if (!output.second) continue;
+        if (!output.second) {
+            continue;
+        }
         if (mTnr7Stage) {
             mTnr7usParam->bc.is_first_frame = 1;
             mTnr7Stage->runTnrFrame(inBuffer->getBufferAddr(), output.second->getBufferAddr(),
@@ -161,7 +173,9 @@ int32_t GPUPostStage::allocateBuffers() {
     while (!mQueuedInputBuffers.empty()) mQueuedInputBuffers.pop();
     CheckAndLogError(!mBufferProducer, BAD_VALUE, "@%s: Buffer Producer is nullptr", __func__);
 
-    if (mInputFrameInfo.empty()) return OK;
+    if (mInputFrameInfo.empty()) {
+        return OK;
+    }
 
     // Only support one input currently
     const stream_t& input = mInputFrameInfo[mInputPort];

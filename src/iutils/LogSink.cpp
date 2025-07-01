@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2024 Intel Corporation.
+ * Copyright (C) 2021-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 #include "iutils/Utils.h"
 
 namespace icamera {
-extern const char* cameraDebugLogToString(int level);
+extern const char* cameraDebugLogToString(uint32_t level);
 #define CAMERA_DEBUG_LOG_ERR (1 << 5)
 #define CAMERA_DEBUG_LOG_WARNING (1 << 3)
 
@@ -53,7 +53,7 @@ void LibcameraLogSink::sendOffLog(LogItem logItem) {
 void StdconLogSink::sendOffLog(LogItem logItem) {
 #define TIME_BUF_SIZE 128
     char timeInfo[TIME_BUF_SIZE];
-    setLogTime(timeInfo);
+    LogOutputSink::setLogTime(timeInfo);
     fprintf(stdout, "[%s] CamHAL[%s] %s: %s\n", timeInfo,
             icamera::cameraDebugLogToString(logItem.level), logItem.logTags, logItem.logEntry);
 }
@@ -61,15 +61,15 @@ void StdconLogSink::sendOffLog(LogItem logItem) {
 void LogOutputSink::setLogTime(char* buf) {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
-    time_t nowtime = tv.tv_sec;
+    const time_t nowtime = tv.tv_sec;
     struct tm local_tm;
 
     struct tm* nowtm = localtime_r(&nowtime, &local_tm);
-    if (nowtm) {
+    if (nowtm != nullptr) {
         char tmbuf[TIME_BUF_SIZE];
-        strftime(tmbuf, TIME_BUF_SIZE, "%m-%d %H:%M:%S", nowtm);
+        (void)strftime(tmbuf, TIME_BUF_SIZE, "%m-%d %H:%M:%S", nowtm);
         snprintf(buf, TIME_BUF_SIZE, "%.96s.%d", tmbuf,
-                 static_cast<int>((tv.tv_usec / 1000) % 1000));
+                 static_cast<int>((tv.tv_usec / 1000U) % 1000U));
     }
 }
 
@@ -95,17 +95,19 @@ void FtraceLogSink::sendOffLog(LogItem logItem) {
 FileLogSink::FileLogSink() {
     static const char* filePath = ::getenv("FILE_LOG_PATH");
 
-    if (!filePath) filePath = DEFALUT_PATH;
+    if (filePath == nullptr) {
+        filePath = DEFALUT_PATH;
+    }
 
     mFp = fopen(filePath, "w");
 }
 
 void FileLogSink::sendOffLog(LogItem logItem) {
     char timeInfo[TIME_BUF_SIZE];
-    setLogTime(timeInfo);
+    LogOutputSink::setLogTime(timeInfo);
     fprintf(mFp, "[%s] CamHAL[%s] %s:%s\n", timeInfo,
             icamera::cameraDebugLogToString(logItem.level), logItem.logTags, logItem.logEntry);
-    fflush(mFp);
+    (void)fflush(mFp);
 }
 
 }  // namespace icamera

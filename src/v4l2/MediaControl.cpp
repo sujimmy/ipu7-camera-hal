@@ -191,13 +191,15 @@ int MediaControl::resetAllLinks() {
         for (uint32_t j = 0; j < entity.numLinks; j++) {
             MediaLink* link = &entity.links[j];
 
-            if (link->flags & MEDIA_LNK_FL_IMMUTABLE ||
-                link->source->entity->info.id != entity.info.id) {
+            if ((link->flags & MEDIA_LNK_FL_IMMUTABLE) ||
+                (link->source->entity->info.id != entity.info.id)) {
                 continue;
             }
             int ret = setupLink(link->source, link->sink, link->flags & ~MEDIA_LNK_FL_ENABLED);
 
-            if (ret < 0) return ret;
+            if (ret < 0) {
+                return ret;
+            }
         }
     }
 
@@ -225,7 +227,7 @@ int MediaControl::resetAllRoutes(int cameraId) {
             continue;
         }
 
-        for (uint32_t j = 0; j < numRoutes; j++) {
+        for (uint32_t j = 0U; j < numRoutes; j++) {
             routes[j].flags &= ~V4L2_SUBDEV_ROUTE_FL_ACTIVE;
         }
 
@@ -248,13 +250,15 @@ int MediaControl::setupLink(MediaPad* source, MediaPad* sink, uint32_t flags) {
     SysCall* sc = SysCall::getInstance();
 
     int fd = openDevice();
-    if (fd < 0) goto done;
+    if (fd < 0) {
+        goto done;
+    }
 
-    for (i = 0; i < source->entity->numLinks; i++) {
+    for (i = 0U; i < source->entity->numLinks; i++) {
         link = &source->entity->links[i];
 
-        if (link->source->entity == source->entity && link->source->index == source->index &&
-            link->sink->entity == sink->entity && link->sink->index == sink->index)
+        if ((link->source->entity == source->entity) && (link->source->index == source->index) &&
+            (link->sink->entity == sink->entity) && (link->sink->index == sink->index))
             break;
     }
 
@@ -265,7 +269,7 @@ int MediaControl::setupLink(MediaPad* source, MediaPad* sink, uint32_t flags) {
     }
 
     /* source pad */
-    memset(&ulink, 0, sizeof(media_link_desc));
+    (void)memset(&ulink, 0, sizeof(media_link_desc));
     ulink.source.entity = source->entity->info.id;
     ulink.source.index = source->index;
     ulink.source.flags = MEDIA_PAD_FL_SOURCE;
@@ -275,9 +279,13 @@ int MediaControl::setupLink(MediaPad* source, MediaPad* sink, uint32_t flags) {
     ulink.sink.index = sink->index;
     ulink.sink.flags = MEDIA_PAD_FL_SINK;
 
-    if (link) ulink.flags = flags | (link->flags & MEDIA_LNK_FL_IMMUTABLE);
+    if (link != nullptr) {
+        ulink.flags = flags | (link->flags & MEDIA_LNK_FL_IMMUTABLE);
+    }
 
-    if (Log::isDumpMediaInfo()) dumpLinkDesc(&ulink, 1);
+    if (Log::isDumpMediaInfo()) {
+        dumpLinkDesc(&ulink, 1);
+    }
 
     ret = sc->ioctl(fd, MEDIA_IOC_SETUP_LINK, &ulink);
     if (ret == -1) {
@@ -304,7 +312,7 @@ int MediaControl::setupLink(uint32_t srcEntity, uint32_t srcPad, uint32_t sinkEn
          srcPad, sinkEntity, sinkPad, enable);
 
     for (auto& entity : mEntities) {
-        for (uint32_t j = 0; j < entity.numLinks; j++) {
+        for (uint32_t j = 0U; j < entity.numLinks; j++) {
             MediaLink* link = &entity.links[j];
 
             if ((link->source->entity->info.id == srcEntity) && (link->source->index == srcPad) &&
@@ -340,7 +348,9 @@ int MediaControl::openDevice() {
 void MediaControl::closeDevice(int fd) {
     LOG1("@%s, fd %d", __func__, fd);
 
-    if (fd < 0) return;
+    if (fd < 0) {
+        return;
+    }
 
     SysCall* sc = SysCall::getInstance();
 
@@ -365,14 +375,16 @@ void MediaControl::dumpInfo(media_device_info& devInfo) {
          (devInfo.driver_version << 16) & 0xff, (devInfo.driver_version << 8) & 0xff,
          (devInfo.driver_version << 0) & 0xff);
 
-    for (uint32_t i = 0; i < sizeof(devInfo.reserved) / sizeof(uint32_t); i++)
+    for (uint32_t i = 0U; i < sizeof(devInfo.reserved) / sizeof(uint32_t); i++)
         LOGI("reserved[%u] %d", i, devInfo.reserved[i]);
 }
 
 int MediaControl::enumInfo() {
     SysCall* sc = SysCall::getInstance();
 
-    if (mEntities.size() > 0) return 0;
+    if (mEntities.size() > 0) {
+        return 0;
+    }
 
     int fd = openDevice();
     if (fd < 0) {
@@ -388,7 +400,9 @@ int MediaControl::enumInfo() {
         goto done;
     }
 
-    if (Log::isDumpMediaInfo()) dumpInfo(info);
+    if (Log::isDumpMediaInfo()) {
+        dumpInfo(info);
+    }
 
     ret = enumEntities(fd, info);
     if (ret < 0) {
@@ -421,7 +435,7 @@ void MediaControl::dumpEntityDesc(media_entity_desc& desc, media_device_info& de
     LOGI("pads %d", desc.pads);
     LOGI("links %u", desc.links);
 
-    for (uint32_t i = 0; i < sizeof(desc.reserved) / sizeof(uint32_t); i++)
+    for (uint32_t i = 0U; i < sizeof(desc.reserved) / sizeof(uint32_t); i++)
         LOGI("reserved[%u] %d", i, devInfo.reserved[i]);
 }
 
@@ -431,8 +445,8 @@ int MediaControl::enumEntities(int fd, media_device_info& devInfo) {
     int ret;
     SysCall* sc = SysCall::getInstance();
 
-    for (id = 0, ret = 0;; id = entity.info.id) {
-        memset(&entity, 0, sizeof(MediaEntity));
+    for (id = 0U, ret = 0;; id = entity.info.id) {
+        (void)memset(&entity, 0, sizeof(MediaEntity));
         entity.info.id = id | MEDIA_ENT_ID_FLAG_NEXT;
 
         ret = sc->ioctl(fd, MEDIA_IOC_ENUM_ENTITIES, &entity.info);
@@ -441,7 +455,9 @@ int MediaControl::enumEntities(int fd, media_device_info& devInfo) {
             break;
         }
 
-        if (Log::isDumpMediaInfo()) dumpEntityDesc(entity.info, devInfo);
+        if (Log::isDumpMediaInfo()) {
+            dumpEntityDesc(entity.info, devInfo);
+        }
 
         /* Number of links (for outbound links) plus number of pads (for
          * inbound links) is a good safe initial estimate of the total
@@ -451,7 +467,7 @@ int MediaControl::enumEntities(int fd, media_device_info& devInfo) {
 
         entity.pads = new MediaPad[entity.info.pads];
         entity.links = new MediaLink[entity.maxLinks];
-        getDevnameFromSysfs(&entity);
+        (void)getDevnameFromSysfs(&entity);
         mEntities.push_back(entity);
 
         /* Note: carefully to move the follow setting. It must be behind of
@@ -461,7 +477,7 @@ int MediaControl::enumEntities(int fd, media_device_info& devInfo) {
          * 2. we can't set entity.pads[i].entity to &entity direct. Because,
          * entity is stack variable, its scope is just this function.
          */
-        for (uint32_t i = 0; i < entity.info.pads; ++i) {
+        for (uint32_t i = 0U; i < entity.info.pads; ++i) {
             entity.pads[i].entity = getEntityById(entity.info.id);
         }
     }
@@ -500,7 +516,7 @@ int MediaControl::getDevnameFromSysfs(MediaEntity* entity) {
     d++; /* skip '/' */
 
     char* t = strstr(d, "dvb");
-    if (t && t == d) {
+    if (t && (t == d)) {
         t = strchr(t, '.');
         if (!t) {
             LOGE("target is invalid %s.", target);
@@ -568,13 +584,13 @@ int MediaControl::enumLinks(int fd) {
             dumpLinkDesc(links.links, entity.info.links);
         }
 
-        for (i = 0; i < entity.info.pads; ++i) {
+        for (i = 0U; i < entity.info.pads; ++i) {
             entity.pads[i].entity = getEntityById(entity.info.id);
             entity.pads[i].index = links.pads[i].index;
             entity.pads[i].flags = links.pads[i].flags;
         }
 
-        for (i = 0; i < entity.info.links; ++i) {
+        for (i = 0U; i < entity.info.links; ++i) {
             media_link_desc* link = &links.links[i];
             MediaLink* fwdlink;
             MediaLink* backlink;
@@ -584,27 +600,31 @@ int MediaControl::enumLinks(int fd) {
             source = getEntityById(link->source.entity);
             sink = getEntityById(link->sink.entity);
 
-            if (source == nullptr || sink == nullptr) {
+            if ((source == nullptr) || (sink == nullptr)) {
                 LOG1("WARNING entity %u link %u src %u/%u to %u/%u is invalid!", entity.info.id, i,
                      link->source.entity, link->source.index, link->sink.entity, link->sink.index);
                 ret = -EINVAL;
             } else {
                 fwdlink = entityAddLink(source);
-                if (fwdlink) {
+                if (fwdlink != nullptr) {
                     fwdlink->source = &source->pads[link->source.index];
                     fwdlink->sink = &sink->pads[link->sink.index];
                     fwdlink->flags = link->flags;
                 }
 
                 backlink = entityAddLink(sink);
-                if (backlink) {
+                if (backlink != nullptr) {
                     backlink->source = &source->pads[link->source.index];
                     backlink->sink = &sink->pads[link->sink.index];
                     backlink->flags = link->flags;
                 }
 
-                if (fwdlink) fwdlink->twin = backlink;
-                if (backlink) backlink->twin = fwdlink;
+                if (fwdlink != nullptr) {
+                    fwdlink->twin = backlink;
+                }
+                if (backlink != nullptr) {
+                    backlink->twin = fwdlink;
+                }
             }
         }
 
@@ -624,7 +644,7 @@ MediaLink* MediaControl::entityAddLink(MediaEntity* entity) {
                  sizeof(MediaLink) * entity->maxLinks);
         delete[] entity->links;
 
-        for (uint32_t i = 0; i < entity->numLinks; ++i) {
+        for (uint32_t i = 0U; i < entity->numLinks; ++i) {
             links[i].twin->twin = &links[i];
         }
 
@@ -640,8 +660,8 @@ MediaEntity* MediaControl::getEntityById(uint32_t id) {
 
     id &= ~MEDIA_ENT_ID_FLAG_NEXT;
 
-    for (uint32_t i = 0; i < mEntities.size(); i++) {
-        if ((mEntities[i].info.id == id && !next) || (mEntities[0].info.id > id && next)) {
+    for (uint32_t i = 0U; i < mEntities.size(); i++) {
+        if (((mEntities[i].info.id == id) && (!next)) || ((mEntities[0].info.id > id) && next)) {
             return &mEntities[i];
         }
     }
@@ -692,7 +712,7 @@ int MediaControl::setFormat(int cameraId, const McFormat* format, int targetWidt
          format->pixelCode);
 
     CLEAR(mbusfmt);
-    if (format->width != 0 && format->height != 0) {
+    if ((format->width != 0) && (format->height != 0)) {
         mbusfmt.width = format->width;
         mbusfmt.height = format->height;
     } else if (format->type == RESOLUTION_TARGET) {
@@ -728,12 +748,15 @@ int MediaControl::setFormat(int cameraId, const McFormat* format, int targetWidt
      * the remote subdev input pads, if any.
      */
     if (pad->flags & MEDIA_PAD_FL_SOURCE) {
-        for (unsigned int i = 0; i < pad->entity->numLinks; ++i) {
+        for (unsigned int i = 0U; i < pad->entity->numLinks; ++i) {
             MediaLink* link = &pad->entity->links[i];
 
-            if (!(link->flags & MEDIA_LNK_FL_ENABLED)) continue;
+            if (!(link->flags & MEDIA_LNK_FL_ENABLED)) {
+                continue;
+            }
 
-            if (link->source == pad && link->sink->entity->info.type == MEDIA_ENT_T_V4L2_SUBDEV) {
+            if ((link->source == pad) &&
+                (link->sink->entity->info.type == MEDIA_ENT_T_V4L2_SUBDEV)) {
                 auto subDev = V4l2DeviceFactory::getSubDev(cameraId, link->sink->entity->devname);
 
                 struct v4l2_subdev_format tmt = {};
@@ -758,7 +781,8 @@ int MediaControl::setSelection(int cameraId, const McFormat* format, int targetW
     LOG1("<id%d> @%s, targetWidth:%d, targetHeight:%d", cameraId, __func__, targetWidth,
          targetHeight);
 
-    if (format->top != -1 && format->left != -1 && format->width != 0 && format->height != 0) {
+    if ((format->top != -1) && (format->left != -1) && (format->width != 0) &&
+        (format->height != 0)) {
         struct v4l2_subdev_selection selection = {};
         selection.pad = format->pad;
         selection.which = V4L2_SUBDEV_FORMAT_ACTIVE;
@@ -770,13 +794,13 @@ int MediaControl::setSelection(int cameraId, const McFormat* format, int targetW
         selection.r.height = format->height;
 
         ret = subDev->SetSelection(selection);
-    } else if (format->selCmd == V4L2_SEL_TGT_CROP || format->selCmd == V4L2_SEL_TGT_COMPOSE) {
+    } else if ((format->selCmd == V4L2_SEL_TGT_CROP) || (format->selCmd == V4L2_SEL_TGT_COMPOSE)) {
         struct v4l2_subdev_selection selection = {};
         selection.pad = format->pad;
         selection.which = V4L2_SUBDEV_FORMAT_ACTIVE;
         selection.target = format->selCmd;
         selection.flags = 0;
-        selection.r.top = 0;
+        selection.r.top = 0U;
         selection.r.left = 0;
         selection.r.width = targetWidth;
         selection.r.height = targetHeight;
@@ -838,9 +862,9 @@ int MediaControl::mediaCtlSetup(int cameraId, MediaCtlConf* mc, int width, int h
     /* Set format & selection in format Configuration */
     for (auto& fmt : mc->formats) {
         if (fmt.formatType == FC_FORMAT) {
-            setFormat(cameraId, &fmt, width, height, field);
+            (void)setFormat(cameraId, &fmt, width, height, field);
         } else if (fmt.formatType == FC_SELECTION) {
-            setSelection(cameraId, &fmt, width, height);
+            (void)setSelection(cameraId, &fmt, width, height);
         }
     }
 
@@ -874,7 +898,7 @@ void MediaControl::mediaCtlClear(int cameraId, MediaCtlConf* mc) {
     LOG1("<id%d> %s", cameraId, __func__);
 
     // VIRTUAL_CHANNEL_S
-    setRouting(cameraId, mc, false);
+    (void)setRouting(cameraId, mc, false);
     // VIRTUAL_CHANNEL_E
 }
 
@@ -893,29 +917,37 @@ int MediaControl::getLensName(string* lensName) {
 }
 
 bool MediaControl::isMediaSourceEntity(const MediaEntity* entity) {
-    if (nullptr == entity) return false;
+    if (nullptr == entity) {
+        return false;
+    }
     auto n_pads = entity->info.pads;
 
     for (auto i = 0; i < n_pads; ++i) {
         // If any sink pad in an entity, it's not the source entity
-        if (entity->pads[i].flags & MEDIA_PAD_FL_SINK) return false;
+        if (entity->pads[i].flags & MEDIA_PAD_FL_SINK) {
+            return false;
+        }
     }
 
     return true;
 }
 
 bool MediaControl::checkHasSource(const MediaEntity* sink, const std::string& source) {
-    for (unsigned int i = 0; i < sink->numLinks; ++i) {
+    for (unsigned int i = 0U; i < sink->numLinks; ++i) {
         if (sink->links[i].sink->entity == sink) {
             // links[i] is the link to sink entity
             // pre is the link's source entity
             MediaEntity* pre = sink->links[i].source->entity;
             if (isMediaSourceEntity(pre)) {
                 // if pre is pure source, return compare name result
-                if (strncmp(source.c_str(), pre->info.name, source.length()) == 0) return true;
+                if (strncmp(source.c_str(), pre->info.name, source.length()) == 0) {
+                    return true;
+                }
             } else {
                 // if pre is not pure source, search recursively
-                if (checkHasSource(pre, source)) return true;
+                if (checkHasSource(pre, source)) {
+                    return true;
+                }
             }
         }
     }
@@ -973,7 +1005,7 @@ int MediaControl::getI2CBusAddress(const string& sensorEntityName, const string&
         }
 
         // entityName example: "imx319 10-0010", sensorEntityName example: "imx319"
-        if (entityName && (strlen(entityName) > (sensorEntityNameLen + 1))) {
+        if (entityName && (strlen(entityName) > (sensorEntityNameLen + 1U))) {
             *i2cBus = entityName + sensorEntityNameLen + 1;
             LOG1("i2cBus is %s", i2cBus->c_str());
             return OK;
@@ -999,9 +1031,10 @@ void MediaControl::dumpTopologyDot() {
             case MEDIA_ENT_T_DEVNODE:
                 // Although printf actually can print NULL pointer, but make check
                 // to make KW happy.
-                if (devname)
+                if (devname != nullptr) {
                     printf("\tn%08x [label=\"%s\\n%s\", shape=box, style=filled, "
                            "fillcolor=yellow]\n", info->id, info->name, devname);
+                }
                 break;
 
             case MEDIA_ENT_T_V4L2_SUBDEV:
@@ -1010,20 +1043,26 @@ void MediaControl::dumpTopologyDot() {
                 for (int i = 0, npads = 0; i < info->pads; ++i) {
                     MediaPad* pad = entity.pads + i;
 
-                    if (!(pad->flags & MEDIA_PAD_FL_SINK)) continue;
+                    if (!(pad->flags & MEDIA_PAD_FL_SINK)) {
+                        continue;
+                    }
 
                     printf("%s<port%d> %d", npads ? " | " : "", i, i);
                     npads++;
                 }
 
                 printf("} | %s", info->name);
-                if (devname) printf("\\n%s", devname);
+                if (devname != nullptr) {
+                    printf("\\n%s", devname);
+                }
                 printf(" | {");
 
                 for (int i = 0, npads = 0; i < info->pads; ++i) {
                     MediaPad* pad = entity.pads + i;
 
-                    if (!(pad->flags & MEDIA_PAD_FL_SOURCE)) continue;
+                    if (!(pad->flags & MEDIA_PAD_FL_SOURCE)) {
+                        continue;
+                    }
 
                     printf("%s<port%d> %d", npads ? " | " : "", i, i);
                     npads++;
@@ -1036,13 +1075,15 @@ void MediaControl::dumpTopologyDot() {
                 continue;
         }
 
-        for (uint32_t i = 0; i < numLinks; i++) {
+        for (uint32_t i = 0U; i < numLinks; i++) {
             MediaLink* link = entity.links + i;
             MediaPad* source = link->source;
             MediaPad* sink = link->sink;
 
             /*Only print the forward links of the entity*/
-            if (source->entity != &entity) continue;
+            if (source->entity != &entity) {
+                continue;
+            }
 
             printf("\tn%08x", source->entity->info.id);
             if ((source->entity->info.type & MEDIA_ENT_TYPE_MASK) == MEDIA_ENT_T_V4L2_SUBDEV)
@@ -1085,7 +1126,9 @@ void MediaControl::dumpTopologyText() {
                numLinks, numLinks > 1 ? "s" : "");
         printf("%*ctype %s subtype %s flags %x\n", padding, ' ', padType2String(info->type),
                entitySubtype2String(info->type), info->flags);
-        if (devname) printf("%*cdevice node name %s\n", padding, ' ', devname);
+        if (devname != nullptr) {
+            printf("%*cdevice node name %s\n", padding, ' ', devname);
+        }
 
         for (int i = 0; i < info->pads; i++) {
             MediaPad* pad = entity.pads + i;
@@ -1096,22 +1139,26 @@ void MediaControl::dumpTopologyText() {
              *if ((info->type & MEDIA_ENT_TYPE_MASK) == MEDIA_ENT_T_V4L2_SUBDEV)
              *v4l2_subdev_print_format(entity, i, V4L2_SUBDEV_FORMAT_ACTIVE);
              */
-            for (uint32_t j = 0; j < numLinks; j++) {
+            for (uint32_t j = 0U; j < numLinks; j++) {
                 MediaLink* link = entity.links + j;
                 MediaPad* source = link->source;
                 MediaPad* sink = link->sink;
                 bool first = true;
 
-                if (source->entity == &entity && source->index == j)
+                if ((source->entity == &entity) && (source->index == j))
                     printf("\t\t-> \"%s\":%u [", sink->entity->info.name, sink->index);
-                else if (sink->entity == &entity && sink->index == j)
+                else if ((sink->entity == &entity) && (sink->index == j))
                     printf("\t\t<- \"%s\":%u [", source->entity->info.name, source->index);
                 else
                     continue;
 
-                for (uint32_t k = 0; k < ARRAY_SIZE(link_flags); k++) {
-                    if (!(link->flags & link_flags[k].flag)) continue;
-                    if (!first) printf(",");
+                for (uint32_t k = 0U; k < ARRAY_SIZE(link_flags); k++) {
+                    if (!(link->flags & link_flags[k].flag)) {
+                        continue;
+                    }
+                    if (!first) {
+                        printf(",");
+                    }
                     printf("%s", link_flags[k].name);
                     first = false;
                 }
@@ -1135,11 +1182,15 @@ const char* MediaControl::entitySubtype2String(unsigned type) {
 
     switch (type & MEDIA_ENT_TYPE_MASK) {
         case MEDIA_ENT_T_DEVNODE:
-            if (subtype >= ARRAY_SIZE(nodeTypes)) subtype = 0;
+            if (subtype >= ARRAY_SIZE(nodeTypes)) {
+                subtype = 0U;
+            }
             return nodeTypes[subtype];
 
         case MEDIA_ENT_T_V4L2_SUBDEV:
-            if (subtype >= ARRAY_SIZE(subdevTypes)) subtype = 0;
+            if (subtype >= ARRAY_SIZE(subdevTypes)) {
+                subtype = 0U;
+            }
             return subdevTypes[subtype];
         default:
             return nodeTypes[0];
@@ -1155,10 +1206,10 @@ const char* MediaControl::padType2String(unsigned flag) {
         {MEDIA_PAD_FL_SOURCE, "Source"},
     };
 
-    uint32_t i;
-
-    for (i = 0; i < ARRAY_SIZE(flags); i++) {
-        if (flags[i].flag & flag) return flags[i].name;
+    for (uint32_t i = 0U; i < ARRAY_SIZE(flags); i++) {
+        if (flags[i].flag & flag) {
+            return flags[i].name;
+        }
     }
 
     return "Unknown";

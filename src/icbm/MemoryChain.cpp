@@ -42,16 +42,20 @@ void MemoryChainDescription::linkIn(const char* featureName, const char* inPortN
     mInChain.push_back(inMemory);
     mOutChain.push_back(outMemory);
 
-    if (mInChain.size() > 1) mInChain[mInChain.size() - 2].next = &mInChain[mInChain.size() - 1];
-    if (mOutChain.size() > 1)
+    if (mInChain.size() > 1) {
+        mInChain[mInChain.size() - 2].next = &mInChain[mInChain.size() - 1];
+    }
+    if (mOutChain.size() > 1) {
         mOutChain[mOutChain.size() - 2].next = &mOutChain[mOutChain.size() - 1];
+    }
 }
 
 MemoryIOPort MemoryChainDescription::getIOPort() {
-    if (mInChain.empty() || mOutChain.empty())
+    if (mInChain.empty() || mOutChain.empty()) {
         return {nullptr, nullptr};
-    else
+    } else {
         return {&mInChain[0], &mOutChain[0]};
+    }
 }
 
 iaic_memory MemoryChainDescription::createMemoryDesc(const ImageInfo& ii) {

@@ -140,9 +140,13 @@ class GraphConfig {
     struct StaticGraphInfo {
         StaticGraphInfo() : staticGraph(nullptr), graphResolutionConfig(nullptr) {}
         void clear() {
-            if (graphResolutionConfig) delete graphResolutionConfig;
+            if (graphResolutionConfig) {
+                delete graphResolutionConfig;
+            }
             graphResolutionConfig = nullptr;
-            if (staticGraph) delete staticGraph;
+            if (staticGraph) {
+                delete staticGraph;
+            }
             staticGraph = nullptr;
         }
         IStaticGraphConfig* staticGraph;

@@ -43,7 +43,9 @@ void CameraSensorsParser::parseMediaCtlConfigSection(const Json::Value& node) {
         MediaCtlConf mc;
         const Json::Value& cfg = node[i];
 
-        if (cfg.isMember("id")) mc.mcId = cfg["id"].asInt();
+        if (cfg.isMember("id")) {
+            mc.mcId = cfg["id"].asInt();
+        }
         if (cfg.isMember("configMode")) {
             mc.configMode.push_back(
                 CameraUtils::getConfigModeByName(cfg["configMode"].asString().c_str()));
@@ -57,15 +59,28 @@ void CameraSensorsParser::parseMediaCtlConfigSection(const Json::Value& node) {
             mc.outputWidth = cfg["output"][0].asInt();
             mc.outputHeight = cfg["output"][1].asInt();
         }
-        if (cfg.isMember("format"))
+        if (cfg.isMember("format")) {
             mc.format = CameraUtils::string2PixelCode(cfg["format"].asString().c_str());
+        }
 
-        if (cfg.isMember("formats")) parseMediaCtlConfigFormatsObject(cfg["formats"], &mc);
-        if (cfg.isMember("selection")) parseMediaCtlSelectionObject(cfg["selection"], &mc);
-        if (cfg.isMember("link")) parseMediaCtlLinkObject(cfg["link"], &mc);
-        if (cfg.isMember("route")) parseMediaCtlRouteObject(cfg["route"], &mc);
-        if (cfg.isMember("control")) parseMediaCtlControlObject(cfg["control"], &mc);
-        if (cfg.isMember("videonode")) parseMediaCtlVideoNodeObject(cfg["videonode"], &mc);
+        if (cfg.isMember("formats")) {
+            parseMediaCtlConfigFormatsObject(cfg["formats"], &mc);
+        }
+        if (cfg.isMember("selection")) {
+            parseMediaCtlSelectionObject(cfg["selection"], &mc);
+        }
+        if (cfg.isMember("link")) {
+            parseMediaCtlLinkObject(cfg["link"], &mc);
+        }
+        if (cfg.isMember("route")) {
+            parseMediaCtlRouteObject(cfg["route"], &mc);
+        }
+        if (cfg.isMember("control")) {
+            parseMediaCtlControlObject(cfg["control"], &mc);
+        }
+        if (cfg.isMember("videonode")) {
+            parseMediaCtlVideoNodeObject(cfg["videonode"], &mc);
+        }
 
         mCurCam->mMediaCtlConfs.push_back(mc);
     }
@@ -73,18 +88,30 @@ void CameraSensorsParser::parseMediaCtlConfigSection(const Json::Value& node) {
 
 void CameraSensorsParser::parseMediaCtlRouteObject(const Json::Value& node, MediaCtlConf* conf) {
     for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
-        auto ele = node[i];
+        const auto ele = node[i];
         McRoute route;
 
         if (ele.isMember("name")) {
             route.entityName = resolveI2CBusString(ele["name"].asString());
-            if (mMediaCtl) route.entity = mMediaCtl->getEntityIdByName(route.entityName);
+            if (mMediaCtl != nullptr) {
+                route.entity = mMediaCtl->getEntityIdByName(route.entityName);
+            }
         }
-        if (ele.isMember("srcPad")) route.srcPad = ele["srcPad"].asInt();
-        if (ele.isMember("srcStream")) route.srcStream = ele["srcStream"].asInt();
-        if (ele.isMember("sinkPad")) route.sinkPad = ele["sinkPad"].asInt();
-        if (ele.isMember("sinkStream")) route.sinkStream = ele["sinkStream"].asInt();
-        if (ele.isMember("flag")) route.flag = ele["flag"].asInt();
+        if (ele.isMember("srcPad")) {
+            route.srcPad = ele["srcPad"].asInt();
+        }
+        if (ele.isMember("srcStream")) {
+            route.srcStream = ele["srcStream"].asInt();
+        }
+        if (ele.isMember("sinkPad")) {
+            route.sinkPad = ele["sinkPad"].asInt();
+        }
+        if (ele.isMember("sinkStream")) {
+            route.sinkStream = ele["sinkStream"].asInt();
+        }
+        if (ele.isMember("flag")) {
+            route.flag = ele["flag"].asInt();
+        }
 
         auto it = conf->routings.find(route.entityName);
         if (it != conf->routings.end()) {
@@ -121,7 +148,7 @@ std::map<std::string, int> ctlCmdMapTable = {
 };
 void CameraSensorsParser::parseMediaCtlControlObject(const Json::Value& node, MediaCtlConf* conf) {
     for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
-        auto ele = node[i];
+        const auto ele = node[i];
         McCtl ctl;
 
         if (ele.isMember("name")) {
@@ -130,7 +157,7 @@ void CameraSensorsParser::parseMediaCtlControlObject(const Json::Value& node, Me
                 ctl.entity = mMediaCtl->getEntityIdByName(ctl.entityName);
         }
         if (ele.isMember("ctrlId")) {
-            auto target = ele["ctrlId"].asString();
+            const auto target = ele["ctrlId"].asString();
             if (ctlCmdMapTable.find(target) != ctlCmdMapTable.end())
                 ctl.ctlCmd = ctlCmdMapTable[target];
             else
@@ -151,20 +178,26 @@ void CameraSensorsParser::parseMediaCtlLinkObject(const Json::Value& node, Media
     for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
         McLink link;
 
-        auto ele = node[i];
+        const auto ele = node[i];
         if (ele.isMember("srcName")) {
             link.srcEntityName = resolveI2CBusString(ele["srcName"].asString());
             if (mMediaCtl)
                 link.srcEntity = mMediaCtl->getEntityIdByName(link.srcEntityName);
         }
-        if (ele.isMember("srcPad")) link.srcPad = ele["srcPad"].asInt();
+        if (ele.isMember("srcPad")) {
+            link.srcPad = ele["srcPad"].asInt();
+        }
         if (ele.isMember("sinkName")) {
             link.sinkEntityName = resolveI2CBusString(ele["sinkName"].asString());
             if (mMediaCtl)
                 link.sinkEntity = mMediaCtl->getEntityIdByName(link.sinkEntityName);
         }
-        if (ele.isMember("sinkPad")) link.sinkPad = ele["sinkPad"].asInt();
-        if (ele.isMember("enable")) link.enable = ele["enable"].asBool();
+        if (ele.isMember("sinkPad")) {
+            link.sinkPad = ele["sinkPad"].asInt();
+        }
+        if (ele.isMember("enable")) {
+            link.enable = ele["enable"].asBool();
+        }
         conf->links.push_back(link);
     }
 }
@@ -172,7 +205,7 @@ void CameraSensorsParser::parseMediaCtlLinkObject(const Json::Value& node, Media
 void CameraSensorsParser::parseMediaCtlVideoNodeObject(const Json::Value& node,
                                                        MediaCtlConf* conf) {
     for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
-        auto ele = node[i];
+        const auto ele = node[i];
         McVideoNode videoNode;
 
         videoNode.name = resolveI2CBusString(ele["name"].asString());
@@ -190,27 +223,43 @@ void CameraSensorsParser::parseMediaCtlConfigFormatsObject(const Json::Value& no
 
         if (ele.isMember("name")) {
             fmt.entityName = resolveI2CBusString(ele["name"].asString());
-            if (mMediaCtl) fmt.entity = mMediaCtl->getEntityIdByName(fmt.entityName);
+            if (mMediaCtl != nullptr) {
+                fmt.entity = mMediaCtl->getEntityIdByName(fmt.entityName);
+            }
         }
-        if (ele.isMember("pad")) fmt.pad = ele["pad"].asUInt();
-        if (ele.isMember("stream")) fmt.stream = ele["stream"].asInt();
+        if (ele.isMember("pad")) {
+            fmt.pad = ele["pad"].asUInt();
+        }
+        if (ele.isMember("stream")) {
+            fmt.stream = ele["stream"].asInt();
+        }
         if (ele.isMember("type")) {
-            auto typeStr = ele["type"].asString();
-            if (typeStr == "RESOLUTION_MAX")
+            const auto typeStr = ele["type"].asString();
+            if (typeStr == "RESOLUTION_MAX") {
                 fmt.type = RESOLUTION_MAX;
-            else if (typeStr == "RESOLUTION_COMPOSE")
+            }
+            else if (typeStr == "RESOLUTION_COMPOSE") {
                 fmt.type = RESOLUTION_COMPOSE;
-            else if (typeStr == "RESOLUTION_CROP")
+            }
+            else if (typeStr == "RESOLUTION_CROP") {
                 fmt.type = RESOLUTION_CROP;
-            else if (typeStr == "RESOLUTION_TARGET")
+            }
+            else if (typeStr == "RESOLUTION_TARGET") {
                 fmt.type = RESOLUTION_TARGET;
-            else
+            }
+            else {
                 LOGW("%s, Unknown format type %s", __func__, typeStr.c_str());
+            }
         }
-        if (ele.isMember("width")) fmt.width = ele["width"].asUInt();
-        if (ele.isMember("height")) fmt.height = ele["height"].asUInt();
-        if (ele.isMember("format"))
+        if (ele.isMember("width")) {
+            fmt.width = ele["width"].asUInt();
+        }
+        if (ele.isMember("height")) {
+            fmt.height = ele["height"].asUInt();
+        }
+        if (ele.isMember("format")) {
             fmt.pixelCode = CameraUtils::string2PixelCode(ele["format"].asString().c_str());
+        }
 
         fmt.formatType = FC_FORMAT;
         conf->formats.push_back(fmt);
@@ -226,13 +275,16 @@ void CameraSensorsParser::parseStaticMetaDataSectionSupportedStreamConfig(const 
         CLEAR(cfg);
 
         auto ele = node[i];
-        if (ele.isMember("format"))
+        if (ele.isMember("format")) {
             cfg.format = CameraUtils::string2PixelCode(ele["format"].asString().c_str());
-        if (ele.isMember("size") && ele["size"].size() == 2) {
+        }
+        if (ele.isMember("size") && (ele["size"].size() == 2)) {
             cfg.width = ele["size"][0].asUInt();
             cfg.height = ele["size"][1].asUInt();
         }
-        if (ele.isMember("field")) cfg.field = ele["field"].asInt();
+        if (ele.isMember("field")) {
+            cfg.field = ele["field"].asInt();
+        }
         if (ele.isMember("mcId")) {
             mcId = ele["mcId"].asInt();
             if (mCurCam->mStreamToMcMap.find(mcId) == mCurCam->mStreamToMcMap.end())
@@ -255,24 +307,38 @@ void CameraSensorsParser::parseMediaCtlSelectionObject(const Json::Value& node, 
         sel.height = 0;
         sel.formatType = FC_SELECTION;
 
-        auto ele = node[i];
+        const auto ele = node[i];
         if (ele.isMember("name")) {
-            auto name = ele["name"].asString();
+            const auto name = ele["name"].asString();
             sel.entityName = resolveI2CBusString(name);
-            if (mMediaCtl) sel.entity = mMediaCtl->getEntityIdByName(sel.entityName);
+            if (mMediaCtl != nullptr) {
+                sel.entity = mMediaCtl->getEntityIdByName(sel.entityName);
+            }
         }
-        if (ele.isMember("pad")) sel.pad = ele["pad"].asInt();
+        if (ele.isMember("pad")) {
+            sel.pad = ele["pad"].asInt();
+        }
         if (ele.isMember("target")) {
-            auto target = ele["target"].asString();
-            if (target == "V4L2_SEL_TGT_COMPOSE")
+            const auto target = ele["target"].asString();
+            if (target == "V4L2_SEL_TGT_COMPOSE") {
                 sel.selCmd = V4L2_SEL_TGT_COMPOSE;
-            else if (target == "V4L2_SEL_TGT_CROP")
+            }
+            if (target == "V4L2_SEL_TGT_CROP") {
                 sel.selCmd = V4L2_SEL_TGT_CROP;
+            }
         }
-        if (ele.isMember("top")) sel.top = ele["top"].asInt();
-        if (ele.isMember("left")) sel.left = ele["left"].asInt();
-        if (ele.isMember("width")) sel.width = ele["width"].asInt();
-        if (ele.isMember("height")) sel.height = ele["height"].asInt();
+        if (ele.isMember("top")) {
+            sel.top = ele["top"].asInt();
+        }
+        if (ele.isMember("left")) {
+            sel.left = ele["left"].asInt();
+        }
+        if (ele.isMember("width")) {
+            sel.width = ele["width"].asInt();
+        }
+        if (ele.isMember("height")) {
+            sel.height = ele["height"].asInt();
+        }
         mc->formats.push_back(sel);
     }
 }
@@ -376,7 +442,9 @@ void CameraSensorsParser::resolveLensName(const Json::Value& node) {
         LOGW("%s, i2c bus is unknown", __func__);
     }
 
-    if (mMediaCtl) mMediaCtl->getVCMI2CAddr(vcmName.c_str(), &mCurCam->mLensName);
+    if (mMediaCtl != nullptr) {
+        mMediaCtl->getVCMI2CAddr(vcmName.c_str(), &mCurCam->mLensName);
+    }
 }
 
 void CameraSensorsParser::parseLensHwType(const Json::Value& node) {
@@ -390,20 +458,27 @@ void CameraSensorsParser::parseLensHwType(const Json::Value& node) {
 }
 
 void CameraSensorsParser::parseTestPatternMap(const Json::Value& node) {
-    if (node.isMember("Off")) mCurCam->mTestPatternMap[TEST_PATTERN_OFF] = node["Off"].asInt();
-    if (node.isMember("ColorBars"))
+    if (node.isMember("Off")) {
+        mCurCam->mTestPatternMap[TEST_PATTERN_OFF] = node["Off"].asInt();
+    }
+    if (node.isMember("ColorBars")) {
         mCurCam->mTestPatternMap[COLOR_BARS] = node["ColorBars"].asInt();
-    if (node.isMember("SolidColor"))
+    }
+    if (node.isMember("SolidColor")) {
         mCurCam->mTestPatternMap[SOLID_COLOR] = node["SolidColor"].asInt();
-    if (node.isMember("ColorBarsFadeToGray"))
+    }
+    if (node.isMember("ColorBarsFadeToGray")) {
         mCurCam->mTestPatternMap[COLOR_BARS_FADE_TO_GRAY] = node["ColorBarsFadeToGray"].asInt();
-    if (node.isMember("PN9")) mCurCam->mTestPatternMap[PN9] = node["PN9"].asInt();
+    }
+    if (node.isMember("PN9")) {
+        mCurCam->mTestPatternMap[PN9] = node["PN9"].asInt();
+    }
 }
 
 void CameraSensorsParser::parseOutputMap(const Json::Value& node) {
     for (Json::Value::ArrayIndex i = 0; i < node.size(); ++i) {
         auto resNode = node[i];
-        if (resNode.size() != 2 || resNode[0].size() != 2 || resNode[1].size() != 2) {
+        if ((resNode.size() != 2) || (resNode[0].size() != 2) || (resNode[1].size() != 2)) {
             LOGW("%s, Bad resolution object.", __func__);
             continue;
         }
@@ -437,7 +512,9 @@ void CameraSensorsParser::parseStaticMetaDataSectionSupportedFeatures(const Json
         else if (featrueStr == "PER_FRAME_CONTROL")
             feature = PER_FRAME_CONTROL;
 
-        if (feature != INVALID_FEATURE) features.push_back(feature);
+        if (feature != INVALID_FEATURE) {
+            features.push_back(feature);
+        }
     }
 
     mCurCam->mStaticMetadata.mSupportedFeatures = features;
@@ -458,7 +535,9 @@ void CameraSensorsParser::parseStaticMetaDataSectionEVRange(const Json::Value& n
 }
 
 void CameraSensorsParser::parseStaticMetaDataSectionEVSetp(const Json::Value& node) {
-    if (node.size() != 2) return;
+    if (node.size() != 2) {
+        return;
+    }
 
     std::vector<int> evStep = {node[0].asInt(), node[1].asInt()};
     mCurCam->mStaticMetadata.mEvStep = evStep;
@@ -584,29 +663,46 @@ void CameraSensorsParser::parseStaticMetaDataSectionSupportedRotateMode(const Js
 }
 
 void CameraSensorsParser::parseStaticMetaDataSection(const Json::Value& node) {
-    if (node.isMember("supportedStreamConfig"))
+    if (node.isMember("supportedStreamConfig")) {
         parseStaticMetaDataSectionSupportedStreamConfig(node["supportedStreamConfig"]);
-    if (node.isMember("supportedFeatures"))
+    }
+    if (node.isMember("supportedFeatures")) {
         parseStaticMetaDataSectionSupportedFeatures(node["supportedFeatures"]);
-    if (node.isMember("fpsRange")) parseStaticMetaDataSectionFpsRange(node["fpsRange"]);
-    if (node.isMember("evRange")) parseStaticMetaDataSectionEVRange(node["evRange"]);
-    if (node.isMember("evStep")) parseStaticMetaDataSectionEVSetp(node["evStep"]);
-    if (node.isMember("supportedAeMode"))
+    }
+    if (node.isMember("fpsRange")) {
+        parseStaticMetaDataSectionFpsRange(node["fpsRange"]);
+    }
+    if (node.isMember("evRange")) {
+        parseStaticMetaDataSectionEVRange(node["evRange"]);
+    }
+    if (node.isMember("evStep")) {
+        parseStaticMetaDataSectionEVSetp(node["evStep"]);
+    }
+    if (node.isMember("supportedAeMode")) {
         parseStaticMetaDataSectionSupportedAeMode(node["supportedAeMode"]);
-    if (node.isMember("supportedAwbMode"))
+    }
+    if (node.isMember("supportedAwbMode")) {
         parseStaticMetaDataSectionSupportedAWBModes(node["supportedAwbMode"]);
-    if (node.isMember("supportedSceneMode"))
+    }
+    if (node.isMember("supportedSceneMode")) {
         parseStaticMetaDataSectionSupportedSceneMode(node["supportedSceneMode"]);
-    if (node.isMember("supportedAfMode"))
+    }
+    if (node.isMember("supportedAfMode")) {
         parseStaticMetaDataSectionSupportedAfMode(node["supportedAfMode"]);
-    if (node.isMember("supportedAntibandingMode"))
+    }
+    if (node.isMember("supportedAntibandingMode")) {
         parseStaticMetaDataSectionSupportedAntibandingMode(node["supportedAntibandingMode"]);
-    if (node.isMember("supportedVideoStabilizationModes"))
+    }
+    if (node.isMember("supportedVideoStabilizationModes")) {
         parseStaticMetaDataSectionSupportedVideoStabilizationMode(
             node["supportedVideoStabilizationModes"]);
-    if (node.isMember("supportedRotateMode"))
+    }
+    if (node.isMember("supportedRotateMode")) {
         parseStaticMetaDataSectionSupportedRotateMode(node["supportedRotateMode"]);
-    if (node.isMember("metadata")) parseGenericStaticMetaData(node["metadata"]);
+    }
+    if (node.isMember("metadata")) {
+        parseGenericStaticMetaData(node["metadata"]);
+    }
 }
 
 void CameraSensorsParser::parseSupportedTuningConfig(const Json::Value& node) {
@@ -645,74 +741,153 @@ std::string CameraSensorsParser::resolveI2CBusString(const std::string& name) {
 }
 
 void CameraSensorsParser::parseSensorSection(const Json::Value& node) {
-    if (node.isMember("name")) mCurCam->sensorName = node["name"].asString();
-    if (node.isMember("description")) mCurCam->sensorDescription = node["description"].asString();
+    if (node.isMember("name")) {
+        mCurCam->sensorName = node["name"].asString();
+    }
+    if (node.isMember("description")) {
+        mCurCam->sensorDescription = node["description"].asString();
+    }
     // VIRTUAL_CHANNEL_S
-    if (node.isMember("vcCount")) mCurCam->mVCCount = node["vcCount"].asInt();
-    if (node.isMember("vcId")) mCurCam->mVCId = node["vcId"].asInt();
-    if (node.isMember("vcGoupId")) mCurCam->mVCGroupId = node["vcGoupId"].asInt();
+    if (node.isMember("vcCount")) {
+        mCurCam->mVCCount = node["vcCount"].asInt();
+    }
+    if (node.isMember("vcId")) {
+        mCurCam->mVCId = node["vcId"].asInt();
+    }
+    if (node.isMember("vcGoupId")) {
+        mCurCam->mVCGroupId = node["vcGoupId"].asInt();
+    }
     // VIRTUAL_CHANNEL_E
     resolveCsiPortAndI2CBus();
-    if (node.isMember("supportedTuningConfig"))
+    if (node.isMember("supportedTuningConfig")) {
         parseSupportedTuningConfig(node["supportedTuningConfig"]);
-    if (node.isMember("lardTags")) parseLardTags(node["lardTags"]);
-    if (node.isMember("supportedISysSizes")) parseSupportedISysSizes(node["supportedISysSizes"]);
-    if (node.isMember("supportedISysFormat")) parseSupportedISysFormat(node["supportedISysFormat"]);
-    if (node.isMember("enableAIQ")) mCurCam->mEnableAIQ = node["enableAIQ"].asBool();
-    if (node.isMember("ispTuningUpdate"))
+    }
+    if (node.isMember("lardTags")) {
+        parseLardTags(node["lardTags"]);
+    }
+    if (node.isMember("supportedISysSizes")) {
+        parseSupportedISysSizes(node["supportedISysSizes"]);
+    }
+    if (node.isMember("supportedISysFormat")) {
+        parseSupportedISysFormat(node["supportedISysFormat"]);
+    }
+    if (node.isMember("enableAIQ")) {
+        mCurCam->mEnableAIQ = node["enableAIQ"].asBool();
+    }
+    if (node.isMember("ispTuningUpdate")) {
         mCurCam->mIspTuningUpdate = node["ispTuningUpdate"].asBool();
-    if (node.isMember("iSysRawFormat")) parseiSysRawFormat(node["iSysRawFormat"]);
-    if (node.isMember("maxRawDataNum")) mCurCam->mMaxRawDataNum = node["maxRawDataNum"].asInt();
-    if (node.isMember("initialSkipFrame"))
+    }
+    if (node.isMember("iSysRawFormat")) {
+        parseiSysRawFormat(node["iSysRawFormat"]);
+    }
+    if (node.isMember("maxRawDataNum")) {
+        mCurCam->mMaxRawDataNum = node["maxRawDataNum"].asInt();
+    }
+    if (node.isMember("initialSkipFrame")) {
         mCurCam->mInitialSkipFrame = node[";initialSkipFrame"].asInt();
-    if (node.isMember("exposureLag")) mCurCam->mExposureLag = node["exposureLag"].asInt();
-    if (node.isMember("gainLag")) mCurCam->mAnalogGainLag = node["gainLag"].asInt();
-    if (node.isMember("digitalGainLag")) mCurCam->mDigitalGainLag = node["digitalGainLag"].asInt();
-    if (node.isMember("yuvColorRangeMode")) parseYUVColorRangeMode(node["yuvColorRangeMode"]);
+    }
+    if (node.isMember("exposureLag")) {
+        mCurCam->mExposureLag = node["exposureLag"].asInt();
+    }
+    if (node.isMember("gainLag")) {
+        mCurCam->mAnalogGainLag = node["gainLag"].asInt();
+    }
+    if (node.isMember("digitalGainLag")) {
+        mCurCam->mDigitalGainLag = node["digitalGainLag"].asInt();
+    }
+    if (node.isMember("yuvColorRangeMode")) {
+        parseYUVColorRangeMode(node["yuvColorRangeMode"]);
+    }
 
-    if (node.isMember("graphSettingsFile"))
+    if (node.isMember("graphSettingsFile")) {
         mCurCam->mGraphSettingsFile = node["graphSettingsFile"].asString();
-    if (node.isMember("dvsType")) parseDVSType(node["dvsType"]);
-    if (node.isMember("nvmDeviceInfo")) parseNvmeDeviceInfo(node["nvmDeviceInfo"]);
-    if (node.isMember("supportModuleNames")) parsesupportModuleNames(node["supportModuleNames"]);
-    if (node.isMember("lensName")) resolveLensName(node["lensName"]);
-    if (node.isMember("lensHwType")) parseLensHwType(node["lensHwType"]);
-    if (node.isMember("testPatternMap")) parseTestPatternMap(node["testPatternMap"]);
-    if (node.isMember("enableAiqd")) mCurCam->mEnableAiqd = node["enableAiqd"].asBool();
-    if (node.isMember("useCrlModule")) mCurCam->mUseCrlModule = node["useCrlModule"].asBool();
-    if (node.isMember("pslOutputMapForRotation")) parseOutputMap(node["pslOutputMapForRotation"]);
+    }
+    if (node.isMember("dvsType")) {
+        parseDVSType(node["dvsType"]);
+    }
+    if (node.isMember("nvmDeviceInfo")) {
+        parseNvmeDeviceInfo(node["nvmDeviceInfo"]);
+    }
+    if (node.isMember("supportModuleNames")) {
+        parsesupportModuleNames(node["supportModuleNames"]);
+    }
+    if (node.isMember("lensName")) {
+        resolveLensName(node["lensName"]);
+    }
+    if (node.isMember("lensHwType")) {
+        parseLensHwType(node["lensHwType"]);
+    }
+    if (node.isMember("testPatternMap")) {
+        parseTestPatternMap(node["testPatternMap"]);
+    }
+    if (node.isMember("enableAiqd")) {
+        mCurCam->mEnableAiqd = node["enableAiqd"].asBool();
+    }
+    if (node.isMember("useCrlModule")) {
+        mCurCam->mUseCrlModule = node["useCrlModule"].asBool();
+    }
+    if (node.isMember("pslOutputMapForRotation")) {
+        parseOutputMap(node["pslOutputMapForRotation"]);
+    }
 
-    if (node.isMember("unregisterExtDmaBuf"))
+    if (node.isMember("unregisterExtDmaBuf")) {
         mCurCam->mUnregisterExtDmaBuf = node["unregisterExtDmaBuf"].asBool();
-    if (node.isMember("maxRequestsInflight"))
+    }
+    if (node.isMember("maxRequestsInflight")) {
         mCurCam->mMaxRequestsInflight = node["maxRequestsInflight"].asInt();
-    if (node.isMember("faceEngineRunningInterval"))
+    }
+    if (node.isMember("faceEngineRunningInterval")) {
         mCurCam->mFaceEngineRunningInterval = node["faceEngineRunningInterval"].asInt();
-    if (node.isMember("faceEngineRunningIntervalNoFace"))
+    }
+    if (node.isMember("faceEngineRunningIntervalNoFace")) {
         mCurCam->mFaceEngineRunningIntervalNoFace = node["faceEngineRunningIntervalNoFace"].asInt();
-    if (node.isMember("faceAeEnabled")) mCurCam->mFaceAeEnabled = node["faceAeEnabled"].asBool();
-    if (node.isMember("faceEngineVendor"))
+    }
+    if (node.isMember("faceAeEnabled")) {
+        mCurCam->mFaceAeEnabled = node["faceAeEnabled"].asBool();
+    }
+    if (node.isMember("faceEngineVendor")) {
         mCurCam->mFaceEngineVendor = node["faceEngineVendor"].asInt();
-    if (node.isMember("psysBundleWithAic"))
+    }
+    if (node.isMember("psysBundleWithAic")) {
         mCurCam->mPsysBundleWithAic = node["psysBundleWithAic"].asBool();
-    if (node.isMember("skipFrameV4L2Error"))
+    }
+    if (node.isMember("skipFrameV4L2Error")) {
         mCurCam->mSkipFrameV4L2Error = node["skipFrameV4L2Error"].asBool();
-    if (node.isMember("isPSACompression"))
+    }
+    if (node.isMember("isPSACompression")) {
         mCurCam->mPSACompression = node["isPSACompression"].asBool();
-    if (node.isMember("tnrExtraFrameNum"))
+    }
+    if (node.isMember("tnrExtraFrameNum")) {
         mCurCam->mTnrExtraFrameNum = node["tnrExtraFrameNum"].asInt();
-    if (node.isMember("isPLCEnable")) mCurCam->mPLCEnable = node["isPLCEnable"].asBool();
-    if (node.isMember("enableAIQ")) mCurCam->mEnableAIQ = node["enableAIQ"].asBool();
-    if (node.isMember("dummyStillSink")) mCurCam->mDummyStillSink = node["dummyStillSink"].asBool();
-    if (node.isMember("useGpuTnr")) mCurCam->mGpuTnrEnabled = node["useGpuTnr"].asBool();
-    if (node.isMember("useGpuIpa")) mCurCam->mGpuIpaEnabled = node["useGpuIpa"].asBool();
-    if (node.isMember("psysAlignWithSystem"))
+    }
+    if (node.isMember("isPLCEnable")) {
+        mCurCam->mPLCEnable = node["isPLCEnable"].asBool();
+    }
+    if (node.isMember("enableAIQ")) {
+        mCurCam->mEnableAIQ = node["enableAIQ"].asBool();
+    }
+    if (node.isMember("dummyStillSink")) {
+        mCurCam->mDummyStillSink = node["dummyStillSink"].asBool();
+    }
+    if (node.isMember("useGpuTnr")) {
+        mCurCam->mGpuTnrEnabled = node["useGpuTnr"].asBool();
+    }
+    if (node.isMember("useGpuIpa")) {
+        mCurCam->mGpuIpaEnabled = node["useGpuIpa"].asBool();
+    }
+    if (node.isMember("psysAlignWithSystem")) {
         mCurCam->mMsPsysAlignWithSystem = node["psysAlignWithSystem"].asInt();
-    if (node.isMember("removeCacheFlushOutputBuffer"))
+    }
+    if (node.isMember("removeCacheFlushOutputBuffer")) {
         mCurCam->mRemoveCacheFlushOutputBuffer = node["removeCacheFlushOutputBuffer"].asBool();
+    }
 
-    if (node.isMember("MediaCtlConfig")) parseMediaCtlConfigSection(node["MediaCtlConfig"]);
-    if (node.isMember("StaticMetadata")) parseStaticMetaDataSection(node["StaticMetadata"]);
+    if (node.isMember("MediaCtlConfig")) {
+        parseMediaCtlConfigSection(node["MediaCtlConfig"]);
+    }
+    if (node.isMember("StaticMetadata")) {
+        parseStaticMetaDataSection(node["StaticMetadata"]);
+    }
 
     if (node.isMember("usePSysProcessor")) {
         mCurCam->mUsePSysProcessor = node["usePSysProcessor"].asBool();
@@ -735,7 +910,9 @@ void CameraSensorsParser::resolveCsiPortAndI2CBus() {
         if (sensorName.find_first_of('-') != std::string::npos)
             sensorName = fullSensorName.substr(0, (sensorName.find_first_of('-')));
 
-        if (mMediaCtl) mMediaCtl->getI2CBusAddress(sensorName, sinkEntityName, &mI2CBus);
+        if (mMediaCtl != nullptr) {
+            mMediaCtl->getI2CBusAddress(sensorName, sinkEntityName, &mI2CBus);
+        }
 
         LOGI("%s: I2CBus:%s <=> CSI Port:%s", __func__, mI2CBus.c_str(), mCsiPort.c_str());
     }
@@ -749,7 +926,7 @@ int CameraSensorsParser::getCameraModuleNameFromEEPROM(const std::string& nvmDir
                      nvmDir.c_str());
 
     // file size should be larger than CAMERA_MODULE_INFO_OFFSET
-    fseek(eepromFile, 0, SEEK_END);
+    (void)fseek(eepromFile, 0, SEEK_END);
     int nvmDataSize = static_cast<int>(ftell(eepromFile));
     if (nvmDataSize < moduleInfoOffset) {
         LOGE("EEPROM data is too small");
@@ -789,7 +966,9 @@ int CameraSensorsParser::getCameraModuleNameFromEEPROM(const std::string& nvmDir
 void CameraSensorsParser::updateNVMDir() {
     // OLD Code. Do not change unless you know what you are doing.
     // I2CBus is adaptor-bus, like 18-0010, and use adaptor id to select NVM path.
-    if ((mI2CBus.size() < 2) && mNVMDeviceInfo.empty()) return;
+    if ((mI2CBus.size() < 2) && mNVMDeviceInfo.empty()) {
+        return;
+    }
 
     // attach i2c adaptor id, like 18-0010
     std::size_t found = mI2CBus.find("-");
@@ -806,7 +985,9 @@ void CameraSensorsParser::updateNVMDir() {
     if (dir) {
         struct dirent* direntPtr = nullptr;
         while ((direntPtr = readdir(dir)) != nullptr) {
-            if (direntPtr->d_type != DT_DIR) continue;
+            if (direntPtr->d_type != DT_DIR) {
+                continue;
+            }
 
             std::string fwNodePath(nvmPath.c_str());
             fwNodePath += direntPtr->d_name;
@@ -848,7 +1029,9 @@ void CameraSensorsParser::updateNVMDir() {
                     }
                 }
             }
-            if (found) break;
+            if (found) {
+                break;
+            }
         }
         closedir(dir);
     } else {
@@ -861,7 +1044,9 @@ void CameraSensorsParser::updateNVMDir() {
             std::string nvmPath;
             nvmPath.append(NVM_DATA_PATH);
             nvmPath.append(nvm.directory);
-            if (nvmPath.back() != '/') nvmPath.append("/");
+            if (nvmPath.back() != '/') {
+                nvmPath.append("/");
+            }
 
             nvmPath.append("eeprom");
             LOG2("NVM data is located in %s", nvmPath.c_str());
@@ -917,7 +1102,7 @@ void CameraSensorsParser::parseGenericStaticMetaData(const Json::Value& node) {
 }
 
 void CameraSensorsParser::updateLensName() {
-    if (!mCurCam->mLensName.empty() || mCurCam->sensorName.find("-wf-") == std::string::npos)
+    if ((!mCurCam->mLensName.empty()) || (mCurCam->sensorName.find("-wf-") == std::string::npos))
         return;
 
     if (mMediaCtl) {

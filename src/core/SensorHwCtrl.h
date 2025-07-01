@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation
+ * Copyright (C) 2015-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef SENSOR_HW_CTRL_H
+#define SENSOR_HW_CTRL_H
 
 #include <vector>
 
@@ -144,3 +145,5 @@ class DummySensor : public SensorHwCtrl {
 };
 
 }  // namespace icamera
+
+#endif // SENSOR_HW_CTRL_H

@@ -115,7 +115,7 @@ int AiqEngine::run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber, in
     }
 
     if (state == AIQ_STATE_DONE) {
-        done(dataContext->mAiqParams, aiqResult);
+        (void)done(dataContext->mAiqParams, aiqResult);
     }
 
     mAiqResultStorage->unLockAiqStatistics();
@@ -123,10 +123,10 @@ int AiqEngine::run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber, in
     if (aiqRun) {
         mAiqRunningHistory.aiqResult = aiqResult;
         mAiqRunningHistory.ccaId = ccaId;
-        mAiqRunningHistory.statsSequnce = aiqStats ? aiqStats->mSequence : -1;
+        mAiqRunningHistory.statsSequnce = aiqStats != nullptr ? aiqStats->mSequence : -1;
     }
 
-    if (effectSeq) {
+    if (effectSeq != nullptr) {
         *effectSeq = mAiqResultStorage->getAiqResult()->mSequence;
         LOG2("%s, effect sequence %ld, statsSequnce %ld", __func__, *effectSeq,
              mAiqRunningHistory.statsSequnce);
@@ -158,14 +158,15 @@ int AiqEngine::prepareStatsParams(const aiq_parameter_t& aiqParams,
     // update face detection related parameters
     if (PlatformData::isFaceAeEnabled(mCameraId)) {
         FaceDetectionResult* faceResult = mAiqResultStorage->getFaceResult();
-        if (faceResult && (faceResult->ccaFaceState.num_faces > 0)) {
+        if ((faceResult != nullptr) && (faceResult->ccaFaceState.num_faces > 0U)) {
             statsParams->faces = faceResult->ccaFaceState;
             ia_rectangle& rect = statsParams->faces.faces[0].face_area;
             LOG2("<seq:%ld>%s, face number:%d, left:%d, top:%d, right:%d, bottom:%d",
                  faceResult->sequence, __func__, faceResult->ccaFaceState.num_faces,
                  rect.left, rect.top, rect.right, rect.bottom);
-            if(faceResult->ccaFaceState.updated)
+            if(faceResult->ccaFaceState.updated) {
                 faceResult->ccaFaceState.updated = false;
+            }
         }
     }
 
@@ -188,7 +189,7 @@ int AiqEngine::prepareStatsParams(const aiq_parameter_t& aiqParams,
 
         // The statistics timestamp is incorrect. If possible, use SOF timestamp instead.
         unsigned long long timestamp = mSensorManager->getSofTimestamp(aiqStatistics->mSequence);
-        if (timestamp == 0) {
+        if (timestamp == 0U) {
             LOG2("<seq%ld>The sof sequence was not found", aiqStatistics->mSequence);
             timestamp = aiqStatistics->mTimestamp;
         }
@@ -199,16 +200,16 @@ int AiqEngine::prepareStatsParams(const aiq_parameter_t& aiqParams,
         CameraContext* context = CameraContext::getInstance(mCameraId);
         gc = context->getGraphConfig(CAMERA_STREAM_CONFIGURATION_MODE_NORMAL);
         if (PlatformData::isDvsSupported(mCameraId) && (gc != nullptr)) {
-            ia_isp_bxt_resolution_info_t resolution;
+            ia_isp_bxt_resolution_info_t resolution{};
             uint32_t gdcKernelId;
-            int status = gc->getGdcKernelSetting(&gdcKernelId, &resolution);
+            const int status = gc->getGdcKernelSetting(&gdcKernelId, &resolution);
             CheckWarning(status != OK, UNKNOWN_ERROR, "Failed to get GDC kernel setting");
 
             statsParams->dvs_stats_height = resolution.output_height;
             statsParams->dvs_stats_width = resolution.output_width;
         }
 
-        statsParams->frame_id = aiqResult ? aiqResult->mFrameId : -1;
+        statsParams->frame_id = aiqResult != nullptr ? aiqResult->mFrameId : -1;
         statsParams->frame_timestamp = timestamp;
         statsParams->camera_orientation = ia_aiq_camera_orientation_unknown;
     } while (0);
@@ -223,7 +224,7 @@ void AiqEngine::setAiqResult(const aiq_parameter_t& aiqParams, AiqResult* aiqRes
     }
 
     // HDR_FEATURE_S
-    int64_t sequence = aiqResult->mSequence - PlatformData::getExposureLag(mCameraId);
+    const int64_t sequence = aiqResult->mSequence - PlatformData::getExposureLag(mCameraId);
     mSensorManager->setWdrMode(aiqResult->mTuningMode, sequence);
 
     if (PlatformData::getSensorAwbEnable(mCameraId)) {
@@ -359,7 +360,7 @@ AiqEngine::AiqState AiqEngine::runAiq(int64_t ccaId, int64_t applyingSeq, AiqRes
 
 void AiqEngine::setSensorExposure(AiqResult* aiqResult, int64_t applyingSeq) {
     SensorExpGroup sensorExposures;
-    for (unsigned int i = 0; i < aiqResult->mAeResults.num_exposures; i++) {
+    for (unsigned int i = 0U; i < aiqResult->mAeResults.num_exposures; i++) {
         SensorExposure exposure;
         exposure.sensorParam = *aiqResult->mAeResults.exposures[i].sensor_exposure;
         exposure.realDigitalGain = aiqResult->mAeResults.exposures[i].exposure[0].digital_gain;
@@ -386,7 +387,7 @@ AiqEngine::AiqState AiqEngine::handleAiqResult(const aiq_parameter_t& aiqParams,
     }
     LOG2("%s, sceneMode:%d", __func__, aiqResult->mSceneMode);
 
-    applyManualTonemaps(aiqParams, aiqResult);
+    (void)applyManualTonemaps(aiqParams, aiqResult);
 
     return AIQ_STATE_DONE;
 }
@@ -409,7 +410,9 @@ int AiqEngine::applyManualTonemaps(const aiq_parameter_t& aiqParams, AiqResult* 
          aiqResult->mGbceResults.have_manual_settings, aiqParams.aeMode,
          aiqParams.tonemapMode);
 
-    if (!aiqResult->mGbceResults.have_manual_settings) return OK;
+    if (!aiqResult->mGbceResults.have_manual_settings) {
+        return OK;
+    }
 
     // Apply user value or gamma curve for gamma table
     if (aiqParams.tonemapMode == TONEMAP_MODE_GAMMA_VALUE) {
@@ -427,8 +430,8 @@ int AiqEngine::applyManualTonemaps(const aiq_parameter_t& aiqParams, AiqResult* 
     }
 
     // Apply the fixed unity value for tone map table
-    if (aiqResult->mGbceResults.tone_map_lut_size > 0) {
-        for (unsigned int i = 0; i < aiqResult->mGbceResults.tone_map_lut_size; i++) {
+    if (aiqResult->mGbceResults.tone_map_lut_size > 0U) {
+        for (unsigned int i = 0U; i < aiqResult->mGbceResults.tone_map_lut_size; i++) {
             aiqResult->mGbceResults.tone_map_lut[i] = 1.0;
         }
     }
@@ -437,7 +440,7 @@ int AiqEngine::applyManualTonemaps(const aiq_parameter_t& aiqParams, AiqResult* 
 }
 
 AiqEngine::AiqState AiqEngine::done(const aiq_parameter_t& aiqParams, AiqResult* aiqResult) {
-    int skipNum = getSkippingNum(aiqResult);
+    const int skipNum = getSkippingNum(aiqResult);
     AiqResult* tmp = aiqResult;
 
     for (int i = 0; i < skipNum; i++) {

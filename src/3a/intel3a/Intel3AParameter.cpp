@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <limits>
 #include <cmath>
 
 #include "iutils/CameraLog.h"
@@ -65,7 +66,7 @@ Intel3AParameter::Intel3AParameter(int cameraId)
 
     CLEAR(mSensitivityRange);
     const std::string str = "sensor.info.sensitivityRange";
-    auto v = PlatformData::getInt32StaticMetadata(cameraId, str);
+    const auto v = PlatformData::getInt32StaticMetadata(cameraId, str);
     if (v.size() == 2) {
         mSensitivityRange.min = v[0];
         mSensitivityRange.max = v[1];
@@ -98,9 +99,9 @@ void Intel3AParameter::init() {
 
 int Intel3AParameter::getCMCInfo(TuningMode tuningMode) {
     IntelCca* intelCca = IntelCca::getInstance(mCameraId, tuningMode);
-    CheckAndLogError(!intelCca, BAD_VALUE, "cca is nullptr, mode:%d", tuningMode);
+    CheckAndLogError(intelCca == nullptr, BAD_VALUE, "cca is nullptr, mode:%d", tuningMode);
 
-    int ret = intelCca->getCMC(&mCMC);
+    const int ret = intelCca->getCMC(&mCMC);
     CheckAndLogError(ret != OK, ret, "failed to load CMC info");
 
     return OK;
@@ -114,10 +115,10 @@ void Intel3AParameter::initAeParameter() {
     mAeParams.metering_mode = ia_aiq_ae_metering_mode_evaluative;
     mAeParams.priority_mode = ia_aiq_ae_priority_mode_normal;
     mAeParams.flicker_reduction_mode = ia_aiq_ae_flicker_reduction_auto;
-    mAeParams.ev_shift = 0.0f;
-    memset(mAeParams.manual_exposure_time_us, 0, sizeof(mAeParams.manual_exposure_time_us));
-    memset(mAeParams.manual_analog_gain, 0, sizeof(mAeParams.manual_analog_gain));
-    memset(mAeParams.manual_iso, 0, sizeof(mAeParams.manual_iso));
+    mAeParams.ev_shift = 0.0F;
+    (void)memset(mAeParams.manual_exposure_time_us, 0, sizeof(mAeParams.manual_exposure_time_us));
+    (void)memset(mAeParams.manual_analog_gain, 0, sizeof(mAeParams.manual_analog_gain));
+    (void)memset(mAeParams.manual_iso, 0, sizeof(mAeParams.manual_iso));
     mAeParams.num_sensor_descriptors = 1;
 
     CLEAR(mAeParams.exposure_window);
@@ -128,8 +129,8 @@ void Intel3AParameter::initAeParameter() {
 
 void Intel3AParameter::initAfParameter() {
     mAfParams.frame_use = ia_aiq_frame_use_video;
-    mAfParams.lens_position = 0;
-    mAfParams.lens_movement_start_timestamp = 0;
+    mAfParams.lens_position = 0U;
+    mAfParams.lens_movement_start_timestamp = 0U;
     mAfParams.focus_mode = ia_aiq_af_operation_mode_infinity;
     mAfParams.flash_mode = ia_aiq_flash_mode_off;
     mAfParams.focus_rect.left = 0;
@@ -180,13 +181,13 @@ int Intel3AParameter::updateParameter(aiq_parameter_t param) {
 /**
  * Will override ae result by those settings provided by application
  */
-void Intel3AParameter::updateAeResult(cca::cca_ae_results* aeResult) {
+void Intel3AParameter::updateAeResult(cca::cca_ae_results* aeResult) const {
 }
 
-float Intel3AParameter::convertdBGainToISO(float sensitivityGain, int baseIso) {
+float Intel3AParameter::convertdBGainToISO(float sensitivityGain, int baseIso) const {
     // Convert db Gain to ISO
     float manualGain = pow(10, (sensitivityGain / 20));
-    manualGain *= baseIso;
+    manualGain *= static_cast<float>(baseIso);
     return manualGain;
 }
 
@@ -227,8 +228,8 @@ void Intel3AParameter::setAeManualLimits(const aiq_parameter_t& param) {
             range.max = param.exposureTimeRange.max;
         }
     }
-    limit->manual_exposure_time_min = range.min;
-    limit->manual_exposure_time_max = range.max;
+    limit->manual_exposure_time_min = static_cast<int>(range.min);
+    limit->manual_exposure_time_max = static_cast<int>(range.max);
 
     camera_range_t gainRange = {-1, -1};
     ret = PlatformData::getSupportAeGainRange(mCameraId, param.sceneMode, gainRange);
@@ -260,7 +261,7 @@ void Intel3AParameter::setManualExposure(const aiq_parameter_t& param) {
         manualExpTimeUs = CLIP(manualExpTimeUs, range.max, range.min);
     }
 
-    for (unsigned int i = 0; i < mAeParams.num_exposures - 1; i++) {
+    for (unsigned int i = 0U; i < mAeParams.num_exposures - 1; i++) {
         mAeParams.manual_exposure_time_us[i] = -1;
     }
     mAeParams.manual_exposure_time_us[mAeParams.num_exposures - 1] = manualExpTimeUs;
@@ -278,19 +279,19 @@ void Intel3AParameter::setManualGain(const aiq_parameter_t& param) {
     }
 
     // Convert db to sensor analog gain.
-    for (unsigned int i = 0; i < mAeParams.num_exposures; i++) {
+    for (unsigned int i = 0U; i < mAeParams.num_exposures; i++) {
         mAeParams.manual_analog_gain[i] = pow(10, (manualGain / 20));
     }
 }
 
 void Intel3AParameter::setManualIso(const aiq_parameter_t& param) {
-    int32_t manualIso = param.manualIso;
+    const int32_t manualIso = param.manualIso;
     if ((manualIso <= 0) || (param.aeDistributionPriority == DISTRIBUTION_SHUTTER)) {
         return;
     }
 
     // Will overwrite manual_analog_gain
-    for (unsigned int i = 0; i < mAeParams.num_exposures; i++) {
+    for (unsigned int i = 0U; i < mAeParams.num_exposures; i++) {
         mAeParams.manual_iso[i] = manualIso;
     }
 }
@@ -404,15 +405,18 @@ void Intel3AParameter::updateAeParameter(const aiq_parameter_t& param) {
     // Ignore TET in manual exposure case
     if ((param.totalExposureTarget > 0) && (param.manualExpTimeUs <= 0) && (param.manualIso <= 0)) {
         camera_range_t range = { -1, -1 };
-        int ret = PlatformData::getSupportAeExposureTimeRange(mCameraId, param.sceneMode, range);
+        const int ret =
+            PlatformData::getSupportAeExposureTimeRange(mCameraId, param.sceneMode, range);
         int64_t tet = param.totalExposureTarget;
-        if ((ret == OK) && (mCMC.base_iso > 0)) {
-            int64_t max = static_cast<int64_t>(range.max * mSensitivityRange.max / mCMC.base_iso);
-            int64_t min = static_cast<int64_t>(range.min * mSensitivityRange.min / mCMC.base_iso);
+        if ((ret == OK) && (mCMC.base_iso > 0U)) {
+            const int64_t max =
+                static_cast<int64_t>(range.max * mSensitivityRange.max / mCMC.base_iso);
+            const int64_t min =
+                static_cast<int64_t>(range.min * mSensitivityRange.min / mCMC.base_iso);
             tet = CLIP(tet, max, min);
         }
         // Will overwrite total exposure
-        for (unsigned int i = 0; i < mAeParams.num_exposures; i++) {
+        for (unsigned int i = 0U; i < mAeParams.num_exposures; i++) {
             mAeParams.manual_total_target_exposure[i] = tet;
         }
     }
@@ -422,7 +426,9 @@ void Intel3AParameter::updatePaResult(cca::cca_pa_params* paResult) {
     CheckAndLogError((paResult == nullptr), VOID_VALUE, "No Pa result provided.");
 
     paResult->enable_manual_settings = false;
-    if (!mUseManualColorMatrix) return;
+    if (!mUseManualColorMatrix) {
+        return;
+    }
 
     if (VALID_COLOR_GAINS(mColorGains.color_gains_rggb)) {
         paResult->color_gains.r  = mColorGains.color_gains_rggb[0];
@@ -449,18 +455,20 @@ void Intel3AParameter::updateAwbResult(cca::cca_awb_results* awbResult) {
     if (mUseManualColorMatrix && VALID_COLOR_GAINS(mColorGains.color_gains_rggb)) {
         // According to color gain value to update the
         // awb result in manual color transform mode
-        float maxChroma = std::max(static_cast<float>(1.0), mColorGains.color_gains_rggb[1]);
+        const float maxChroma = std::max(static_cast<float>(1.0), mColorGains.color_gains_rggb[1]);
         awbResult->accurate_r_per_g =
             static_cast<float>(maxChroma / mColorGains.color_gains_rggb[0]);
         awbResult->accurate_b_per_g =
             static_cast<float>(maxChroma / mColorGains.color_gains_rggb[3]);
     } else {
         camera_awb_gains_t& gains = mUseManualAwbGain ? mManualGains : mAwbGainShift;
-        float normalizedR = AiqUtils::normalizeAwbGain(gains.r_gain);
-        float normalizedG = AiqUtils::normalizeAwbGain(gains.g_gain);
-        float normalizedB = AiqUtils::normalizeAwbGain(gains.b_gain);
+        const float normalizedR = AiqUtils::normalizeAwbGain(gains.r_gain);
+        const float normalizedG = AiqUtils::normalizeAwbGain(gains.g_gain);
+        const float normalizedB = AiqUtils::normalizeAwbGain(gains.b_gain);
 
-        const float MAX_PER_G = AWB_GAIN_NORMALIZED_START / AWB_GAIN_NORMALIZED_END;
+        const float MAX_PER_G =
+                    static_cast<float>(AWB_GAIN_NORMALIZED_START) /
+                    static_cast<float>(AWB_GAIN_NORMALIZED_END);
         const float MIN_PER_G = 1.0 / MAX_PER_G;
 
         if (mUseManualAwbGain) {
@@ -633,13 +641,13 @@ void Intel3AParameter::updateAfParameter(const aiq_parameter_t& param) {
         float focusDistance = param.focusDistance;
         if (focusDistance > param.minFocusDistance) {
             focusDistance = param.minFocusDistance;
-        } else if (focusDistance < 0.0f) {
-            focusDistance = 0.0f;
+        } else if (focusDistance < 0.0F) {
+            focusDistance = 0.0F;
         }
 
-        unsigned focusInMm = 0;
-        if (focusDistance != 0.0f) {
-            focusInMm = 1000 * (1.0f / focusDistance);
+        unsigned focusInMm = 0U;
+        if (std::fabs(focusDistance) > std::numeric_limits<float>::epsilon()) {
+            focusInMm = 1000 * (1.0F / focusDistance);
             mAfParams.manual_focus_parameters.manual_focus_action =
                 ia_aiq_manual_focus_action_set_distance;
             mManualFocusDistance = focusDistance;
@@ -693,7 +701,7 @@ void Intel3AParameter::updateAfParameterForAfTriggerCancel() {
 }
 
 void Intel3AParameter::fillAfTriggerResult(cca::cca_af_results* afResults) {
-    if ((!afResults) || (!mAfForceLock)) {
+    if ((afResults == nullptr) || (!mAfForceLock)) {
         return;
     }
 
@@ -712,7 +720,9 @@ void Intel3AParameter::fillAfTriggerResult(cca::cca_af_results* afResults) {
 }
 
 void Intel3AParameter::dumpParameter() {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(Intel3AParameter))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(Intel3AParameter))) {
+        return;
+    }
 
     LOG3("AE parameters: mode %d, bypass %d, frame_use %d, PerTicks %d", mAeMode,
          mAeParams.is_bypass, mAeParams.frame_use, mAePerTicks);

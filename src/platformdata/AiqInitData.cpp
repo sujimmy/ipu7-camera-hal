@@ -51,7 +51,7 @@ ia_binary_data* AiqData::getData() {
 void AiqData::saveData(const ia_binary_data& data) {
     LOG1("%s", __func__);
 
-    if (!mDataPtr || data.size != mData.size) {
+    if ((mDataPtr == nullptr) || (data.size != mData.size)) {
         mDataPtr.reset(new char[data.size]);
         mData.size = data.size;
         mData.data = mDataPtr.get();
@@ -68,14 +68,16 @@ void AiqData::loadFile(const std::string& fileName, ia_binary_data* data, int ma
     // Get file size
     struct stat fileStat;
     CLEAR(fileStat);
-    int ret = stat(fileName.c_str(), &fileStat);
+    const int ret = stat(fileName.c_str(), &fileStat);
     if (ret != 0) {
         LOG1("There is no file %s", fileName.c_str());
         return;
     }
 
     int64_t usedFileSize = fileStat.st_size;
-    if (maxSize > 0 && maxSize < fileStat.st_size) usedFileSize = maxSize;
+    if ((maxSize > 0) && (maxSize < fileStat.st_size)) {
+        usedFileSize = maxSize;
+    }
 
     // Open file
     FILE* fp = fopen(fileName.c_str(), "rb");
@@ -85,8 +87,8 @@ void AiqData::loadFile(const std::string& fileName, ia_binary_data* data, int ma
     std::unique_ptr<char[]> dataPtr(new char[usedFileSize]);
 
     // Read data
-    size_t readSize = fread(dataPtr.get(), sizeof(char), usedFileSize, fp);
-    fclose(fp);
+    const size_t readSize = fread(dataPtr.get(), sizeof(char), usedFileSize, fp);
+    (void)fclose(fp);
 
     CheckWarning(readSize != (size_t)usedFileSize, VOID_VALUE, "Failed to read %s, error %s",
                  fileName.c_str(), strerror(errno));
@@ -107,15 +109,15 @@ void AiqData::saveDataToFile(const std::string& fileName, const ia_binary_data* 
                  strerror(errno));
 
     // Write data to file
-    size_t writeSize = fwrite(data->data, 1, data->size, fp);
+    const size_t writeSize = fwrite(data->data, 1, data->size, fp);
     if (writeSize != data->size) {
         LOGW("Failed to write data %s, error %s", fileName.c_str(), strerror(errno));
-        fclose(fp);
+        (void)fclose(fp);
         return;
     }
 
-    fflush(fp);
-    fclose(fp);
+    (void)fflush(fp);
+    (void)fclose(fp);
 
     LOG1("%s, file %s, size %d", __func__, fileName.c_str(), data->size);
 }
@@ -166,7 +168,9 @@ AiqInitData::AiqInitData(const std::string& sensorName, const std::string& camCf
             return;
         }
 
-        if (mCpf.find(cfg.tuningMode) == mCpf.end()) mCpf[cfg.tuningMode] = new AiqData(aiqbName);
+        if (mCpf.find(cfg.tuningMode) == mCpf.end()) {
+            mCpf[cfg.tuningMode] = new AiqData(aiqbName);
+        }
     }
 
     mMkn = std::unique_ptr<MakerNote>(new MakerNote);
@@ -198,14 +202,16 @@ int AiqInitData::findConfigFile(const std::string& camCfgDir, std::string* cpfPa
     std::vector<string> configFilePath;
     configFilePath.push_back("./");
     configFilePath.push_back(camCfgDir);
-    int configFileCount = configFilePath.size();
+    const int configFileCount = configFilePath.size();
 
     string cpfFile;
     for (int i = 0; i < configFileCount; i++) {
         cpfFile.append(configFilePath.at(i));
         cpfFile.append(*cpfPathName);
         struct stat st;
-        if (!stat(cpfFile.c_str(), &st)) break;
+        if (!stat(cpfFile.c_str(), &st)) {
+            break;
+        }
         cpfFile.clear();
     }
 
@@ -244,7 +250,9 @@ ia_binary_data* AiqInitData::getNvm(int cameraId, const char* overwrittenFile, i
         nvmFile = overwrittenFile;
         size = fileSize;
     }
-    if (!nvmFile || !size) return nullptr;
+    if ((nvmFile == nullptr) || (size <= 0)) {
+        return nullptr;
+    }
 
     if (!mNvm) {
         LOG2("NVM data for %s is located in %s, size %d", mSensorName.c_str(), nvmFile, size);
@@ -253,7 +261,7 @@ ia_binary_data* AiqInitData::getNvm(int cameraId, const char* overwrittenFile, i
 
         if (CameraDump::isDumpTypeEnable(DUMP_NVM_DATA)) {
             ia_binary_data* nvmData = mNvm->getData();
-            if (nvmData && nvmData->data && nvmData->size > 0) {
+            if (nvmData && nvmData->data && (nvmData->size > 0U)) {
                 BinParam_t bParam;
                 bParam.bType = BIN_TYPE_GENERAL;
                 bParam.mType = M_NVM;

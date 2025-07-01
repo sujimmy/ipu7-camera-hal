@@ -35,7 +35,7 @@ void CameraParserInvoker::parseCommon() {
     constexpr const char* LIBCAMHAL_PROFILE_NAME = "libcamhal_configs.json";
 
     CameraCommonParser commonParser{mStaticCfg};
-    commonParser.run(getJsonFileFullName(LIBCAMHAL_PROFILE_NAME));
+    (void)commonParser.run(getJsonFileFullName(LIBCAMHAL_PROFILE_NAME));
 }
 
 void CameraParserInvoker::parseSensors() {
@@ -54,7 +54,7 @@ void CameraParserInvoker::parseSensors() {
         LOGI("%s: I will Load config file: %s", __func__, sensorFileName.c_str());
 
         CameraSensorsParser cameraSensorsParser(mMediaCtl, mStaticCfg, sensor.second);
-        bool ret = cameraSensorsParser.run(getJsonFileFullName(sensorFileName));
+        const bool ret = cameraSensorsParser.run(getJsonFileFullName(sensorFileName));
         if (!ret)
             LOGE("%s, %s loaded failed!", __func__, sensorFileName.c_str());
         else
@@ -71,8 +71,8 @@ void CameraParserInvoker::runParser() {
 void CameraParserInvoker::chooseAvaliableJsonFile(
     const std::vector<const char*>& avaliableJsonFiles, std::string* jsonFile) {
     struct stat st;
-    for (auto json : avaliableJsonFiles) {
-        int ret = stat(json, &st);
+    for (const auto json : avaliableJsonFiles) {
+        const int ret = stat(json, &st);
         if (ret == 0) {
             *jsonFile = json;
             return;
@@ -132,7 +132,9 @@ std::vector<std::pair<std::string, SensorInfo>> CameraParserInvoker::getAvailabl
 
 void CameraParserInvoker::dumpSensorInfo(void) {
     // OLD Code. Do not change unless you know what you are doing.
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(CameraParserInvoker))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(CameraParserInvoker))) {
+        return;
+    }
 
     LOG3("@%s, sensor number: %d ==================", __func__, mNumSensors);
     for (int i = 0; i < mNumSensors; i++) {
@@ -140,12 +142,12 @@ void CameraParserInvoker::dumpSensorInfo(void) {
              mStaticCfg->mCameras[i].sensorName.c_str(), mStaticCfg->mCameras[i].mISysFourcc);
 
         const stream_array_t& configs= mStaticCfg->mCameras[i].mStaticMetadata.mConfigsArray;
-        for (size_t j = 0; j < configs.size(); j++) {
+        for (size_t j = 0U; j < configs.size(); j++) {
             LOG3("    format:%d size(%dx%d) field:%d", configs[j].format,
                  configs[j].width, configs[j].height, configs[j].field);
         }
 
-        for (unsigned j = 0; j < mStaticCfg->mCameras[i].mSupportedISysFormat.size(); j++) {
+        for (unsigned j = 0U; j < mStaticCfg->mCameras[i].mSupportedISysFormat.size(); j++) {
             LOG3("    mSupportedISysFormat:%d", mStaticCfg->mCameras[i].mSupportedISysFormat[j]);
         }
 
@@ -160,20 +162,20 @@ void CameraParserInvoker::dumpSensorInfo(void) {
 
         // dump the media controller information
         LOG3("    Format Configuration:");
-        for (unsigned j = 0; j < mStaticCfg->mCameras[i].mMediaCtlConfs.size(); j++) {
+        for (unsigned j = 0U; j < mStaticCfg->mCameras[i].mMediaCtlConfs.size(); j++) {
             const MediaCtlConf* mc = &mStaticCfg->mCameras[i].mMediaCtlConfs[j];
-            for (unsigned k = 0; k < mc->links.size(); k++) {
+            for (unsigned k = 0U; k < mc->links.size(); k++) {
                 const McLink* link = &mc->links[k];
                 LOG3("        link src %s [%d:%d] ==> %s [%d:%d] enable %d",
                      link->srcEntityName.c_str(), link->srcEntity, link->srcPad,
                      link->sinkEntityName.c_str(), link->sinkEntity, link->sinkPad, link->enable);
             }
-            for (unsigned k = 0; k < mc->ctls.size(); k++) {
+            for (unsigned k = 0U; k < mc->ctls.size(); k++) {
                 const McCtl* ctl = &mc->ctls[k];
                 LOG3("        Ctl %s [%d] cmd %s [0x%08x] value %d", ctl->entityName.c_str(),
                      ctl->entity, ctl->ctlName.c_str(), ctl->ctlCmd, ctl->ctlValue);
             }
-            for (unsigned k = 0; k < mc->formats.size(); k++) {
+            for (unsigned k = 0U; k < mc->formats.size(); k++) {
                 const McFormat* format = &mc->formats[k];
                 if (format->formatType == FC_FORMAT)
                     LOG3("        format %s [%d:%d] [%dx%d] %s", format->entityName.c_str(),

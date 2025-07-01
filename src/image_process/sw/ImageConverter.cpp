@@ -54,12 +54,10 @@ void YUV420ToRGB565(int width, int height, void *src, void *dst)
             r = (yy + vr) >> 8;
             g = (yy - ug - vg) >> 8;
             b = (yy + ub ) >> 8;
-            if (r < 0) r = 0;
-            if (r > 255) r = 255;
-            if (g < 0) g = 0;
-            if (g > 255) g = 255;
-            if (b < 0) b = 0;
-            if (b > 255) b = 255;
+            r = std::min(std::max(0, r), 255);
+            g = std::min(std::max(0, g), 255);
+            b = std::min(std::max(0, b), 255);
+
             *rgbs++ = (((unsigned short)r>>3)<<11) | (((unsigned short)g>>2)<<5)
                    | (((unsigned short)b>>3)<<0);
 
@@ -695,8 +693,9 @@ void convertYUYVToNV21(int width, int height, int srcStride, void *src, void *ds
         //The first line of the source
         //Copy first Y Plane first
         for (int j=0; j < width * 2; j++) {
-            if (j % 2 == 0)
+            if (j % 2 == 0) {
                 dstPtr[j/2] = srcPtr[j];
+            }
             if (i%2) {
                 if (( j % 4 ) == 3) {
                     dstPtrUV[v_counter] = srcPtr[j]; //V plane

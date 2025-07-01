@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,9 @@ int CameraStream::start() {
 int CameraStream::stop() {
     LOG1("<id%d>@%s, %p", mCameraId, __func__, this);
 
-    if (mBufferProducer != nullptr) mBufferProducer->removeFrameAvailableListener(this);
+    if (mBufferProducer != nullptr) {
+        mBufferProducer->removeFrameAvailableListener(this);
+    }
 
     AutoMutex poolLock(mBufferPoolLock);
     mBufferInProcessing = 0;
@@ -68,16 +70,20 @@ int CameraStream::allocateMemory(camera_buffer_t* ubuffer) {
 
     int ret = BAD_VALUE;
     shared_ptr<CameraBuffer> camBuffer = userBufferToCameraBuffer(ubuffer);
-    CheckAndLogError(!camBuffer, ret, "@%s: fail to alloc CameraBuffer", __func__);
+    CheckAndLogError(camBuffer == nullptr, ret, "@%s: fail to alloc CameraBuffer", __func__);
 
     // mBufferProducer will not change after start
-    if (mBufferProducer) ret = mBufferProducer->allocateMemory(mPort, camBuffer);
+    if (mBufferProducer != nullptr) {
+        ret = mBufferProducer->allocateMemory(mPort, camBuffer);
+    }
 
     return ret;
 }
 
 shared_ptr<CameraBuffer> CameraStream::userBufferToCameraBuffer(camera_buffer_t* ubuffer) {
-    if (ubuffer == nullptr) return nullptr;
+    if (ubuffer == nullptr) {
+        return nullptr;
+    }
 
     shared_ptr<CameraBuffer> camBuffer = nullptr;
 
@@ -99,11 +105,12 @@ shared_ptr<CameraBuffer> CameraStream::userBufferToCameraBuffer(camera_buffer_t*
         }
     }
 
-    if (!camBuffer) {  // Not found in the pool, so create a new CameraBuffer for it.
+    if (camBuffer == nullptr) {  // Not found in the pool, so create a new CameraBuffer for it.
         ubuffer->index = mInputBuffersPool.size();
         camBuffer = CameraBuffer::create(ubuffer->s.memType, ubuffer->s.size, ubuffer->index,
                                          ubuffer);
-        CheckAndLogError(!camBuffer, nullptr, "@%s: fail to alloc CameraBuffer", __func__);
+        CheckAndLogError(camBuffer == nullptr, nullptr, "@%s: fail to alloc CameraBuffer",
+                         __func__);
         mInputBuffersPool.push_back(camBuffer);
     } else {
         camBuffer->setUserBufferInfo(ubuffer);
@@ -119,7 +126,7 @@ int CameraStream::qbuf(camera_buffer_t* ubuffer, int64_t sequence, bool addExtra
     UNUSED(addExtraBuf);
 
     shared_ptr<CameraBuffer> camBuffer = userBufferToCameraBuffer(ubuffer);
-    if (camBuffer) {
+    if (camBuffer != nullptr) {
         camBuffer->setSettingSequence(sequence);
         LOG2("<id%d:seq%ld>@%s, mStreamId:%d, CameraBuffer:%p for port:%d, ubuffer:%p, addr:%p",
              mCameraId, sequence, __func__, mStreamId, camBuffer.get(), mPort, ubuffer,
@@ -142,13 +149,19 @@ int CameraStream::qbuf(camera_buffer_t* ubuffer, int64_t sequence, bool addExtra
 void CameraStream::setBufferProducer(BufferProducer* producer) {
     mBufferProducer = producer;
 
-    if (producer != nullptr) producer->addFrameAvailableListener(this);
+    if (producer != nullptr) {
+        producer->addFrameAvailableListener(this);
+    }
 }
 
 int CameraStream::onFrameAvailable(uuid port, const shared_ptr<CameraBuffer>& camBuffer) {
     // Ignore if the buffer is not for this stream.
-    if (mPort != port) return OK;
-    if (camBuffer->getStreamId() != mStreamId) return OK;
+    if (mPort != port) {
+        return OK;
+    }
+    if (camBuffer->getStreamId() != mStreamId) {
+        return OK;
+    }
 
     LOG2("<id%d>@%s: mStreamId:%d, CameraBuffer:%p for port:%d", mCameraId, __func__, mStreamId,
          camBuffer.get(), port);

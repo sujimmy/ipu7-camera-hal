@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_STREAM_H
+#define CAMERA_STREAM_H
 
 #include "ParamDataType.h"
 #include "BufferQueue.h"
@@ -97,3 +98,5 @@ class CameraStream : public BufferConsumer, public EventSource {
 };
 
 }  // namespace icamera
+
+#endif // CAMERA_STREAM_H

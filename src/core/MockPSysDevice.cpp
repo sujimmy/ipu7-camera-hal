@@ -75,7 +75,9 @@ int MockPSysDevice::addTask(const PSysTask& task) {
 
 int MockPSysDevice::poll() {
     std::lock_guard<std::mutex> l(mDataLock);
-    if (mExitPending) return -1;
+    if (mExitPending) {
+        return -1;
+    }
 
     if (!mTasksMap.empty()) {
         auto it = mTasksMap.begin();

@@ -30,7 +30,11 @@ using namespace CBLayoutUtils;
 
 int32_t GraphUtils::createStageId(uint8_t resourceId, uint8_t contextId) {
     // ipu stage id start with 0x10, resourceId uses bit7:4, contextId used bit3:0
-    return (IPU_STAGE_ID_BASE + ((resourceId << 4) & 0xF0) + (contextId & 0xF));
+    const uint32_t stageId = static_cast<uint32_t>(IPU_STAGE_ID_BASE) +
+                             ((static_cast<uint32_t>(resourceId) << 4) & 0xF0U) +
+                             (static_cast<uint32_t>(contextId) & 0x0FU);
+
+    return static_cast<int32_t>(stageId);
 }
 
 uint8_t GraphUtils::getResourceId(int32_t stageId) {
@@ -62,11 +66,11 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
     // Only for frame terminal
     if (resourceId == NODE_RESOURCE_ID_LBFF) {
         // LB input
-        if (terminalId == LBFF_TERMINAL_CONNECT_MAIN_DATA_INPUT ||
+        if ((terminalId == LBFF_TERMINAL_CONNECT_MAIN_DATA_INPUT) ||
 #ifdef IPU_SYSVER_ipu75
-            terminalId == LBFF_TERMINAL_CONNECT_DOL_LONG ||
+            (terminalId == LBFF_TERMINAL_CONNECT_DOL_LONG) ||
 #endif
-            terminalId == LBFF_TERMINAL_CONNECT_LSC_INPUT) {
+            (terminalId == LBFF_TERMINAL_CONNECT_LSC_INPUT)) {
             // Currently only support V4L2_PIX_FMT_SGRBG10
             // TODO: support RAW12
             return (bpp == 10) ? GET_FOURCC_FMT('B', 'A', '1', '0')
@@ -80,8 +84,8 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
                                : GET_FOURCC_FMT('N', 'V', '1', '2');
         }
 #else
-        if (terminalId == LBFF_TERMINAL_CONNECT_ME_OUTPUT ||
-            terminalId == LBFF_TERMINAL_CONNECT_PS_OUTPUT) {
+        if ((terminalId == LBFF_TERMINAL_CONNECT_ME_OUTPUT) ||
+            (terminalId == LBFF_TERMINAL_CONNECT_PS_OUTPUT)) {
             return (bpp == 8) ? GET_FOURCC_FMT('V', '4', '2', '0') : 0;
         }
 #endif
@@ -89,17 +93,17 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
 #ifndef IPU_SYSVER_ipu8
     if (resourceId == NODE_RESOURCE_ID_BBPS) {
         // BB input
-        if (terminalId == BBPS_TERMINAL_CONNECT_TNR_BC_YUV4N_IFD ||
+        if ((terminalId == BBPS_TERMINAL_CONNECT_TNR_BC_YUV4N_IFD) ||
 #ifdef IPU_SYSVER_ipu75
-            terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BC_YUV4NM1_IFD ||
-            terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BLEND_YUVNM1_IFD ||
+            (terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BC_YUV4NM1_IFD) ||
+            (terminalId == BBPS_TERMINAL_CONNECT_SLIM_TNR_BLEND_YUVNM1_IFD) ||
 #endif
-            terminalId == BBPS_TERMINAL_CONNECT_SLIM_SPATIAL_YUVN_IFD) {
+            (terminalId == BBPS_TERMINAL_CONNECT_SLIM_SPATIAL_YUVN_IFD)) {
             return (bpp == 8) ? GET_FOURCC_FMT('V', '4', '2', '0') : 0;
         }
         // BB output
-        if (terminalId == BBPS_TERMINAL_CONNECT_OFS_MP_YUVN_ODR ||
-            terminalId == BBPS_TERMINAL_CONNECT_OFS_DP_YUVN_ODR) {
+        if ((terminalId == BBPS_TERMINAL_CONNECT_OFS_MP_YUVN_ODR) ||
+            (terminalId == BBPS_TERMINAL_CONNECT_OFS_DP_YUVN_ODR)) {
             return (bpp == 10) ? GET_FOURCC_FMT('P', '0', '1', '0')
                                 : GET_FOURCC_FMT('N', 'V', '1', '2');
         }
@@ -110,7 +114,9 @@ int32_t GraphUtils::getFourccFmt(uint8_t resourceId, int32_t terminalId, int32_t
 }
 
 void GraphUtils::dumpConnections(const std::vector<IGraphType::PipelineConnection>& connections) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphUtils))) {
+        return;
+    }
 
     LOG3("Graph connections:");
     for (auto& conn : connections) {
@@ -142,12 +148,14 @@ void GraphUtils::dumpConnections(const std::vector<IGraphType::PipelineConnectio
 }
 
 void GraphUtils::dumpKernelInfo(const ia_isp_bxt_program_group& programGroup) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(GraphUtils))) {
+        return;
+    }
 
     LOG3("Kernel info: count %d, opMode %d", programGroup.kernel_count,
          programGroup.operation_mode);
 
-    for (unsigned int i = 0; i < programGroup.kernel_count; i++) {
+    for (unsigned int i = 0U; i < programGroup.kernel_count; i++) {
         const ia_isp_bxt_run_kernels_t& curRunKernel = programGroup.run_kernels[i];
 
         LOG3("uid %d, streamId: %d, enabled %d", curRunKernel.kernel_uuid, curRunKernel.stream_id,

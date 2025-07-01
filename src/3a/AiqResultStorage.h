@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIQ_RESULT_STORAGE_H
+#define AIQ_RESULT_STORAGE_H
 
 #include <map>
 
@@ -144,3 +145,5 @@ private:
 };
 
 } //namespace icamera
+
+#endif // AIQ_RESULT_STORAGE_H

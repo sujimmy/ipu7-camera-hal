@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef SENSOR_MANAGER_H
+#define SENSOR_MANAGER_H
 
 #include <map>
 
@@ -80,7 +81,7 @@ private:
     void handleSensorExposure();
     // HDR_FEATURE_S
     void handleSensorModeSwitch(int64_t sequence);
-    int convertTuningModeToWdrMode(TuningMode tuningMode);
+    int convertTuningModeToWdrMode(TuningMode tuningMode) const;
     // HDR_FEATURE_E
     int getSensorModeData(ia_aiq_exposure_sensor_descriptor& sensorData);
 
@@ -120,3 +121,5 @@ private:
 };
 
 } /* namespace icamera */
+
+#endif // SENSOR_MANAGER_H

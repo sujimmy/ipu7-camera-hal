@@ -88,7 +88,7 @@ CameraDevice::~CameraDevice() {
     // Clear the media control when close the device.
     MediaControl* mc = MediaControl::getInstance();
     MediaCtlConf* mediaCtl = PlatformData::getMediaCtlConf(mCameraId);
-    if (mc && mediaCtl) {
+    if ((mc != nullptr) && (mediaCtl != nullptr)) {
         mc->mediaCtlClear(mCameraId, mediaCtl);
     }
 
@@ -96,7 +96,9 @@ CameraDevice::~CameraDevice() {
 
     for (int i = 0; i < MAX_STREAM_NUMBER; i++) delete mStreams[i];
 
-    if (mGcMgr) delete mGcMgr;
+    if (mGcMgr != nullptr) {
+        delete mGcMgr;
+    }
 
     delete mLensCtrl;
     delete m3AControl;
@@ -152,7 +154,7 @@ void CameraDevice::deinit() {
 
     if (mState == DEVICE_START) {
         // stop first
-        stopLocked();
+        (void)stopLocked();
     }
 
     // stop request thread
@@ -196,7 +198,7 @@ StreamSource* CameraDevice::createBufferProducer() {
 }
 
 void CameraDevice::bindListeners() {
-    if (mProcessingUnit) {
+    if (mProcessingUnit != nullptr) {
         vector<EventListener*> statsListenerList = m3AControl->getStatsEventListener();
         for (auto statsListener : statsListenerList) {
             // Subscribe PSys statistics.
@@ -295,7 +297,7 @@ int CameraDevice::configureInput(const stream_t* inputConfig) {
 
 int CameraDevice::configure(stream_config_t* streamList) {
     PERF_CAMERA_ATRACE();
-    CheckAndLogError(!streamList->streams, BAD_VALUE, "%s: No valid stream config", __func__);
+    CheckAndLogError(streamList->streams == nullptr, BAD_VALUE, "%s: No valid stream config", __func__);
     CheckAndLogError(((streamList->num_streams > MAX_STREAM_NUMBER) ||
                       (streamList->num_streams <= 0)), BAD_VALUE,
                       "%s: The stream number(%d) out of range: [1-%d]", __func__,
@@ -335,12 +337,13 @@ int CameraDevice::configure(stream_config_t* streamList) {
     if (preStreamIdForFace >= 0) {
         CLEAR(mFdStream);
         mFdStream = streamList->streams[preStreamIdForFace];
-        mFdStream.usage = CAMERA_STREAM_FACE;
+        mFdStream.usage = static_cast<int32_t>(CAMERA_STREAM_FACE);
         mFdStream.width = RESOLUTION_VGA_WIDTH;
         mFdStream.height = RESOLUTION_VGA_HEIGHT;
         if (streamList->streams[preStreamIdForFace].width * RESOLUTION_VGA_HEIGHT !=
-            streamList->streams[preStreamIdForFace].height * RESOLUTION_VGA_WIDTH)
+            streamList->streams[preStreamIdForFace].height * RESOLUTION_VGA_WIDTH) {
             mFdStream.height = RESOLUTION_360P_HEIGHT;
+        }
 
         mFdStream.id = streamList->num_streams;
         mFdStream.stride = CameraUtils::getStride(mFdStream.format, mFdStream.width);
@@ -360,7 +363,7 @@ int CameraDevice::configure(stream_config_t* streamList) {
     int totalStream = 0;
 
     // Graph config only be used for PSYS processor now
-    if ((!mGcMgr) && PlatformData::isUsePSysProcessor(mCameraId)) {
+    if ((mGcMgr == nullptr) && PlatformData::isUsePSysProcessor(mCameraId)) {
         mGcMgr = new GraphConfigManager(mCameraId);
     }
     if (mGcMgr != nullptr) {
@@ -381,9 +384,9 @@ int CameraDevice::configure(stream_config_t* streamList) {
         // Config the H-Scheduler based on graph id
         std::shared_ptr<GraphConfig> gc =
                 CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
-        CheckAndLogError(!gc, UNKNOWN_ERROR, "Failed to get GraphConfig!");
-        int graphId = gc->getGraphId();
-        if (mScheduler) {
+        CheckAndLogError(gc == nullptr, UNKNOWN_ERROR, "Failed to get GraphConfig!");
+        const int graphId = gc->getGraphId();
+        if (mScheduler != nullptr) {
             ret = mScheduler->configurate(graphId);
             CheckAndLogError(ret != OK, ret, "@%s Faield to configure H-Scheduler", __func__);
         }
@@ -399,7 +402,7 @@ int CameraDevice::configure(stream_config_t* streamList) {
     std::map<uuid, stream_t> producerConfigs = selectProducerConfig(streamList, mcId);
     CheckAndLogError(producerConfigs.empty(), BAD_VALUE, "The config for producer is invalid.");
 
-    bool needProcessor = isProcessorNeeded(streamList, producerConfigs[MAIN_INPUT_PORT_UID]);
+    const bool needProcessor = isProcessorNeeded(streamList, producerConfigs[MAIN_INPUT_PORT_UID]);
     for (auto& item : producerConfigs) {
         LOG1("Producer config for port:%d, fmt:%s (%dx%d), needProcessor=%d", item.first,
              CameraUtils::format2string(item.second.format).c_str(), item.second.width,
@@ -431,7 +434,7 @@ int CameraDevice::configure(stream_config_t* streamList) {
     if (needProcessor) {
         mProcessingUnit =
             IProcessingUnitFactory::createIProcessingUnit(mCameraId, mScheduler);
-        CheckAndLogError(!mProcessingUnit, UNKNOWN_ERROR,
+        CheckAndLogError(mProcessingUnit == nullptr, UNKNOWN_ERROR,
                          "@%s Failed to create ProcessingUnit", __func__);
 
         if (mProcessingUnit) {
@@ -481,7 +484,8 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
     stream_t biggestStream = streamList->streams[mSortedStreamIds[0]];
     if (mDataContext->cropRegion.flag == 1) {
         // Use crop region to select MC config
-        PlatformData::selectMcConf(mCameraId, mInputConfig, (ConfigMode)streamList->operation_mode,
+        PlatformData::selectMcConf(mCameraId, mInputConfig,
+                                   static_cast<ConfigMode>(streamList->operation_mode),
                                    mcId);
     } else {
         stream_t matchedStream = biggestStream;
@@ -493,7 +497,7 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
                                                         configModes);
             std::shared_ptr<GraphConfig> gc =
                 CameraContext::getInstance(mCameraId)->getGraphConfig(configModes[0]);
-            if ((!configModes.empty()) && gc) {
+            if ((!configModes.empty()) && (gc != nullptr)) {
                 camera_resolution_t csiOutput = {0, 0};
                 gc->getCSIOutputResolution(csiOutput);
                 if ((csiOutput.width > 0) && (csiOutput.height > 0)) {
@@ -503,7 +507,8 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
             }
         }
 
-        PlatformData::selectMcConf(mCameraId, matchedStream, (ConfigMode)streamList->operation_mode,
+        PlatformData::selectMcConf(mCameraId, matchedStream,
+                                   static_cast<ConfigMode>(streamList->operation_mode),
                                    mcId);
     }
 
@@ -531,8 +536,8 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
     }
 
     // Filter the ISYS best resolution with input stream
-    int inputWidth = mInputConfig.width;
-    int inputHeight = mInputConfig.height;
+    const int inputWidth = mInputConfig.width;
+    const int inputHeight = mInputConfig.height;
     camera_resolution_t producerRes = {inputWidth, inputHeight};
     if ((inputWidth == 0) && (inputHeight == 0)) {
         // Only get the ISYS resolution when input config is not specified.
@@ -562,8 +567,10 @@ std::map<uuid, stream_t> CameraDevice::selectProducerConfig(const stream_config_
  * 2. To support specific features such as HW weaving or dewarping.
  */
 bool CameraDevice::isProcessorNeeded(const stream_config_t* streamList,
-                                     const stream_t& producerConfig) {
-    if (mDataContext->cropRegion.flag == 1) return true;
+                                     const stream_t& producerConfig) const {
+    if (mDataContext->cropRegion.flag == 1) {
+        return true;
+    }
 
     if (producerConfig.field != V4L2_FIELD_ANY) {
         if (mDataContext->deinterlaceMode == DEINTERLACE_WEAVING) {
@@ -572,7 +579,7 @@ bool CameraDevice::isProcessorNeeded(const stream_config_t* streamList,
     }
 
     if (producerConfig.field != V4L2_FIELD_ALTERNATE) {
-        int streamCounts = streamList->num_streams;
+        const int streamCounts = streamList->num_streams;
         for (int streamId = 0; streamId < streamCounts; streamId++) {
             if ((producerConfig.width != streamList->streams[streamId].width) ||
                 (producerConfig.height != streamList->streams[streamId].height) ||
@@ -592,7 +599,7 @@ bool CameraDevice::isProcessorNeeded(const stream_config_t* streamList,
 int CameraDevice::createStreams(stream_config_t* streamList, int configuredStreamNum) {
     LOG1("<id%d>@%s", mCameraId, __func__);
 
-    int streamCounts = streamList->num_streams;
+    const int streamCounts = streamList->num_streams;
     for (int streamId = 0; streamId < streamCounts; streamId++) {
         stream_t& streamConf = streamList->streams[streamId];
         LOG1("@%s, stream_number:%d, stream configure: format:%s (%dx%d)", __func__, streamCounts,
@@ -660,15 +667,17 @@ int CameraDevice::analyzeStream(stream_config_t* streamList, int* inputRawStream
 
         bool saved = false;
         // Store the streamId in descending order.
-        for (size_t j = 0; j < mSortedStreamIds.size(); j++) {
+        for (size_t j = 0U; j < mSortedStreamIds.size(); j++) {
             stream_t& tmp = streamList->streams[mSortedStreamIds[j]];
             if (stream.width * stream.height > tmp.width * tmp.height) {
-                mSortedStreamIds.insert((mSortedStreamIds.begin() + j), i);
+                mSortedStreamIds.insert(std::next(mSortedStreamIds.begin(), j), i);
                 saved = true;
                 break;
             }
         }
-        if (!saved) mSortedStreamIds.push_back(i);
+        if (!saved) {
+            mSortedStreamIds.push_back(i);
+        }
     }
 
     // Set opaque RAW stream as last one
@@ -677,8 +686,9 @@ int CameraDevice::analyzeStream(stream_config_t* streamList, int* inputRawStream
     }
 
     // Don't create stream for face if it is not supported
-    if (!PlatformData::isFaceDetectionSupported(mCameraId))
+    if (!PlatformData::isFaceDetectionSupported(mCameraId)) {
         *preStreamIdForFace = -1;
+    }
 
     return OK;
 }
@@ -687,7 +697,7 @@ int CameraDevice::assignPortForStreams(const stream_config_t* streamList, int in
                                        int inputYuvStreamId, int configuredStreamNum) {
     mStreamIdToPortMap.clear();
 
-    for (size_t i = 0; i < mSortedStreamIds.size(); i++) {
+    for (size_t i = 0U; i < mSortedStreamIds.size(); i++) {
         /*
          * If PSYS Processor isn't used, treat as ISYS only case.
          * Then set port to INPUT_STREAM_PORT_UID directly.
@@ -739,10 +749,11 @@ int CameraDevice::assignPortForStreams(const stream_config_t* streamList, int in
 int CameraDevice::bindStreams(stream_config_t* streamList) {
     for (auto& iter : mStreamIdToPortMap) {
         mStreams[iter.first]->setPort(iter.second);
-        if (mProcessingUnit)
+        if (mProcessingUnit != nullptr) {
             mStreams[iter.first]->setBufferProducer(mProcessingUnit);
-        else
+        } else {
             mStreams[iter.first]->setBufferProducer(mProducer);
+        }
     }
 
     return OK;
@@ -762,10 +773,10 @@ int CameraDevice::start() {
                      __func__);
 
     mScheduler->start();
-    int ret = startLocked();
+    const int ret = startLocked();
     if (ret != OK) {
         LOGE("Camera device starts failed.");
-        stopLocked();  // There is error happened, stop all related units.
+        (void)stopLocked();  // There is error happened, stop all related units.
         return INVALID_OPERATION;
     }
 
@@ -783,7 +794,9 @@ int CameraDevice::stop() {
     m3AControl->stop();
     mLensCtrl->stop();
 
-    if (mState == DEVICE_START) stopLocked();
+    if (mState == DEVICE_START) {
+        (void)stopLocked();
+    }
 
     mScheduler->stop();
     mState = DEVICE_STOP;
@@ -800,7 +813,7 @@ int CameraDevice::allocateMemory(camera_buffer_t* ubuffer) {
     CheckAndLogError((ubuffer->s.id < 0) || (ubuffer->s.id >= mStreamNum), BAD_VALUE,
                      "@%s: Wrong stream id %d", __func__, ubuffer->s.id);
 
-    int ret = mStreams[ubuffer->s.id]->allocateMemory(ubuffer);
+    const int ret = mStreams[ubuffer->s.id]->allocateMemory(ubuffer);
     CheckAndLogError(ret < 0, ret, "@%s: failed, index: %d", __func__, ubuffer->index);
 
     return ret;
@@ -818,9 +831,11 @@ int CameraDevice::dqbuf(int streamId, camera_buffer_t** ubuffer) {
     int ret = mRequestThread->waitFrame(streamId, ubuffer);
     while (ret == TIMED_OUT) ret = mRequestThread->waitFrame(streamId, ubuffer);
 
-    if (ret == NO_INIT) return ret;
+    if (ret == NO_INIT) {
+        return ret;
+    }
 
-    CheckAndLogError((!*ubuffer) || (ret != OK),
+    CheckAndLogError(((*ubuffer) == nullptr) || (ret != OK),
                      ret, "failed to get ubuffer from stream %d", streamId);
 
     return ret;
@@ -841,18 +856,20 @@ int CameraDevice::handleQueueBuffer(int bufferNum, camera_buffer_t** ubuffer, in
         // Find if user has queued a buffer for mStreams[streamId]
         for (int bufferId = 0; bufferId < bufferNum; bufferId++) {
             camera_buffer_t* buffer = ubuffer[bufferId];
-            int streamIdInBuf = buffer->s.id;
+            const int streamIdInBuf = buffer->s.id;
             CheckAndLogError((streamIdInBuf < 0) || (streamIdInBuf > mStreamNum), BAD_VALUE,
                              "@%s: Wrong stream id %d", __func__, streamIdInBuf);
 
-            if (IS_INPUT_BUFFER(buffer->timestamp, buffer->sequence)) hasInput = true;
+            if (IS_INPUT_BUFFER(buffer->timestamp, buffer->sequence)) {
+                hasInput = true;
+            }
             if ((buffer->s.usage == CAMERA_STREAM_PREVIEW) ||
                 (buffer->s.usage == CAMERA_STREAM_VIDEO_CAPTURE)) {
                 hasYuvOutput = true;
             }
 
             if (streamIdInBuf == streamId) {
-                int ret = mStreams[streamId]->qbuf(buffer, sequence);
+                const int ret = mStreams[streamId]->qbuf(buffer, sequence);
                 CheckAndLogError(ret < 0, ret, "@%s: queue buffer:%p failed:%d", __func__, buffer,
                                  ret);
                 isBufferQueued = true;
@@ -867,7 +884,7 @@ int CameraDevice::handleQueueBuffer(int bufferNum, camera_buffer_t** ubuffer, in
             if (streamId == mFdStream.id) {
                 // Use private CameraStream to run face detection for non-reprocessing case
                 // and there is one YUV output stream at least
-                bool addExtraBuf = ((!hasInput) && hasYuvOutput) ? true : false;
+                const bool addExtraBuf = ((!hasInput) && hasYuvOutput) ? true : false;
                 ret = mStreams[streamId]->qbuf(nullptr, sequence, addExtraBuf);
             } else {
                 ret = mStreams[streamId]->qbuf(nullptr, sequence);
@@ -905,11 +922,12 @@ int CameraDevice::setParameters(const DataContext& dataContext) {
     int ret = OK;
 
     // Set test pattern mode
-    camera_test_pattern_mode_t testPatternMode = dataContext.mAiqParams.testPatternMode;
+    const camera_test_pattern_mode_t testPatternMode = dataContext.mAiqParams.testPatternMode;
     if (PlatformData::isTestPatternSupported(mCameraId)) {
-        int32_t sensorTestPattern = PlatformData::getSensorTestPattern(mCameraId, testPatternMode);
+        const int32_t sensorTestPattern =
+            PlatformData::getSensorTestPattern(mCameraId, testPatternMode);
         if (sensorTestPattern >= 0) {
-            ret |= mSensorCtrl->setTestPatternMode(sensorTestPattern);
+            ret = mSensorCtrl->setTestPatternMode(sensorTestPattern);
         }
     }
 
@@ -945,7 +963,7 @@ int CameraDevice::startLocked() {
         CheckAndLogError(ret < 0, BAD_VALUE, "Start stream %d failed with ret:%d.", i, ret);
     }
 
-    if (mProcessingUnit) {
+    if (mProcessingUnit != nullptr) {
         ret = mProcessingUnit->start();
         CheckAndLogError((ret < 0), BAD_VALUE, "Start image processor failed with ret:%d.", ret);
     }
@@ -979,7 +997,9 @@ int CameraDevice::stopLocked() {
     // Stop the CaptureUnit for streamon
     mProducer->stop();
 
-    if (mProcessingUnit) mProcessingUnit->stop();
+    if (mProcessingUnit != nullptr) {
+        mProcessingUnit->stop();
+    }
 
     unbindListeners();
 
@@ -997,7 +1017,7 @@ void CameraDevice::handleEvent(EventData eventData) {
                 auto dataContext = cameraContext->getDataContextBySeq(request.settingSeq);
                 // Set test pattern mode
                 if (PlatformData::isTestPatternSupported(mCameraId)) {
-                    int32_t sensorTestPattern =
+                    const int32_t sensorTestPattern =
                         PlatformData::getSensorTestPattern(mCameraId,
                                                            dataContext->mAiqParams.testPatternMode);
                     if (sensorTestPattern >= 0) {
@@ -1008,13 +1028,13 @@ void CameraDevice::handleEvent(EventData eventData) {
                 }
             }
 
-            handleQueueBuffer(request.bufferNum, request.buffer, request.settingSeq);
+            (void)handleQueueBuffer(request.bufferNum, request.buffer, request.settingSeq);
             break;
         }
         case EVENT_PSYS_REQUEST_BUF_READY: {
-            if (mCallback) {
+            if (mCallback != nullptr) {
                 camera_msg_data_t data = {CAMERA_ISP_BUF_READY, {}};
-                int64_t sequence = eventData.data.requestReady.sequence;
+                const int64_t sequence = eventData.data.requestReady.sequence;
 
                 data.data.buffer_ready.timestamp = eventData.data.requestReady.timestamp;
                 data.data.buffer_ready.frameNumber = eventData.data.requestReady.frameNumber;
@@ -1026,7 +1046,7 @@ void CameraDevice::handleEvent(EventData eventData) {
         }
 
         case EVENT_REQUEST_METADATA_READY: {
-            if (mCallback) {
+            if (mCallback != nullptr) {
                 camera_msg_data_t data = {CAMERA_METADATA_READY, {}};
 
                 data.data.metadata_ready.sequence = eventData.data.requestReady.sequence;
@@ -1037,7 +1057,7 @@ void CameraDevice::handleEvent(EventData eventData) {
         }
 
         case EVENT_FRAME_AVAILABLE: {
-            if (mCallback) {
+            if (mCallback != nullptr) {
                 camera_msg_data_t data = {CAMERA_FRAME_DONE, };
 
                 data.data.frame_ready.streamId = eventData.data.frameDone.streamId;

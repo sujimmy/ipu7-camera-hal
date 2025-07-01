@@ -65,7 +65,9 @@ void initPerfettoTrace() {
 ScopedPerfetto::ScopedPerfetto(const char* traceInfo, const char* note1, int value1,
                                const char* note2, int value2, const char* note3, int value3)
         : mEnableAtraceEnd(false) {
-    if (!icamera::gPerfettoEnabled) return;
+    if (!icamera::gPerfettoEnabled) {
+        return;
+    }
     mEnableAtraceEnd = true;
     if (note1 == nullptr) {
         TRACE_EVENT_BEGIN(PERFETTO_CATEGORIES, perfetto::StaticString(traceInfo));

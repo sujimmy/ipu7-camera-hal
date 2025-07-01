@@ -131,7 +131,9 @@ int Dvs::configCcaDvsData(const ConfigMode configMode, cca::cca_init_params *par
 void Dvs::handleEvent(EventData eventData) {
     LOG2("@%s: eventData.type:%d", __func__, eventData.type);
 
-    if (eventData.type != EVENT_PSYS_STATS_BUF_READY) return;
+    if (eventData.type != EVENT_PSYS_STATS_BUF_READY) {
+        return;
+    }
 
     IntelCca* intelCcaHandle = IntelCca::getInstance(mCameraId, mTuningMode);
     CheckAndLogError(!intelCcaHandle, VOID_VALUE, "@%s, Failed to get IntelCca instance", __func__);
@@ -148,10 +150,11 @@ void Dvs::handleEvent(EventData eventData) {
     zp.digital_zoom_ratio = 1.0f;
     zp.digital_zoom_factor = 1.0f;
     zp.zoom_mode = ia_dvs_zoom_mode_region;
-    if (!ptzRegion.left && !ptzRegion.top && !ptzRegion.right && !ptzRegion.bottom)
+    if (!ptzRegion.left && !ptzRegion.top && !ptzRegion.right && !ptzRegion.bottom) {
         zp.zoom_region = {mGDCRegion.left, mGDCRegion.top, mGDCRegion.right, mGDCRegion.bottom};
-    else
+    } else {
         zp.zoom_region = { ptzRegion.left, ptzRegion.top, ptzRegion.right, ptzRegion.bottom };
+    }
     intelCcaHandle->updateZoom(zp);
 
     ia_err iaErr = intelCcaHandle->runDVS(eventData.data.statsReady.sequence);
@@ -161,7 +164,9 @@ void Dvs::handleEvent(EventData eventData) {
 }
 
 void Dvs::dumpDvsConfiguration(const cca::cca_init_params &config) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(Dvs))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(Dvs))) {
+        return;
+    }
 
     LOG3("config.dvsOutputType %d", config.dvsOutputType);
     LOG3("config.enableVideoStablization %d", config.enableVideoStablization);

@@ -39,15 +39,16 @@ extern const char* tagNames[];
 GroupDesc globalGroupsDescp[TAGS_MAX_NUM];
 
 namespace icamera {
-int gLogLevel = 0;
-int gPerfLevel = 0;
-int gSlowlyRunRatio = 0;
+
+uint32_t gLogLevel = 0U;
+uint32_t gPerfLevel = 0U;
+int32_t gSlowlyRunRatio = 0;
 // DUMP_ENTITY_TOPOLOGY_S
 bool gIsDumpMediaTopo = false;
 // DUMP_ENTITY_TOPOLOGY_E
 bool gIsDumpMediaInfo = false;
 
-const char* cameraDebugLogToString(int level) {
+const char* cameraDebugLogToString(uint32_t level) {
     switch (level) {
         case CAMERA_DEBUG_LOG_LEVEL1:
             return "LV1";
@@ -92,12 +93,12 @@ static void getLogTime(char* timeBuf, int bufLen) {
     // The format of time is: 01-22 15:24:53.071
     struct timeval tv;
     gettimeofday(&tv, nullptr);
-    time_t nowtime = tv.tv_sec;
+    const time_t nowtime = tv.tv_sec;
     struct tm* nowtm = localtime(&nowtime);
-    if (nowtm) {  // If nowtm is nullptr, simply print nothing for time info
+    if (nowtm != nullptr) {  // If nowtm is nullptr, simply print nothing for time info
         char tmbuf[bufLen];
         CLEAR(tmbuf);
-        strftime(tmbuf, bufLen, "%m-%d %H:%M:%S", nowtm);
+        (void)strftime(tmbuf, bufLen, "%m-%d %H:%M:%S", nowtm);
         snprintf(timeBuf, bufLen, "%s.%03ld", tmbuf, tv.tv_usec / 1000);
     }
 }
@@ -116,8 +117,10 @@ __attribute__((__format__(__printf__, 3, 0))) static void printLog(const char* m
 }
 #endif
 
-void doLogBody(int logTag, int level, int grpPosition, const char* fmt, ...) {
-    if (!(level & globalGroupsDescp[grpPosition].level)) return;
+void doLogBody(int logTag, uint32_t level, int grpPosition, const char* fmt, ...) {
+    if ((level & static_cast<int>(globalGroupsDescp[grpPosition].level)) == 0U) {
+        return;
+    }
 
     char message[256];
     va_list ap;
@@ -128,8 +131,10 @@ void doLogBody(int logTag, int level, int grpPosition, const char* fmt, ...) {
     globalLogSink->sendOffLog({message, level, tagNames[grpPosition]});
 }
 
-void doLogBody(int logTag, int level, const char* fmt, ...) {
-    if (!(level & globalGroupsDescp[logTag].level)) return;
+void doLogBody(int logTag, uint32_t level, const char* fmt, ...) {
+    if ((level & static_cast<int>(globalGroupsDescp[logTag].level)) == 0U) {
+        return;
+    }
 
     char message[256];
     va_list ap;
@@ -159,13 +164,15 @@ static void setLogTagLevel() {
     static const char* LOG_FILE_TAG = "cameraTags";
     char* logFileTag = ::getenv(LOG_FILE_TAG);
 
-    if (!logFileTag) return;
+    if (logFileTag == nullptr) {
+        return;
+    }
     std::string s = logFileTag;
     std::istringstream is(s);
     std::string token;
 
     while (std::getline(is, token, ':')) {
-        auto pos = token.find_first_of('-');
+        const auto pos = token.find_first_of('-');
 
         std::string name;
         std::string levelStr;
@@ -177,80 +184,86 @@ static void setLogTagLevel() {
         }
 
         for (int itemIdx = 0; itemIdx < TAGS_MAX_NUM; ++itemIdx) {
-            if (name != tagNames[itemIdx]) continue;
+            if (name != tagNames[itemIdx]) {
+                continue;
+            }
 
-            if (!levelStr.empty())
+            if (!levelStr.empty()) {
                 globalGroupsDescp[itemIdx].level = strtoul(levelStr.c_str(), nullptr, 0);
+            }
         }
     }
 }
 
 void setDebugLevel(void) {
-    const char* PROP_CAMERA_HAL_DEBUG = "cameraDebug";
-    const char* PROP_CAMERA_HAL_PERF = "cameraPerf";
-    const char* PROP_CAMERA_RUN_RATIO = "cameraRunRatio";
-
     initLogSinks();
+
+    const char* PROP_CAMERA_HAL_DEBUG = "cameraDebug";
+    const char* PROP_CAMERA_RUN_RATIO = "cameraRunRatio";
 
     // debug
     char* dbgLevel = getenv(PROP_CAMERA_HAL_DEBUG);
     gLogLevel = CAMERA_DEBUG_LOG_ERR | CAMERA_DEBUG_LOG_WARNING | CAMERA_DEBUG_LOG_INFO;
 
-    if (dbgLevel) {
+    if (dbgLevel != nullptr) {
         gLogLevel = strtoul(dbgLevel, nullptr, 0);
         LOG1("Debug level is 0x%x", gLogLevel);
     }
 
-    for (size_t i = 0; i < TAGS_MAX_NUM; ++i) {
+    for (int i = 0; i < TAGS_MAX_NUM; ++i) {
         globalGroupsDescp[i].level = gLogLevel;
     }
 
     setLogTagLevel();
 
     char* slowlyRunRatio = getenv(PROP_CAMERA_RUN_RATIO);
-    if (slowlyRunRatio) {
+    if (slowlyRunRatio != nullptr) {
         gSlowlyRunRatio = strtoul(slowlyRunRatio, nullptr, 0);
         LOG1("Slow run ratio is 0x%x", gSlowlyRunRatio);
     }
-
+    // ASYNC_TRACE_S
     // performance
+    const char* PROP_CAMERA_HAL_PERF = "cameraPerf";
     char* perfLevel = getenv(PROP_CAMERA_HAL_PERF);
-    if (perfLevel) {
+    if (perfLevel != nullptr) {
         gPerfLevel = strtoul(perfLevel, nullptr, 0);
         LOGI("Performance level is 0x%x", gPerfLevel);
 
         // bitmask of tracing categories
-        if (gPerfLevel & CAMERA_DEBUG_LOG_PERF_TRACES) {
+        if ((gPerfLevel & static_cast<int>(CAMERA_DEBUG_LOG_PERF_TRACES)) != 0U) {
             LOG1("Perf KPI start/end trace is not yet supported");
         }
-        if (gPerfLevel & CAMERA_DEBUG_LOG_PERF_TRACES_BREAKDOWN) {
+        if ((gPerfLevel & static_cast<int>(CAMERA_DEBUG_LOG_PERF_TRACES_BREAKDOWN)) != 0U) {
             LOG1("Perf KPI breakdown trace is not yet supported");
         }
-        if (gPerfLevel & CAMERA_DEBUG_LOG_PERF_IOCTL_BREAKDOWN) {
+        if ((gPerfLevel & static_cast<int>(CAMERA_DEBUG_LOG_PERF_IOCTL_BREAKDOWN)) != 0U) {
             LOG1("Perf IOCTL breakdown trace is not yet supported");
         }
-        if (gPerfLevel & CAMERA_DEBUG_LOG_PERF_MEMORY) {
+        if ((gPerfLevel & static_cast<int>(CAMERA_DEBUG_LOG_PERF_MEMORY)) != 0U) {
             LOG1("Perf memory breakdown trace is not yet supported");
         }
         // DUMP_ENTITY_TOPOLOGY_S
-        if (gPerfLevel & CAMERA_DEBUG_LOG_MEDIA_TOPO_LEVEL) {
+        if ((gPerfLevel & static_cast<int>(CAMERA_DEBUG_LOG_MEDIA_TOPO_LEVEL)) != 0U) {
             gIsDumpMediaTopo = true;
         }
         // DUMP_ENTITY_TOPOLOGY_E
-        if (gPerfLevel & CAMERA_DEBUG_LOG_MEDIA_CONTROLLER_LEVEL) {
+        if ((gPerfLevel & static_cast<int>(CAMERA_DEBUG_LOG_MEDIA_CONTROLLER_LEVEL)) != 0U) {
             gIsDumpMediaInfo = true;
         }
         ScopedAtrace::setTraceLevel(gPerfLevel);
     }
+    // ASYNC_TRACE_E
 }
 
-bool isDebugLevelEnable(int level) {
+bool isDebugLevelEnable(uint32_t level) {
     return gLogLevel & level;
 }
 
 bool isLogTagEnabled(int tag) {
-    if (tag < 0 || tag >= TAGS_MAX_NUM) return false;
-    return globalGroupsDescp[tag].level > 0;
+    if ((tag < 0) || (tag >= TAGS_MAX_NUM)) {
+        return false;
+    }
+    return globalGroupsDescp[tag].level > 0U;
 }
 
 // DUMP_ENTITY_TOPOLOGY_S
@@ -264,13 +277,13 @@ bool isDumpMediaInfo(void) {
 }
 
 __attribute__((__format__(__printf__, 1, 0))) void ccaPrintError(const char* fmt, va_list ap) {
-    if (gLogLevel & CAMERA_DEBUG_LOG_CCA) {
+    if ((gLogLevel & static_cast<int>(CAMERA_DEBUG_LOG_CCA)) != 0U) {
         printLog("CCA_DEBUG", CAMERA_DEBUG_LOG_ERR, fmt, ap);
     }
 }
 
 __attribute__((__format__(__printf__, 1, 0))) void ccaPrintInfo(const char* fmt, va_list ap) {
-    if (gLogLevel & CAMERA_DEBUG_LOG_CCA) {
+    if ((gLogLevel & static_cast<int>(CAMERA_DEBUG_LOG_CCA)) != 0U) {
         printLog("CCA_DEBUG", CAMERA_DEBUG_LOG_INFO, fmt, ap);
     }
 }

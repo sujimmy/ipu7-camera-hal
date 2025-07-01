@@ -49,17 +49,17 @@ FileSource::FileSource(int cameraId)
     const char* injectedFile = PlatformData::getInjectedFile();
 
     // Pnp test mode, the inject file may invalid
-    if (injectedFile) {
+    if (injectedFile != nullptr) {
         // Check if a xml config file is used or use frame file directly or use injection path.
         struct stat statBuf;
-        if (injectedFile && (stat(injectedFile, &statBuf) == 0)) {
+        if ((injectedFile != nullptr) && (stat(injectedFile, &statBuf) == 0)) {
             mInjectedFile = std::string(injectedFile);
         }
         LOG1("@%s, Injected file path: %s", __func__, mInjectedFile.c_str());
 
         string suffix = ".xml";
-        size_t fullSize = mInjectedFile.size();
-        size_t suffixSize = suffix.size();
+        const size_t fullSize = mInjectedFile.size();
+        const size_t suffixSize = suffix.size();
 
         // If mInjectedFile is ended with ".xml", it means we're using config file mode.
         // If mInjectedFile is a directory, it means we're using injection path.
@@ -108,15 +108,15 @@ int FileSource::configure(const map<uuid, stream_t>& outputFrames) {
 }
 
 int FileSource::allocateSourceBuffer() {
-    int fmt = mStreamConfig.format;
-    int width = mStreamConfig.width;
-    int height = mStreamConfig.height;
+    const int fmt = mStreamConfig.format;
+    const int width = mStreamConfig.width;
+    const int height = mStreamConfig.height;
     // Get frame size with aligned height taking in count for internal buffers.
-    uint32_t size = CameraUtils::getFrameSize(fmt, width, height, true);
+    const uint32_t size = CameraUtils::getFrameSize(fmt, width, height, true);
     map<int, string> frameFileName;
     if (mInjectionWay == USING_CONFIG_FILE) {
         FileSourceProfile profile(mInjectedFile);
-        int ret = profile.getFrameFiles(mCameraId, frameFileName);
+        const int ret = profile.getFrameFiles(mCameraId, frameFileName);
         CheckAndLogError(ret != OK, BAD_VALUE, "Cannot find the frame files");
         for (const auto& item : frameFileName)
             frameFileName[item.first] = profile.getFrameFile(mCameraId, item.first);
@@ -139,7 +139,8 @@ int FileSource::allocateSourceBuffer() {
         // Prepare the buffers to read the files for frame
         shared_ptr<CameraBuffer> buf = CameraBuffer::create(V4L2_MEMORY_USERPTR, size, 0, fmt,
                                                             width, height);
-        CheckAndLogError(!buf, BAD_VALUE, "@%s: Allocate producer buffer failed", __func__);
+        CheckAndLogError(buf == nullptr, BAD_VALUE, "@%s: Allocate producer buffer failed",
+                         __func__);
         fillFrameBuffer(fileName, buf);
         mFrameFileBuffers[fileName] = buf;
     }
@@ -151,7 +152,7 @@ int FileSource::start() {
 
     AutoMutex l(mLock);
 
-    allocateSourceBuffer();
+    (void)allocateSourceBuffer();
     mSequence = -1;
     mExitPending = false;
     mProduceThread->start();
@@ -182,10 +183,10 @@ int FileSource::stop() {
 }
 
 int FileSource::qbuf(uuid port, const shared_ptr<CameraBuffer>& camBuffer) {
-    CheckAndLogError(!camBuffer, BAD_VALUE, "Camera buffer is null");
+    CheckAndLogError(camBuffer == nullptr, BAD_VALUE, "Camera buffer is null");
 
     AutoMutex l(mLock);
-    bool needSignal = mBufferQueue[port].empty();
+    const bool needSignal = mBufferQueue[port].empty();
     mBufferQueue[port].push(camBuffer);
     if (needSignal) {
         mBufferSignal.notify_one();
@@ -209,7 +210,7 @@ bool FileSource::produce() {
     {
         // Wait for all the output ports to be ready.
         std::unique_lock<std::mutex> lock(mLock);
-        for (auto& bufQueue : mBufferQueue) {
+        for (const auto& bufQueue : mBufferQueue) {
             if (mExitPending) {
                 return false;
             }
@@ -229,8 +230,8 @@ bool FileSource::produce() {
     notifySofEvent();
 
     clock_gettime(CLOCK_MONOTONIC, &end);
-    long seconds = end.tv_sec - start.tv_sec;
-    long nSeconds = end.tv_nsec - start.tv_nsec;
+    const long seconds = end.tv_sec - start.tv_sec;
+    const long nSeconds = end.tv_nsec - start.tv_nsec;
     // Check how long to sleep to meet the specified FPS requirement.
     long sleepTime = static_cast<long>(1000000.0 / mFps) - (seconds * 1000000 + nSeconds / 1000);
     LOG2("Need to sleep: %ld us", sleepTime);
@@ -273,14 +274,14 @@ void FileSource::fillFrameBuffer(string fileName, shared_ptr<CameraBuffer>& buff
     std::ifstream file(fileName.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
     CheckAndLogError(!file.is_open(), VOID_VALUE, "Cannot open frame file:%s", fileName.c_str());
 
-    size_t fileSize = file.tellg();
+    const size_t fileSize = file.tellg();
     file.seekg(0, std::ios::beg);
 
     CheckWarningNoReturn(fileSize < buffer->getBufferSize(),
                          "The size of file:%s is less than buffer's requirement.",
                          fileName.c_str());
     file.read(reinterpret_cast<char*>(buffer->getBufferAddr()),
-              std::min(fileSize, (size_t)buffer->getBufferSize()));
+              std::min(fileSize, static_cast<size_t>(buffer->getBufferSize())));
 }
 
 void FileSource::fillFrameBuffer(shared_ptr<CameraBuffer>& buffer) {
@@ -296,7 +297,7 @@ void FileSource::fillFrameBuffer(shared_ptr<CameraBuffer>& buffer) {
         }
         map<int, string> frameFileName;
         FileSourceFromDir fSource(mInjectedFile);
-        int ret = fSource.getInjectionFileInfo(&frameFileName);
+        const int ret = fSource.getInjectionFileInfo(&frameFileName);
         if (ret != OK) {
             LOGE("Cannot find the frame files for fillFrameBuffer");
         }
@@ -385,7 +386,7 @@ FileSourceProfile::FileSourceProfile(string configFile) : mCurrentDataField(FIEL
     parseXmlFile(configFile);
     mergeCommonConfig();
 
-    for (auto& item : mConfigs) {
+    for (const auto& item : mConfigs) {
         // The first frame, that is the frame for sequence 0 MUST be provided.
         if (item.second.mFrameFiles.find(0) == item.second.mFrameFiles.end()) {
             LOGE("Sensor:%s, frame file for sequence 0 MUST be provided", item.first.c_str());
@@ -550,15 +551,17 @@ void FileSourceProfile::endElement(void* userData, const char* name) {
 void FileSourceProfile::parseXmlFile(const string& xmlFile) {
     LOG2("@%s, parsing profile: %s", __func__, xmlFile.c_str());
 
-    if (xmlFile.empty()) return;
+    if (xmlFile.empty()) {
+        return;
+    }
 
     FILE* fp = fopen(xmlFile.c_str(), "r");
-    CheckAndLogError(!fp, VOID_VALUE, "Can not open profile file %s", xmlFile.c_str());
+    CheckAndLogError(fp == nullptr, VOID_VALUE, "Can not open profile file %s", xmlFile.c_str());
 
-    XML_Parser parser = XML_ParserCreate(nullptr);
+    const XML_Parser parser = XML_ParserCreate(nullptr);
     if (parser == nullptr) {
         LOGE("Create XML parser failed.");
-        fclose(fp);
+        (void)fclose(fp);
         return;
     }
 
@@ -570,8 +573,8 @@ void FileSourceProfile::parseXmlFile(const string& xmlFile) {
     bool done = false;
 
     while (!done) {
-        int len = fread(pTmpBuf, 1, kBufSize, fp);
-        if (!len && ferror(fp)) {
+        const int len = fread(pTmpBuf, 1, kBufSize, fp);
+        if ((len == 0) && (ferror(fp) != 0)) {
             clearerr(fp);
             break;
         }
@@ -583,7 +586,7 @@ void FileSourceProfile::parseXmlFile(const string& xmlFile) {
     }
 
     XML_ParserFree(parser);
-    fclose(fp);
+    (void)fclose(fp);
 }
 
 FileSourceFromDir::FileSourceFromDir(const string& injectionPath) : mInjectionPath(injectionPath) {
@@ -592,14 +595,15 @@ FileSourceFromDir::FileSourceFromDir(const string& injectionPath) : mInjectionPa
     struct stat statBuf;
 
     DIR* dirInfo = opendir(mInjectionPath.c_str());
-    CheckAndLogError(!dirInfo, VOID_VALUE, "Invalid injection path: %s.", mInjectionPath.c_str());
+    CheckAndLogError(dirInfo == nullptr, VOID_VALUE, "Invalid injection path: %s.",
+                     mInjectionPath.c_str());
 
     while ((fileDirent = readdir(dirInfo))) {
         if ((strcmp(fileDirent->d_name, ".") == 0) || (strcmp(fileDirent->d_name, "..") == 0)) {
             continue;
         }
 
-        if ((stat(fileDirent->d_name, &statBuf) == 0) && (S_ISDIR(statBuf.st_mode))) {
+        if ((stat(fileDirent->d_name, &statBuf) == 0) && ((S_ISDIR(statBuf.st_mode)) != 0U)) {
             continue;
         }
 
@@ -608,14 +612,14 @@ FileSourceFromDir::FileSourceFromDir(const string& injectionPath) : mInjectionPa
 
     closedir(dirInfo);
 
-    CheckAndLogError(!mInjectionFiles.size(), VOID_VALUE, "No Injection files");
+    CheckAndLogError(mInjectionFiles.size() == 0, VOID_VALUE, "No Injection files");
     sort(mInjectionFiles.begin(), mInjectionFiles.end());
 }
 
 FileSourceFromDir::~FileSourceFromDir() {}
 
 int FileSourceFromDir::getInjectionFileInfo(map<int, string>* frameFilesInfo) {
-    for (unsigned int seqId = 0; seqId < mInjectionFiles.size(); seqId++) {
+    for (unsigned int seqId = 0U; seqId < mInjectionFiles.size(); seqId++) {
         if (mInjectionPath.back() == '/') {
             string fullPath = mInjectionPath + mInjectionFiles[seqId];
             frameFilesInfo->insert(std::pair<int, std::string>(seqId, fullPath));
@@ -649,9 +653,11 @@ string FileSourceFromDir::getFrameFile(const map<int, string>& frameFilesInfo, i
 }
 
 void FileSourceFromDir::fillFrameBuffer(void* addr, size_t bufferSize, uint32_t sequence) {
-    if ((mInjectionFiles.size() == 0) || (!addr)) return;
+    if ((mInjectionFiles.size() == 0) || (addr == nullptr)) {
+        return;
+    }
 
-    uint32_t index = sequence % mInjectionFiles.size();
+    const uint32_t index = sequence % mInjectionFiles.size();
     string fileName;
     if (mInjectionPath.back() == '/') {
         fileName = mInjectionPath + mInjectionFiles[index];
@@ -661,7 +667,7 @@ void FileSourceFromDir::fillFrameBuffer(void* addr, size_t bufferSize, uint32_t 
     std::ifstream file(fileName.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
     CheckAndLogError(!file.is_open(), VOID_VALUE, "Cannot open frame file:%s", fileName.c_str());
 
-    size_t fileSize = file.tellg();
+    const size_t fileSize = file.tellg();
     file.seekg(0, std::ios::beg);
     file.read(reinterpret_cast<char*>(addr), std::min(fileSize, bufferSize));
 }

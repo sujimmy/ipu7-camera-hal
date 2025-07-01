@@ -67,7 +67,9 @@ status_t JpegMaker::setupExifWithMetaData(int bufWidth, int bufHeight, int64_t s
     mExifMaker->initializeLocation(metaData);
     mExifMaker->setSensorAeConfig(aiqResult, dataContext);
 
-    if (metaData->software) mExifMaker->setSoftware(metaData->software);
+    if (metaData->software != nullptr) {
+        mExifMaker->setSoftware(metaData->software);
+    }
 
     return status;
 }

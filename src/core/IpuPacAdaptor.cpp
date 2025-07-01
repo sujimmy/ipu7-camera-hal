@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <utility>
 #include <memory>
+#include <limits>
 
 #include "iutils/Utils.h"
 #include "iutils/CameraLog.h"
@@ -51,10 +52,10 @@ int IpuPacAdaptor::init(std::vector<int> streamIds) {
     AutoMutex l(mPacAdaptorLock);
 
     mIntelCca = IntelCca::getInstance(mCameraId, TUNING_MODE_VIDEO);
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
 
     mStreamIdToInputParams.clear();
-    for (auto& id : streamIds) {
+    for (const auto& id : streamIds) {
         cca::cca_pal_input_params* p = static_cast<cca::cca_pal_input_params*>(
                 mIntelCca->allocMem(id, "param", id, sizeof(cca::cca_pal_input_params)));
         CheckAndLogError(p == nullptr, NO_MEMORY, "Cannot alloc memory for input parameter!");
@@ -74,9 +75,9 @@ int IpuPacAdaptor::init(std::vector<int> streamIds) {
 
 int IpuPacAdaptor::reinitAic(const int32_t aicId) {
     AutoMutex l(mPacAdaptorLock);
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
 
-    ia_err iaErr = mIntelCca->reinitAic(aicId);
+    const ia_err iaErr = mIntelCca->reinitAic(aicId);
     CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
                      "%s, Faield to reinit aic, aicId: %d", __func__, aicId);
 
@@ -107,17 +108,17 @@ status_t IpuPacAdaptor::pacConfig(int streamId, const cca::cca_aic_config& aicCo
                                   uint32_t* offsetPtr, cca::cca_aic_terminal_config* termCfg,
                                   const int32_t* statsBufToTermIds) {
     AutoMutex l(mPacAdaptorLock);
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
 
     LOG2("@%s, cb number: %u, streamId: %d", __func__, termCfg->cb_num, streamId);
-    for (uint32_t i = 0; i < termCfg->cb_num; ++i) {
+    for (uint32_t i = 0U; i < termCfg->cb_num; ++i) {
         LOG2("%s, config pac for cb: %d", __func__, termCfg->cb_terminal_buf[i].group_id);
     }
 
-    ia_err iaErr = mIntelCca->configAic(aicConfig, kernelOffset, offsetPtr, *termCfg, streamId,
-                                        statsBufToTermIds);
+    const ia_err iaErr = mIntelCca->configAic(aicConfig, kernelOffset, offsetPtr, *termCfg,
+                                              streamId, statsBufToTermIds);
     CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
                      "%s, Faield to configure pac, streamId: %d", __func__, streamId);
 
@@ -129,7 +130,7 @@ void* IpuPacAdaptor::allocateBuffer(int streamId, uint8_t contextId,
     AutoMutex l(mPacAdaptorLock);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      nullptr, "%s, wrong state %d", __func__, mPacAdaptorState);
-    CheckAndLogError(!mIntelCca, nullptr, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, nullptr, "%s, mIntelCca is nullptr", __func__);
 
     return allocateBufferL(streamId, contextId, termId, size);
 }
@@ -152,7 +153,7 @@ void IpuPacAdaptor::releaseBuffer(int streamId, uint8_t contextId, uint32_t term
     AutoMutex l(mPacAdaptorLock);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      VOID_VALUE, "%s, wrong state %d", __func__, mPacAdaptorState);
-    CheckAndLogError(!mIntelCca, VOID_VALUE, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, VOID_VALUE, "%s, mIntelCca is nullptr", __func__);
 
     releaseBufferL(streamId, contextId, termId, addr);
 }
@@ -179,16 +180,16 @@ status_t IpuPacAdaptor::setPacTerminalData(int streamId, uint8_t contextId,
 
 status_t IpuPacAdaptor::registerBuffer(int streamId, const cca::cca_aic_terminal_config& termCfg) {
     AutoMutex l(mPacAdaptorLock);
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
 
     LOG2("@%s, cb number: %u, streamId: %d", __func__, termCfg.cb_num, streamId);
-    for (uint32_t i = 0; i < termCfg.cb_num; ++i) {
+    for (uint32_t i = 0U; i < termCfg.cb_num; ++i) {
         LOG2("%s, register buffer for cb: %d", __func__, termCfg.cb_terminal_buf[i].group_id);
     }
 
-    ia_err iaErr = mIntelCca->registerAicBuf(termCfg, streamId);
+    const ia_err iaErr = mIntelCca->registerAicBuf(termCfg, streamId);
     CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
                      "%s, Faield to register pac buffer, streamId: %d", __func__, streamId);
 
@@ -200,7 +201,9 @@ status_t IpuPacAdaptor::storeTerminalResult(int64_t sequence, int32_t streamId) 
 
     // get the aic buffer of all CBs for current streamId
     for (auto& data : mTerminalData) {
-        if (data.first.first != streamId) continue;
+        if (data.first.first != streamId) {
+            continue;
+        }
 
         // According to the PacTerminalBufMap of streamId and contextId to get aic buffer
         PacTerminalBufMap& cbTermData = data.second;
@@ -224,7 +227,7 @@ status_t IpuPacAdaptor::storeTerminalResult(int64_t sequence, int32_t streamId) 
 
         LOG2("%s, get the aic buffer for streamId: %d, contextId: %u, terminal num: %d",
              __func__, streamId, data.first.second, index);
-        ia_err iaErr = mIntelCca->getAicBuf(ccaTermConfig, streamId);
+        const ia_err iaErr = mIntelCca->getAicBuf(ccaTermConfig, streamId);
         CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
                          "<seq:%ld>%s, Faield to getAicBuf. streamId: %d, contextId: %d",
                          sequence, __func__, streamId, data.first.second);
@@ -233,9 +236,9 @@ status_t IpuPacAdaptor::storeTerminalResult(int64_t sequence, int32_t streamId) 
         std::pair<int, uint8_t> cbInstance = std::make_pair(streamId, data.first.second);
         for (auto& buf : cbTermData) {
             int aicDataId = payloadBufs[index].id;
-            size_t aicDataSize = payloadBufs[index].size;
+            const size_t aicDataSize = payloadBufs[index].size;
             void* aicDataAddr = payloadBufs[index].payloadPtr;
-            int64_t aicDataSeq = payloadBufs[index].sequence;
+            const int64_t aicDataSeq = payloadBufs[index].sequence;
             LOG3("%s, terminal id: %u, id: %u, size: %zu, addr: %p, sequence: %ld", __func__,
                  buf.first, aicDataId, aicDataSize, aicDataAddr, aicDataSeq);
 
@@ -250,9 +253,11 @@ status_t IpuPacAdaptor::storeTerminalResult(int64_t sequence, int32_t streamId) 
         }
 
         // Only update data if find same sequence id
-        size_t i = 0;
+        size_t i = 0U;
         for ( ; i < cbTermResult.size(); ++i) {
-            if (cbTermResult[i].sequence == sequence) break;
+            if (cbTermResult[i].sequence == sequence) {
+                break;
+            }
         }
 
         if (i != cbTermResult.size()) {
@@ -269,14 +274,16 @@ status_t IpuPacAdaptor::storeTerminalResult(int64_t sequence, int32_t streamId) 
 void IpuPacAdaptor::applyMediaFormat(const AiqResult* aiqResult,
                                      ia_media_format* mediaFormat, bool* useLinearGamma,
                                      int64_t sequence) {
-    CheckAndLogError(!mediaFormat || !aiqResult, VOID_VALUE, "mediaFormat or aiqResult is nullptr");
+    CheckAndLogError((mediaFormat == nullptr) || (aiqResult == nullptr), VOID_VALUE,
+                     "mediaFormat or aiqResult is nullptr");
 
     auto cameraContext = CameraContext::getInstance(mCameraId);
     auto dataContext = cameraContext->getDataContextBySeq(sequence);
 
     *mediaFormat = media_format_legacy;
     if (dataContext->mAiqParams.tonemapMode == TONEMAP_MODE_GAMMA_VALUE) {
-        if (dataContext->mAiqParams.tonemapGamma == 1.0) {
+        const float gamma = dataContext->mAiqParams.tonemapGamma;
+        if (std::fabs(gamma - 1.0F) < std::numeric_limits<float>::epsilon()) {
             *useLinearGamma = true;
             *mediaFormat = media_format_custom;
             LOG2("%s: a linear 1.0 gamma value.", __func__);
@@ -286,15 +293,15 @@ void IpuPacAdaptor::applyMediaFormat(const AiqResult* aiqResult,
         }
     } else if (dataContext->mAiqParams.tonemapMode == TONEMAP_MODE_CONTRAST_CURVE) {
         const camera_tonemap_curves_t* curves = &dataContext->mAiqParams.tonemapCurves;
-        CheckAndLogError((curves->rSize != curves->gSize || curves->bSize != curves->gSize),
+        CheckAndLogError((curves->rSize != curves->gSize) || (curves->bSize != curves->gSize),
                          VOID_VALUE, "%s, the size of rgb channels must be same", __func__);
 
         // User's curve is 2-d array: (in, out)
         // Use the gamma curve to select the media format
-        float curveX = curves->gCurve[curves->gSize / 2];
-        float curveY = curves->gCurve[curves->gSize / 2 + 1];
+        const float curveX = curves->gCurve[curves->gSize / 2];
+        const float curveY = curves->gCurve[curves->gSize / 2 + 1];
 
-        if (curveX == curveY) {
+        if (std::fabs(curveX - curveY) < std::numeric_limits<float>::epsilon()) {
             // It's a linear gamma curves(same with gamma = 1.0)
             *useLinearGamma = true;
             *mediaFormat = media_format_custom;
@@ -312,7 +319,7 @@ void IpuPacAdaptor::applyMediaFormat(const AiqResult* aiqResult,
 status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
                                int64_t settingSequence, int32_t streamId) {
     AutoMutex l(mPacAdaptorLock);
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
 
@@ -345,7 +352,7 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
         inputParams->force_lsc_update = true;
     }
 
-    if (ispSettings) {
+    if (ispSettings != nullptr) {
         inputParams->nr_setting = ispSettings->nrSetting;
         inputParams->ee_setting = ispSettings->eeSetting;
         LOG2("%s: ISP NR setting, level: %d, strength: %d", __func__,
@@ -362,8 +369,8 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
     }
 
     inputParams->custom_controls.count = aiqResults->mCustomControls.count;
-    uint32_t cnt = static_cast<uint32_t>(inputParams->custom_controls.count);
-    if (cnt > 0) {
+    const uint32_t cnt = static_cast<uint32_t>(inputParams->custom_controls.count);
+    if (cnt > 0U) {
         CheckAndLogError(cnt > cca::MAX_CUSTOM_CONTROLS_PARAM_SIZE,
                          UNKNOWN_ERROR, "%s, buffer for custom control[%d] is too small",
                          __func__, cnt);
@@ -376,7 +383,7 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
     if (aiqResults->mGbceResults.have_manual_settings == true) {
         inputParams->manual_gbce_setting = aiqResults->mGbceResults;
         if (useLinearGamma) {
-            inputParams->manual_gbce_setting.gamma_lut_size = 0;
+            inputParams->manual_gbce_setting.gamma_lut_size = 0U;
         }
     }
 
@@ -395,7 +402,7 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
 
         LOG2("%s: set digital gain for ULL pipe: %f", __func__, inputParams->manual_digital_gain);
     } else if (PlatformData::isMultiExposureCase(mCameraId, TUNING_MODE_VIDEO) &&
-               PlatformData::getSensorGainType(mCameraId) == ISP_DG_AND_SENSOR_DIRECT_AG) {
+               (PlatformData::getSensorGainType(mCameraId) == ISP_DG_AND_SENSOR_DIRECT_AG)) {
         inputParams->manual_digital_gain =
             aiqResults->mAeResults.exposures[0].exposure[0].digital_gain;
 
@@ -415,12 +422,12 @@ status_t IpuPacAdaptor::runAIC(const IspSettings* ispSettings,
         }
         // HDR_FEATURE_E
 
-        iaErr = mIntelCca->runAIC(aiqResults->mFrameId, inputParams, 0xff, streamId);
+        iaErr = mIntelCca->runAIC(aiqResults->mFrameId, inputParams, 0xffU, streamId);
     }
-    CheckAndLogError(iaErr != ia_err_none && iaErr != ia_err_not_run, UNKNOWN_ERROR,
+    CheckAndLogError((iaErr != ia_err_none) && (iaErr != ia_err_not_run), UNKNOWN_ERROR,
                      "Pac parameter adaptation has failed %d", iaErr);
 
-    storeTerminalResult(settingSequence, streamId);
+    (void)storeTerminalResult(settingSequence, streamId);
 
     mPacRunHistMap[pacItem] = false;
 
@@ -431,11 +438,12 @@ status_t IpuPacAdaptor::updateResolutionSettings(int streamId,
                                                  const cca::cca_aic_config& aicConfig,
                                                  bool isKeyResChanged) {
     AutoMutex l(mPacAdaptorLock);
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
 
-    ia_err iaErr = mIntelCca->updateConfigurationResolutions(aicConfig, streamId, isKeyResChanged);
+    const ia_err iaErr = mIntelCca->updateConfigurationResolutions(aicConfig, streamId,
+                                                                   isKeyResChanged);
     CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
                      "%s, Faield to configure pac, streamId: %d", __func__, streamId);
 
@@ -459,7 +467,7 @@ status_t IpuPacAdaptor::getAllBuffers(int streamId, uint8_t contextId, int64_t s
         bufferMap = cbTermResult.back().termResult;
         return OK;
     } else {
-        for (size_t i = 0; i < cbTermResult.size(); ++i) {
+        for (size_t i = 0U; i < cbTermResult.size(); ++i) {
             if (cbTermResult[i].sequence == sequenceId) {
                 bufferMap = cbTermResult[i].termResult;
                 return OK;
@@ -473,7 +481,7 @@ status_t IpuPacAdaptor::getAllBuffers(int streamId, uint8_t contextId, int64_t s
 
 bool IpuPacAdaptor::isStatsUsed(int streamId, int64_t sequence) {
     // Don't use statistics if it is older than last one
-    if (mLastStatsSequence >= 0 && sequence <= mLastStatsSequence) {
+    if ((mLastStatsSequence >= 0) && (sequence <= mLastStatsSequence)) {
         return false;
     }
 
@@ -481,7 +489,7 @@ bool IpuPacAdaptor::isStatsUsed(int streamId, int64_t sequence) {
      * Normally only statistics from Video pipe is used.
      * The statistics from Still pipe is used when working in Still pipe cases.
      */
-    if ((streamId == STILL_STREAM_ID) && !PlatformData::isStillOnlyPipeEnabled(mCameraId)) {
+    if ((streamId == STILL_STREAM_ID) && (!PlatformData::isStillOnlyPipeEnabled(mCameraId))) {
         return false;
     }
 
@@ -491,7 +499,7 @@ bool IpuPacAdaptor::isStatsUsed(int streamId, int64_t sequence) {
 status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t sequenceId,
                                     unsigned long long timestamp) {
     AutoMutex l(mPacAdaptorLock);
-    CheckAndLogError(!mIntelCca, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
+    CheckAndLogError(mIntelCca == nullptr, UNKNOWN_ERROR, "%s, mIntelCca is nullptr", __func__);
     CheckAndLogError(mPacAdaptorState != PAC_ADAPTOR_INIT,
                      INVALID_OPERATION, "%s, wrong state %d", __func__, mPacAdaptorState);
 
@@ -504,7 +512,7 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
         return OK;
     }
 
-    bool statsUsed = isStatsUsed(streamId, sequenceId);
+    const bool statsUsed = isStatsUsed(streamId, sequenceId);
 
     cca::cca_out_stats outStatsTemp;
     cca::cca_out_stats* outStats = &outStatsTemp;
@@ -517,13 +525,13 @@ status_t IpuPacAdaptor::decodeStats(int streamId, uint8_t contextId, int64_t seq
         auto cameraContext = CameraContext::getInstance(mCameraId);
         auto dataContext = cameraContext->getDataContextBySeq(sequenceId);
         auto aiqResult = const_cast<AiqResult*>(mAiqResultStorage->getAiqResult(sequenceId));
-        if (aiqResult && dataContext->mAiqParams.callbackRgbs) {
+        if ((aiqResult != nullptr) && dataContext->mAiqParams.callbackRgbs) {
             outStats = &aiqResult->mOutStats;
             outStats->get_rgbs_stats = true;
         }
     }
 
-    ia_err iaErr = mIntelCca->decodeStats(contextId, sequenceId, streamId, outStats);
+    const ia_err iaErr = mIntelCca->decodeStats(contextId, sequenceId, streamId, outStats);
     CheckAndLogError(iaErr != ia_err_none, UNKNOWN_ERROR,
                      "<seq:%ld>%s, Faield to decode stats. streamId: %d, contextId: %d",
                      sequenceId, __func__, streamId, contextId);

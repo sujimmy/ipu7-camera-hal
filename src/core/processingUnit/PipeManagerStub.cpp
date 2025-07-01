@@ -144,7 +144,9 @@ int PipeManagerStub::prepareIpuParams(IspSettings* settings, int64_t sequence, i
             break;
         }
     }
-    if (!validStream) return BAD_VALUE;
+    if (!validStream) {
+        return BAD_VALUE;
+    }
 
     {
         // Make sure the AIC is executed once.
@@ -186,7 +188,9 @@ void PipeManagerStub::onMetadataReady(int64_t sequence) {
 }
 
 int PipeManagerStub::onBufferDone(uuid port, const std::shared_ptr<CameraBuffer>& buffer) {
-    if (!buffer) return OK;  // No need to handle if the buffer is nullptr.
+    if (!buffer) {
+        return OK;  // No need to handle if the buffer is nullptr.
+    }
 
     int64_t sequence = buffer->getSequence();
     LOG2("<id%d:seq%ld>@%s", mCameraId, sequence, __func__);
@@ -208,7 +212,9 @@ int PipeManagerStub::onBufferDone(uuid port, const std::shared_ptr<CameraBuffer>
                     outputPort = buf.first;
                 }
             }
-            if (outputPort == INVALID_PORT) continue;
+            if (outputPort == INVALID_PORT) {
+                continue;
+            }
 
             it->mNumOfReturnedBuffers++;
             if (it->mNumOfReturnedBuffers >= it->mNumOfValidBuffers) {
@@ -299,7 +305,9 @@ int PipeManagerStub::processTask(const PipeTaskData& task) {
 }
 
 bool PipeManagerStub::threadLoop() {
-    if (mExitPending) return false;
+    if (mExitPending) {
+        return false;
+    }
 
     PipeTaskData task = {};
     LOG2("<id%d>@%s", mCameraId, __func__);

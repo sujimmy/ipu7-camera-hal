@@ -20,22 +20,22 @@
 
 namespace icamera {
 
-const int ATRACE_LEN = 128;
-int gScopedAtraceLevel = 0;
+const int32_t ATRACE_LEN = 128;
+uint32_t  gScopedAtraceLevel = 0U;
 
-ScopedAtrace::ScopedAtrace(const int level, const char* func, const char* tag, const char* note,
+ScopedAtrace::ScopedAtrace(uint32_t level, const char* func, const char* tag, const char* note,
                            long value, const char* note2, int value2, const char* note3,
                            int value3) {
     mEnableAtraceEnd = false;
-    if (gScopedAtraceLevel & level) {
+    if ((gScopedAtraceLevel & level) != 0U) {
         char buf[ATRACE_LEN];
-        if (value < 0 || note == nullptr) {
+        if ((value < 0) || (note == nullptr)) {
             snprintf(buf, ATRACE_LEN, "<%s,%s>", func, tag);
             atrace_begin(ATRACE_TAG, buf);
-        } else if (value2 < 0 || note2 == nullptr) {
+        } else if ((value2 < 0) || (note2 == nullptr)) {
             snprintf(buf, ATRACE_LEN, "<%s,%s>:%s(%ld)", func, tag, note, value);
             atrace_begin(ATRACE_TAG, buf);
-        } else if (value3 < 0 || note3 == nullptr) {
+        } else if ((value3 < 0) || (note3 == nullptr)) {
             snprintf(buf, ATRACE_LEN, "<%s,%s>:%s(%ld) %s(%d)", func, tag, note, value, note2,
                      value2);
             atrace_begin(ATRACE_TAG, buf);
@@ -54,7 +54,7 @@ ScopedAtrace::~ScopedAtrace() {
     }
 }
 
-void ScopedAtrace::setTraceLevel(int level) {
+void ScopedAtrace::setTraceLevel(uint32_t level) {
     gScopedAtraceLevel = level;
 }
 

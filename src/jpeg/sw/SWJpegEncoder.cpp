@@ -86,7 +86,9 @@ bool SWJpegEncoder::doJpegEncode(EncodePackage* package) {
     else
         status = swEncode(*package);
 
-    if (status < 0) goto exit;
+    if (status < 0) {
+        goto exit;
+    }
 
     package->encodedDataSize = mJpegSize;
 
@@ -147,16 +149,21 @@ int SWJpegEncoder::swEncode(const EncodePackage& package) {
     const void* uv_buf =
         static_cast<unsigned char*>(package.inputData) + package.inputStride * package.inputHeight;
 
-    if (status) goto exit;
+    if (status != 0) {
+        goto exit;
+    }
 
     status = encoder.doJpegEncoding(package.inputData, uv_buf, package.inputFormat);
-    if (status) goto exit;
+    if (status != 0) {
+        goto exit;
+    }
 
 exit:
-    if (status)
+    if (status != 0) {
         mJpegSize = -1;
-    else
+    } else {
         encoder.getJpegSize(&mJpegSize);
+    }
 
     encoder.deInit();
 
@@ -180,7 +187,9 @@ int SWJpegEncoder::swEncodeMultiThread(const EncodePackage& package) {
     config(package);
 
     status = doJpegEncodingMultiThread();
-    if (status) goto exit;
+    if (status != 0) {
+        goto exit;
+    }
 
 exit:
     mJpegSize = status ? -1 : mergeJpeg();
@@ -307,7 +316,9 @@ int SWJpegEncoder::doJpegEncodingMultiThread(void) {
         LOG2("@%s, the %d sw jpeg encoder thread before exit!", __func__, i);
         encThread = mSwJpegEncoder[i];
         encThread->waitThreadFinish();
-        if (encThread->getJpegDataSize() == -1) status = UNKNOWN_ERROR;
+        if (encThread->getJpegDataSize() == -1) {
+            status = UNKNOWN_ERROR;
+        }
     }
 
     return status;
@@ -459,16 +470,21 @@ int SWJpegEncoder::CodecWorkerThread::swEncode(void) {
     encoder.setJpegQuality(mCfg.quality);
     status = encoder.configEncoding(mCfg.width, mCfg.height, mCfg.stride,
                                     static_cast<JSAMPLE*>(mCfg.outBuf), mCfg.outBufSize);
-    if (status) goto exit;
+    if (status != 0) {
+        goto exit;
+    }
 
     status = encoder.doJpegEncoding(mCfg.inBufY, mCfg.inBufUV, mCfg.fourcc);
-    if (status) goto exit;
+    if (status != 0) {
+        goto exit;
+    }
 
 exit:
-    if (status)
+    if (status != 0) {
         mDataSize = -1;
-    else
+    } else {
         encoder.getJpegSize(&mDataSize);
+    }
 
     encoder.deInit();
 

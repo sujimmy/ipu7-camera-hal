@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation
+ * Copyright (C) 2022-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,9 @@ int32_t CameraScheduler::createExecutors() {
         if (!group.triggerSource.empty()) {
             // Check if trigger source is one executor
             std::shared_ptr<Executor> source = findExecutor(group.triggerSource.c_str());
-            if (source) source->addListener(group.executor);
+            if (source != nullptr) {
+                source->addListener(group.executor);
+            }
         }
         mPolicy->getNodeList(exe.first, &group.nodeList);
 
@@ -84,7 +86,7 @@ int32_t CameraScheduler::registerNode(ISchedulerNode* node) {
     std::lock_guard<std::mutex> l(mLock);
 
     ExecutorGroup* group = nullptr;
-    for (size_t i = 0; i < mExeGroups.size(); i++) {
+    for (size_t i = 0U; i < mExeGroups.size(); i++) {
         for (auto& nodeName : mExeGroups[i].nodeList) {
             if (strcmp(nodeName.c_str(), node->getName()) == 0) {
                 group = &mExeGroups[i];
@@ -121,7 +123,9 @@ void CameraScheduler::stop() {
 
 int32_t CameraScheduler::executeNode(std::string triggerSource, int64_t triggerId) {
     // System timer aligned, ignore external trigger
-    if (mMsAlignWithSystem) return OK;
+    if (mMsAlignWithSystem) {
+        return OK;
+    }
 
     mTriggerCount++;
     for (auto& group : mExeGroups) {
@@ -132,10 +136,14 @@ int32_t CameraScheduler::executeNode(std::string triggerSource, int64_t triggerI
 }
 
 std::shared_ptr<CameraScheduler::Executor> CameraScheduler::findExecutor(const char* exeName) {
-    if (!exeName) return nullptr;
+    if (!exeName) {
+        return nullptr;
+    }
 
     for (auto& group : mExeGroups) {
-        if (strcmp(group.executor->getName(), exeName) == 0) return group.executor;
+        if (strcmp(group.executor->getName(), exeName) == 0) {
+            return group.executor;
+        }
     }
 
     return nullptr;
@@ -148,20 +156,24 @@ CameraScheduler::Executor::Executor(const char* name)
 
 CameraScheduler::Executor::~Executor() {
     LOG1("%s: destory", getName());
-    stop();
+    CameraScheduler::Executor::stop();
 }
 
 void CameraScheduler::Executor::addNode(ISchedulerNode* node) {
     std::lock_guard<std::mutex> l(mNodeLock);
-    if (mActive) return;
+    if (mActive) {
+        return;
+    }
     mNodes.push_back(node);
     LOG1("%s: %s added to %s, pos %d", __func__, node->getName(), getName(), mNodes.size());
 }
 
 void CameraScheduler::Executor::removeNode(ISchedulerNode* node) {
     std::lock_guard<std::mutex> l(mNodeLock);
-    if (mActive) return;
-    for (size_t i = 0; i < mNodes.size(); i++) {
+    if (mActive) {
+        return;
+    }
+    for (size_t i = 0U; i < mNodes.size(); i++) {
         if (mNodes[i] == node) {
             LOG1("%s: %s moved from %s", __func__, node->getName(), getName());
             mNodes.erase(mNodes.begin() + i);
@@ -211,7 +223,9 @@ bool CameraScheduler::Executor::threadLoop() {
 
     {
         std::lock_guard<std::mutex> l(mNodeLock);
-        if (!mActive) return false;
+        if (!mActive) {
+            return false;
+        }
     }
 
     LOG3("%s process, tick %d", getName(), tick);

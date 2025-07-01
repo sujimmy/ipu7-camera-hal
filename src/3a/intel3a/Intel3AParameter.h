@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef INTEL_3A_PARAMETER_H
+#define INTEL_3A_PARAMETER_H
 
 #include "AiqSetting.h"
 #include "AiqUtils.h"
@@ -35,7 +36,7 @@ class Intel3AParameter {
     int getCMCInfo(TuningMode tuningMode);
     int setSensorInfo(ia_aiq_exposure_sensor_descriptor descriptor);
     int updateParameter(aiq_parameter_t param);
-    void updateAeResult(cca::cca_ae_results* aeResult);
+    void updateAeResult(cca::cca_ae_results* aeResult) const ;
     void updateAwbResult(cca::cca_awb_results* awbResult);
     void updatePaResult(cca::cca_pa_params* paResult);
 
@@ -52,7 +53,7 @@ class Intel3AParameter {
     void updateAfParameterForAfTriggerStart();
     void updateAfParameterForAfTriggerCancel();
 
-    float convertdBGainToISO(float sensitivityGain, int baseIso);
+    float convertdBGainToISO(float sensitivityGain, int baseIso) const ;
     void setManualExposure(const aiq_parameter_t& param);
     void setManualGain(const aiq_parameter_t& param);
     void setManualIso(const aiq_parameter_t& param);
@@ -97,3 +98,5 @@ class Intel3AParameter {
 };
 
 } /* namespace icamera */
+
+#endif // INTEL_3A_PARAMETER_H

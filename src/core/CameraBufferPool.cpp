@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Intel Corporation
+ * Copyright (C) 2022-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ status_t CameraBufferPool::createBufferPool(int cameraId, uint32_t numBufs,
     std::lock_guard<std::mutex> l(mLock);
     mBuffers.clear();
 
-    for (uint32_t i = 0; i < numBufs; i++) {
+    for (uint32_t i = 0U; i < numBufs; i++) {
         std::shared_ptr<CameraBuffer> buffer = CameraBuffer::create(stream.memType,
             stream.size, i, stream.format, stream.width, stream.height);
         if (!buffer) {

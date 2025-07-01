@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIQ_UNIT_H
+#define AIQ_UNIT_H
 
 #ifdef IPA_SANDBOXING
 #include "CcaClient.h"
@@ -155,3 +156,4 @@ private:
 
 } /* namespace icamera */
 
+#endif // AIQ_UNIT_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2024 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_BUFFER_H
+#define CAMERA_BUFFER_H
 
 #include <memory>
 #include <queue>
@@ -58,7 +59,7 @@ class CameraBuffer {
     int getStreamType() const { return mU->s.streamType; }
     int getStreamUsage() const { return mU->s.usage; }
     int getStreamId() const { return mU->s.id; }
-    int getFlags() const { return mU->flags; }
+    int32_t getFlags() const { return mU->flags; }
     // v4l2 buffer information
     uint32_t getIndex(void) const { return mV.Index(); }
 
@@ -97,7 +98,7 @@ class CameraBuffer {
 
     void setUserBufferFlags(int flags) { mBufferflag = flags; }
     // Check if the specific flag in "mU->flags" is set or not
-    bool isFlagsSet(int flag);
+    bool isFlagsSet(uint32_t flag) const;
     // The ubuffer is from application
     void setUserBufferInfo(camera_buffer_t* ubuffer);
     void setUserBufferInfo(int format, int width, int height);
@@ -114,12 +115,17 @@ class CameraBuffer {
 
     V4L2Buffer& getV4L2Buffer() { return mV; }
 
-    bool isExtDmaBuf() { return (mBufferflag & BUFFER_FLAG_DMA_EXPORT); }
+    bool isExtDmaBuf() {
+      return (mBufferflag & BUFFER_FLAG_DMA_EXPORT) != 0;
+    }
 
     bool isNeedFlush() {
-        return (mBufferflag & (BUFFER_FLAG_SW_READ | BUFFER_FLAG_SW_WRITE) ? true : false);
+      return (mBufferflag & (BUFFER_FLAG_SW_READ | BUFFER_FLAG_SW_WRITE)) != 0;
     }
-    bool isInternalBuffer() { return (mBufferflag & BUFFER_FLAG_INTERNAL); }
+
+    bool isInternalBuffer() {
+      return (mBufferflag & BUFFER_FLAG_INTERNAL) != 0;
+    }
 
     void setSettingSequence(int64_t sequence) { mSettingSequence = sequence; }
     int64_t getSettingSequence() const { return mSettingSequence; }
@@ -154,7 +160,7 @@ class CameraBuffer {
     // To tag whether the memory is allocated by CameraBuffer class. We need to free them
     bool mAllocatedMemory;
 
-    int mBufferflag;
+    uint32_t mBufferflag;
     camera_buffer_t* mU;
     int64_t mSettingSequence;
 
@@ -193,3 +199,5 @@ class CameraBufferMapper {
 };
 
 }  // namespace icamera
+
+#endif // CAMERA_BUFFER_H

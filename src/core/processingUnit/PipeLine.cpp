@@ -142,7 +142,9 @@ void PipeLine::setControl(int64_t sequence, const StageControl& control) {
 // It supports that one pipe has only one input pipeStage now
 IPipeStage* PipeLine::getInput() {
     for (auto& unit : mPSUnit) {
-        if (unit.isInputEdge) return unit.pipeStage;
+        if (unit.isInputEdge) {
+            return unit.pipeStage;
+        }
     }
     return nullptr;
 }
@@ -161,28 +163,36 @@ std::vector<IPipeStage*> PipeLine::getOutput() {
 
 void PipeLine::registerListener(EventType eventType, EventListener* enventListener) {
     for (auto& unit : mPSUnit) {
-        if (eventType == EVENT_STAGE_BUF_READY && unit.isOutputEdge)
+        if (eventType == EVENT_STAGE_BUF_READY && unit.isOutputEdge) {
             unit.pipeStage->registerListener(eventType, enventListener);
+        }
         if (eventType == EVENT_PSYS_STATS_SIS_BUF_READY ||
-            eventType == EVENT_PSYS_STATS_BUF_READY)
+            eventType == EVENT_PSYS_STATS_BUF_READY) {
             unit.pipeStage->registerListener(eventType, enventListener);
+        }
     }
 }
 
 void PipeLine::removeListener(EventType eventType, EventListener* enventListener) {
     for (auto& unit : mPSUnit) {
-        if (eventType == EVENT_STAGE_BUF_READY && unit.isOutputEdge)
+        if (eventType == EVENT_STAGE_BUF_READY && unit.isOutputEdge) {
             unit.pipeStage->removeListener(eventType, enventListener);
+        }
         if (eventType == EVENT_PSYS_STATS_SIS_BUF_READY ||
-            eventType == EVENT_PSYS_STATS_BUF_READY)
+            eventType == EVENT_PSYS_STATS_BUF_READY) {
             unit.pipeStage->removeListener(eventType, enventListener);
+        }
     }
 }
 
 void PipeLine::releasePipeStage() {
     for (auto& unit : mPSUnit) {
-        if (unit.ipuStage) unit.ipuStage->deInit();
-        if (unit.pipeStage) delete unit.pipeStage;
+        if (unit.ipuStage) {
+            unit.ipuStage->deInit();
+        }
+        if (unit.pipeStage) {
+            delete unit.pipeStage;
+        }
     }
     if (mPSysDevice) {
         delete mPSysDevice;
@@ -196,7 +206,9 @@ status_t PipeLine::createPipeStages() {
     status_t ret = mGraphConfig->getStagesByStreamId(mStreamId, &stages);
     CheckAndLogError(ret != OK, ret, "%s: Get pipeStages from grpah failed", __func__);
 
-    if (mPSysDevice) delete mPSysDevice;
+    if (mPSysDevice) {
+        delete mPSysDevice;
+    }
     mPSysDevice = new PSysDevice(mCameraId);
 
     ret = mPSysDevice->init();
@@ -257,7 +269,9 @@ status_t PipeLine::configurePipeStages() {
     CheckAndLogError(ret != OK, UNKNOWN_ERROR, "%s:%d create PSysGraph fail", __func__, mStreamId);
 
     for (auto& unit : mPSUnit) {
-        if (!unit.ipuStage) continue;
+        if (!unit.ipuStage) {
+            continue;
+        }
 
         PSysNode* pNode = nullptr;
         for (auto& node : mPSysGraph.nodes) {
@@ -293,7 +307,9 @@ status_t PipeLine::updateConfigurationSettingForPtz(bool isKeyResChanged) {
 
     int32_t cbNum = 0;
     for (auto& unit : mPSUnit) {
-        if (!unit.ipuStage) continue;
+        if (!unit.ipuStage) {
+            continue;
+        }
 
         cca::cca_cb_config& cb = aicConfig.cb_config[cbNum];
         cb.group_id = static_cast<int32_t>(unit.psysContextId);
@@ -311,13 +327,17 @@ status_t PipeLine::createPSysGraph(int32_t numLinks, GraphLink** links) {
     std::map<uint8_t, PSysNode> nodes;  // <contextId, node>
     for (int32_t i = 0; i < numLinks; i++) {
         const GraphLink* link = links[i];
-        if (!link->isActive) continue;
+        if (!link->isActive) {
+            continue;
+        }
 
         // Save CB nodes
         TerminalConfig cfg;
         for (int i = 0 ; i < 2; i++) {
             OuterNode* node = (i == 0) ? link->srcNode : link->destNode;
-            if (!node || node->type == NodeTypes::Isys) continue;
+            if (!node || node->type == NodeTypes::Isys) {
+                continue;
+            }
 
             uint8_t termId = (i == 0) ? link->srcTerminalId : link->destTerminalId;
             PSysNode& pNode = nodes[node->contextId];  // Create empty node for the 1st access
@@ -342,8 +362,12 @@ status_t PipeLine::createPSysGraph(int32_t numLinks, GraphLink** links) {
         }
 
         // Save links between CBs
-        if (link->type != LinkType::Node2Node && link->type != LinkType::Node2Self) continue;
-        if (link->srcNode->type == NodeTypes::Isys) continue;
+        if (link->type != LinkType::Node2Node && link->type != LinkType::Node2Self) {
+            continue;
+        }
+        if (link->srcNode->type == NodeTypes::Isys) {
+            continue;
+        }
 
         PSysLink pLink = {};
         pLink.srcNodeCtxId = mGraphConfig->getPSysContextId(mStreamId, link->srcNode->contextId);
@@ -362,8 +386,9 @@ status_t PipeLine::createPSysGraph(int32_t numLinks, GraphLink** links) {
 #endif
         mPSysGraph.links.push_back(pLink);
 
-        if (link->linkCompressionConfiguration && link->linkCompressionConfiguration->isEnabled)
+        if (link->linkCompressionConfiguration && link->linkCompressionConfiguration->isEnabled) {
             LOGE("Don't support compression now!");
+        }
     }
 
     mPSysGraph.nodes.clear();
@@ -376,7 +401,9 @@ status_t PipeLine::createPSysGraph(int32_t numLinks, GraphLink** links) {
 
 void PipeLine::dumpPSysGraph() {
     if (!Log::isLogTagEnabled(GET_FILE_SHIFT(PipeLine)) ||
-        !Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3)) return;
+        !Log::isDebugLevelEnable(CAMERA_DEBUG_LOG_LEVEL3)) {
+        return;
+    }
 
     LOG3("Dump psys graph link for stream %d", mStreamId);
     for (auto& link : mPSysGraph.links)
@@ -485,7 +512,9 @@ void PipeLine::analyzeConnections(const std::vector<IGraphType::PipelineConnecti
             connection.connectionConfig.mSinkStage != INVALID_PORT && connection.hasEdgePort) {
             mEdgeConnections.push_back(connection);
             PipeStageUnit* unit = findPipeStage(connection.connectionConfig.mSinkStage);
-            if (unit) unit->isInputEdge = true;
+            if (unit) {
+                unit->isInputEdge = true;
+            }
         }
 
         // If the connection's source stage is same as the last stage/pg id in this executor,
@@ -498,7 +527,9 @@ void PipeLine::analyzeConnections(const std::vector<IGraphType::PipelineConnecti
                 connection.connectionConfig.mSinkTerminal) {
             mEdgeConnections.push_back(connection);
             PipeStageUnit* unit = findPipeStage(connection.connectionConfig.mSourceStage);
-            if (unit) unit->isOutputEdge = true;
+            if (unit) {
+                unit->isOutputEdge = true;
+            }
         }
     }
 }
@@ -510,7 +541,9 @@ IPipeStage* PipeLine::findStageProducer(const PipeStageUnit& psUnit) {
     uuid sourceStage = mTerminalStage[mSinkMapSource[psUnit.inputTerminals[0]]];
 
     for (auto& unit : mPSUnit) {
-        if (unit.stageUuid == sourceStage) return unit.pipeStage;
+        if (unit.stageUuid == sourceStage) {
+            return unit.pipeStage;
+        }
     }
 
     return nullptr;
@@ -524,7 +557,9 @@ std::vector<PipeStageUnit*> PipeLine::findStageConsumer(const PipeStageUnit& psU
     }
 
     for (auto& unit : mPSUnit) {
-        if (sinkStages.find(unit.stageUuid) != sinkStages.end()) consumerUnits.push_back(&unit);
+        if (sinkStages.find(unit.stageUuid) != sinkStages.end()) {
+            consumerUnits.push_back(&unit);
+        }
     }
 
     return consumerUnits;
@@ -586,9 +621,12 @@ void PipeLine::setFrameInfoForPipeStage() {
         // (output ports) source stage(output ports) -> (input ports)sink stage
         // Use its own input info due to no executor as producer
         for (auto terminal : unit.inputTerminals) {
-            if (!mTerminalsDesc[terminal].enabled) continue;
-            if (mSinkMapSource.find(terminal) == mSinkMapSource.end() && !unit.isInputEdge)
+            if (!mTerminalsDesc[terminal].enabled) {
                 continue;
+            }
+            if (mSinkMapSource.find(terminal) == mSinkMapSource.end() && !unit.isInputEdge) {
+                continue;
+            }
 
             stream_t inputConfig;
             CLEAR(inputConfig);
@@ -609,8 +647,12 @@ void PipeLine::setFrameInfoForPipeStage() {
         }
 
         for (auto terminal : unit.outputTerminals) {
-            if (!mTerminalsDesc[terminal].enabled) continue;
-            if (mSourceMapSink.find(terminal) == mSourceMapSink.end()) continue;
+            if (!mTerminalsDesc[terminal].enabled) {
+                continue;
+            }
+            if (mSourceMapSink.find(terminal) == mSourceMapSink.end()) {
+                continue;
+            }
             stream_t outputConfig;
             CLEAR(outputConfig);
             outputConfig.width = mTerminalsDesc[terminal].frameDesc.mWidth;
@@ -639,7 +681,9 @@ void PipeLine::getTerminalFrameInfos(const std::vector<uuid>& terminals,
 }
 
 void PipeLine::dumpPipeStages() const {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(PipeLine))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(PipeLine))) {
+        return;
+    }
 
     LOG3("============= dump PipeStage for stream %d =================", mStreamId);
     for (auto& unit : mPSUnit) {

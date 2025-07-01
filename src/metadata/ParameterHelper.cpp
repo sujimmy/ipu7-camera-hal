@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2021 Intel Corporation.
+ * Copyright (C) 2017-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,9 @@ void ParameterHelper::merge(const CameraMetadata& metadata, Parameters* dst)
 
     AutoWLock wl(dst->mData);
     const icamera_metadata_t* src = const_cast<CameraMetadata*>(&metadata)->getAndLock();
-    size_t count = metadata.entryCount();
+    const size_t count = metadata.entryCount();
     icamera_metadata_ro_entry_t entry;
-    for (size_t i = 0; i < count; i++) {
+    for (size_t i = 0U; i < count; i++) {
         CLEAR(entry);
         if (get_icamera_metadata_ro_entry(src, i, &entry) != OK) {
             continue;

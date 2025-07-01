@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ Mutex SyncManager::sLock;
 #define SEC_TO_MS(sec) ((sec) * (1000))
 #define USEC_TO_MS(usec) ((usec) / (1000))
 
-const int max_vc_sync_count = 128;
+const int32_t max_vc_sync_count = 128;
 
 SyncManager* SyncManager::getInstance() {
     AutoMutex lock(sLock);
@@ -44,7 +44,7 @@ SyncManager* SyncManager::getInstance() {
 void SyncManager::releaseInstance() {
     AutoMutex lock(sLock);
 
-    if (sInstance) {
+    if (sInstance != nullptr) {
         delete sInstance;
         sInstance = nullptr;
     }
@@ -72,7 +72,7 @@ bool SyncManager::isSynced(int cameraId, int64_t sequence) {
     LOG2("@%s", __func__);
     const int TIME_DIFF_MS = 2;
     bool sync = true;
-    int index = sequence % MAX_BUFFER_COUNT;
+    const int index = sequence % MAX_BUFFER_COUNT;
 
     AutoMutex lock(mLock);
     camera_buf_info bufInfo = mCameraBufInfo[cameraId][index];
@@ -80,20 +80,21 @@ bool SyncManager::isSynced(int cameraId, int64_t sequence) {
     int syncNum = 0;
     bool isSync[MAX_CAMERA_NUMBER];
     long frameSyncedMs[MAX_CAMERA_NUMBER];
-    long curFrameMs = USEC_TO_MS(bufInfo.sof_ts.tv_usec) + SEC_TO_MS(bufInfo.sof_ts.tv_sec);
+    const long curFrameMs = USEC_TO_MS(bufInfo.sof_ts.tv_usec) + SEC_TO_MS(bufInfo.sof_ts.tv_sec);
 
     // first step: To check whether the current frame is synced with others camera channel
     //            if timestamp difference <= 2ms, then think the frame is synced
     for (int i = 0; i < MAX_CAMERA_NUMBER; i++) {
         isSync[i] = false;
         frameSyncedMs[i] = 0;
-        if (mCameraBufInfo[i][0].sequence == -1 || i == cameraId) {
+        if ((mCameraBufInfo[i][0].sequence == -1) || (i == cameraId)) {
             continue;
         }
         for (int j = 0; j < MAX_BUFFER_COUNT; j++) {
             if (mCameraBufInfo[i][j].sequence >= 0) {
                 camera_buf_info& temp = mCameraBufInfo[i][j];
-                long tempFrameMs = USEC_TO_MS(temp.sof_ts.tv_usec) + SEC_TO_MS(temp.sof_ts.tv_sec);
+                const long tempFrameMs =
+                    USEC_TO_MS(temp.sof_ts.tv_usec) + SEC_TO_MS(temp.sof_ts.tv_sec);
                 if (abs(tempFrameMs - curFrameMs) <= TIME_DIFF_MS) {
                     isSync[syncNum] = true;
                     frameSyncedMs[syncNum] = tempFrameMs;
@@ -128,7 +129,7 @@ bool SyncManager::isSynced(int cameraId, int64_t sequence) {
 
 void SyncManager::updateCameraBufInfo(int cameraId, camera_buf_info* info) {
     LOG2("@%s", __func__);
-    int index = info->sequence % MAX_BUFFER_COUNT;
+    const int index = info->sequence % MAX_BUFFER_COUNT;
     AutoMutex lock(mLock);
     mCameraBufInfo[cameraId][index] = *info;
 }

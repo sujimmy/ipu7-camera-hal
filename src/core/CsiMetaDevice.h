@@ -57,7 +57,7 @@ class CsiMetaDevice : public EventSource {
     explicit CsiMetaDevice(int cameraId);
     ~CsiMetaDevice();
 
-    int init();
+    int init() const;
     void deinit();
     int configure();
     int start();

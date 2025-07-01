@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef SCOPED_ATRACE_H
+#define SCOPED_ATRACE_H
 
 #include <unistd.h>
+#include <stdint.h>
 
 #define PERF_LOG_TAG_STR(X) PERF_LOG_TAG_STR1(X)
 #define PERF_LOG_TAG_STR1(X) #X
@@ -34,18 +36,18 @@ namespace icamera {
  */
 class ScopedAtrace {
  public:
-    ScopedAtrace(const int level, const char* func, const char* tag, const char* note = NULL,
+    ScopedAtrace(uint32_t level, const char* func, const char* tag, const char* note = NULL,
                  long value = -1, const char* note2 = NULL, int value2 = -1,
                  const char* note3 = NULL, int value3 = -1);
     ~ScopedAtrace();
-    static void setTraceLevel(int);
+    static void setTraceLevel(uint32_t);
 
  private:
     bool mEnableAtraceEnd;
 };
 
-#define CAMERA_DEBUG_LOG_ATRACE_OS (1 << 4)
-#define CAMERA_DEBUG_LOG_ATRACE_IMAGING (1 << 7)
+#define CAMERA_DEBUG_LOG_ATRACE_OS (1U << 4)
+#define CAMERA_DEBUG_LOG_ATRACE_IMAGING (1U << 7)
 
 #define PERF_CAMERA_ATRACE() \
     icamera::ScopedAtrace atrace(CAMERA_DEBUG_LOG_ATRACE_OS, __func__, PERF_LOG_TAG_STR(LOG_TAG));
@@ -73,3 +75,5 @@ class ScopedAtrace {
                                  PERF_LOG_TAG_STR(LOG_TAG), note, value, note2, value2, note3, \
                                  value3);
 }  // namespace icamera
+
+#endif // SCOPED_ATRACE_H

@@ -46,8 +46,8 @@ void GraphConfigManager::releaseHalStream(std::vector<HalStream*>* halStreamVec)
  */
 PipeUseCase GraphConfigManager::getUseCaseFromStream(ConfigMode configMode,
                                                        const stream_t& stream) {
-    if (configMode == CAMERA_STREAM_CONFIGURATION_MODE_STILL_CAPTURE ||
-        stream.usage == CAMERA_STREAM_STILL_CAPTURE)
+    if ((configMode == CAMERA_STREAM_CONFIGURATION_MODE_STILL_CAPTURE) ||
+        (stream.usage == CAMERA_STREAM_STILL_CAPTURE))
         return USE_CASE_STILL;
 
     return USE_CASE_VIDEO;
@@ -85,7 +85,7 @@ int GraphConfigManager::createHalStreamVector(ConfigMode configMode,
             return NO_MEMORY;
         }
 
-        for (size_t j = 0; j < (*halStreamVec).size(); j++) {
+        for (size_t j = 0U; j < (*halStreamVec).size(); j++) {
             if (halStream->width() * halStream->height() >
                 (*halStreamVec)[j]->width() * (*halStreamVec)[j]->height()) {
                 stored = true;
@@ -93,7 +93,9 @@ int GraphConfigManager::createHalStreamVector(ConfigMode configMode,
                 break;
             }
         }
-        if (!stored) (*halStreamVec).push_back(halStream);
+        if (!stored) {
+            (*halStreamVec).push_back(halStream);
+        }
     }
 
     return OK;
@@ -153,7 +155,7 @@ int32_t GraphConfigManager::configStreams(const stream_config_t* streamList,
                      __func__, mode);
 
         int id = graphConfig->getSelectedMcId();
-        CheckAndLogError((id != -1 && mMcId != -1 && mMcId != id), UNKNOWN_ERROR,
+        CheckAndLogError((id != -1) && (mMcId != -1) && (mMcId != id), UNKNOWN_ERROR,
                          "Not support two different MC ID at same time:(%d/%d)", mMcId, id);
         mMcId = id;
         LOG2("%s: Add graph setting for op_mode %d", __func__, mode);
@@ -170,7 +172,7 @@ int32_t GraphConfigManager::configStreams(const stream_config_t* streamList,
 }
 
 void GraphConfigManager::dumpStreamConfig() {
-    for (size_t i = 0; i < mHalStreams.size(); i++) {
+    for (size_t i = 0U; i < mHalStreams.size(); i++) {
         if (static_cast<stream_t*>(mHalStreams[i]->mPrivate)->streamType == CAMERA_STREAM_OUTPUT) {
             LOG1("out stream[%zu] %dx%d, fmt %s", i, mHalStreams[i]->width(),
                  mHalStreams[i]->height(), CameraUtils::pixelCode2String(mHalStreams[i]->format()));

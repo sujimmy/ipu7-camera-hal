@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel Corporation
+ * Copyright (C) 2022-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_BUFFER_POOL_H
+#define CAMERA_BUFFER_POOL_H
 
 #include <mutex>
 #include <unordered_map>
@@ -47,3 +48,5 @@ class CameraBufferPool {
     std::mutex mLock;  // lock the mBuffers
 };
 }  // namespace icamera
+
+#endif // CAMERA_BUFFER_POOL_H

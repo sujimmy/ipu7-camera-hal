@@ -161,8 +161,9 @@ std::shared_ptr<CameraBuffer> JpegProcess::cropAndDownscaleThumbnail(
             height = inBuf->getHeight();
         }
 
-        if (mCropBuf && (mCropBuf->getWidth() != width || mCropBuf->getHeight() != height))
+        if (mCropBuf && (mCropBuf->getWidth() != width || mCropBuf->getHeight() != height)) {
             mCropBuf.reset();
+        }
         if (!mCropBuf) {
             int bufSize = CameraUtils::getFrameSize(inBuf->getFormat(), width, height,
                                                     false, false, false);

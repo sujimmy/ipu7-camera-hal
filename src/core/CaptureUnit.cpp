@@ -68,8 +68,12 @@ CaptureUnit::~CaptureUnit() {
     PERF_CAMERA_ATRACE();
     LOG1("<id%d>%s", mCameraId, __func__);
 
-    if (mFlushFd[0] != -1) close(mFlushFd[0]);
-    if (mFlushFd[1] != -1) close(mFlushFd[1]);
+    if (mFlushFd[0] != -1) {
+        close(mFlushFd[0]);
+    }
+    if (mFlushFd[1] != -1) {
+        close(mFlushFd[1]);
+    }
 
     delete mPollThread;
 }
@@ -102,9 +106,9 @@ int CaptureUnit::createDevices() {
     destroyDevices();
 
     const uuid kDefaultPort = INVALID_PORT;
-    uuid portOfMainDevice = findDefaultPort(mOutputFrameInfo);
+    const uuid portOfMainDevice = findDefaultPort(mOutputFrameInfo);
     const stream_t& kDefaultStream = mOutputFrameInfo.at(portOfMainDevice);
-    VideoNodeType nodeType = VIDEO_GENERIC;
+    const VideoNodeType nodeType = VIDEO_GENERIC;
     mDevices.push_back(new MainDevice(mCameraId, nodeType, this));
 
     // targetPorts specifies the desired port for the device.
@@ -115,14 +119,14 @@ int CaptureUnit::createDevices() {
 
     // Open and configure the devices. The stream and port that are used by the device is
     // decided by whether consumer has provided such info, use the default one if not.
-    for (uint8_t i = 0; i < mDevices.size(); i++) {
+    for (uint8_t i = 0U; i < mDevices.size(); i++) {
         DeviceBase* device = mDevices[i];
 
         int ret = device->openDevice();
         CheckAndLogError(ret != OK, ret, "Open device(%s) failed:%d", device->getName(), ret);
 
         const uuid kTargetPort = targetPorts[i];
-        bool hasPort = mOutputFrameInfo.find(kTargetPort) != mOutputFrameInfo.end();
+        const bool hasPort = mOutputFrameInfo.find(kTargetPort) != mOutputFrameInfo.end();
         const stream_t& stream = hasPort ? mOutputFrameInfo.at(kTargetPort) : kDefaultStream;
 
         ret = device->configure(hasPort ? kTargetPort : kDefaultPort, stream, mMaxBufferNum);
@@ -216,7 +220,7 @@ int CaptureUnit::stop() {
     mExitPending = true;
     if (mFlushFd[1] != -1) {
         char buf = 0xf;  // random value to write to flush fd.
-        int size = write(mFlushFd[1], &buf, sizeof(char));
+        const int size = write(mFlushFd[1], &buf, sizeof(char));
         LOG1("%s, write size %d", __func__, size);
     }
 
@@ -244,7 +248,7 @@ int CaptureUnit::configure(const map<uuid, stream_t>& outputFrames) {
         (mState != CAPTURE_CONFIGURE) && (mState != CAPTURE_INIT) && (mState != CAPTURE_STOP),
         INVALID_OPERATION, "@%s: Configure in wrong state %d", __func__, mState);
 
-    uuid port = findDefaultPort(outputFrames);
+    const uuid port = findDefaultPort(outputFrames);
     const stream_t& mainStream = outputFrames.at(port);
 
     for (const auto& item : outputFrames) {
@@ -257,12 +261,13 @@ int CaptureUnit::configure(const map<uuid, stream_t>& outputFrames) {
 
     /* media ctl setup */
     MediaCtlConf* mediaCtl = PlatformData::getMediaCtlConf(mCameraId);
-    CheckAndLogError(!mediaCtl, BAD_VALUE, "get format configuration failed for %s (%dx%d)",
+    CheckAndLogError(mediaCtl == nullptr, BAD_VALUE,
+                     "get format configuration failed for %s (%dx%d)",
                      CameraUtils::format2string(mainStream.format).c_str(), mainStream.width,
                      mainStream.height);
 
     MediaControl* mc = MediaControl::getInstance();
-    CheckAndLogError(!mc, UNKNOWN_ERROR, "%s, MediaControl init failed", __func__);
+    CheckAndLogError(mc == nullptr, UNKNOWN_ERROR, "%s, MediaControl init failed", __func__);
 
     int status = mc->mediaCtlSetup(mCameraId, mediaCtl, mainStream.width, mainStream.height,
                                    mainStream.field);
@@ -280,7 +285,7 @@ int CaptureUnit::configure(const map<uuid, stream_t>& outputFrames) {
 }
 
 uuid CaptureUnit::findDefaultPort(const map<uuid, stream_t>& frames) const {
-    for (unsigned int i = 0; i < MAX_STREAM_NUMBER; i++) {
+    for (uint32_t i = 0U; i < MAX_STREAM_NUMBER; i++) {
         if (frames.find(INPUT_STREAM_PORT_UID(i)) != frames.end()) {
             return INPUT_STREAM_PORT_UID(i);
         }
@@ -296,9 +301,9 @@ int CaptureUnit::allocateMemory(uuid port, const std::shared_ptr<CameraBuffer>& 
                      "Allocating Memory Capture device only supports MMAP mode.");
 
     DeviceBase* device = findDeviceByPort(port);
-    CheckAndLogError(!device, BAD_VALUE, "No device available for port:%d", port);
+    CheckAndLogError(device == nullptr, BAD_VALUE, "No device available for port:%d", port);
 
-    int ret = camBuffer->allocateMemory(device->getV4l2Device());
+    const int ret = camBuffer->allocateMemory(device->getV4l2Device());
     CheckAndLogError(ret < 0, ret, "Failed to allocate memory ret(%d) for port:%d", ret, port);
 
     return OK;
@@ -310,7 +315,7 @@ int CaptureUnit::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBuffer)
                      "@%s: qbuf in wrong state %d", __func__, mState);
 
     DeviceBase* device = findDeviceByPort(port);
-    CheckAndLogError(!device, BAD_VALUE, "No device available for port:%d", port);
+    CheckAndLogError(device == nullptr, BAD_VALUE, "No device available for port:%d", port);
 
     LOG2("<id%d>@%s, queue CameraBuffer: %p to port:%d", mCameraId, __func__, camBuffer.get(),
          port);
@@ -322,12 +327,18 @@ int CaptureUnit::qbuf(uuid port, const std::shared_ptr<CameraBuffer>& camBuffer)
 int CaptureUnit::queueAllBuffers() {
     PERF_CAMERA_ATRACE();
 
-    if (mExitPending) return OK;
+    if (mExitPending) {
+        return OK;
+    }
 
     int64_t predictSequence = -1;
     for (auto device : mDevices) {
-        int ret = device->queueBuffer(predictSequence);
-        if (mExitPending) break;
+
+        const int ret = device->queueBuffer(predictSequence);
+        if (mExitPending) {
+            break;
+        }
+
         CheckAndLogError(ret != OK, ret, "queueBuffer fails, dev:%s, ret:%d", device->getName(),
                          ret);
         if (predictSequence == -1) {
@@ -339,7 +350,7 @@ int CaptureUnit::queueAllBuffers() {
 }
 
 void CaptureUnit::onDequeueBuffer() {
-    processPendingBuffers();
+    (void)processPendingBuffers();
 }
 
 int CaptureUnit::processPendingBuffers() {
@@ -349,15 +360,16 @@ int CaptureUnit::processPendingBuffers() {
         bool hasPendingBuffer = true;
         for (auto device : mDevices) {
             if (!device->hasPendingBuffer()) {
+                // Do not queue buffer when one of the devices has no pending buffers.
                 hasPendingBuffer = false;
-                break;
+                return OK;
             }
         }
-        // Do not queue buffer when one of the devices has no pending buffers.
-        if (!hasPendingBuffer) break;
 
         int ret = queueAllBuffers();
-        if (mExitPending) break;
+        if (mExitPending) {
+            break;
+        }
         CheckAndLogError(ret != OK, ret, "Failed to queue buffers, ret=%d", ret);
     }
 
@@ -368,7 +380,7 @@ int CaptureUnit::poll() {
     PERF_CAMERA_ATRACE();
     int ret = 0;
     const int poll_timeout_count = 10;
-    const int poll_timeout = gSlowlyRunRatio ? (gSlowlyRunRatio * 1000000) : 1000;
+    const int poll_timeout = gSlowlyRunRatio != 0 ? (gSlowlyRunRatio * 1000000) : 1000;
 
     LOG2("<id%d>%s", mCameraId, __func__);
     CheckAndLogError(((mState != CAPTURE_CONFIGURE) && (mState != CAPTURE_START)),
@@ -382,7 +394,7 @@ int CaptureUnit::poll() {
              device->getBufferNumInDevice());
     }
 
-    while ((timeOutCount--) && (ret == 0)) {
+    while (((timeOutCount--) != 0) && (ret == 0)) {
         // If stream off, no poll needed.
         if (mExitPending) {
             LOG2("%s: mExitPending is true, exit", __func__);
@@ -411,8 +423,10 @@ int CaptureUnit::poll() {
     for (const auto& readyDevice : readyDevices) {
         for (auto device : mDevices) {
             if (device->getV4l2Device() == readyDevice) {
-                int ret = device->dequeueBuffer();
-                if (mExitPending) return -1;
+                const int ret = device->dequeueBuffer();
+                if (mExitPending) {
+                    return -1;
+                }
 
                 if (ret != OK) {
                     LOGE("Device:%s grab frame failed:%d", device->getName(), ret);

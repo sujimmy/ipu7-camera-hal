@@ -60,7 +60,9 @@ IntelOPIC2* IntelOPIC2::getInstance() {
 
 void IntelOPIC2::releaseInstance() {
     std::lock_guard<std::mutex> lock(sLock);
-    if (sInstance) delete sInstance;
+    if (sInstance) {
+        delete sInstance;
+    }
     sInstance = nullptr;
 }
 
@@ -99,7 +101,9 @@ int IntelOPIC2::setup(ICBMInitInfo* initParams, std::shared_ptr<IC2ApiHandle> ha
                  initParams->sessionType);
 
     for (int feature = LEVEL0_TNR; feature < REQUEST_MAX; feature <<= 1) {
-        if (!(initParams->sessionType & feature)) continue;
+        if (!(initParams->sessionType & feature)) {
+            continue;
+        }
         const char* featureStr = gFeatureStrMapping.at(static_cast<ICBMFeatureType>(feature));
         if (strstr(supportedFeatures.c_str(), featureStr) == nullptr) {
             LOG1("<%d>@%s type %d not supported", initParams->cameraId, __func__, feature);
@@ -175,7 +179,9 @@ int IntelOPIC2::processFrame(const ICBMReqInfo& reqInfo) {
                      reqInfo.sessionType);
     auto mcd = createMemoryChain(reqInfo);
     auto mem = mcd.getIOPort();
-    if (mem.first == nullptr) return OK;
+    if (mem.first == nullptr) {
+        return OK;
+    }
 
     std::unique_lock<std::mutex> lock(*mLockMap[key]);
     bool res = mIC2Api->execute(mSessionMap[key], *mem.first, *mem.second);

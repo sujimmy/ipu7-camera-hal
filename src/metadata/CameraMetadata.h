@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_METADATA_H
+#define CAMERA_METADATA_H
 
 #include <string>
 
@@ -190,3 +191,5 @@ class CameraMetadata {
 };
 
 }  // namespace icamera
+
+#endif // CAMERA_METADATA_H

@@ -18,6 +18,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <limits>
 
 #include "iutils/Utils.h"
 #include "iutils/Errors.h"
@@ -31,10 +32,12 @@
 namespace icamera {
 
 void AiqUtils::dumpAeResults(const cca::cca_ae_results& aeResult) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) {
+        return;
+    }
 
     LOG3("num_exposures :%d", aeResult.num_exposures);
-    for (unsigned int i = 0; i < aeResult.num_exposures; i++) {
+    for (unsigned int i = 0U; i < aeResult.num_exposures; i++) {
         LOG3("AE sensor exp[%u] result ag %u dg %u coarse: %u fine: %u llp:%u fll:%u", i,
              aeResult.exposures[i].sensor_exposure[0].analog_gain_code_global,
              aeResult.exposures[i].sensor_exposure[0].digital_gain_global,
@@ -62,10 +65,10 @@ void AiqUtils::dumpAeResults(const cca::cca_ae_results& aeResult) {
          aeResult.multiframe == ia_aiq_bracket_mode_ull ? "ULL" : "none-ULL");
 
     const cca::cca_hist_weight_grid& wg = aeResult.weight_grid;
-    if ((wg.width != 0) && (wg.height != 0)) {
+    if ((wg.width != 0U) && (wg.height != 0U)) {
         LOG3("AE weight grid [%dx%d]", wg.width, wg.height);
         for (int i = 0; (i < 5) && (i < wg.height); i++) {
-            LOG3("AE weight_grid[%d] = %d ", wg.width/2, wg.weights[wg.width/2]);
+            LOG3("AE weight_grid[%d] = %d ", wg.width/2U, wg.weights[wg.width/2U]);
         }
     }
 
@@ -75,7 +78,9 @@ void AiqUtils::dumpAeResults(const cca::cca_ae_results& aeResult) {
 }
 
 void AiqUtils::dumpAfResults(const cca::cca_af_results& afResult) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) {
+        return;
+    }
 
     LOG3("AF results: current/next dis %d/%d, next pos %d, final_position_reached %s, status %d",
          afResult.current_focus_distance, afResult.next_focus_distance, afResult.next_lens_position,
@@ -101,7 +106,9 @@ void AiqUtils::dumpAfResults(const cca::cca_af_results& afResult) {
 }
 
 void AiqUtils::dumpAwbResults(const cca::cca_awb_results& awbResult) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) {
+        return;
+    }
 
     LOG3("AWB result: accurate_r/g %f, accurate_b/g %f, distance_from_convergence %f",
          awbResult.accurate_r_per_g, awbResult.accurate_b_per_g,
@@ -109,34 +116,40 @@ void AiqUtils::dumpAwbResults(const cca::cca_awb_results& awbResult) {
 }
 
 void AiqUtils::dumpGbceResults(const cca::cca_gbce_params& gbceResult) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) {
+        return;
+    }
 
     LOG3("gamma_lut_size: %u, tone_map_lut_size: %u",
          gbceResult.gamma_lut_size, gbceResult.tone_map_lut_size);
 
-    if ((gbceResult.gamma_lut_size <= 0) || (gbceResult.tone_map_lut_size <= 0)) return;
+    if ((gbceResult.gamma_lut_size <= 0U) || (gbceResult.tone_map_lut_size <= 0U)) {
+        return;
+    }
 
     LOG3("gamma table: R: 0(%f), %u(%f), %u(%f)", gbceResult.r_gamma_lut[0],
-         (gbceResult.gamma_lut_size / 2), gbceResult.r_gamma_lut[gbceResult.gamma_lut_size / 2],
+         (gbceResult.gamma_lut_size / 2U), gbceResult.r_gamma_lut[gbceResult.gamma_lut_size / 2U],
          (gbceResult.gamma_lut_size - 1),  gbceResult.r_gamma_lut[gbceResult.gamma_lut_size - 1]);
 
     LOG3("gamma table: G: 0(%f), %u(%f), %u(%f)", gbceResult.g_gamma_lut[0],
-         (gbceResult.gamma_lut_size / 2), gbceResult.g_gamma_lut[gbceResult.gamma_lut_size / 2],
+         (gbceResult.gamma_lut_size / 2U), gbceResult.g_gamma_lut[gbceResult.gamma_lut_size / 2U],
          (gbceResult.gamma_lut_size - 1),  gbceResult.g_gamma_lut[gbceResult.gamma_lut_size - 1]);
 
     LOG3("gamma table: B: 0(%f), %u(%f), %u(%f)", gbceResult.b_gamma_lut[0],
-         (gbceResult.gamma_lut_size / 2), gbceResult.b_gamma_lut[gbceResult.gamma_lut_size / 2],
+         (gbceResult.gamma_lut_size / 2U), gbceResult.b_gamma_lut[gbceResult.gamma_lut_size / 2U],
          (gbceResult.gamma_lut_size - 1),  gbceResult.b_gamma_lut[gbceResult.gamma_lut_size - 1]);
 
     LOG3("tonemap table: 0(%f), %u(%f), %u(%f)", gbceResult.tone_map_lut[0],
-         (gbceResult.tone_map_lut_size / 2),
-         gbceResult.tone_map_lut[gbceResult.tone_map_lut_size / 2],
+         (gbceResult.tone_map_lut_size / 2U),
+         gbceResult.tone_map_lut[gbceResult.tone_map_lut_size / 2U],
          (gbceResult.tone_map_lut_size - 1),
          gbceResult.tone_map_lut[gbceResult.tone_map_lut_size - 1]);
 }
 
 void AiqUtils::dumpPaResults(const cca::cca_pa_params& paResult) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) {
+        return;
+    }
 
     for (int i = 0; i < 3; i++) {
         LOG3("color_conversion_matrix  [%.3f %.3f %.3f] ",
@@ -151,7 +164,9 @@ void AiqUtils::dumpPaResults(const cca::cca_pa_params& paResult) {
 }
 
 void AiqUtils::dumpSaResults(const cca::cca_sa_results& saResult) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUtils))) {
+        return;
+    }
 
     LOG3("SA results color_order %d size %dx%d",
          saResult.color_order, saResult.width,  saResult.height);
@@ -193,10 +208,10 @@ void AiqUtils::convertToAiqFrameParam(const SensorFrameParams &sensor, ia_aiq_fr
 camera_coordinate_t AiqUtils::convertCoordinateSystem(const camera_coordinate_system_t& srcSystem,
                                                       const camera_coordinate_system_t& dstSystem,
                                                       const camera_coordinate_t& srcCoordinate) {
-    int dstWidth = dstSystem.right - dstSystem.left;
-    int dstHeight = dstSystem.bottom - dstSystem.top;
-    int srcWidth = srcSystem.right - srcSystem.left;
-    int srcHeight = srcSystem.bottom - srcSystem.top;
+    const int dstWidth = dstSystem.right - dstSystem.left;
+    const int dstHeight = dstSystem.bottom - dstSystem.top;
+    const int srcWidth = srcSystem.right - srcSystem.left;
+    const int srcHeight = srcSystem.bottom - srcSystem.top;
 
     camera_coordinate_t result;
     result.x = (srcCoordinate.x - srcSystem.left) * dstWidth / srcWidth + dstSystem.left;
@@ -238,8 +253,10 @@ camera_window_t AiqUtils::convertToIaWindow(const camera_coordinate_system_t& sr
  */
 float AiqUtils::normalizeAwbGain(int gain) {
     gain = CLIP(gain, AWB_GAIN_MAX, AWB_GAIN_MIN);
-    return AWB_GAIN_NORMALIZED_START + (float)(gain - AWB_GAIN_MIN) * \
-                                       AWB_GAIN_RANGE_NORMALIZED / AWB_GAIN_RANGE_USER;
+    return static_cast<float>(AWB_GAIN_NORMALIZED_START) +
+                             (static_cast<float>(gain) - AWB_GAIN_MIN) *
+                              static_cast<float>(AWB_GAIN_RANGE_NORMALIZED) /
+                              static_cast<float>(AWB_GAIN_RANGE_USER);
 }
 
 int AiqUtils::convertToUserAwbGain(float normalizedGain) {
@@ -327,17 +344,18 @@ void AiqUtils::applyTonemapGamma(float gamma, cca::cca_gbce_params* results) {
 }
 
 void AiqUtils::applyTonemapSRGB(cca::cca_gbce_params* results) {
-    CheckAndLogError(!results, VOID_VALUE, "gbce results nullptr");
+    CheckAndLogError(results == nullptr, VOID_VALUE, "gbce results nullptr");
 
     int lutSize = results->gamma_lut_size;
     CheckAndLogError(lutSize < MIN_TONEMAP_POINTS, VOID_VALUE,
                      "Bad gamma lut size (%d) in gbce results", lutSize);
     for (int i = 0; i < lutSize; i++) {
-        if (i / (lutSize - 1)  < 0.0031308)
+        if (i / (lutSize - 1)  < 0.0031308) {
             results->g_gamma_lut[i] = 12.92 * (i / (lutSize - 1));
-        else
+        } else {
             results->g_gamma_lut[i] =
                     1.055 * pow(i / static_cast<float>(lutSize - 1), 1 / 2.4) - 0.055;
+        }
     }
 
     MEMCPY_S(results->b_gamma_lut, lutSize * sizeof(float),
@@ -347,17 +365,18 @@ void AiqUtils::applyTonemapSRGB(cca::cca_gbce_params* results) {
 }
 
 void AiqUtils::applyTonemapREC709(cca::cca_gbce_params* results) {
-    CheckAndLogError(!results, VOID_VALUE, "gbce results nullptr");
+    CheckAndLogError(results == nullptr, VOID_VALUE, "gbce results nullptr");
 
     int lutSize = results->gamma_lut_size;
     CheckAndLogError(lutSize < MIN_TONEMAP_POINTS, VOID_VALUE,
                      "Bad gamma lut size (%d) in gbce results", lutSize);
     for (int i = 0; i < lutSize; i++) {
-        if (i / (lutSize - 1) < 0.018)
+        if (i / (lutSize - 1) < 0.018) {
             results->g_gamma_lut[i] = 4.5 * (i / (lutSize - 1));
-        else
+        } else {
             results->g_gamma_lut[i] =
                     1.099 * pow(i / static_cast<float>(lutSize - 1), 0.45) - 0.099;
+        }
     }
 
     MEMCPY_S(results->b_gamma_lut, lutSize * sizeof(float),
@@ -368,19 +387,20 @@ void AiqUtils::applyTonemapREC709(cca::cca_gbce_params* results) {
 
 void AiqUtils::applyTonemapCurve(const camera_tonemap_curves_t& curves,
                                  cca::cca_gbce_params* results) {
-    CheckAndLogError(!results, VOID_VALUE, "gbce result nullptr");
-    CheckAndLogError(results->gamma_lut_size <= 1, VOID_VALUE, "wrong gamma_lut_size");
+    CheckAndLogError(results == nullptr, VOID_VALUE, "gbce result nullptr");
+    CheckAndLogError(results->gamma_lut_size <= 1U, VOID_VALUE, "wrong gamma_lut_size");
     CheckAndLogError(curves.rSize != curves.gSize, VOID_VALUE, "wrong rSize");
     CheckAndLogError(curves.bSize != curves.gSize, VOID_VALUE, "wrong bSize");
 
     LOG2("%s: input size %d, output size %d", __func__, curves.gSize, results->gamma_lut_size);
     // User's curve is 2-d array: (in, out)
-    float step = static_cast<float>(curves.gSize / 2 - 1) / (results->gamma_lut_size - 1);
-    for (uint32_t i = 0; i < results->gamma_lut_size; i++) {
-        float inPos = i * step;
-        int32_t left = static_cast<int>(inPos) * 2 + 1;
-        int32_t right = left + 2;
-        float ratio = inPos - static_cast<int32_t>(inPos);
+    const float step = static_cast<float>(curves.gSize / 2 - 1) / (results->gamma_lut_size - 1);
+    for (uint32_t i = 0U; i < results->gamma_lut_size; i++) {
+        const float inPos = static_cast<float>(i) * step;
+        const int32_t left = static_cast<int>(inPos) * 2 + 1;
+        const int32_t right = left + 2;
+        const float ratio = inPos - static_cast<int32_t>(inPos);
+
         if (right > curves.gSize - 1) {
             results->r_gamma_lut[i] = curves.rCurve[left];
             results->g_gamma_lut[i] = curves.gCurve[left];
@@ -398,7 +418,7 @@ void AiqUtils::applyTonemapCurve(const camera_tonemap_curves_t& curves,
 
 void AiqUtils::applyAwbGainForTonemapCurve(const camera_tonemap_curves_t& curves,
                                            cca::cca_awb_results* results) {
-    CheckAndLogError(!results, VOID_VALUE, "pa result nullptr");
+    CheckAndLogError(results == nullptr, VOID_VALUE, "pa result nullptr");
     CheckAndLogError(curves.rSize != curves.gSize, VOID_VALUE, "wrong rSize");
     CheckAndLogError(curves.bSize != curves.gSize, VOID_VALUE, "wrong bSize");
 
@@ -412,9 +432,9 @@ void AiqUtils::applyAwbGainForTonemapCurve(const camera_tonemap_curves_t& curves
         sumB += curves.bCurve[i];
     }
 
-    float averageR = sumR / (curves.rSize / 2);
-    float averageG = sumG / (curves.gSize / 2);
-    float averageB = sumB / (curves.bSize / 2);
+    float averageR = sumR / (static_cast<float>(curves.rSize) / 2.0);
+    float averageG = sumG / (static_cast<float>(curves.gSize) / 2.0);
+    float averageB = sumB / (static_cast<float>(curves.bSize) / 2.0);
     LOG2("%s: curve average: %f %f %f", __func__, averageR, averageG, averageB);
 
     float minAverage = std::min(averageR, averageG);
@@ -422,12 +442,11 @@ void AiqUtils::applyAwbGainForTonemapCurve(const camera_tonemap_curves_t& curves
     float maxAverage = std::max(averageR, averageG);
     maxAverage = std::max(maxAverage, averageB);
     if (maxAverage - minAverage > EPSILON) {
-        averageR =  AWB_GAIN_NORMALIZED_START + (averageR - minAverage) * \
-                                           AWB_GAIN_RANGE_NORMALIZED / (maxAverage - minAverage);
-        averageG =  AWB_GAIN_NORMALIZED_START + (averageG - minAverage) * \
-                                           AWB_GAIN_RANGE_NORMALIZED / (maxAverage - minAverage);
-        averageB =  AWB_GAIN_NORMALIZED_START + (averageB - minAverage) * \
-                                           AWB_GAIN_RANGE_NORMALIZED / (maxAverage - minAverage);
+        const float start = static_cast<float>(AWB_GAIN_NORMALIZED_START);
+        const float normalized = static_cast<float>(AWB_GAIN_RANGE_NORMALIZED);
+        averageR = start + (averageR - minAverage) * normalized / (maxAverage - minAverage);
+        averageG = start + (averageG - minAverage) * normalized / (maxAverage - minAverage);
+        averageB = start + (averageB - minAverage) * normalized / (maxAverage - minAverage);
         results->accurate_r_per_g = averageR / averageG;
         results->accurate_b_per_g = averageB / averageG;
         LOG2("%s: overwrite awb gain %f %f", __func__,
@@ -458,29 +477,29 @@ void AiqUtils::applyAwbGainForTonemapCurve(const camera_tonemap_curves_t& curves
  *  it will return the default value 5m
  */
 float AiqUtils::calculateHyperfocalDistance(const cca::cca_cmc &cmc) {
-    const float DEFAULT_HYPERFOCAL_DISTANCE = 5000.0f;
+    const float DEFAULT_HYPERFOCAL_DISTANCE = 5000.0F;
 
     // Pixel size is stored in CMC in hundreds of micrometers
-    float pixelSizeMicro = cmc.optics.sensor_pix_size_h / 100;
+    const float pixelSizeMicro = cmc.optics.sensor_pix_size_h / 100;
     // focal length is stored in CMC in hundreds of millimeters
-    float focalLengthMillis = static_cast<float>(cmc.optics.effect_focal_length) / 100;
+    const float focalLengthMillis = static_cast<float>(cmc.optics.effect_focal_length) / 100;
 
     // fixed aperture, the fn should be divided 100 because the value
     // is multiplied 100 in cmc avoid division by 0
-    if (cmc.lut_apertures == 0) {
+    if (cmc.lut_apertures == 0U) {
         LOG2("lut apertures is not provided or zero in the cmc. Using default");
         return DEFAULT_HYPERFOCAL_DISTANCE;
     }
 
-    float fNumber = static_cast<float>(cmc.lut_apertures) / 100;
+    const float fNumber = static_cast<float>(cmc.lut_apertures) / 100;
     // assuming square pixel
     const int CIRCLE_OF_CONFUSION_IN_PIXELS = 2;
-    float cocMicros = pixelSizeMicro * CIRCLE_OF_CONFUSION_IN_PIXELS;
-    float hyperfocalDistanceMillis = 1000 * (focalLengthMillis * focalLengthMillis) /
-                                     (fNumber * cocMicros);
+    const float cocMicros = pixelSizeMicro * CIRCLE_OF_CONFUSION_IN_PIXELS;
+    const float hyperfocalDistanceMillis = 1000 * (focalLengthMillis * focalLengthMillis) /
+                                           (fNumber * cocMicros);
 
-    return (hyperfocalDistanceMillis == 0.0f) ? DEFAULT_HYPERFOCAL_DISTANCE :
-                                                hyperfocalDistanceMillis;
+    return (hyperfocalDistanceMillis < std::numeric_limits<float>::epsilon()) ?
+            DEFAULT_HYPERFOCAL_DISTANCE : hyperfocalDistanceMillis;
 }
 
 } /* namespace icamera */

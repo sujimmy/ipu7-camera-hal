@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
- * Copyright (C) 2015-2021 Intel Corporation
+ * Copyright (C) 2015-2025 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ icamera_metadata_t* CameraMetadata::release() {
 
 void CameraMetadata::clear() {
     CheckAndLogError(mLocked, VOID_VALUE, "%s: CameraMetadata is locked", __func__);
-    if (mBuffer) {
+    if (mBuffer != nullptr) {
         free_icamera_metadata(mBuffer);
         mBuffer = nullptr;
     }
@@ -111,9 +111,9 @@ status_t CameraMetadata::append(const CameraMetadata& other) {
 
 status_t CameraMetadata::append(const icamera_metadata_t* other) {
     CheckAndLogError(mLocked, INVALID_OPERATION, "%s: CameraMetadata is locked", __func__);
-    size_t extraEntries = get_icamera_metadata_entry_count(other);
-    size_t extraData = get_icamera_metadata_data_count(other);
-    resizeIfNeeded(extraEntries, extraData);
+    const size_t extraEntries = get_icamera_metadata_entry_count(other);
+    const size_t extraData = get_icamera_metadata_data_count(other);
+    (void)resizeIfNeeded(extraEntries, extraData);
 
     return append_icamera_metadata(mBuffer, other);
 }
@@ -123,7 +123,7 @@ size_t CameraMetadata::entryCount() const {
 }
 
 bool CameraMetadata::isEmpty() const {
-    return entryCount() == 0;
+    return entryCount() == 0U;
 }
 
 status_t CameraMetadata::sort() {
@@ -132,8 +132,8 @@ status_t CameraMetadata::sort() {
 }
 
 status_t CameraMetadata::checkType(uint32_t tag, uint8_t expectedType) {
-    int tagType = get_icamera_metadata_tag_type(tag);
-    CheckAndLogError(tagType == -1 || tagType >= ICAMERA_NUM_TYPES, INVALID_OPERATION,
+    const int tagType = get_icamera_metadata_tag_type(tag);
+    CheckAndLogError((tagType == -1) || (tagType >= ICAMERA_NUM_TYPES), INVALID_OPERATION,
                      "Update metadata entry: Unknown tag %d type=%d", tag, tagType);
     CheckAndLogError(tagType != expectedType, INVALID_OPERATION,
                      "Mismatched tag type when updating entry %s (%d) of type %s; "
@@ -149,7 +149,7 @@ status_t CameraMetadata::update(uint32_t tag, const int32_t* data, size_t data_c
     if ((res = checkType(tag, ICAMERA_TYPE_INT32)) != OK) {
         return res;
     }
-    return updateImpl(tag, (const void*)data, data_count);
+    return updateImpl(tag, reinterpret_cast<const void*>(data), data_count);
 }
 
 status_t CameraMetadata::update(uint32_t tag, const uint8_t* data, size_t data_count) {
@@ -158,7 +158,7 @@ status_t CameraMetadata::update(uint32_t tag, const uint8_t* data, size_t data_c
     if ((res = checkType(tag, ICAMERA_TYPE_BYTE)) != OK) {
         return res;
     }
-    return updateImpl(tag, (const void*)data, data_count);
+    return updateImpl(tag, reinterpret_cast<const void*>(data), data_count);
 }
 
 status_t CameraMetadata::update(uint32_t tag, const float* data, size_t data_count) {
@@ -167,7 +167,7 @@ status_t CameraMetadata::update(uint32_t tag, const float* data, size_t data_cou
     if ((res = checkType(tag, ICAMERA_TYPE_FLOAT)) != OK) {
         return res;
     }
-    return updateImpl(tag, (const void*)data, data_count);
+    return updateImpl(tag, reinterpret_cast<const void*>(data), data_count);
 }
 
 status_t CameraMetadata::update(uint32_t tag, const int64_t* data, size_t data_count) {
@@ -176,7 +176,7 @@ status_t CameraMetadata::update(uint32_t tag, const int64_t* data, size_t data_c
     if ((res = checkType(tag, ICAMERA_TYPE_INT64)) != OK) {
         return res;
     }
-    return updateImpl(tag, (const void*)data, data_count);
+    return updateImpl(tag, reinterpret_cast<const void*>(data), data_count);
 }
 
 status_t CameraMetadata::update(uint32_t tag, const double* data, size_t data_count) {
@@ -185,7 +185,7 @@ status_t CameraMetadata::update(uint32_t tag, const double* data, size_t data_co
     if ((res = checkType(tag, ICAMERA_TYPE_DOUBLE)) != OK) {
         return res;
     }
-    return updateImpl(tag, (const void*)data, data_count);
+    return updateImpl(tag, reinterpret_cast<const void*>(data), data_count);
 }
 
 status_t CameraMetadata::update(uint32_t tag, const icamera_metadata_rational_t* data,
@@ -195,7 +195,7 @@ status_t CameraMetadata::update(uint32_t tag, const icamera_metadata_rational_t*
     if ((res = checkType(tag, ICAMERA_TYPE_RATIONAL)) != OK) {
         return res;
     }
-    return updateImpl(tag, (const void*)data, data_count);
+    return updateImpl(tag, reinterpret_cast<const void*>(data), data_count);
 }
 
 status_t CameraMetadata::update(uint32_t tag, const std::string& string) {
@@ -205,17 +205,17 @@ status_t CameraMetadata::update(uint32_t tag, const std::string& string) {
         return res;
     }
     // string.size() doesn't count the null termination character.
-    return updateImpl(tag, (const void*)string.c_str(), string.size() + 1);
+    return updateImpl(tag, (const void*)string.c_str(), string.size() + 1U);
 }
 
 status_t CameraMetadata::updateImpl(uint32_t tag, const void* data, size_t data_count) {
     CheckAndLogError(mLocked, INVALID_OPERATION, "%s: CameraMetadata is locked", __func__);
     status_t res;
-    int type = get_icamera_metadata_tag_type(tag);
+    const int type = get_icamera_metadata_tag_type(tag);
     CheckAndLogError(type == -1, BAD_VALUE, "%s: Tag %d not found", __func__, tag);
-    size_t data_size = calculate_icamera_metadata_entry_data_size(type, data_count);
+    const size_t data_size = calculate_icamera_metadata_entry_data_size(type, data_count);
 
-    res = resizeIfNeeded(1, data_size);
+    res = resizeIfNeeded(1U, data_size);
 
     if (res == OK) {
         icamera_metadata_entry_t entry;
@@ -251,12 +251,12 @@ icamera_metadata_entry_t CameraMetadata::find(uint32_t tag) {
     CLEAR(entry);
     if (mLocked) {
         LOGE("%s: CameraMetadata is locked", __func__);
-        entry.count = 0;
+        entry.count = 0U;
         return entry;
     }
     res = find_icamera_metadata_entry(mBuffer, tag, &entry);
     if (res != OK) {
-        entry.count = 0;
+        entry.count = 0U;
         entry.data.u8 = nullptr;
     }
     return entry;
@@ -267,7 +267,7 @@ icamera_metadata_ro_entry_t CameraMetadata::find(uint32_t tag) const {
     icamera_metadata_ro_entry entry;
     res = find_icamera_metadata_ro_entry(mBuffer, tag, &entry);
     if (res != OK) {
-        entry.count = 0;
+        entry.count = 0U;
         entry.data.u8 = nullptr;
     }
     return entry;
@@ -299,26 +299,26 @@ void CameraMetadata::dump(int fd, int verbosity, int indentation) const {
 
 status_t CameraMetadata::resizeIfNeeded(size_t extraEntries, size_t extraData) {
     if (mBuffer == nullptr) {
-        mBuffer = allocate_icamera_metadata(extraEntries * 2, extraData * 2);
+        mBuffer = allocate_icamera_metadata(extraEntries * 2U, extraData * 2U);
         CheckAndLogError(mBuffer == nullptr, NO_MEMORY, "%s: Can't allocate larger metadata buffer",
                          __func__);
     } else {
-        size_t currentEntryCount = get_icamera_metadata_entry_count(mBuffer);
-        size_t currentEntryCap = get_icamera_metadata_entry_capacity(mBuffer);
+        const size_t currentEntryCount = get_icamera_metadata_entry_count(mBuffer);
+        const size_t currentEntryCap = get_icamera_metadata_entry_capacity(mBuffer);
         size_t newEntryCount = currentEntryCount + extraEntries;
-        newEntryCount = (newEntryCount > currentEntryCap) ? newEntryCount * 2 : currentEntryCap;
+        newEntryCount = (newEntryCount > currentEntryCap) ? newEntryCount * 2U : currentEntryCap;
 
-        size_t currentDataCount = get_icamera_metadata_data_count(mBuffer);
-        size_t currentDataCap = get_icamera_metadata_data_capacity(mBuffer);
+        const size_t currentDataCount = get_icamera_metadata_data_count(mBuffer);
+        const size_t currentDataCap = get_icamera_metadata_data_capacity(mBuffer);
         size_t newDataCount = currentDataCount + extraData;
-        newDataCount = (newDataCount > currentDataCap) ? newDataCount * 2 : currentDataCap;
+        newDataCount = (newDataCount > currentDataCap) ? newDataCount * 2U : currentDataCap;
 
-        if (newEntryCount > currentEntryCap || newDataCount > currentDataCap) {
+        if ((newEntryCount > currentEntryCap) || (newDataCount > currentDataCap)) {
             icamera_metadata_t* oldBuffer = mBuffer;
             mBuffer = allocate_icamera_metadata(newEntryCount, newDataCount);
             CheckAndLogError(mBuffer == nullptr, NO_MEMORY,
                              "%s: Can't allocate larger metadata buffer", __func__);
-            append_icamera_metadata(mBuffer, oldBuffer);
+            (void)append_icamera_metadata(mBuffer, oldBuffer);
             free_icamera_metadata(oldBuffer);
         }
     }

@@ -24,7 +24,7 @@
 namespace icamera {
 
 int Condition::waitRelative(ConditionLock& lock, int64_t reltime) {
-    std::cv_status ret = mCondition.wait_for(lock, std::chrono::nanoseconds(reltime));
+    const std::cv_status ret = mCondition.wait_for(lock, std::chrono::nanoseconds(reltime));
     return ret == std::cv_status::timeout ? TIMED_OUT : OK;
 }
 
@@ -39,7 +39,7 @@ Thread::~Thread() {
 int Thread::run(std::string name, int priority) {
     AutoMutex lock(mLock);
 
-    if (mState != NOT_STARTED && mState != EXITED) {
+    if ((mState != NOT_STARTED) && (mState != EXITED)) {
         LOGW("Cannot start thread(%s) in state(%d).", name.c_str(), mState);
         return INVALID_OPERATION;
     }
@@ -118,7 +118,7 @@ int Thread::join() {
 bool Thread::isRunning() const {
     AutoMutex lock(mLock);
     // A thread in EXITING also means it's still running, but it's going to exit.
-    return mState == RUNNING || mState == EXITING;
+    return (mState == RUNNING) || (mState == EXITING);
 }
 
 bool Thread::isExiting() const {
@@ -136,7 +136,7 @@ void Thread::_threadLoop(Thread* self) {
         // Wait for function "run" to finish.
         // If the thread is going to exit, then no need to wait anymore.
         ConditionLock lock(self->mLock);
-        while (self->mState != RUNNING && self->mState != EXITING) {
+        while ((self->mState != RUNNING) && (self->mState != EXITING)) {
             self->mStartCondition.wait(lock);
         }
 
@@ -150,10 +150,10 @@ void Thread::_threadLoop(Thread* self) {
     }
 
     while (true) {
-        bool loopAgain = self->threadLoop();
+        const bool loopAgain = self->threadLoop();
 
         AutoMutex lock(self->mLock);
-        if (!loopAgain || self->mState == EXITING) {
+        if ((!loopAgain) || (self->mState == EXITING)) {
             self->mState = EXITED;
             self->mExitedCondition.broadcast();
             return;
@@ -183,12 +183,16 @@ void Thread::setProperty() {
     setpriority(PRIO_PROCESS, 0, mPriority);
 
     const int policy = SCHED_OTHER;
-    int min = sched_get_priority_min(policy);
-    int max = sched_get_priority_max(policy);
+    const int min = sched_get_priority_min(policy);
+    const int max = sched_get_priority_max(policy);
     LOG1("Priority range:(%d-%d)", min, max);
 
-    if (mPriority < min) mPriority = min;
-    if (mPriority > max) mPriority = max;
+    if (mPriority < min) {
+        mPriority = min;
+    }
+    if (mPriority > max) {
+        mPriority = max;
+    }
 
     sched_param param;
     param.sched_priority = mPriority;

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef FILE_SOURCE_H
+#define FILE_SOURCE_H
 
 #include "StreamSource.h"
 #include "iutils/Thread.h"
@@ -183,3 +184,5 @@ class FileSourceFromDir {
 };
 
 }  // namespace icamera
+
+#endif // FILE_SOURCE_H

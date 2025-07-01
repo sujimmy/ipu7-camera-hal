@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Intel Corporation.
+ * Copyright (C) 2018-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,13 +42,14 @@ int MakerNote::init(int cameraId, TuningMode tuningMode) {
 
     // Only getMKN returns OK, it will change data->mknData, otherwise it will not be changed.
     IntelCca* intelCca = IntelCca::getInstance(cameraId, tuningMode);
-    CheckAndLogError(!intelCca, BAD_VALUE, "@%s, Failed to get intelCca instance", __func__);
+    CheckAndLogError(intelCca == nullptr, BAD_VALUE, "@%s, Failed to get intelCca instance",
+                     __func__);
 
-    if (!mMakernoteDataList.size()) {
+    if (mMakernoteDataList.size() == 0) {
         for (int i = 0; i < MAX_MAKER_NOTE_LIST_SIZE; i++) {
             MakernoteData data;
             void* mknData = intelCca->allocMem(0, "mknData", i, sizeof(cca::cca_mkn));
-            CheckAndLogError(!mknData, NO_MEMORY, "@%s, allocMem fails", __func__);
+            CheckAndLogError(mknData == nullptr, NO_MEMORY, "@%s, allocMem fails", __func__);
             data.mknData = static_cast<cca::cca_mkn*>(mknData);
             mMakernoteDataList.push_back(data);
         }
@@ -66,7 +67,8 @@ int MakerNote::deinit(int cameraId, TuningMode tuningMode) {
     CheckAndLogError(mMknState != INIT, NO_INIT, "@%s, mkn isn't initialized", __func__);
 
     IntelCca* intelCca = IntelCca::getInstance(cameraId, tuningMode);
-    CheckAndLogError(!intelCca, BAD_VALUE, "@%s, Failed to get intelCca instance", __func__);
+    CheckAndLogError(intelCca == nullptr, BAD_VALUE, "@%s, Failed to get intelCca instance",
+                     __func__);
 
     while (!mMakernoteDataList.empty()) {
         MakernoteData data = mMakernoteDataList.front();
@@ -83,21 +85,25 @@ int MakerNote::deinit(int cameraId, TuningMode tuningMode) {
 int MakerNote::saveMakernoteData(int cameraId, camera_makernote_mode_t makernoteMode,
                                  int64_t sequence, TuningMode tuningMode) {
     LOG2("@%s", __func__);
-    bool dump = CameraDump::isDumpTypeEnable(DUMP_MAKER_NOTE);
-    if ((makernoteMode == MAKERNOTE_MODE_OFF) && !dump) return OK;
+
+    const bool dump = CameraDump::isDumpTypeEnable(DUMP_MAKER_NOTE);
+    if ((makernoteMode == MAKERNOTE_MODE_OFF) && !dump) {
+        return OK;
+    }
 
     AutoMutex lock(mMknLock);
     CheckAndLogError(mMknState != INIT, NO_INIT, "@%s, mkn isn't initialized", __func__);
 
-    ia_mkn_trg mknTrg = ((makernoteMode == MAKERNOTE_MODE_JPEG) || dump
+    const ia_mkn_trg mknTrg = ((makernoteMode == MAKERNOTE_MODE_JPEG) || dump
                          ? ia_mkn_trg_section_1 : ia_mkn_trg_section_2);
     MakernoteData data = mMakernoteDataList.front();
 
     IntelCca* intelCca = IntelCca::getInstance(cameraId, tuningMode);
-    CheckAndLogError(!intelCca, BAD_VALUE, "@%s, Failed to get intelCca instance", __func__);
+    CheckAndLogError(intelCca == nullptr, BAD_VALUE, "@%s, Failed to get intelCca instance",
+                     __func__);
 
-    ia_err iaErr = intelCca->getMKN(mknTrg, data.mknData);
-    int ret = AiqUtils::convertError(iaErr);
+    const ia_err iaErr = intelCca->getMKN(mknTrg, data.mknData);
+    const int ret = AiqUtils::convertError(iaErr);
     CheckAndLogError(ret != OK, ret, "@%s, Failed to getMKN", __func__);
 
     if (dump) {
@@ -112,7 +118,7 @@ int MakerNote::saveMakernoteData(int cameraId, camera_makernote_mode_t makernote
     if (makernoteMode != MAKERNOTE_MODE_OFF) {
         mMakernoteDataList.pop_front();
         data.sequence = sequence;
-        data.timestamp = 0;
+        data.timestamp = 0U;
         LOG2("<seq%ld>@%s, saved makernote %d", sequence, __func__, makernoteMode);
 
         mMakernoteDataList.push_back(data);
@@ -137,10 +143,10 @@ void MakerNote::updateTimestamp(int64_t sequence, uint64_t timestamp) {
 void MakerNote::acquireMakernoteData(uint64_t timestamp, uint8_t* buf, uint32_t& size) {
     AutoMutex lock(mMknLock);
     CheckAndLogError(mMknState != INIT, VOID_VALUE, "@%s, mkn isn't initialized", __func__);
-    CheckAndLogError(!buf, VOID_VALUE, "@%s, buffer is nullptr", __func__);
+    CheckAndLogError(buf == nullptr, VOID_VALUE, "@%s, buffer is nullptr", __func__);
 
     for (auto rit = mMakernoteDataList.rbegin(); rit != mMakernoteDataList.rend(); ++rit) {
-        if (((*rit).timestamp > 0) && (timestamp >= (*rit).timestamp)) {
+        if (((*rit).timestamp > 0U) && (timestamp >= (*rit).timestamp)) {
             LOG2("@%s, found timestamp %ld for request timestamp %ld", __func__, (*rit).timestamp,
                  timestamp);
             MEMCPY_S(buf, (*rit).mknData->size, (*rit).mknData->buf, (*rit).mknData->size);

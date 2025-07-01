@@ -53,7 +53,7 @@ DeviceBase::DeviceBase(int cameraId, VideoNodeType nodeType, VideoNodeDirection 
 
     mFrameSkipNum = PlatformData::getInitialSkipFrame(mCameraId);
     std::string devName;
-    int ret = PlatformData::getDevNameByType(cameraId, nodeType, devName);
+    const int ret = PlatformData::getDevNameByType(cameraId, nodeType, devName);
     CheckAndLogError(ret != OK, VOID_VALUE,
                      "Failed to get video device name for cameraId: %d, node type: %d", cameraId,
                      nodeType);
@@ -70,8 +70,9 @@ int DeviceBase::openDevice() {
     LOG1("<id%d>%s, device:%s", mCameraId, __func__, mName);
 
     // FRAME_SYNC_S
-    if (PlatformData::isEnableFrameSyncCheck(mCameraId))
+    if (PlatformData::isEnableFrameSyncCheck(mCameraId)) {
         SyncManager::getInstance()->updateSyncCamNum();
+    }
     // FRAME_SYNC_E
 
     return mDevice->Open(O_RDWR);
@@ -166,7 +167,7 @@ int DeviceBase::queueBuffer(int64_t sequence) {
 
         buffer = mPendingBuffers.front();
 
-        bool valid = checkAndUpdateBufLength(buffer);
+        const bool valid = checkAndUpdateBufLength(buffer);
         if (!valid) {
             return BAD_VALUE;
         }
@@ -202,10 +203,10 @@ int DeviceBase::dequeueBuffer() {
     LOG2("<id%d>%s, device:%s", mCameraId, __func__, mName);
 
     shared_ptr<CameraBuffer> camBuffer = getFirstDeviceBuffer();
-    CheckAndLogError(!camBuffer, UNKNOWN_ERROR, "No buffer in device:%s.", mName);
+    CheckAndLogError(camBuffer == nullptr, UNKNOWN_ERROR, "No buffer in device:%s.", mName);
 
     int ret = OK;
-    int targetIndex = camBuffer->getIndex();
+    const int targetIndex = camBuffer->getIndex();
 
     V4L2Buffer& vbuf = camBuffer->getV4L2Buffer();
     int actualIndex = mDevice->GrabFrame(&vbuf);
@@ -221,9 +222,8 @@ int DeviceBase::dequeueBuffer() {
 
     PERF_CAMERA_ATRACE_PARAM3("grabFrame SeqID", camBuffer->getSequence(), "csi2_port",
                               camBuffer->getCsi2Port(), "virtual_channel",
-                              camBuffer->getVirtualChannel());
-
-    ret |= onDequeueBuffer(camBuffer);
+                              camBuffer->getVirtualChannel());  
+    (void)onDequeueBuffer(camBuffer);
 
     // Skip initial frames if needed.
     if (mFrameSkipNum > 0) {
@@ -276,7 +276,7 @@ shared_ptr<CameraBuffer> DeviceBase::getFirstDeviceBuffer() {
 bool DeviceBase::skipFrameAfterSyncCheck(int64_t sequence) {
     // For multi-camera sensor, to check whether the frame synced or not
     int count = 0;
-    const int timeoutDuration = gSlowlyRunRatio ? (gSlowlyRunRatio * 1000000) : 1000;
+    const int timeoutDuration = gSlowlyRunRatio != 0 ? (gSlowlyRunRatio * 1000000) : 1000;
     const int maxCheckTimes = 10;  // 10 times
     while (!SyncManager::getInstance()->isSynced(mCameraId, sequence)) {
         usleep(timeoutDuration);
@@ -305,7 +305,9 @@ void DeviceBase::popBufferFromDevice() {
 }
 
 void DeviceBase::dumpFrame(const shared_ptr<CameraBuffer>& buffer) {
-    if (!CameraDump::isDumpTypeEnable(DUMP_ISYS_BUFFER)) return;
+    if (!CameraDump::isDumpTypeEnable(DUMP_ISYS_BUFFER)) {
+        return;
+    }
 
     LOG2("@%s, ISYS: fmt:%s(%dx%d), stride:%d, len:%d", __func__,
          CameraUtils::format2string(buffer->getFormat()).c_str(), buffer->getWidth(),
@@ -316,21 +318,21 @@ void DeviceBase::dumpFrame(const shared_ptr<CameraBuffer>& buffer) {
 
 MainDevice::MainDevice(int cameraId, VideoNodeType nodeType, DeviceCallback* deviceCB)
         : DeviceBase(cameraId, nodeType, INPUT_VIDEO_NODE, deviceCB) {
-    LOG1("<id%d>%s, device:%s", mCameraId, __func__, mName);
+    LOG1("<id%d>%s, device:%s", DeviceBase::mCameraId, __func__, DeviceBase::mName);
 }
 
 MainDevice::~MainDevice() {}
 
 int MainDevice::createBufferPool(const stream_t& config) {
-    LOG1("<id%d>%s, fmt:%s(%dx%d) field:%d", mCameraId, __func__,
+    LOG1("<id%d>%s, fmt:%s(%dx%d) field:%d", DeviceBase::mCameraId, __func__,
          CameraUtils::pixelCode2String(config.format), config.width, config.height, config.field);
 
     struct v4l2_format v4l2fmt;
     v4l2fmt.fmt.pix_mp.field = config.field;
 
-    if (PlatformData::isCSIFrontEndCapture(mCameraId)) {
-        int planesNum = CameraUtils::getNumOfPlanes(config.format);
-        LOG1("@%s Num of planes: %d, mCameraId:%d", __func__, planesNum, mCameraId);
+    if (PlatformData::isCSIFrontEndCapture(DeviceBase::mCameraId)) {
+        const int planesNum = CameraUtils::getNumOfPlanes(config.format);
+        LOG1("@%s Num of planes: %d, mCameraId:%d", __func__, planesNum, DeviceBase::mCameraId);
 
         v4l2fmt.fmt.pix_mp.width = config.width;
         v4l2fmt.fmt.pix_mp.height = config.height;
@@ -354,8 +356,9 @@ int MainDevice::createBufferPool(const stream_t& config) {
     CheckAndLogError(ret != OK, ret, "set v4l2 format failed ret=%d", ret);
     v4l2fmt = *tmpbuf.Get();
 
-    int realBufferSize = v4l2fmt.fmt.pix.sizeimage;
-    int calcBufferSize = CameraUtils::getFrameSize(config.format, config.width, config.height);
+    const int realBufferSize = v4l2fmt.fmt.pix.sizeimage;
+    const int calcBufferSize =
+        CameraUtils::getFrameSize(config.format, config.width, config.height);
     CheckAndLogError(calcBufferSize < realBufferSize, BAD_VALUE,
                      "realBufferSize %d is larger than calcBufferSize %d.", realBufferSize,
                      calcBufferSize);
@@ -363,9 +366,9 @@ int MainDevice::createBufferPool(const stream_t& config) {
     LOG2("@%s: realBufSize:%d, calcBufSize:%d", __func__, realBufferSize, calcBufferSize);
 
     mV4L2BufferInfo.clear();
-    int bufNum = mDevice->SetupBuffers(mMaxBufferNumber, true,
+    int bufNum = mDevice->SetupBuffers(DeviceBase::mMaxBufferNumber, true,
                                        static_cast<enum v4l2_memory>(config.memType),
-                                       &mV4L2BufferInfo);
+                                       &this->mV4L2BufferInfo);
     CheckAndLogError(bufNum < 0, BAD_VALUE, "request buffers failed return=%d", bufNum);
 
     return OK;
@@ -374,14 +377,18 @@ int MainDevice::createBufferPool(const stream_t& config) {
 int MainDevice::onDequeueBuffer(shared_ptr<CameraBuffer> buffer) {
     mDeviceCB->onDequeueBuffer();
 
-    if (mNeedSkipFrame) return OK;
+    if (DeviceBase::mNeedSkipFrame) {
+        return OK;
+    }
 
     LOG2("<seq%u>@%s, field:%d, timestamp: sec=%ld, usec=%ld", buffer->getSequence(),
          __func__, buffer->getField(), buffer->getTimestamp().tv_sec,
          buffer->getTimestamp().tv_usec);
 
-    for (auto& consumer : mConsumers) {
-        consumer->onFrameAvailable(mPort, buffer);
+    DeviceBase::dumpFrame(buffer);
+
+    for (auto& consumer : DeviceBase::mConsumers) {
+        consumer->onFrameAvailable(DeviceBase::mPort, buffer);
     }
 
     EventData frameData;
@@ -392,30 +399,29 @@ int MainDevice::onDequeueBuffer(shared_ptr<CameraBuffer> buffer) {
     frameData.data.frame.timestamp.tv_usec = buffer->getTimestamp().tv_usec;
     notifyListeners(frameData);
 
-    dumpFrame(buffer);
-
     return OK;
 }
 
 bool MainDevice::needQueueBack(shared_ptr<CameraBuffer> buffer) {
-    bool needSkipFrame = (mFrameSkipNum > 0);
+    bool needSkipFrame = (DeviceBase::mFrameSkipNum > 0);
 
     const V4L2Buffer& vbuf = buffer->getV4L2Buffer();
     // Check for STR2MMIO Error from kernel space
-    if ((vbuf.Flags() & V4L2_BUF_FLAG_ERROR) && PlatformData::isSkipFrameOnSTR2MMIOErr(mCameraId)) {
+    if ((vbuf.Flags() & static_cast<uint32_t>(V4L2_BUF_FLAG_ERROR)) &&
+         (PlatformData::isSkipFrameOnSTR2MMIOErr(this->mCameraId))) {
         // On STR2MMIO error, enqueue this buffer back to V4L2 before notifying the
         // listener/consumer and return
         needSkipFrame = true;
         LOGW("<seq%u>%s: buffer error", buffer->getSequence(), __func__);
     }
     // FRAME_SYNC_S
-    if (PlatformData::isEnableFrameSyncCheck(mCameraId)) {
+    if (PlatformData::isEnableFrameSyncCheck(DeviceBase::mCameraId)) {
         struct camera_buf_info sharedCamBufInfo;
         sharedCamBufInfo.sequence = buffer->getSequence();
         sharedCamBufInfo.sof_ts = buffer->getTimestamp();
-        SyncManager::getInstance()->updateCameraBufInfo(mCameraId, &sharedCamBufInfo);
-        if (skipFrameAfterSyncCheck(buffer->getSequence())) {
-            LOG1("<id%d:seq%u>@%s: dropped due to frame not sync", mCameraId,
+        SyncManager::getInstance()->updateCameraBufInfo(DeviceBase::mCameraId, &sharedCamBufInfo);
+        if (DeviceBase::skipFrameAfterSyncCheck(buffer->getSequence())) {
+            LOG1("<id%d:seq%u>@%s: dropped due to frame not sync", DeviceBase::mCameraId,
                  buffer->getSequence(), __func__);
             needSkipFrame = true;
         }

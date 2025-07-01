@@ -37,10 +37,11 @@ std::unique_ptr<IImageProcessor> IImageProcessor::createImageProcessor() {
 // If support this kind of post process type in current OS
 bool IImageProcessor::isProcessingTypeSupported(PostProcessType type) {
     int supportedType = POST_PROCESS_CONVERT | POST_PROCESS_JPEG_ENCODING;
-    if (PlatformData::useGPUProcessor())
+    if (PlatformData::useGPUProcessor()) {
         supportedType |= POST_PROCESS_GPU;
-    else
+    } else {
         supportedType |= POST_PROCESS_ROTATE | POST_PROCESS_SCALING | POST_PROCESS_CROP;
+    }
 
     return supportedType & type;
 }

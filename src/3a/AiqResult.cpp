@@ -68,7 +68,7 @@ int AiqResult::init() {
     return OK;
 }
 
-int AiqResult::deinit() {
+int AiqResult::deinit() const {
     return OK;
 }
 

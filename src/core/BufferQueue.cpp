@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2022 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ int BufferQueue::queueInputBuffer(uuid port, const std::shared_ptr<CameraBuffer>
     LOG2("%s CameraBuffer %p for port:%x", __func__, camBuffer.get(), port);
 
     CameraBufQ& input = mInputQueue[port];
-    bool needSignal = input.empty();
+    const bool needSignal = input.empty();
     input.push(camBuffer);
     if (needSignal) {
         mFrameAvailableSignal.notify_one();
@@ -63,7 +63,9 @@ void BufferQueue::setBufferProducer(BufferProducer* producer) {
     AutoMutex l(mBufferQueueLock);
     mBufferProducer = producer;
 
-    if (producer == nullptr) return;
+    if (producer == nullptr) {
+        return;
+    }
 
     mBufferProducer->addFrameAvailableListener(this);
 }
@@ -72,7 +74,7 @@ void BufferQueue::addFrameAvailableListener(BufferConsumer* listener) {
     LOG1("%s listener %p", __func__, listener);
     AutoMutex l(mBufferQueueLock);
     bool isAlreadyAdded = false;
-    for (auto& consumer : mBufferConsumerList) {
+    for (const auto& consumer : mBufferConsumerList) {
         if (consumer == listener) {
             isAlreadyAdded = true;
             break;
@@ -144,25 +146,28 @@ int BufferQueue::waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
                                         std::map<uuid, std::shared_ptr<CameraBuffer> >& buffer,
                                         std::map<uuid, CameraBufQ>& bufferQueue,
                                         int64_t timeout) {
-    int ret = OK;
-    timeout = (timeout ? timeout : kWaitDuration) * SLOWLY_MULTIPLIER;
+    timeout = (timeout != 0 ? timeout : kWaitDuration) * SLOWLY_MULTIPLIER;
 
     for (auto& queue : bufferQueue) {
-        uuid port = queue.first;
+        const uuid port = queue.first;
         CameraBufQ& cameraBufQ = queue.second;
         if (cameraBufQ.empty()) {
             LOG2("%s: wait port %x", __func__, port);
-            std::cv_status status = mFrameAvailableSignal.wait_for(
+            const std::cv_status status = mFrameAvailableSignal.wait_for(
                 lock, std::chrono::nanoseconds(timeout));
 
-            if (status == std::cv_status::timeout) return TIMED_OUT;
+            if (status == std::cv_status::timeout) {
+                return TIMED_OUT;
+            }
         }
-        if (cameraBufQ.empty()) return NOT_ENOUGH_DATA;
+        if (cameraBufQ.empty()) {
+            return NOT_ENOUGH_DATA;
+        }
         // Wake up from the buffer available
         buffer[port] = cameraBufQ.front();
     }
 
-    return ret;
+    return OK;
 }
 
 int BufferQueue::waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
@@ -170,11 +175,13 @@ int BufferQueue::waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
                                         std::map<uuid, std::shared_ptr<CameraBuffer> >& cOutBuffer,
                                         int64_t timeout) {
     int ret = OK;
-    timeout = (timeout ? timeout : kWaitDuration) * SLOWLY_MULTIPLIER;
+    timeout = (timeout != 0 ? timeout : kWaitDuration) * SLOWLY_MULTIPLIER;
 
     LOG2("@%s start waiting the input and output buffers", __func__);
     ret = waitFreeBuffersInQueue(lock, cInBuffer, mInputQueue, timeout);
-    if (ret != OK) return ret;
+    if (ret != OK) {
+        return ret;
+    }
 
     return waitFreeBuffersInQueue(lock, cOutBuffer, mOutputQueue, timeout);
 }
@@ -182,7 +189,7 @@ int BufferQueue::waitFreeBuffersInQueue(std::unique_lock<std::mutex>& lock,
 int BufferQueue::getFreeBuffersInQueue(std::map<uuid, std::shared_ptr<CameraBuffer> >& inBuffers,
                                        std::map<uuid, std::shared_ptr<CameraBuffer> >& outBuffers) {
     for (auto& input : mInputQueue) {
-        uuid port = input.first;
+        const uuid port = input.first;
         CameraBufQ& inputQueue = input.second;
         if (inputQueue.empty()) {
             inBuffers.clear();
@@ -192,7 +199,7 @@ int BufferQueue::getFreeBuffersInQueue(std::map<uuid, std::shared_ptr<CameraBuff
     }
 
     for (auto& output : mOutputQueue) {
-        uuid port = output.first;
+        const uuid port = output.first;
         CameraBufQ& outputQueue = output.second;
         if (outputQueue.empty()) {
             inBuffers.clear();
@@ -210,17 +217,19 @@ int BufferQueue::getFreeBuffersInQueue(std::map<uuid, std::shared_ptr<CameraBuff
 void BufferQueue::returnBuffers(std::map<uuid, std::shared_ptr<CameraBuffer> >& inBuffers,
                                 std::map<uuid, std::shared_ptr<CameraBuffer> >& outBuffers) {
     // Return buffers
-    if (mBufferProducer) {
+    if (mBufferProducer != nullptr) {
         for (auto const& portBufferPair : inBuffers) {
             mBufferProducer->qbuf(portBufferPair.first, portBufferPair.second);
         }
     }
     for (auto const& portBufferPair : outBuffers) {
         std::shared_ptr<CameraBuffer> outBuf = portBufferPair.second;
-        uuid port = portBufferPair.first;
+        const uuid port = portBufferPair.first;
         // If the output buffer is nullptr, that means user doesn't request that buffer,
         // so it doesn't need to be handled here.
-        if (!outBuf) continue;
+        if (outBuf == nullptr) {
+            continue;
+        }
         for (auto& it : mBufferConsumerList) {
             it->onFrameAvailable(port, outBuf);
         }
@@ -232,18 +241,19 @@ int BufferQueue::allocProducerBuffers(int camId, int bufNum) {
 
     mInternalBuffers.clear();
 
-    CheckAndLogError(!mBufferProducer, BAD_VALUE, "@%s: Buffer Producer is nullptr", __func__);
+    CheckAndLogError(mBufferProducer == nullptr, BAD_VALUE, "@%s: Buffer Producer is nullptr",
+                     __func__);
 
     for (const auto& item : mInputFrameInfo) {
         uuid port = item.first;
-        int srcFmt = item.second.format;
-        int srcWidth = item.second.width;
-        int srcHeight = item.second.height;
+        const int srcFmt = item.second.format;
+        const int srcWidth = item.second.width;
+        const int srcHeight = item.second.height;
 
         LOG1("%s fmt:%s (%dx%d)", __func__, CameraUtils::format2string(srcFmt).c_str(), srcWidth,
              srcHeight);
 
-        int32_t size = CameraUtils::getFrameSize(srcFmt, srcWidth, srcHeight);
+        const int32_t size = CameraUtils::getFrameSize(srcFmt, srcWidth, srcHeight);
         int memType = mBufferProducer->getMemoryType();
 
         for (int i = 0; i < bufNum; i++) {
@@ -253,13 +263,14 @@ int BufferQueue::allocProducerBuffers(int camId, int bufNum) {
                     camBuffer =
                         CameraBuffer::create(V4L2_MEMORY_USERPTR, size, i, srcFmt, srcWidth,
                                              srcHeight);
-                    CheckAndLogError(!camBuffer, NO_MEMORY,
+                    CheckAndLogError(camBuffer == nullptr, NO_MEMORY,
                                      "Allocate producer userptr buffer failed");
                     break;
 
                 case V4L2_MEMORY_MMAP:
                     camBuffer = std::make_shared<CameraBuffer>(V4L2_MEMORY_MMAP, size, i);
-                    CheckAndLogError(!camBuffer, NO_MEMORY, "Allocate producer mmap buffer failed");
+                    CheckAndLogError(camBuffer == nullptr, NO_MEMORY,
+                                     "Allocate producer mmap buffer failed");
                     camBuffer->setUserBufferInfo(srcFmt, srcWidth, srcHeight);
                     mBufferProducer->allocateMemory(port, camBuffer);
                     break;

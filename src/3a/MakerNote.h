@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef MAKER_NOTE_H
+#define MAKER_NOTE_H
 
 #include <list>
 #include <map>
@@ -124,3 +125,5 @@ class MakerNote {
 };
 
 }  // namespace icamera
+
+#endif // MAKER_NOTE_H

@@ -19,7 +19,7 @@
 namespace icamera {
 
 // Temporary solution
-enum PipeUseCase {
+enum PipeUseCase : uint32_t {
     USE_CASE_COMMON = 0,
     USE_CASE_VIDEO = 1 << 0,
     USE_CASE_STILL = 1 << 1,

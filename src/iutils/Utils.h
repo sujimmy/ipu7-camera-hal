@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <string.h>
 #include <string>
@@ -28,7 +29,9 @@ namespace icamera {
 
 typedef int64_t nsecs_t;
 
-#define ALIGN(val, alignment) (((val) + (alignment)-1) & ~((alignment)-1))
+#define ALIGN(val, alignment) (((static_cast<uintptr_t>(val)) +\
+        (static_cast<uintptr_t>(alignment)) - 1U) &\
+        ~((static_cast<uintptr_t>(alignment)) - 1U))
 #define ALIGN_64(val) ALIGN(val, 64)
 #define ALIGN_32(val) ALIGN(val, 32)
 #define ALIGN_16(val) ALIGN(val, 16)
@@ -36,7 +39,7 @@ typedef int64_t nsecs_t;
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
-#define CLEAR(x) memset(&(x), 0, sizeof(x))
+#define CLEAR(x) (void)memset(&(x), 0, sizeof(x))
 
 // macro CLIP is used to clip the Number value to between the Min and Max
 #define CLIP(Number, Max, Min) ((Number) > (Max) ? (Max) : ((Number) < (Min) ? (Min) : (Number)))
@@ -115,7 +118,7 @@ typedef int64_t nsecs_t;
  *  Helper macro to convert timeval struct to nanosecond values stored in a
  *  long long signed value (equivalent to int64_t)
  */
-#define TIMEVAL2NSECS(x) (int64_t)((x).tv_sec * 1000000000LL + (x).tv_usec * 1000LL)
+#define TIMEVAL2NSECS(x) static_cast<uint64_t>((x).tv_sec * 1000000000LL + (x).tv_usec * 1000LL)
 
 /**
  *  \macro TIMEVAL2USECS
@@ -123,7 +126,8 @@ typedef int64_t nsecs_t;
  *  Helper macro to convert timeval struct to microsecond values stored in a
  *  long long signed value (equivalent to int64_t)
  */
-#define TIMEVAL2USECS(x) (int64_t)(((x).tv_sec * 1000000000LL + (x).tv_usec * 1000LL) / 1000LL)
+#define TIMEVAL2USECS(x) (static_cast<uint64_t>( \
+                            ((x).tv_sec * 1000000000LL + (x).tv_usec * 1000LL) / 1000LL))
 
 // macro for float comparaion with 0
 #define EPSILON 0.00001
@@ -151,7 +155,7 @@ typedef int64_t nsecs_t;
 // macro for memcpy
 #ifndef MEMCPY_S
 #define MEMCPY_S(dest, dmax, src, smax) \
-    memcpy((dest), (src), std::min((size_t)(dmax), (size_t)(smax)))
+    (void)memcpy((dest), (src), std::min(static_cast<size_t>(dmax), static_cast<size_t>(smax)))
 #endif
 
 #define STDCOPY(dst, src, size) std::copy((src), ((src) + (size)), (dst))
@@ -196,7 +200,10 @@ typedef int64_t nsecs_t;
 #define CAMHAL_CEIL_DIV(a, b) (((a) + (b)-1) / (b))
 
 #define FOURCC_TO_UL(a, b, c, d) \
-    ((uint32_t)(a) | ((uint32_t)(b) << 8) | ((uint32_t)(c) << 16) | ((uint32_t)(d) << 24))
+    ((static_cast<uint32_t>(a)) | \
+    ((static_cast<uint32_t>(b) << 8)) | \
+    ((static_cast<uint32_t>(c) << 16)) | \
+    ((static_cast<uint32_t>(d) << 24)))
 
 // Internal useful tool for format
 namespace CameraUtils {
@@ -274,3 +281,5 @@ frame_usage_mode_t getFrameUsage(const stream_config_t *streamList);
 }  // namespace CameraUtils
 
 }  // namespace icamera
+
+#endif // UTILS_H

@@ -46,7 +46,9 @@ void SysCall::updateInstance(SysCall* newSysCall) {
         sIsInitialized = false;
     }
     sInstance = newSysCall;
-    if (newSysCall != nullptr) sIsInitialized = true;
+    if (newSysCall != nullptr) {
+        sIsInitialized = true;
+    }
 }
 #endif
 
@@ -167,7 +169,7 @@ int SysCall::ioctl(int fd, int request, void* arg) {
     int ret = 0;
     do {
         ret = ::ioctl(fd, request, arg);
-    } while (-1 == ret && EINTR == errno);
+    } while ((-1 == ret) && (EINTR == errno));
 
     return ret;
 }

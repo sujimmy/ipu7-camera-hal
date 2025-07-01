@@ -56,15 +56,15 @@ int CameraSharedMemory::CameraDeviceOpen(int cameraId) {
     CheckAndLogError(lock() != OK, ret, "Fail to lock shared memory!");
 
     // Check camera device status from the shared memory
-    pid_t pid = mCameraSharedInfo->camDevStatus[cameraId].pid;
+    const pid_t pid = mCameraSharedInfo->camDevStatus[cameraId].pid;
     char* name = mCameraSharedInfo->camDevStatus[cameraId].name;
-    if (pid != CAMERA_DEVICE_IDLE && processExist(pid, name)) {
+    if ((pid != CAMERA_DEVICE_IDLE) && processExist(pid, name)) {
         LOG1("@%s(pid %d): device has been opened in another process(pid %d/%s)", __func__,
              getpid(), pid, name);
         ret = INVALID_OPERATION;
     } else {
         mCameraSharedInfo->camDevStatus[cameraId].pid = getpid();
-        getNameByPid(getpid(), mCameraSharedInfo->camDevStatus[cameraId].name);
+        (void)getNameByPid(getpid(), mCameraSharedInfo->camDevStatus[cameraId].name);
     }
     unlock();
 
@@ -110,10 +110,10 @@ void CameraSharedMemory::acquireSharedMemory() {
         mCameraSharedInfo = nullptr;
     } else {
         struct shmid_ds shmState;
-        int ret = shmctl(mSharedMemId, IPC_STAT, &shmState);
+        const int ret = shmctl(mSharedMemId, IPC_STAT, &shmState);
 
         // attach number is 1, current process is the only camera process
-        if (ret == 0 && shmState.shm_nattch == 1) {
+        if ((ret == 0) && (shmState.shm_nattch == 1)) {
             if (newCreated)
                 LOG1("The shared memory is new created, init the values.");
             else
@@ -127,9 +127,9 @@ void CameraSharedMemory::acquireSharedMemory() {
             // Check if the process stored in share memory is still running.
             // Set the device status to IDLE if the stored process is not running.
             for (int i = 0; i < MAX_CAMERA_NUMBER; i++) {
-                pid_t pid = mCameraSharedInfo->camDevStatus[i].pid;
+                const pid_t pid = mCameraSharedInfo->camDevStatus[i].pid;
                 char* name = mCameraSharedInfo->camDevStatus[i].name;
-                if (pid != CAMERA_DEVICE_IDLE && !processExist(pid, name)) {
+                if ((pid != CAMERA_DEVICE_IDLE) && (!processExist(pid, name))) {
                     LOG1("process %d(%s) opened the device but it's not running now.", pid, name);
                     mCameraSharedInfo->camDevStatus[i].pid = CAMERA_DEVICE_IDLE;
                 }
@@ -161,7 +161,7 @@ void CameraSharedMemory::releaseSharedMemory() {
     // delete shared memory if no one is attaching
     struct shmid_ds shmState;
     ret = shmctl(mSharedMemId, IPC_STAT, &shmState);
-    if (ret == 0 && shmState.shm_nattch == 0) {
+    if ((ret == 0) && (shmState.shm_nattch == 0)) {
         LOG1("No attaches to the camera shared memory. Release it.");
         shmctl(mSharedMemId, IPC_RMID, 0);
     }
@@ -208,7 +208,8 @@ int CameraSharedMemory::getNameByPid(pid_t pid, char* name) {
 
 bool CameraSharedMemory::processExist(pid_t pid, const char* storedName) {
     char name[MAX_PROCESS_NAME_LENGTH];
-    return kill(pid, 0) == 0 && getNameByPid(pid, name) == OK && strcmp(storedName, name) == 0;
+    return (kill(pid, 0) == 0) && (getNameByPid(pid, name) == OK) &&
+        (strcmp(storedName, name) == 0);
 }
 
 void CameraSharedMemory::openSemLock() {
@@ -235,13 +236,13 @@ void CameraSharedMemory::openSemLock() {
     // Wait the semaphore lock for 2 seconds
     clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += CAMERA_SHM_LOCK_TIME;
-    while ((ret = sem_timedwait(mSemLock, &ts)) == -1 && errno == EINTR);
+    while (((ret = sem_timedwait(mSemLock, &ts)) == -1) && (errno == EINTR));
     if (ret == 0) {
         sem_post(mSemLock);
         return;
     }
 
-    if (ret != 0 && errno == ETIMEDOUT) {
+    if ((ret != 0) && (errno == ETIMEDOUT)) {
         LOG1("Lock timed out, process holding it may have crashed. Re-create the semaphore.");
         sem_close(mSemLock);
         sem_unlink(SEM_NAME);
@@ -267,7 +268,7 @@ int CameraSharedMemory::lock() {
     CLEAR(ts);
     clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += CAMERA_SHM_LOCK_TIME;
-    while (((ret = sem_timedwait(mSemLock, &ts)) == -1) && errno == EINTR);
+    while (((ret = sem_timedwait(mSemLock, &ts)) == -1) && (errno == EINTR));
     CheckAndLogError(ret != 0, UNKNOWN_ERROR, "Lock failed or timed out");
 
     return OK;

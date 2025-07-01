@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2023 Intel Corporation.
+ * Copyright (C) 2016-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef CAMERA_DEVICE_H
+#define CAMERA_DEVICE_H
 
 #include "AiqUnit.h"
 #include "CameraStream.h"
@@ -184,7 +185,7 @@ class CameraDevice : public EventListener {
  private:
     StreamSource* createBufferProducer();
     std::map<uuid, stream_t> selectProducerConfig(const stream_config_t* streamList, int mcId);
-    bool isProcessorNeeded(const stream_config_t* streamList, const stream_t& producerConfig);
+    bool isProcessorNeeded(const stream_config_t* streamList, const stream_t& producerConfig) const;
     int analyzeStream(stream_config_t* streamList, int* inputStreamId, int* preStreamIdForFace,
                       int* inputYuvStreamId);
     int assignPortForStreams(const stream_config_t* streamList, int inputStreamId,
@@ -258,3 +259,5 @@ class CameraDevice : public EventListener {
 };
 
 }  // namespace icamera
+
+#endif // CAMERA_DEVICE_H

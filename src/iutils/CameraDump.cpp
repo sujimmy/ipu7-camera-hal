@@ -43,11 +43,11 @@ using std::string;
 
 namespace icamera {
 
-int gDumpType = 0;
-int gDumpFormat = 0;
-uint32_t gDumpSkipNum = 0;
-uint32_t gDumpRangeMin = 0;
-uint32_t gDumpRangeMax = 0;
+uint32_t gDumpType = 0U;
+uint32_t gDumpFormat = 0U;
+uint32_t gDumpSkipNum = 0U;
+uint32_t gDumpRangeMin = 0U;
+uint32_t gDumpRangeMax = 0U;
 int gDumpFrequency = 1;
 char gDumpPath[255];
 bool gDumpRangeEnabled = false;
@@ -114,40 +114,42 @@ void CameraDump::setDumpLevel(void) {
 
     // dump, it's used to dump images or some parameters to a file.
     char* dumpType = getenv(PROP_CAMERA_HAL_DUMP);
-    if (dumpType) {
+    if (dumpType != nullptr) {
         gDumpType = strtoul(dumpType, nullptr, 0);
         LOGI("Dump type is 0x%x", gDumpType);
     }
 
     char* dumpFormat = getenv(PROP_CAMERA_HAL_DUMP_FORMAT);
-    if (dumpFormat) {
+    if (dumpFormat != nullptr) {
         gDumpFormat = strtoul(dumpFormat, nullptr, 0);
         LOG1("Dump format is 0x%x", gDumpFormat);
     }
 
     char* cameraDumpPath = getenv(PROP_CAMERA_HAL_DUMP_PATH);
     snprintf(gDumpPath, sizeof(gDumpPath), "%s", "./");
-    if (cameraDumpPath) {
+    if (cameraDumpPath != nullptr) {
         snprintf(gDumpPath, sizeof(gDumpPath), "%s", cameraDumpPath);
     }
 
     char* cameraDumpSkipNum = getenv(PROP_CAMERA_HAL_DUMP_SKIP_NUM);
-    if (cameraDumpSkipNum) {
+    if (cameraDumpSkipNum != nullptr) {
         gDumpSkipNum = strtoul(cameraDumpSkipNum, nullptr, 0);
         LOG1("Dump skip num is %d", gDumpSkipNum);
     }
 
     char* cameraDumpRange = getenv(PROP_CAMERA_HAL_DUMP_RANGE);
-    if (cameraDumpRange) {
+    if (cameraDumpRange != nullptr) {
         parseRange(cameraDumpRange, &gDumpRangeMin, &gDumpRangeMax);
         gDumpRangeEnabled = true;
         LOG1("Dump range is %d-%d", gDumpRangeMin, gDumpRangeMax);
     }
 
     char* cameraDumpFrequency = getenv(PROP_CAMERA_HAL_DUMP_FREQUENCY);
-    if (cameraDumpFrequency) {
+    if (cameraDumpFrequency != nullptr) {
         gDumpFrequency = strtoul(cameraDumpFrequency, nullptr, 0);
-        if (gDumpFrequency == 0) gDumpFrequency = 1;
+        if (gDumpFrequency == 0) {
+            gDumpFrequency = 1;
+        }
         LOG1("Dump frequency is %d", gDumpFrequency);
     }
 
@@ -177,15 +179,17 @@ void CameraDump::setDumpLevel(void) {
     }
 
     // the PG dump is implemented in libiacss
-    if (gDumpType & DUMP_PSYS_PG) {
+    if ((gDumpType & static_cast<int>(DUMP_PSYS_PG)) != 0U) {
         const char* PROP_CAMERA_CSS_DEBUG = "camera_css_debug";
         const char* PROP_CAMERA_CSS_DUMP_PATH = "camera_css_debug_dump_path";
 
         char newCssDebugEnv[16];
         char* cssDebugEnv = getenv(PROP_CAMERA_CSS_DEBUG);
-        int cssDebugType = cssDebugEnv ? strtoul(cssDebugEnv, nullptr, 0) : 0;
+        const uint32_t cssDebugType =
+                       cssDebugEnv != nullptr ?
+                       static_cast<uint32_t>(strtoul(cssDebugEnv, nullptr, 0)) : 0U;
         // defined in ia_log.h IA_CSS_LOG_LEVEL_DUMP = 64
-        const int IA_CSS_LOG_LEVEL_DUMP = 64;
+        const uint32_t IA_CSS_LOG_LEVEL_DUMP = 64U;
         snprintf(newCssDebugEnv, sizeof(newCssDebugEnv), "%d",
                  (cssDebugType | IA_CSS_LOG_LEVEL_DUMP));
         // enable dump env in libiacss
@@ -197,16 +201,16 @@ void CameraDump::setDumpLevel(void) {
         // set dump path to hal dump path
         if (setenv(PROP_CAMERA_CSS_DUMP_PATH, gDumpPath, 1)) {
             LOGE("setenv error for %s, current path:%s\n", PROP_CAMERA_CSS_DUMP_PATH,
-                 cssDumpPath ? cssDumpPath : "null");
+                 cssDumpPath != nullptr ? cssDumpPath : "null");
         }
     }
 }
 
-bool CameraDump::isDumpTypeEnable(int dumpType) {
+bool CameraDump::isDumpTypeEnable(uint32_t dumpType) {
     return gDumpType & dumpType;
 }
 
-bool CameraDump::isDumpFormatEnable(int dumpFormat) {
+bool CameraDump::isDumpFormatEnable(uint32_t dumpFormat) {
     return gDumpFormat & dumpFormat;
 }
 
@@ -215,16 +219,16 @@ const char* CameraDump::getDumpPath(void) {
 }
 
 void CameraDump::writeData(const void* data, int size, const char* fileName) {
-    CheckAndLogError((data == nullptr || size == 0 || fileName == nullptr), VOID_VALUE,
+    CheckAndLogError((data == nullptr) || (size == 0) || (fileName == nullptr), VOID_VALUE,
                      "Nothing needs to be dumped");
 
     FILE* fp = fopen(fileName, "w+");
     CheckAndLogError(fp == nullptr, VOID_VALUE, "open dump file %s failed", fileName);
 
     LOG1("Write data to file:%s", fileName);
-    if ((fwrite(data, size, 1, fp)) != 1)
+    if ((fwrite(data, size, 1, fp)) != 1U)
         LOGW("Error or short count writing %d bytes to %s", size, fileName);
-    fclose(fp);
+    (void)fclose(fp);
 }
 
 static string getNamePrefix(int cameraId, ModuleType_t type, uuid port, int sUsage = 0) {
@@ -274,8 +278,8 @@ static string getAiqSettingAppendix(int cameraId, int64_t sequence) {
         aiqResults->mAeResults.exposures[0].sensor_exposure;
     ia_aiq_exposure_parameters* exposure = aiqResults->mAeResults.exposures[0].exposure;
 
-    CheckAndLogError((sensorExposure == nullptr || exposure == nullptr), string(settingAppendix),
-                     "Cannot find aiq exposures");
+    CheckAndLogError((sensorExposure == nullptr) || (exposure == nullptr),
+                     string(settingAppendix), "Cannot find aiq exposures");
 
     double ag = sensorExposure->analog_gain_code_global;
     double dg = sensorExposure->digital_gain_global;
@@ -315,7 +319,7 @@ static string getAiqSettingAppendix(int cameraId, int64_t sequence) {
             LOG2("%s: converted AG: %f, DG: %f for %s", __func__, ag, dg, sensorName);
         }
 
-        if (aiqResults->mAeResults.num_exposures == 2) {
+        if (aiqResults->mAeResults.num_exposures == 2U) {
             if (strstr(sensorName, "imx390") != nullptr) {
                 double ag_1 =
                     aiqResults->mAeResults.exposures[1].sensor_exposure[0].analog_gain_code_global;
@@ -344,7 +348,7 @@ static string getAiqSettingAppendix(int cameraId, int64_t sequence) {
             ispDg = PlatformData::getIspDigitalGain(cameraId, exposure->digital_gain);
         }
 
-        if (aiqResults->mAeResults.num_exposures == 2) {
+        if (aiqResults->mAeResults.num_exposures == 2U) {
             if (strstr(sensorName, "imx390") != nullptr) {
                 double ag_1 =
                     aiqResults->mAeResults.exposures[1].sensor_exposure[0].analog_gain_code_global;
@@ -377,8 +381,10 @@ static string formatFrameFileName(const char* prefix, const char* appendix, cons
     char fileName[MAX_NAME_LEN] = {'\0'};
 
     if (icamera::CameraDump::isDumpFormatEnable(DUMP_FORMAT_IQSTUDIO)) {
-        if (strstr(suffix, "GRBG") || strstr(suffix, "RGGB") || strstr(suffix, "GBRG") ||
-            strstr(suffix, "BGGR")) {
+        if ((strstr(suffix, "GRBG") != nullptr) ||
+            (strstr(suffix, "RGGB") != nullptr) ||
+            (strstr(suffix, "GBRG") != nullptr) ||
+            (strstr(suffix, "BGGR") != nullptr)) {
             snprintf(fileName, (MAX_NAME_LEN - 1),
                      "%s~rev#v1~type#studio%s~msid#4442075~rep#%ld.raw", prefix, appendix,
                      sequence);
@@ -477,18 +483,25 @@ void CameraDump::dumpImage(int cameraId, const shared_ptr<CameraBuffer>& camBuff
                            ModuleType_t type, uuid port, const char* desc) {
     CheckAndLogError(camBuffer == nullptr, VOID_VALUE, "invalid param");
 
-    if (camBuffer->getSequence() < gDumpSkipNum) return;
-
-    if (gDumpRangeEnabled &&
-        (camBuffer->getSequence() < gDumpRangeMin || camBuffer->getSequence() > gDumpRangeMax)) {
+    if (camBuffer->getSequence() < gDumpSkipNum) {
         return;
     }
 
-    if (camBuffer->getSequence() % gDumpFrequency != 0) return;
+    if (gDumpRangeEnabled &&
+        ((camBuffer->getSequence() < gDumpRangeMin) ||
+         (camBuffer->getSequence() > gDumpRangeMax))) {
+        return;
+    }
+
+    if (camBuffer->getSequence() % gDumpFrequency != 0U) {
+        return;
+    }
 
     string prefix = getNamePrefix(cameraId, type, port, camBuffer->getUserBuffer()->s.usage);
     string appendix = getAiqSettingAppendix(cameraId, camBuffer->getSequence());
-    if (desc) appendix.append(desc);
+    if (desc != nullptr) {
+        appendix.append(desc);
+    }
 
     string fileName = formatFrameFileName(
         prefix.c_str(), appendix.c_str(),
@@ -512,14 +525,18 @@ void CameraDump::dumpImage(int cameraId, const shared_ptr<CameraBuffer>& camBuff
 void CameraDump::dumpBinary(int cameraId, const void* data, int size, BinParam_t* binParam) {
     CheckAndLogError(binParam == nullptr, VOID_VALUE, "invalid param");
 
-    if (binParam->sequence < gDumpSkipNum) return;
-
-    if (gDumpRangeEnabled &&
-        (binParam->sequence < gDumpRangeMin || binParam->sequence > gDumpRangeMax)) {
+    if (binParam->sequence < gDumpSkipNum) {
         return;
     }
 
-    if (binParam->sequence % gDumpFrequency != 0) return;
+    if (gDumpRangeEnabled &&
+        ((binParam->sequence < gDumpRangeMin) || (binParam->sequence > gDumpRangeMax))) {
+        return;
+    }
+
+    if (binParam->sequence % gDumpFrequency != 0) {
+        return;
+    }
 
     string prefix = getNamePrefix(cameraId, binParam->mType, INVALID_PORT, binParam->sUsage);
     string fileName = formatBinFileName(cameraId, prefix.c_str(), binParam);

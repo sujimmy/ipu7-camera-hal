@@ -114,27 +114,54 @@ PnpDebugParser::PnpDebugParser(PnpDebugControl::StaticCfg* cfg)
 
 bool PnpDebugParser::run(const std::string& filename) {
     auto root = openJsonFile(filename);
-    if (root.empty()) return false;
+    if (root.empty()) {
+        return false;
+    }
 
-    if (!root.isMember("PnpDebugConfig")) return false;
+    if (!root.isMember("PnpDebugConfig")) {
+        return false;
+    }
 
     const Json::Value& node = root["PnpDebugConfig"];
     if (node.isMember("Power")) {
         const Json::Value& ele = node["Power"];
 
-        if (ele.isMember("useMockAAL")) mStaticCfg->useMockAAL = ele["useMockAAL"].asBool();
-        if (ele.isMember("useMockHal")) mStaticCfg->useMockHal = ele["useMockHal"].asBool();
-        if (ele.isMember("useMockPipes")) mStaticCfg->useMockPipes = ele["useMockPipes"].asBool();
-        if (ele.isMember("pnpMockFps")) mStaticCfg->mockAPPFps = ele["pnpMockFps"].asInt();
-        if (ele.isMember("bypass3A")) mStaticCfg->isBypass3A = ele["bypass3A"].asBool();
-        if (ele.isMember("bypassPAC")) mStaticCfg->isBypassPAC = ele["bypassPAC"].asBool();
-        if (ele.isMember("bypassCB")) mStaticCfg->isBypassCB = ele["bypassCB"].asBool();
-        if (ele.isMember("disableFace")) mStaticCfg->isFaceDisabled = ele["disableFace"].asBool();
-        if (ele.isMember("disableFaceAe")) mStaticCfg->isFaceAeDisabled =
-            ele["disableFaceAe"].asBool();
-        if (ele.isMember("bypassFDAlgo")) mStaticCfg->isBypassFDAlgo = ele["bypassFDAlgo"].asBool();
-        if (ele.isMember("bypassISys")) mStaticCfg->isBypassISys = ele["bypassISys"].asBool();
-        if (ele.isMember("useMockPSys")) mStaticCfg->useMockPSys = ele["useMockPSys"].asBool();
+        if (ele.isMember("useMockAAL")) {
+            mStaticCfg->useMockAAL = ele["useMockAAL"].asBool();
+        }
+        if (ele.isMember("useMockHal")) {
+            mStaticCfg->useMockHal = ele["useMockHal"].asBool();
+        }
+        if (ele.isMember("useMockPipes")) {
+            mStaticCfg->useMockPipes = ele["useMockPipes"].asBool();
+        }
+        if (ele.isMember("pnpMockFps")) {
+            mStaticCfg->mockAPPFps = ele["pnpMockFps"].asInt();
+        }
+        if (ele.isMember("bypass3A")) {
+            mStaticCfg->isBypass3A = ele["bypass3A"].asBool();
+        }
+        if (ele.isMember("bypassPAC")) {
+            mStaticCfg->isBypassPAC = ele["bypassPAC"].asBool();
+        }
+        if (ele.isMember("bypassCB")) {
+            mStaticCfg->isBypassCB = ele["bypassCB"].asBool();
+        }
+        if (ele.isMember("disableFace")) {
+            mStaticCfg->isFaceDisabled = ele["disableFace"].asBool();
+        }
+        if (ele.isMember("disableFaceAe")) {
+            mStaticCfg->isFaceAeDisabled = ele["disableFaceAe"].asBool();
+        }
+        if (ele.isMember("bypassFDAlgo")) {
+            mStaticCfg->isBypassFDAlgo = ele["bypassFDAlgo"].asBool();
+        }
+        if (ele.isMember("bypassISys")) {
+            mStaticCfg->isBypassISys = ele["bypassISys"].asBool();
+        }
+        if (ele.isMember("useMockPSys")) {
+            mStaticCfg->useMockPSys = ele["useMockPSys"].asBool();
+        }
     }
 
     if (node.isMember("Performance")) {

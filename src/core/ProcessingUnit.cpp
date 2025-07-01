@@ -73,15 +73,15 @@ int ProcessingUnit::configure(const std::map<uuid, stream_t>& inputInfo,
 
     std::map<uuid, stream_t> outputFrameInfo;
     stream_t stillStream = {}, videoStream = {};
-    for (auto& outFrameInfo : mOutputFrameInfo) {
+    for (auto& outFrameInfo : BufferQueue::mOutputFrameInfo) {
         // Check if it's required to output raw image from ISYS
         if (outFrameInfo.second.format == V4L2_PIX_FMT_SGRBG12) {
             mRawPort = outFrameInfo.first;
         } else if (outFrameInfo.second.usage == CAMERA_STREAM_OPAQUE_RAW) {
             mOpaqueRawPorts.insert(outFrameInfo.first);
-        } else if (outFrameInfo.second.streamType == CAMERA_STREAM_INPUT &&
-                   (outFrameInfo.second.usage == CAMERA_STREAM_PREVIEW ||
-                    outFrameInfo.second.usage == CAMERA_STREAM_VIDEO_CAPTURE)) {
+        } else if ((outFrameInfo.second.streamType == CAMERA_STREAM_INPUT) &&
+                   ((outFrameInfo.second.usage == CAMERA_STREAM_PREVIEW) ||
+                    (outFrameInfo.second.usage == CAMERA_STREAM_VIDEO_CAPTURE))) {
             mYuvInputInfo[outFrameInfo.first] = outFrameInfo.second;
         } else if (outFrameInfo.second.usage == CAMERA_STREAM_STILL_CAPTURE) {
             stillStream = outFrameInfo.second;
@@ -113,9 +113,11 @@ int ProcessingUnit::configure(const std::map<uuid, stream_t>& inputInfo,
 
     mTuningMode = tuningConfig.tuningMode;
 
-    getTnrTriggerInfo();
+    (void)getTnrTriggerInfo();
 
-    if (ret == OK) mStatus = PIPELINE_CREATED;
+    if (ret == OK) {
+        mStatus = PIPELINE_CREATED;
+    }
 
     return ret;
 }
@@ -124,9 +126,9 @@ int ProcessingUnit::start() {
     PERF_CAMERA_ATRACE();
     AutoMutex l(mBufferQueueLock);
 
-    bool pendRaw = PlatformData::isHALZslSupported(mCameraId) || !mOpaqueRawPorts.empty();
-    int rawBufferNum = pendRaw ? PlatformData::getMaxRawDataNum(mCameraId)
-                               : PlatformData::getPreferredBufQSize(mCameraId);
+    const bool pendRaw = PlatformData::isHALZslSupported(mCameraId) || (!mOpaqueRawPorts.empty());
+    const int rawBufferNum = pendRaw ? PlatformData::getMaxRawDataNum(mCameraId)
+                                     : PlatformData::getPreferredBufQSize(mCameraId);
 
     /* Should use MIN_BUFFER_COUNT to optimize frame latency when PSYS processing
      * time is slower than ISYS
@@ -139,11 +141,11 @@ int ProcessingUnit::start() {
 
     int ret = OK;
     if (needProducerBuffer) {
-        ret = allocProducerBuffers(mCameraId, rawBufferNum);
+        ret = BufferQueue::allocProducerBuffers(mCameraId, rawBufferNum);
         CheckAndLogError(ret != OK, NO_MEMORY, "Allocating producer buffer failed:%d", ret);
     }
 
-    mThreadRunning = true;
+    IProcessingUnit::mThreadRunning = true;
     mProcessThread->start();
 
     ret = mPipeManager->start();
@@ -151,7 +153,7 @@ int ProcessingUnit::start() {
 
     auto cameraContext = CameraContext::getInstance(mCameraId);
     auto dataContext = cameraContext->getDataContextBySeq(0);
-    setParameters(dataContext);
+    (void)setParameters(dataContext);
     AutoWMutex wl(mIspSettingsLock);
     // Predict to run AIC with video pipe for the first frame
     mPipeManager->prepareIpuParams(&mIspSettings);
@@ -163,7 +165,7 @@ void ProcessingUnit::stop() {
     PERF_CAMERA_ATRACE();
     mPipeManager->stop();
 
-    mThreadRunning = false;
+    IProcessingUnit::mThreadRunning = false;
     mProcessThread->exit();
 
     {
@@ -179,19 +181,19 @@ void ProcessingUnit::stop() {
     mProcessThread->wait();
 
     // Thread is not running. It is safe to clear the Queue
-    clearBufferQueues();
+    BufferQueue::clearBufferQueues();
 }
 
 status_t ProcessingUnit::getTnrTriggerInfo() {
     IntelCca* intelCca = IntelCca::getInstance(mCameraId, mTuningMode);
-    CheckAndLogError(!intelCca, UNKNOWN_ERROR, "cca is nullptr, mode:%d", mTuningMode);
+    CheckAndLogError(intelCca == nullptr, UNKNOWN_ERROR, "cca is nullptr, mode:%d", mTuningMode);
     cca::cca_cmc cmc;
-    ia_err ret = intelCca->getCMC(&cmc);
+    const ia_err ret = intelCca->getCMC(&cmc);
     CheckAndLogError(ret != ia_err_none, BAD_VALUE, "Get cmc data failed");
     mTnrTriggerInfo = cmc.tnr7us_trigger_info;
     LOG2("%s tnr trigger info: gain num: %d threshold: %f", __func__, mTnrTriggerInfo.num_gains,
          mTnrTriggerInfo.tnr7us_threshold_gain);
-    for (unsigned int i = 0; i < mTnrTriggerInfo.num_gains; i++) {
+    for (unsigned int i = 0U; i < mTnrTriggerInfo.num_gains; i++) {
         LOG2("  %u: gain %f, frame count: %d", i, mTnrTriggerInfo.trigger_infos[i].gain,
              mTnrTriggerInfo.trigger_infos[i].frame_count);
     }
@@ -202,15 +204,15 @@ int ProcessingUnit::setParameters(const DataContext* dataContext) {
     // Process image enhancement related settings.
     const camera_image_enhancement_t& enhancement = dataContext->mIspParams.enhancement;
     AutoWMutex wl(mIspSettingsLock);
-    mIspSettings.manualSettings.manualSharpness = (char)enhancement.sharpness;
-    mIspSettings.manualSettings.manualBrightness = (char)enhancement.brightness;
-    mIspSettings.manualSettings.manualContrast = (char)enhancement.contrast;
-    mIspSettings.manualSettings.manualHue = (char)enhancement.hue;
-    mIspSettings.manualSettings.manualSaturation = (char)enhancement.saturation;
+    mIspSettings.manualSettings.manualSharpness = static_cast<char>(enhancement.sharpness);
+    mIspSettings.manualSettings.manualBrightness = static_cast<char>(enhancement.brightness);
+    mIspSettings.manualSettings.manualContrast = static_cast<char>(enhancement.contrast);
+    mIspSettings.manualSettings.manualHue = static_cast<char>(enhancement.hue);
+    mIspSettings.manualSettings.manualSaturation = static_cast<char>(enhancement.saturation);
     mIspSettings.eeSetting.strength = enhancement.sharpness;
 
     mIspSettings.eeSetting.feature_level = ia_isp_feature_level_high;
-    camera_edge_mode_t manualEdgeMode = dataContext->mIspParams.edgeMode;
+    const camera_edge_mode_t manualEdgeMode = dataContext->mIspParams.edgeMode;
     LOG2("%s: manual edge mode set: %d", __func__, manualEdgeMode);
     switch (manualEdgeMode) {
         case EDGE_MODE_LEVEL_4:
@@ -235,7 +237,7 @@ int ProcessingUnit::setParameters(const DataContext* dataContext) {
 
     mIspSettings.nrSetting.feature_level = ia_isp_feature_level_high;
     mIspSettings.nrSetting.strength = static_cast<char>(EXTREME_STRENGTH_LEVEL2);
-    camera_nr_mode_t manualNrMode = dataContext->mIspParams.nrMode;
+    const camera_nr_mode_t manualNrMode = dataContext->mIspParams.nrMode;
     LOG2("%s: manual NR mode set: %d", __func__, manualNrMode);
     switch (manualNrMode) {
         case NR_MODE_LEVEL_4:
@@ -275,10 +277,10 @@ int ProcessingUnit::setParameters(const DataContext* dataContext) {
 /**
  * Get available setting sequence from outBuf
  */
-int64_t ProcessingUnit::getSettingSequence(const CameraBufferPortMap& outBuf) {
+int64_t ProcessingUnit::getSettingSequence(const CameraBufferPortMap& outBuf) const {
     int64_t settingSequence = -1;
     for (auto& output : outBuf) {
-        if (output.second) {
+        if (output.second != nullptr) {
             settingSequence = output.second->getSettingSequence();
             break;
         }
@@ -297,7 +299,7 @@ bool ProcessingUnit::needSkipOutputFrame(int64_t sequence) {
     auto cameraContext = CameraContext::getInstance(mCameraId);
     AiqResultStorage* resultStorage = cameraContext->getAiqResultStorage();
     const AiqResult* aiqResults = resultStorage->getAiqResult(sequence);
-    if (aiqResults != nullptr && aiqResults->mSkip) {
+    if ((aiqResults != nullptr) && aiqResults->mSkip) {
         LOG1("<seq:%ld>@%s", sequence, __func__);
         return true;
     }
@@ -313,8 +315,8 @@ bool ProcessingUnit::needSkipOutputFrame(int64_t sequence) {
  * run as well, otherwise the pipe doesn't need to run and this input buffer needs to
  * be skipped.
  */
-bool ProcessingUnit::needExecutePipe(int64_t settingSequence, int64_t inputSequence) {
-    if (settingSequence == -1 || inputSequence >= settingSequence) {
+bool ProcessingUnit::needExecutePipe(int64_t settingSequence, int64_t inputSequence) const {
+    if ((settingSequence == -1) || (inputSequence >= settingSequence)) {
         return true;
     }
 
@@ -329,8 +331,8 @@ bool ProcessingUnit::needExecutePipe(int64_t settingSequence, int64_t inputSeque
  * If 'inputSequence' larger than 'settingSequence', means the input buffer
  * may be required by following output buffer, so it may be reused later.
  */
-bool ProcessingUnit::needHoldOnInputFrame(int64_t settingSequence, int64_t inputSequence) {
-    if (settingSequence == -1 || inputSequence <= settingSequence) {
+bool ProcessingUnit::needHoldOnInputFrame(int64_t settingSequence, int64_t inputSequence) const {
+    if ((settingSequence == -1) || (inputSequence <= settingSequence)) {
         return false;
     }
 
@@ -340,7 +342,7 @@ bool ProcessingUnit::needHoldOnInputFrame(int64_t settingSequence, int64_t input
 // ProcessingUnit ThreadLoop
 int ProcessingUnit::processNewFrame() {
     LOG3("<id%d>@%s", mCameraId, __func__);
-    CheckAndLogError(!mBufferProducer, INVALID_OPERATION, "No available producer");
+    CheckAndLogError(mBufferProducer == nullptr, INVALID_OPERATION, "No available producer");
 
     /* Will trigger the Scheduler in this Loop. trigger chance:
     ** 1. ISys buffer done and request output buffer ready, trigger the Scheduler after prepareTask
@@ -356,26 +358,32 @@ int ProcessingUnit::processNewFrame() {
     bool taskReady = true;
     {
         std::unique_lock<std::mutex> lock(mBufferQueueLock);
-        if (!mThreadRunning) return -1;  // Already stopped
+        if (!this->mThreadRunning) {
+            return -1;  // Already stopped
+          }
         // set timeout only when there are already pending tasks in the Queue
         int64_t timeout = mSequencesInflight.size() > 0 ? kQueueTimeout : 0;
-        ret = waitFreeBuffersInQueue(lock, srcBuffers, mInputQueue, timeout);
+        ret = BufferQueue::waitFreeBuffersInQueue(lock, srcBuffers, BufferQueue::mInputQueue, timeout);
 
-        if (!mThreadRunning) return -1;  // Already stopped
-        if (ret == NOT_ENOUGH_DATA) return OK;
+        if (!this->mThreadRunning) {
+            return -1;  // Already stopped
+        }
+        if (ret == NOT_ENOUGH_DATA) {
+            return OK;
+        }
         if (ret == TIMED_OUT) {
             LOG1("<id%d>@%s, timeout happen, wait recovery", mCameraId, __func__);
             taskReady = false;
         }
 
         if (!srcBuffers.empty()) {
-            uuid defaultPort = srcBuffers.begin()->first;
+            const uuid defaultPort = srcBuffers.begin()->first;
             shared_ptr<CameraBuffer> mainBuf = srcBuffers[defaultPort];
             inputSequence = mainBuf->getSequence();
         }
         // check the output request
-        for (auto& output : mOutputQueue) {
-            uuid port = output.first;
+        for (auto& output : BufferQueue::mOutputQueue) {
+            const uuid port = output.first;
             CameraBufQ& outputQueue = output.second;
             if (outputQueue.empty()) {
                 taskReady = false;
@@ -405,7 +413,7 @@ int ProcessingUnit::handleYuvReprocessing(CameraBufferPortMap* buffersMap) {
 
     CameraBufferPortMap srcBuffers, dstBuffers;
     std::shared_ptr<CameraBuffer> inputBuffer = nullptr;
-    uint64_t timestamp = 0;
+    uint64_t timestamp = 0U;
     int64_t bufSequence = -1;
 
     for (const auto& item : *buffersMap) {
@@ -426,7 +434,7 @@ int ProcessingUnit::handleYuvReprocessing(CameraBufferPortMap* buffersMap) {
         }
      }
 
-    for (auto& output: mOutputQueue) {
+    for (auto& output: BufferQueue::mOutputQueue) {
         output.second.pop();
     }
 
@@ -442,7 +450,9 @@ int ProcessingUnit::handleYuvReprocessing(CameraBufferPortMap* buffersMap) {
     taskParam.mCallbackRgbs = false;
     taskParam.mYuvTask = true;
 
-    if (!mThreadRunning) return -1;
+    if (!IProcessingUnit::mThreadRunning) {
+        return -1;
+    }
 
     mPipeManager->addTask(taskParam);
 
@@ -458,10 +468,10 @@ void ProcessingUnit::handleRawReprocessing(CameraBufferPortMap* srcBuffers,
     std::shared_ptr<CameraBuffer> rawOutputBuffer = nullptr;
     int64_t settingSequence = -1;
     CameraBufferPortMap videoBuf, stillBuf;
-    uuid rawPort = 0;
+    uuid rawPort = 0U;
 
     for (const auto& item : *dstBuffers) {
-        if (item.second) {
+        if (item.second != nullptr) {
             LOG2("%s, usage %d, timestamp %ld, sequence %u", __func__,
                  item.second->getStreamUsage(), TIMEVAL2USECS(item.second->getTimestamp()),
                  item.second->getSequence());
@@ -479,13 +489,13 @@ void ProcessingUnit::handleRawReprocessing(CameraBufferPortMap* srcBuffers,
         }
     }
 
-    uuid defaultPort = srcBuffers->begin()->first;
+    const uuid defaultPort = srcBuffers->begin()->first;
     shared_ptr<CameraBuffer> mainBuf = (*srcBuffers)[defaultPort];
-    int64_t inputSequence = mainBuf->getSequence();
+    const int64_t inputSequence = mainBuf->getSequence();
     uint64_t timestamp = TIMEVAL2NSECS(mainBuf->getTimestamp());
 
-    if (rawOutputBuffer && TIMEVAL2USECS(rawOutputBuffer->getTimestamp()) > 0) {
-        timestamp = 0;
+    if ((rawOutputBuffer != nullptr) && TIMEVAL2USECS(rawOutputBuffer->getTimestamp()) > 0U) {
+        timestamp = 0U;
 
         // handle Shutter first if has raw input
         sendPsysRequestEvent(dstBuffers, settingSequence, timestamp, EVENT_PSYS_REQUEST_BUF_READY);
@@ -503,13 +513,13 @@ void ProcessingUnit::handleRawReprocessing(CameraBufferPortMap* srcBuffers,
         }
 
         // Return opaque RAW buffer
-        for (auto& it : mBufferConsumerList) {
+        for (auto& it : BufferQueue::mBufferConsumerList) {
             it->onFrameAvailable(rawPort, rawOutputBuffer);
         }
 
         // Remove input stream from dstBuffers map
         dstBuffers->erase(rawPort);
-    } else if (rawOutputBuffer) {
+    } else if (rawOutputBuffer != nullptr) {
         if (!needExecutePipe(settingSequence, inputSequence)) {
             LOG2("%s, inputSequence %ld is smaller than settingSequence %ld, skip sensor frame.",
                  __func__, inputSequence, settingSequence);
@@ -525,7 +535,7 @@ void ProcessingUnit::handleRawReprocessing(CameraBufferPortMap* srcBuffers,
         sendPsysRequestEvent(dstBuffers, settingSequence, timestamp, EVENT_PSYS_REQUEST_BUF_READY);
 
         // Return opaque RAW buffer
-        for (auto& it : mBufferConsumerList) {
+        for (auto& it : BufferQueue::mBufferConsumerList) {
             it->onFrameAvailable(rawPort, rawOutputBuffer);
         }
         *hasRawOutput = true;
@@ -549,7 +559,9 @@ void ProcessingUnit::handleRawReprocessing(CameraBufferPortMap* srcBuffers,
 
 bool ProcessingUnit::isBufferHoldForRawReprocess(int64_t sequence) {
     AutoMutex lock(mBufferMapLock);
-    if (mRawBufferMap.find(sequence) == mRawBufferMap.end()) return false;
+    if (mRawBufferMap.find(sequence) == mRawBufferMap.end()) {
+        return false;
+    }
 
     return true;
 }
@@ -561,9 +573,9 @@ void ProcessingUnit::saveRawBuffer(CameraBufferPortMap* srcBuffers) {
         mapBuf[src.first] = src.second;
     }
 
-    uuid defaultPort = srcBuffers->begin()->first;
+    const uuid defaultPort = srcBuffers->begin()->first;
     shared_ptr<CameraBuffer> mainBuf = (*srcBuffers)[defaultPort];
-    int64_t inputSequence = mainBuf->getSequence();
+    const int64_t inputSequence = mainBuf->getSequence();
 
     LOG2("<id%d:seq%ld>@%s", mCameraId, inputSequence, __func__);
     {
@@ -588,7 +600,7 @@ void ProcessingUnit::returnRawBuffer() {
             }
         }
 
-        if (mBufferProducer) {
+        if (mBufferProducer != nullptr) {
             const CameraBufferPortMap& bufferPortMap = it->second;
             for (auto& item : bufferPortMap) {
                  mBufferProducer->qbuf(item.first, item.second);
@@ -623,30 +635,31 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
             // If all buffers are handled
             AutoMutex l(mBufferQueueLock);
             if (hasRawOutput) {
-                for (auto& input : mInputQueue) {
+                for (auto& input : BufferQueue::mInputQueue) {
                     input.second.pop();
                 }
             }
-            for (auto& output : mOutputQueue) {
+            for (auto& output : BufferQueue::mOutputQueue) {
                 output.second.pop();
             }
             return OK;
         }
     } else if (!mYuvInputInfo.empty()) {
         auto iter = dstBuffers->find(YUV_REPROCESSING_INPUT_PORT_ID);
-        if (iter != dstBuffers->end() && iter->second.get() != nullptr)
+        if ((iter != dstBuffers->end()) && (iter->second.get() != nullptr)) {
             return handleYuvReprocessing(dstBuffers);
+        }
     } else if (PlatformData::isHALZslSupported(mCameraId)) {
         extractZslInfo(dstBuffers, reprocess, videoBuf, stillBuf, zslSequence);
         saveRawBuffer(srcBuffers);
     }
 
-    uuid defaultPort = srcBuffers->begin()->first;
+    const uuid defaultPort = srcBuffers->begin()->first;
     shared_ptr<CameraBuffer> mainBuf = (*srcBuffers)[defaultPort];
-    int64_t inputSequence = mainBuf->getSequence();
+    const int64_t inputSequence = mainBuf->getSequence();
     TRACE_LOG_POINT("ProcessingUnit", "input output buffer ready", MAKE_COLOR(inputSequence),
                     inputSequence);
-    uint64_t timestamp = TIMEVAL2NSECS(mainBuf->getTimestamp());
+    const uint64_t timestamp = TIMEVAL2NSECS(mainBuf->getTimestamp());
     LOG2("%s: input buffer sequence %ld timestamp %ld", __func__, inputSequence, timestamp);
 
     // Output raw image
@@ -657,7 +670,7 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
         for (auto& buffer : *dstBuffers) {
             if (buffer.first == mRawPort) {
                 dstBuf = buffer.second;
-                CheckAndLogError(!dstBuf, UNKNOWN_ERROR, "%s, dstBuf for output raw is null",
+                CheckAndLogError(dstBuf == nullptr, UNKNOWN_ERROR, "%s, dstBuf for output raw is null",
                                  __func__);
                 dstBuf->updateV4l2Buffer(*mainBuf->getV4L2Buffer().Get());
                 dstBuffers->erase(mRawPort);
@@ -667,23 +680,23 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
         outputRawImage(mainBuf, dstBuf);
     }
 
-    int64_t settingSequence = getSettingSequence(*dstBuffers);
-    bool needRunPipe = needExecutePipe(settingSequence, inputSequence);
-    bool holdOnInput = needHoldOnInputFrame(settingSequence, inputSequence);
+    const int64_t settingSequence = getSettingSequence(*dstBuffers);
+    const bool needRunPipe = needExecutePipe(settingSequence, inputSequence);
+    const bool holdOnInput = needHoldOnInputFrame(settingSequence, inputSequence);
     LOG2("%s: dst sequence = %ld, src sequence = %ld, needRunPipe = %d, needReuseInput = %d",
          __func__, settingSequence, inputSequence, needRunPipe, holdOnInput);
 
     {
         AutoMutex l(mBufferQueueLock);
-        if (needRunPipe && !needSkipOutputFrame(inputSequence)) {
-            for (auto& output : mOutputQueue) {
+        if (needRunPipe && (!needSkipOutputFrame(inputSequence))) {
+            for (auto& output : BufferQueue::mOutputQueue) {
                 output.second.pop();
             }
         }
 
         // If input buffer will be used later, don't pop it from the queue.
-        if (!holdOnInput && !hasRawInput && !reprocess) {
-            for (auto& input : mInputQueue) {
+        if ((!holdOnInput) && (!hasRawInput) && (!reprocess)) {
+            for (auto& input : BufferQueue::mInputQueue) {
                 input.second.pop();
             }
         }
@@ -703,13 +716,13 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
         bool callbackRgbs = false;
         AiqResultStorage* resultStorage = cameraContext->getAiqResultStorage();
         AiqResult* aiqResult = const_cast<AiqResult*>(resultStorage->getAiqResult(inputSequence));
-        if (aiqResult && dataContext->mAiqParams.callbackRgbs) {
+        if ((aiqResult != nullptr) && dataContext->mAiqParams.callbackRgbs) {
             callbackRgbs = true;
         }
 
-        if (aiqResult) {
+        if (aiqResult != nullptr) {
             if (mTnrTriggerInfo.num_gains > 0U) {
-                int64_t sequence = zslSequence >= 0U ? zslSequence : inputSequence;
+                const int64_t sequence = zslSequence >= 0U ? zslSequence : inputSequence;
                 handleExtraTasksForTnr(sequence, dstBuffers, aiqResult);
             }
 
@@ -734,7 +747,7 @@ status_t ProcessingUnit::prepareTask(CameraBufferPortMap* srcBuffers,
             sendPsysRequestEvent(dstBuffers, settingSequence, timestamp,
                                  EVENT_REQUEST_METADATA_READY);
         }
-    } else if (!holdOnInput && !isBufferHoldForRawReprocess(inputSequence)) {
+    } else if ((!holdOnInput) && (!isBufferHoldForRawReprocess(inputSequence))) {
         for (const auto& src : *srcBuffers) {
             mBufferProducer->qbuf(src.first, src.second);
         }
@@ -747,14 +760,16 @@ void ProcessingUnit::extractZslInfo(CameraBufferPortMap* dstBuffers, bool& repro
                                     CameraBufferPortMap& videoBuf, CameraBufferPortMap& stillBuf,
                                     int64_t& zslSequence) {
     for (const auto& item : *dstBuffers) {
-        if (item.second && item.second->getStreamUsage() == CAMERA_STREAM_STILL_CAPTURE) {
+        if ((item.second != nullptr) &&
+            (item.second->getStreamUsage() == CAMERA_STREAM_STILL_CAPTURE)) {
             stillBuf[item.first] = item.second;
-        } else if (item.second && item.second->getStreamUsage() != CAMERA_STREAM_OPAQUE_RAW) {
+        } else if ((item.second != nullptr) &&
+            (item.second->getStreamUsage() != CAMERA_STREAM_OPAQUE_RAW)) {
             videoBuf[item.first] = item.second;
         }
     }
 
-    if (!stillBuf.empty() && TIMEVAL2USECS(stillBuf.begin()->second->getTimestamp()) > 0) {
+    if ((!stillBuf.empty()) && (TIMEVAL2USECS(stillBuf.begin()->second->getTimestamp()) > 0U)) {
         zslSequence = stillBuf.begin()->second->getSettingSequence();
         reprocess = true;
         LOG2("Handle HAL based ZSL, change target %ld", zslSequence);
@@ -806,7 +821,9 @@ void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMa
             fakeTaskBuffers.erase(item.first);
         }
     }
-    if (!hasStill) return;
+    if (!hasStill) {
+        return;
+    }
 
     LOG2("<seq%ld>: still tnr task start", sequence);
     int64_t startSequence = sequence - (getTnrFrameCount(aiqResult) - 1);
@@ -815,7 +832,9 @@ void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMa
     PipeControl control;
     control[STILL_STREAM_ID] = ctl;
 
-    if (startSequence < 0) startSequence = 0;
+    if (startSequence < 0) {
+        startSequence = 0;
+    }
     if (startSequence > mLastStillTnrSequence) {
         LOG2("<seq%ld>: still tnr task start from seq %ld, run %ld frames to generate data",
              sequence, startSequence, (sequence + 1 - startSequence));
@@ -842,13 +861,17 @@ void ProcessingUnit::handleExtraTasksForTnr(int64_t sequence, CameraBufferPortMa
 }
 
 int ProcessingUnit::getTnrFrameCount(const AiqResult* aiqResult) {
-    if (!mTnrTriggerInfo.num_gains) return 1;
+    if (mTnrTriggerInfo.num_gains == 0U) {
+        return 1;
+    }
 
-    float totalGain = (aiqResult->mAeResults.exposures[0].exposure->analog_gain *
+    const float totalGain = (aiqResult->mAeResults.exposures[0].exposure->analog_gain *
                   aiqResult->mAeResults.exposures[0].exposure->digital_gain);
-    if (totalGain < mTnrTriggerInfo.tnr7us_threshold_gain) return 1;
+    if (totalGain < mTnrTriggerInfo.tnr7us_threshold_gain) {
+        return 1;
+    }
 
-    unsigned int index = 0;
+    unsigned int index = 0U;
     for (unsigned int i = 1; i < mTnrTriggerInfo.num_gains; i++) {
         if (fabs(mTnrTriggerInfo.trigger_infos[i].gain - totalGain) <
             fabs(mTnrTriggerInfo.trigger_infos[i - 1].gain - totalGain)) {
@@ -864,7 +887,7 @@ int ProcessingUnit::getTnrFrameCount(const AiqResult* aiqResult) {
 
 void ProcessingUnit::dispatchTask(CameraBufferPortMap& inBuf, CameraBufferPortMap& outBuf,
                                   bool fakeTask, bool callbackRgbs) {
-    int64_t currentSequence = inBuf.begin()->second->getSequence();
+    const int64_t currentSequence = inBuf.begin()->second->getSequence();
     TRACE_LOG_POINT("ProcessingUnit", "start run PSYS", MAKE_COLOR(currentSequence),
                     currentSequence);
     PERF_CAMERA_ATRACE_PARAM1("Task Sequence", currentSequence);
@@ -883,13 +906,13 @@ void ProcessingUnit::dispatchTask(CameraBufferPortMap& inBuf, CameraBufferPortMa
     taskParam.mFakeTask = fakeTask;
     taskParam.mCallbackRgbs = callbackRgbs;
 
-    int64_t settingSequence = getSettingSequence(outBuf);
+    const int64_t settingSequence = getSettingSequence(outBuf);
     // Handle per-frame settings if output buffer requires
     if (settingSequence > -1) {
         auto cameraContext = CameraContext::getInstance(mCameraId);
         auto dataContext = cameraContext->getDataContextBySeq(currentSequence);
 
-        setParameters(dataContext);
+        (void)setParameters(dataContext);
 
         // Dump raw image if makernote mode is MAKERNOTE_MODE_JPEG or fake task for IQ tune
         if (((dataContext->mAiqParams.makernoteMode == MAKERNOTE_MODE_JPEG)
@@ -904,7 +927,9 @@ void ProcessingUnit::dispatchTask(CameraBufferPortMap& inBuf, CameraBufferPortMa
         taskParam.mIspSettings = mIspSettings;
     }
 
-    if (!mThreadRunning) return;
+    if (!IProcessingUnit::mThreadRunning) {
+        return;
+    }
 
     mPipeManager->addTask(taskParam);
 }
@@ -918,7 +943,7 @@ void ProcessingUnit::onBufferDone(int64_t sequence, uuid port,
     }
 
     if (!needSkipOutputFrame(sequence)) {
-        for (auto& it : mBufferConsumerList) {
+        for (auto& it : BufferQueue::mBufferConsumerList) {
             it->onFrameAvailable(port, camBuffer);
         }
     }
@@ -934,7 +959,9 @@ void ProcessingUnit::onStatsReady(EventData& eventData) {
 void ProcessingUnit::sendPsysFrameDoneEvent(const CameraBufferPortMap* dstBuffers) {
     for (auto& dst : *dstBuffers) {
         shared_ptr<CameraBuffer> outBuf = dst.second;
-        if (!outBuf) continue;
+        if (outBuf == nullptr) {
+            continue;
+        }
 
         EventData frameData;
         frameData.type = EVENT_PSYS_FRAME;
@@ -952,12 +979,12 @@ void ProcessingUnit::sendPsysFrameDoneEvent(const CameraBufferPortMap* dstBuffer
 void ProcessingUnit::sendPsysRequestEvent(const CameraBufferPortMap* dstBuffers, int64_t sequence,
                                          uint64_t timestamp, EventType eventType) {
     for (const auto& output : *dstBuffers) {
-        if (output.second && !output.second->isInternalBuffer()) {
+        if ((output.second != nullptr) && (!output.second->isInternalBuffer())) {
             EventData event;
             event.type = eventType;
             event.buffer = nullptr;
             event.data.requestReady.timestamp =
-                timestamp > 0 ? timestamp : output.second->getUserBuffer()->timestamp;
+                timestamp > 0U ? timestamp : output.second->getUserBuffer()->timestamp;
             event.data.requestReady.sequence = sequence;
             event.data.requestReady.frameNumber = output.second->getUserBuffer()->frameNumber;
 
@@ -968,7 +995,7 @@ void ProcessingUnit::sendPsysRequestEvent(const CameraBufferPortMap* dstBuffers,
 }
 
 void ProcessingUnit::onTaskDone(const PipeTaskData& result) {
-    int64_t sequence = result.mInputBuffers.begin()->second->getSequence();
+    const int64_t sequence = result.mInputBuffers.begin()->second->getSequence();
     LOG2("<id%d:seq%ld>@%s", mCameraId, sequence, __func__);
     TRACE_LOG_POINT("ProcessingUnit", __func__, MAKE_COLOR(sequence), sequence);
     PERF_CAMERA_ATRACE_PARAM1("Task Done Sequence", sequence);
@@ -982,7 +1009,7 @@ void ProcessingUnit::onTaskDone(const PipeTaskData& result) {
             return;
         }
         // Return YUV reprocessing input buffer
-        for (auto& it : mBufferConsumerList) {
+        for (auto& it : BufferQueue::mBufferConsumerList) {
             it->onFrameAvailable(YUV_REPROCESSING_INPUT_PORT_ID, iter->second);
         }
         return;
@@ -993,18 +1020,18 @@ void ProcessingUnit::onTaskDone(const PipeTaskData& result) {
             sendPsysFrameDoneEvent(&result.mOutputBuffers);
         }
 
-        int64_t settingSequence = getSettingSequence(result.mOutputBuffers);
-        bool holdOnInput = needHoldOnInputFrame(settingSequence, sequence);
-        bool hasRawOutput = isBufferHoldForRawReprocess(sequence);
+        const int64_t settingSequence = getSettingSequence(result.mOutputBuffers);
+        const bool holdOnInput = needHoldOnInputFrame(settingSequence, sequence);
+        const bool hasRawOutput = isBufferHoldForRawReprocess(sequence);
 
         LOG2("%s, dst sequence: %ld, src sequence: %ld, hasRawOutput: %d, holdOnInput: %d",
              __func__, settingSequence, sequence, hasRawOutput, holdOnInput);
         // Return buffer only if the buffer is not used in the future.
-        if (!holdOnInput && mBufferProducer && !hasRawOutput) {
+        if ((!holdOnInput) && (mBufferProducer != nullptr) && (!hasRawOutput)) {
             for (const auto& src : result.mInputBuffers) {
-                if (src.second->getStreamUsage() != CAMERA_STREAM_OPAQUE_RAW &&
-                    src.second->getStreamType() == CAMERA_STREAM_INPUT) {
-                    for (auto& it : mBufferConsumerList) {
+                if ((src.second->getStreamUsage() != CAMERA_STREAM_OPAQUE_RAW) &&
+                    (src.second->getStreamType() == CAMERA_STREAM_INPUT)) {
+                    for (auto& it : BufferQueue::mBufferConsumerList) {
                         it->onFrameAvailable(src.first, src.second);
                     }
                 } else {
@@ -1029,7 +1056,7 @@ void ProcessingUnit::onMetadataReady(int64_t sequence, const CameraBufferPortMap
     LOG2("<seq%ld> %s", sequence, __func__);
 
     // handle metadata event after decoding stats
-    sendPsysRequestEvent(&outBuf, sequence, 0, EVENT_REQUEST_METADATA_READY);
+    sendPsysRequestEvent(&outBuf, sequence, 0U, EVENT_REQUEST_METADATA_READY);
 }
 
 void ProcessingUnit::outputRawImage(shared_ptr<CameraBuffer>& srcBuf,
@@ -1045,7 +1072,7 @@ void ProcessingUnit::outputRawImage(shared_ptr<CameraBuffer>& srcBuf,
     MEMCPY_S(dstMapper.addr(), dstMapper.size(), srcMapper.addr(), srcMapper.size());
 
     // Send output buffer to its consumer
-    for (auto& it : mBufferConsumerList) {
+    for (auto& it : BufferQueue::mBufferConsumerList) {
         it->onFrameAvailable(mRawPort, dstBuf);
     }
 }

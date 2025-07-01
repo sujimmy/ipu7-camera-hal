@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 Intel Corporation.
+ * Copyright (C) 2015-2025 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AIQ_RESULT_H
+#define AIQ_RESULT_H
 
 #include "AiqUtils.h"
 #include "AiqSetting.h"
@@ -36,7 +37,7 @@ public:
     ~AiqResult();
 
     int init();
-    int deinit();
+    int deinit() const;
 
     AiqResult& operator=(const AiqResult& other);
 
@@ -73,3 +74,5 @@ private:
 };
 
 } /* namespace icamera */
+
+#endif // AIQ_RESULT_H

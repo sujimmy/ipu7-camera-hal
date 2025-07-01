@@ -202,7 +202,9 @@ int SwPostProcessUnit::getMemoryType() {
 }
 
 bool SwPostProcessUnit::isBypassed(int64_t sequence) {
-    if (!mPostProcessorCore) return false;
+    if (!mPostProcessorCore) {
+        return false;
+    }
 
     // Currently only GPU processor supports bypass per request
     if (mPostProcessType == POST_PROCESS_GPU) {
@@ -213,7 +215,9 @@ bool SwPostProcessUnit::isBypassed(int64_t sequence) {
 
 status_t SwPostProcessUnit::doPostProcessing(const std::shared_ptr<CameraBuffer>& inBuf,
                                              std::shared_ptr<CameraBuffer> outBuf) {
-    if (inBuf == outBuf) return OK;
+    if (inBuf == outBuf) {
+        return OK;
+    }
 
     if (mPostProcessType == POST_PROCESS_NONE) {
         MEMCPY_S(outBuf->getBufferAddr(), outBuf->getBufferSize(),

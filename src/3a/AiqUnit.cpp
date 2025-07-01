@@ -39,10 +39,10 @@ AiqUnit::AiqUnit(int cameraId, SensorHwCtrl *sensorHw, LensHw *lensHw) :
 
 AiqUnit::~AiqUnit() {
     if (mAiqUnitState == AIQ_UNIT_START) {
-        stop();
+        AiqUnit::stop();
     }
     if (mAiqUnitState == AIQ_UNIT_INIT) {
-        deinit();
+        AiqUnit::deinit();
     }
 
     delete mAiqEngine;
@@ -88,7 +88,7 @@ int AiqUnit::configure(const stream_config_t *streamList) {
     std::vector<ConfigMode> configModes;
     PlatformData::getConfigModesByOperationMode(mCameraId, streamList->operation_mode,
                                                 configModes);
-    int ret = initIntelCcaHandle(configModes);
+    const int ret = initIntelCcaHandle(configModes);
     CheckAndLogError(ret < 0, BAD_VALUE, "@%s failed to create intel cca handle", __func__);
 
     mOperationMode = streamList->operation_mode;
@@ -97,22 +97,24 @@ int AiqUnit::configure(const stream_config_t *streamList) {
 }
 
 int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
-    if (mCcaInitialized) return OK;
+    if (mCcaInitialized) {
+        return OK;
+    }
 
     LOG1("<id%d>@%s", mCameraId, __func__);
     mTuningModes.clear();
-    for (auto &cfg : configModes) {
+    for (const auto &cfg : configModes) {
         TuningMode tuningMode;
         int ret = PlatformData::getTuningModeByConfigMode(mCameraId, cfg, tuningMode);
         CheckAndLogError(ret != OK, ret, "%s: Failed to get tuningMode, cfg: %d", __func__, cfg);
 
-        PERF_CAMERA_ATRACE_PARAM1_IMAGING("intelCca->init", 1);
+        PERF_CAMERA_ATRACE_PARAM1_IMAGING("intelCca->init", 1U);
 
         const auto params = std::unique_ptr<cca::cca_init_params>(new cca::cca_init_params);
         // Initialize cca_cpf data
         ia_binary_data cpfData;
         ret = PlatformData::getCpf(mCameraId, tuningMode, &cpfData);
-        if ((ret == OK) && cpfData.data) {
+        if ((ret == OK) && (cpfData.data != nullptr)) {
             CheckAndLogError(cpfData.size > cca::MAX_CPF_LEN, UNKNOWN_ERROR,
                        "%s, AIQB buffer is too small cpfData:%d > MAX_CPF_LEN:%d",
                        __func__, cpfData.size, cca::MAX_CPF_LEN);
@@ -122,7 +124,7 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
 
         // Initialize cca_nvm data
         ia_binary_data* nvmData = PlatformData::getNvm(mCameraId);
-        if (nvmData) {
+        if (nvmData != nullptr) {
             CheckAndLogError(nvmData->size > cca::MAX_NVM_LEN,  UNKNOWN_ERROR,
                        "%s, NVM buffer is too small: nvmData:%d  MAX_NVM_LEN:%d",
                        __func__, nvmData->size, cca::MAX_NVM_LEN);
@@ -132,7 +134,7 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
 
         // Initialize cca_aiqd data
         ia_binary_data* aiqdData = PlatformData::getAiqd(mCameraId, tuningMode);
-        if (aiqdData) {
+        if (aiqdData != nullptr) {
             CheckAndLogError(aiqdData->size > cca::MAX_AIQD_LEN,  UNKNOWN_ERROR,
                        "%s, AIQD buffer is too small aiqdData:%d > MAX_AIQD_LEN:%d",
                        __func__, aiqdData->size, cca::MAX_AIQD_LEN);
@@ -148,7 +150,7 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
         params->frameUse = ia_aiq_frame_use_video;
         params->aiqStorageLen = MAX_SETTING_COUNT;
         // handle AE delay in AiqEngine
-        params->aecFrameDelay = 0;
+        params->aecFrameDelay = 0U;
 
         // Initialize functions which need to be started
         params->bitmap = cca::CCA_MODULE_AE | cca::CCA_MODULE_AWB |
@@ -166,15 +168,15 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
             params->aic_stream_ids.count = streamIds.size();
             CheckAndLogError(streamIds.size() > cca::MAX_STREAM_NUM, UNKNOWN_ERROR,
                     "%s, Too many streams: %zu in graph", __func__, streamIds.size());
-            for (size_t i = 0; i < streamIds.size(); ++i) {
+            for (size_t i = 0U; i < streamIds.size(); ++i) {
                 params->aic_stream_ids.ids[i] = streamIds[i];
             }
         }
 
         IntelCca *intelCca = IntelCca::getInstance(mCameraId, tuningMode);
-        CheckAndLogError(!intelCca, UNKNOWN_ERROR,
+        CheckAndLogError(intelCca == nullptr, UNKNOWN_ERROR,
                          "Failed to get cca. mode:%d cameraId:%d", tuningMode, mCameraId);
-        ia_err iaErr = intelCca->init(*params);
+        const ia_err iaErr = intelCca->init(*params);
         if (iaErr == ia_err_none) {
             mTuningModes.push_back(tuningMode);
         } else {
@@ -195,19 +197,22 @@ int AiqUnit::initIntelCcaHandle(const std::vector<ConfigMode> &configModes) {
 }
 
 void AiqUnit::deinitIntelCcaHandle() {
-    if (!mCcaInitialized) return;
+    if (!mCcaInitialized) {
+        return;
+    }
 
     LOG1("<id%d>@%s", mCameraId, __func__);
-    for (auto &mode : mTuningModes) {
+    for (const auto &mode : mTuningModes) {
         IntelCca *intelCca = IntelCca::getInstance(mCameraId, mode);
-        CheckAndLogError(!intelCca, VOID_VALUE, "%s, Failed to get cca: mode(%d), cameraId(%d)",
+        CheckAndLogError(intelCca == nullptr, VOID_VALUE,
+                         "%s, Failed to get cca: mode(%d), cameraId(%d)",
                          __func__, mode, mCameraId);
 
         if (PlatformData::isAiqdEnabled(mCameraId)) {
             const auto aiqd = std::unique_ptr<cca::cca_aiqd>(new cca::cca_aiqd);
             (void)memset(aiqd.get(), 0, sizeof(cca::cca_aiqd));
 
-            ia_err iaErr = intelCca->getAiqd(aiqd.get());
+            const ia_err iaErr = intelCca->getAiqd(aiqd.get());
             if (AiqUtils::convertError(iaErr) == OK) {
                 ia_binary_data data = {aiqd->buf, static_cast<unsigned int>(aiqd->size)};
                 PlatformData::saveAiqd(mCameraId, mode, data);
@@ -216,7 +221,7 @@ void AiqUnit::deinitIntelCcaHandle() {
             }
         }
 
-        int ret = PlatformData::deinitMakernote(mCameraId, mode);
+        const int ret = PlatformData::deinitMakernote(mCameraId, mode);
         if (ret != OK) {
             LOGE("@%s, PlatformData::deinitMakernote fails", __func__);
         }
@@ -259,7 +264,7 @@ int AiqUnit::run3A(int64_t ccaId, int64_t applyingSeq, int64_t frameNumber, int6
         return BAD_VALUE;
     }
 
-    int ret = mAiqEngine->run3A(ccaId, applyingSeq, frameNumber, effectSeq);
+    const int ret = mAiqEngine->run3A(ccaId, applyingSeq, frameNumber, effectSeq);
     CheckAndLogError(ret != OK, ret, "run 3A failed.");
 
     return OK;
@@ -281,7 +286,9 @@ std::vector<EventListener*> AiqUnit::getStatsEventListener() {
 }
 
 void AiqUnit::dumpCcaInitParam(const cca::cca_init_params& params) {
-    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUnit))) return;
+    if (!Log::isLogTagEnabled(GET_FILE_SHIFT(AiqUnit))) {
+        return;
+    }
 
     LOG3("bitmap:%x", params.bitmap);
     LOG3("frameUse: %d", params.frameUse);

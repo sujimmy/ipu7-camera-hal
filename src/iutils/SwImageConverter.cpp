@@ -34,12 +34,10 @@ void SwImageConverter::RGB2YUV(unsigned short R, unsigned short G, unsigned shor
     oY = (257 * Rp + 504 * Gp + 98 * Bp) / 4000 + 16;
     oU = (-148 * Rp - 291 * Gp + 439 * Bp) / 4000 + 128;
     oV = (439 * Rp - 368 * Gp - 71 * Bp) / 4000 + 128;
-    if (oY > 255) oY = 255;
-    if (oY < 0) oY = 0;
-    if (oU > 255) oU = 255;
-    if (oU < 0) oU = 0;
-    if (oV > 255) oV = 255;
-    if (oV < 0) oV = 0;
+    oY = std::min(std::max(0, oY), 255);
+    oU = std::min(std::max(0, oU), 255);
+    oV = std::min(std::max(0, oV), 255);
+
     *Y = (unsigned char)oY;
     *U = (unsigned char)oU;
     *V = (unsigned char)oV;
@@ -57,12 +55,10 @@ void SwImageConverter::YUV2RGB(unsigned char Y, unsigned char U, unsigned char V
     oB = (Ypp + 16531 * Up) >> 11;
     oG = (Ypp - 6660 * Vp - 3203 * Up) >> 11;
     oR = (Ypp + 13074 * Vp) >> 11;
-    if (oR > 1023) oR = 1023;
-    if (oR < 0) oR = 0;
-    if (oG > 1023) oG = 1023;
-    if (oG < 0) oG = 0;
-    if (oB > 1023) oB = 1023;
-    if (oB < 0) oB = 0;
+    oR = std::min(std::max(0, oR), 1023);
+    oG = std::min(std::max(0, oG), 1023);
+    oB = std::min(std::max(0, oB), 1023);
+
     *R = (unsigned short)oR;
     *G = (unsigned short)oG;
     *B = (unsigned short)oB;
@@ -181,39 +177,39 @@ void SwImageConverter::convertBayerBlock(unsigned int x, unsigned int y, unsigne
             break;
         case V4L2_PIX_FMT_SRGGB10:
             *((unsigned short*)out_buf + y * dstStride + x) = R;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = Gr;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = Gb;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = B;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = Gr;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = Gb;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = B;
             break;
         case V4L2_PIX_FMT_SGRBG10:
             *((unsigned short*)out_buf + y * dstStride + x) = Gr;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = R;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = B;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = Gb;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = R;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = B;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = Gb;
             break;
         case V4L2_PIX_FMT_SGBRG10:
             *((unsigned short*)out_buf + y * dstStride + x) = Gb;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = B;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = R;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = Gr;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = B;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = R;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = Gr;
             break;
         case V4L2_PIX_FMT_SBGGR10:
             *((unsigned short*)out_buf + y * dstStride + x) = B;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = Gb;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = Gr;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = R;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = Gb;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = Gr;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = R;
             break;
         case V4L2_PIX_FMT_NV12:
             Ybase = out_buf;
             UVbase = Ybase + dstStride * height;
-            RGB2YUV(R, (Gr + Gb) / 2, B, &Y, &U, &V);
+            RGB2YUV(R, (Gr + Gb) / 2U, B, &Y, &U, &V);
             Ybase[y * dstStride + x] = Ybase[y * dstStride + x + 1] =
                 Ybase[(y + 1) * dstStride + x] = Ybase[(y + 1) * dstStride + x + 1] = Y;
             UVbase[y / 2 * dstStride + x / 2 * 2] = U;
             UVbase[y / 2 * dstStride + x / 2 * 2 + 1] = V;
             break;
         case V4L2_PIX_FMT_UYVY:
-            RGB2YUV(R, (Gr + Gb) / 2, B, &Y, &U, &V);
+            RGB2YUV(R, (Gr + Gb) / 2U, B, &Y, &U, &V);
             out_buf[y * dstStride + x * 2] = U;
             out_buf[y * dstStride + x * 2 + 1] = Y;
             out_buf[y * dstStride + x * 2 + 2] = V;
@@ -224,7 +220,7 @@ void SwImageConverter::convertBayerBlock(unsigned int x, unsigned int y, unsigne
             out_buf[(y + 1) * dstStride + x * 2 + 3] = Y;
             break;
         case V4L2_PIX_FMT_YUYV:
-            RGB2YUV(R, (Gr + Gb) / 2, B, &Y, &U, &V);
+            RGB2YUV(R, (Gr + Gb) / 2U, B, &Y, &U, &V);
             out_buf[y * dstStride + x * 2] = Y;
             out_buf[y * dstStride + x * 2 + 1] = U;
             out_buf[y * dstStride + x * 2 + 2] = Y;
@@ -235,7 +231,7 @@ void SwImageConverter::convertBayerBlock(unsigned int x, unsigned int y, unsigne
             out_buf[(y + 1) * dstStride + x * 2 + 3] = V;
             break;
         case V4L2_PIX_FMT_YUV420: {
-            RGB2YUV(R, (Gr + Gb) / 2, B, &Y, &U, &V);
+            RGB2YUV(R, (Gr + Gb) / 2U, B, &Y, &U, &V);
             Ybase = out_buf;
             uint8_t* UBase = out_buf + dstStride * height;
             uint8_t* VBase = out_buf + dstStride * (height + height / 4);
@@ -243,7 +239,7 @@ void SwImageConverter::convertBayerBlock(unsigned int x, unsigned int y, unsigne
             Ybase[y * dstStride + x + 1] = Y;
             Ybase[(y + 1) * dstStride + x] = Y;
             Ybase[(y + 1) * dstStride + x + 1] = Y;
-            if (y % 4 == 0) {
+            if (y % 4 == 0U) {
                 UBase[y / 4 * dstStride + x / 2] = U;
                 VBase[y / 4 * dstStride + x / 2] = V;
             } else {
@@ -267,7 +263,7 @@ void SwImageConverter::convertYuvBlock(unsigned int x, unsigned int y, unsigned 
     unsigned char U[4];
     unsigned char V[4];
     unsigned short R, G, B;
-    int srcStride = CameraUtils::getStride(src_fmt, width);
+    const int srcStride = CameraUtils::getStride(src_fmt, width);
 
     switch (src_fmt) {
         case V4L2_PIX_FMT_NV12:
@@ -344,12 +340,12 @@ void SwImageConverter::convertYuvBlock(unsigned int x, unsigned int y, unsigned 
             YBase[y * dstStride + x + 1] = Y[1];
             YBase[(y + 1) * dstStride + x] = Y[2];
             YBase[(y + 1) * dstStride + x + 1] = Y[3];
-            if (y % 4 == 0) {
-                UBase[y / 4 * dstStride + x / 2] = (U[0] + U[2]) / 2;
-                VBase[y / 4 * dstStride + x / 2] = (V[0] + V[2]) / 2;
+            if (y % 4 == 0U) {
+                UBase[y / 4 * dstStride + x / 2] = (U[0] + U[2]) / 2U;
+                VBase[y / 4 * dstStride + x / 2] = (V[0] + V[2]) / 2U;
             } else {
-                UBase[y / 4 * dstStride + width / 2 + x / 2] = (U[0] + U[2]) / 2;
-                VBase[y / 4 * dstStride + width / 2 + x / 2] = (V[0] + V[2]) / 2;
+                UBase[y / 4 * dstStride + width / 2 + x / 2] = (U[0] + U[2]) / 2U;
+                VBase[y / 4 * dstStride + width / 2 + x / 2] = (V[0] + V[2]) / 2U;
             }
             break;
         }
@@ -384,30 +380,30 @@ void SwImageConverter::convertYuvBlock(unsigned int x, unsigned int y, unsigned 
         case V4L2_PIX_FMT_SRGGB10:
             YUV2RGB(Y[0], U[0], V[0], &R, &G, &B);
             *((unsigned short*)out_buf + y * dstStride + x) = R;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = G;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = G;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = B;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = G;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = G;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = B;
             break;
         case V4L2_PIX_FMT_SGRBG10:
             YUV2RGB(Y[0], U[0], V[0], &R, &G, &B);
             *((unsigned short*)out_buf + y * dstStride + x) = G;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = R;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = B;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = G;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = R;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = B;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = G;
             break;
         case V4L2_PIX_FMT_SGBRG10:
             YUV2RGB(Y[0], U[0], V[0], &R, &G, &B);
             *((unsigned short*)out_buf + y * dstStride + x) = G;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = B;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = R;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = G;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = B;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = R;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = G;
             break;
         case V4L2_PIX_FMT_SBGGR10:
             YUV2RGB(Y[0], U[0], V[0], &R, &G, &B);
             *((unsigned short*)out_buf + y * dstStride + x) = B;
-            *((unsigned short*)out_buf + y * dstStride + x + 1) = G;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x) = G;
-            *((unsigned short*)out_buf + (y + 1) * dstStride + x + 1) = R;
+            *((unsigned short*)out_buf + y * dstStride + x + 1U) = G;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x) = G;
+            *((unsigned short*)out_buf + (y + 1U) * dstStride + x + 1U) = R;
             break;
         default:
             return;
@@ -418,7 +414,7 @@ int SwImageConverter::convertFormat(unsigned int width, unsigned int height, uns
                                     unsigned int inLength, unsigned int srcFmt,
                                     unsigned char* outBuf, unsigned int outLength,
                                     unsigned int dstFmt) {
-    CheckAndLogError((inBuf == nullptr || outBuf == nullptr), BAD_VALUE,
+    CheckAndLogError((inBuf == nullptr) || (outBuf == nullptr), BAD_VALUE,
                      "Invalid input(%p) or output buffer(%p)", inBuf, outBuf);
 
     unsigned int x, y;
@@ -435,9 +431,9 @@ int SwImageConverter::convertFormat(unsigned int width, unsigned int height, uns
     }
 
     // for not vector raw
-    int srcStride = CameraUtils::getStride(srcFmt, width);
-    for (y = 0; y < height; y += 2) {
-        for (x = 0; x < width; x += 2) {
+    const int srcStride = CameraUtils::getStride(srcFmt, width);
+    for (y = 0U; y < height; y += 2) {
+        for (x = 0U; x < width; x += 2) {
             if (CameraUtils::isRaw(srcFmt)) {
                 if (CameraUtils::getBpp(srcFmt) == 8) {
                     bayer_data[0] = inBuf[y * srcStride + x];
@@ -445,11 +441,11 @@ int SwImageConverter::convertFormat(unsigned int width, unsigned int height, uns
                     bayer_data[2] = inBuf[(y + 1) * srcStride + x];
                     bayer_data[3] = inBuf[(y + 1) * srcStride + x + 1];
                 } else {
-                    int offset = srcStride / (CameraUtils::getBpp(srcFmt) / 8);
+                    const int offset = srcStride / (CameraUtils::getBpp(srcFmt) / 8);
                     bayer_data[0] = *((unsigned short*)inBuf + y * offset + x);
-                    bayer_data[1] = *((unsigned short*)inBuf + y * offset + x + 1);
-                    bayer_data[2] = *((unsigned short*)inBuf + (y + 1) * offset + x);
-                    bayer_data[3] = *((unsigned short*)inBuf + (y + 1) * offset + x + 1);
+                    bayer_data[1] = *((unsigned short*)inBuf + y * offset + x + 1U);
+                    bayer_data[2] = *((unsigned short*)inBuf + (y + 1U) * offset + x);
+                    bayer_data[3] = *((unsigned short*)inBuf + (y + 1U) * offset + x + 1U);
                 }
                 convertBayerBlock(x, y, width, height, bayer_data, outBuf, srcFmt, dstFmt);
             } else {
