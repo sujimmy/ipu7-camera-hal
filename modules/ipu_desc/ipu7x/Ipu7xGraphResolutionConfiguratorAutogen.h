@@ -33,10 +33,13 @@
 class GraphResolutionConfiguratorHelper
 {
 public:
-    GraphResolutionConfiguratorHelper();
 
     static uint32_t getRunKernelUuid(GraphResolutionConfiguratorKernelRole role);
     static uint32_t getRunKernelUuidOfOutput(HwSink hwSink, int32_t graphId, GraphLink** links);
     static StaticGraphStatus getRunKernelUuidForResHistoryUpdate(std::vector<uint32_t>& kernelUuids);
     static uint32_t getRunKernelIoBufferSystemApiUuid();
+    static GraphResolutionConfiguratorKernelRole getKernelRole(uint32_t kernelUuid);
+    static uint32_t getReferenceKernel(uint32_t kernelUuid);
+    static FormatType getFormatForDrainer(uint32_t kernelUuid);
+    static StaticGraphStatus getSmurfRunKernelUuid(std::vector<std::pair<uint32_t, uint32_t>>& kernelUuids);
 };
