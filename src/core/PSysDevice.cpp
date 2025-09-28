@@ -123,7 +123,6 @@ int PSysDevice::addGraph(const PSysGraph& graph) {
 
         drvNode.node_ctx_id = static_cast<uint8_t>(node.nodeCtxId);
         drvNode.node_rsrc_id = static_cast<uint8_t>(node.nodeRsrcId);
-
         MEMCPY_S(&drvNode.profiles[0].teb, sizeof(drvNode.profiles[0].teb), &node.bitmaps.teb,
                  sizeof(node.bitmaps.teb));
         MEMCPY_S(&drvNode.profiles[0].deb, sizeof(drvNode.profiles[0].deb), &node.bitmaps.deb,

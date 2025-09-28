@@ -394,10 +394,6 @@ status_t PipeLine::createPSysGraph(int32_t numLinks, GraphLink** links) {
         }
 #endif
         mPSysGraph.links.push_back(pLink);
-
-        if (link->linkCompressionConfiguration && link->linkCompressionConfiguration->isEnabled) {
-            LOGE("Don't support compression now!");
-        }
     }
 
     mPSysGraph.nodes.clear();
