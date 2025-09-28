@@ -118,30 +118,3 @@ uint32_t GraphResolutionConfiguratorHelper::getRunKernelIoBufferSystemApiUuid()
     return 50058;
 }
 
-GraphResolutionConfiguratorKernelRole GraphResolutionConfiguratorHelper::getKernelRole(uint32_t kernelUuid)
-{
-    (void) kernelUuid;
-    return GraphResolutionConfiguratorKernelRole::NonRcb;
-}
-
-uint32_t GraphResolutionConfiguratorHelper::getReferenceKernel(uint32_t kernelUuid)
-{
-    (void) kernelUuid;
-    return 0;
-}
-
-FormatType GraphResolutionConfiguratorHelper::getFormatForDrainer(uint32_t kernelUuid)
-{
-    (void) kernelUuid;
-    return FormatType::YUV420_8_SP_P;
-}
-
-StaticGraphStatus GraphResolutionConfiguratorHelper::getSmurfRunKernelUuid(std::vector<std::pair<uint32_t, uint32_t>>& kernelUuids)
-{
-    kernelUuids.clear();
-
-    std::pair <uint32_t, uint32_t> smurfPair;
-
-    return StaticGraphStatus::SG_OK;
-}
-
