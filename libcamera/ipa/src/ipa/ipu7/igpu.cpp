@@ -18,7 +18,7 @@
 #include <cmath>
 #include <map>
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <utility>
 #include <vector>
 

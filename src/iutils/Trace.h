@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <stdbool.h>
-#include <stdint.h>
+#include <cstdint>
 #include <stdio.h>
 #include <string.h>
 #include <sys/cdefs.h>

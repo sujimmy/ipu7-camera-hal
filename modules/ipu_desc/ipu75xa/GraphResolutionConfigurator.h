@@ -27,7 +27,7 @@
 #pragma once
 #include <vector>
 #include <map>
-#include <stdint.h>
+#include <cstdint>
 
 #define _USE_MATH_DEFINES
 #define GRA_ROUND_UP(a,b)  (((a) + ((b)-1)) / (b) * (b))
