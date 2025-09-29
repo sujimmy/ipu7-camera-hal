@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 #include <cstddef>
 
 namespace icamera {

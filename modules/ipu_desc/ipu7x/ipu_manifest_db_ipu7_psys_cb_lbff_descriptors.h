@@ -28,7 +28,7 @@
 #ifndef IPU_MANIFEST_DB_IPU7_PSYS_CB_LBFF_DESCRIPTORS_H
 #define IPU_MANIFEST_DB_IPU7_PSYS_CB_LBFF_DESCRIPTORS_H
 
-#include <stdint.h>
+#include <cstdint>
 #include "cb_payload_descriptor.h"
 
 static payload_descriptor_t lbff_0_descriptors = {

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "iutils/Errors.h"
 #include "cb_payload_descriptor.h"

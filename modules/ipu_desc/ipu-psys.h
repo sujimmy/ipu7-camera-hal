@@ -19,7 +19,7 @@
  ****************************************************************************/
 #ifndef _UAPI_IPU_PSYS_H
 #define _UAPI_IPU_PSYS_H
-#include <stdint.h>
+#include <cstdint>
 
 struct ipu_psys_capability {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

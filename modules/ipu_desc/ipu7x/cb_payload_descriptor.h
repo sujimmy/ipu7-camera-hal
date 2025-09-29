@@ -15,7 +15,7 @@
  */
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 typedef struct _cb_payload_descriptor_t
 {

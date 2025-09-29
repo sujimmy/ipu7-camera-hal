@@ -17,7 +17,7 @@
 #pragma once
 
 #include <unistd.h>
-#include <stdint.h>
+#include <cstdint>
 
 #define PERF_LOG_TAG_STR(X) PERF_LOG_TAG_STR1(X)
 #define PERF_LOG_TAG_STR1(X) #X

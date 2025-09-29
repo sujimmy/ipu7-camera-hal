@@ -16,7 +16,7 @@
 
 #pragma once
 #include <stdarg.h>
-#include <stdint.h>
+#include <cstdint>
 #include <stdio.h>
 
 #include "utils/ScopedAtrace.h"
